@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="fouc-cloak" class="scroll-smooth" lang="en" style=""><head>
+<!DOCTYPE html><html class="fouc-cloak scroll-smooth overflow-x-hidden w-full max-w-[100vw]" lang="en"><head>
 <style>
   /* FOUC Prevention Cloak */
   html.fouc-cloak, body.fouc-cloak { opacity: 0 !important; visibility: hidden !important; }
@@ -92,6 +92,16 @@
     @keyframes headerFadeIn {
       0% { opacity: 0; transform: translateY(-15px); }
       100% { opacity: 1; transform: none; }
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee {
+      animation: marquee 30s linear infinite;
+    }
+    .animate-marquee:hover {
+      animation-play-state: paused;
     }
 
     /* Dynamic Typewriter Blink Cursor */
@@ -477,7 +487,7 @@
   </style>
 <script src="https://unpkg.com/lenis@1.1.9/dist/lenis.min.js"></script>
 </head>
-<body class="min-h-screen bg-parchment-200 text-parchment-900 overflow-x-hidden selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
+<body class="min-h-screen bg-parchment-200 text-parchment-900 overflow-x-hidden w-full max-w-[100vw] selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
 <!-- Background Texture Layer -->
 <div aria-hidden="true" class="fixed inset-0 bg-paper-grain pointer-events-none z-0"></div>
 <!-- BEGIN: NavigationBar -->
@@ -503,7 +513,7 @@
 <div class="absolute top-16 left-0 right-0 max-w-md mx-auto px-4 pt-2 pb-4 hidden" id="mobile-menu" data-lenis-prevent><div class="bg-white/90 backdrop-blur-xl border border-white/80 rounded-3xl p-5 shadow-2xl ring-1 ring-black/5 flex flex-col space-y-1"><div class="flex items-center justify-between pb-3 mb-1 border-b border-parchment-200/60 text-[10px] uppercase font-bold tracking-widest text-parchment-800/60"><span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse"></span> WynnPages Studio</span><span class="font-mono">Bespoke Craft</span></div><nav class="flex flex-col space-y-1"><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#works"><span class="font-editorial text-base font-semibold tracking-tight">Our Work &amp; Gallery</span><span class="text-xs text-[#b85d43] opacity-80 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">Explore →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#philosophy"><span class="font-editorial text-base font-semibold tracking-tight">The Philosophy</span><span class="text-xs text-[#b85d43] opacity-80 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">Read →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#craft-journey"><span class="font-editorial text-base font-semibold tracking-tight">How It Works</span><span class="text-xs text-[#b85d43] opacity-80 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">3 Steps →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#pricing"><span class="font-editorial text-base font-semibold tracking-tight">Flat Pricing &amp; Guarantee</span><span class="text-xs text-[#b85d43] opacity-80 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">$599 AUD →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#faq"><span class="font-editorial text-base font-semibold tracking-tight">Common Questions</span><span class="text-xs text-[#b85d43] opacity-80 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">FAQ →</span></a></nav><div class="pt-3 mt-1 border-t border-parchment-200/60 flex flex-col gap-2"><a class="apple-spring-btn shimmer-btn w-full py-2.5 px-4 rounded-xl bg-parchment-900 text-amber-50 font-medium text-xs shadow-sm flex items-center justify-between hover:bg-black transition-all duration-200" href="#quote-box"><span class="">Claim A Build Slot</span><span class="text-amber-200 font-semibold">$599 AUD ✦</span></a><div class="flex items-center justify-between px-2 pt-0.5 text-[11px] text-parchment-800/70"><span class="flex items-center gap-1"><span class="text-gold-600">✦</span> 72h Turnaround</span><a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="mailto:hello@wynnpages.com.au">Direct Email</a></div></div></div></div>
 </header>
 <!-- END: NavigationBar -->
-<div id="menu-overlay" class="fixed inset-0 z-40 bg-parchment-200/40 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-400 hidden"></div>
+<div id="menu-overlay" class="fixed inset-0 h-[100dvh] w-screen z-40 bg-parchment-200/40 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-400 hidden"></div>
 <main class="relative z-10 opacity-0 animate-[mainFadeIn_1.2s_ease-out_forwards] max-w-md mx-auto min-h-screen flex flex-col">
 <!-- BEGIN: HeroSection -->
 <section class="relative w-full min-h-[640px] pt-20 pb-8 px-5 flex flex-col justify-between items-center text-center overflow-hidden">
@@ -903,7 +913,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             lenis = new Lenis({
                 duration: 1.2,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smoothTouch: true, 
+                smoothTouch: false, 
                 touchMultiplier: 2,
             });
             function raf(time) {
@@ -933,7 +943,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     const handleScrollEffects = (scrollY) => {
         // 1. Hero Scroll Parallax
         if (heroParallax) {
-            heroParallax.style.transform = `translate3d(0, ${scrollY * 0.4}px, 0)`;
+            heroParallax.style.transform = `translate3d(0, ${Math.max(0, scrollY) * 0.4}px, 0)`;
         }
         if (heroBg) {
             // Only use scale and opacity. Translate is handled by heroParallax wrapper.
@@ -1197,12 +1207,12 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
               if (navL2) navL2.style.opacity = '1';
               if (navL3) navL3.style.transform = 'none';
               
-              mobileMenu.style.transition = 'all 1.5s cubic-bezier(0.16, 1, 0.3, 1)';
+              mobileMenu.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
               mobileMenu.style.opacity = '0';
-              mobileMenu.style.transform = 'translateY(-60px) scale(0.96)';
+              mobileMenu.style.transform = 'translateY(-20px) scale(0.98)';
               
               if (menuOverlay) {
-                  menuOverlay.style.transition = 'all 1.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                  menuOverlay.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
                   menuOverlay.style.opacity = '0';
               }
               
@@ -1215,17 +1225,22 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                       menuOverlay.classList.add('hidden');
                       menuOverlay.style.pointerEvents = 'auto'; 
                   }
-              }, 1500);
+                  document.documentElement.style.overflow = '';
+                  document.body.style.overflow = '';
+              }, 400);
           }
 
-          if (lenis) {
+          if (lenis && !('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
               lenis.scrollTo(targetElement, { 
                  offset: -70, 
-                 duration: 1.5, 
+                 duration: 1.2, 
                  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
               });
           } else {
-              targetElement.scrollIntoView({ behavior: 'smooth' });
+              // Delay slightly to let the menu close smoothly before scrolling on mobile
+              setTimeout(() => {
+                 targetElement.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
           }
         }
       });
@@ -1282,6 +1297,9 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         
         if (isClosed) {
           // OPENING MENU
+          document.documentElement.style.overflow = 'hidden';
+          document.body.style.overflow = 'hidden';
+          
           mobileMenu.classList.remove('hidden');
           if (menuOverlay) {
               menuOverlay.classList.remove('hidden');
@@ -1336,6 +1354,8 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                 menuOverlay.classList.remove('pointer-events-auto');
                 menuOverlay.classList.add('pointer-events-none');
             }
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
           }, 400);
         }
       });
@@ -1629,33 +1649,9 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     if (track) {
       // Clone cards for infinite loop
       const cards = track.innerHTML;
-      track.innerHTML = cards + cards + cards; // Triple the cards to ensure enough width
-      
-      let isPaused = false;
-      let scrollSpeed = 0.25; // Subtle, elegant speed
-
-      function autoScroll() {
-        if (!isPaused) {
-          track.scrollLeft += scrollSpeed;
-          // If we scrolled past the first set of cards, reset seamlessly
-          if (track.scrollLeft >= track.scrollWidth / 3) {
-            track.scrollLeft -= (track.scrollWidth / 3);
-          }
-        }
-        requestAnimationFrame(autoScroll);
-      }
-      
-      // Delay start to allow main entrance animations to finish smoothly
-      setTimeout(() => requestAnimationFrame(autoScroll), 1200);
-
-      // Pause on interaction
-      track.addEventListener('mouseenter', () => isPaused = true);
-      track.addEventListener('mouseleave', () => isPaused = false);
-      track.addEventListener('touchstart', () => isPaused = true, {passive: true});
-      track.addEventListener('touchend', () => {
-          // Slight delay before resuming after touch to prevent jumpiness
-          setTimeout(() => isPaused = false, 1000);
-      });
+      track.innerHTML = `<div class="flex gap-4 pr-4">${cards}</div><div class="flex gap-4 pr-4">${cards}</div>`; 
+      track.classList.remove('overflow-x-auto', 'gap-4');
+      track.classList.add('w-max', 'animate-marquee', 'flex');
     }
 
   </script>
