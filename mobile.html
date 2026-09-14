@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="fouc-cloak scroll-smooth overflow-x-hidden w-full max-w-[100vw]" lang="en"><head>
+<!DOCTYPE html><html class="fouc-cloak scroll-smooth overflow-x-clip w-full max-w-[100vw]" lang="en"><head>
 <style>
   /* FOUC Prevention Cloak */
   html.fouc-cloak, body.fouc-cloak { opacity: 0 !important; visibility: hidden !important; }
@@ -92,16 +92,6 @@
     @keyframes headerFadeIn {
       0% { opacity: 0; transform: translateY(-15px); }
       100% { opacity: 1; transform: none; }
-    }
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-    .animate-marquee {
-      animation: marquee 30s linear infinite;
-    }
-    .animate-marquee:hover {
-      animation-play-state: paused;
     }
 
     /* Dynamic Typewriter Blink Cursor */
@@ -487,7 +477,7 @@
   </style>
 <script src="https://unpkg.com/lenis@1.1.9/dist/lenis.min.js"></script>
 </head>
-<body class="min-h-screen bg-parchment-200 text-parchment-900 overflow-x-hidden w-full max-w-[100vw] selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
+<body class="min-h-screen bg-parchment-200 text-parchment-900 overflow-x-clip w-full max-w-[100vw] selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
 <!-- Background Texture Layer -->
 <div aria-hidden="true" class="fixed inset-0 bg-paper-grain pointer-events-none z-0"></div>
 <!-- BEGIN: NavigationBar -->
@@ -913,7 +903,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             lenis = new Lenis({
                 duration: 1.2,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smoothTouch: false, 
+                smoothTouch: true, 
                 touchMultiplier: 2,
             });
             function raf(time) {
@@ -1644,14 +1634,39 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 
       revealObserver.observe(guaranteeSection);
     })();
-    // Infinite Auto-Scrolling Marquee for Recent Creations
+    // Infinite Auto-Scrolling for Recent Creations
     const track = document.getElementById('creations-track');
     if (track) {
       // Clone cards for infinite loop
       const cards = track.innerHTML;
-      track.innerHTML = `<div class="flex gap-4 pr-4">${cards}</div><div class="flex gap-4 pr-4">${cards}</div>`; 
-      track.classList.remove('overflow-x-auto', 'gap-4');
-      track.classList.add('w-max', 'animate-marquee', 'flex');
+      track.innerHTML = cards + cards + cards; // Triple the cards to ensure enough width
+      
+      let isPaused = false;
+      let scrollSpeed = 0.5; 
+
+      function autoScroll() {
+        if (!isPaused) {
+          track.scrollLeft += scrollSpeed;
+          // If we scrolled past the first set of cards, reset seamlessly
+          if (track.scrollLeft >= track.scrollWidth / 3) {
+            track.scrollLeft -= (track.scrollWidth / 3);
+          }
+        }
+        requestAnimationFrame(autoScroll);
+      }
+      
+      // Delay start to allow main entrance animations to finish smoothly
+      setTimeout(() => requestAnimationFrame(autoScroll), 1200);
+
+      // Pause on interaction
+      track.addEventListener('touchstart', () => isPaused = true, {passive: true});
+      track.addEventListener('touchend', () => {
+          setTimeout(() => isPaused = false, 1500);
+      });
+      track.addEventListener('mousedown', () => isPaused = true);
+      track.addEventListener('mouseup', () => {
+          setTimeout(() => isPaused = false, 1500);
+      });
     }
 
   </script>
