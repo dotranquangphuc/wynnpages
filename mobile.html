@@ -1206,6 +1206,10 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                   menuOverlay.style.opacity = '0';
               }
               
+              // Unlock scrolling immediately so Lenis can scroll without layout thrashing
+              document.documentElement.style.overflow = '';
+              document.body.style.overflow = '';
+              
               setTimeout(() => {
                   mobileMenu.classList.add('hidden');
                   mobileMenu.style.pointerEvents = '';
@@ -1215,8 +1219,6 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                       menuOverlay.classList.add('hidden');
                       menuOverlay.style.pointerEvents = 'auto'; 
                   }
-                  document.documentElement.style.overflow = '';
-                  document.body.style.overflow = '';
               }, 400);
           }
 
@@ -1334,6 +1336,10 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
           if (navL2) navL2.style.opacity = '1';
           if (navL3) navL3.style.transform = 'none';
 
+          // Unlock interaction immediately when closing
+          document.documentElement.style.overflow = '';
+          document.body.style.overflow = '';
+
           // Hide completely after transition
           setTimeout(() => {
             mobileMenu.classList.add('hidden');
@@ -1344,8 +1350,6 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                 menuOverlay.classList.remove('pointer-events-auto');
                 menuOverlay.classList.add('pointer-events-none');
             }
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
           }, 400);
         }
       });
