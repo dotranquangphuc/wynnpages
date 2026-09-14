@@ -933,14 +933,18 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     const handleScrollEffects = (scrollY) => {
         // 1. Hero Scroll Parallax
         if (heroParallax) {
-            heroParallax.style.transform = `translate3d(0, ${Math.max(0, scrollY) * 0.4}px, 0)`;
+            if (scrollY < 0) {
+                // Pin to top on bounce scroll down (iOS pull-down)
+                heroParallax.style.transform = `translate3d(0, ${scrollY}px, 0)`;
+            } else {
+                heroParallax.style.transform = `translate3d(0, ${scrollY * 0.4}px, 0)`;
+            }
         }
         if (heroBg) {
-            // Only use scale and opacity. Translate is handled by heroParallax wrapper.
-            // Avoid dynamic blur for mobile performance.
-            let progress = Math.max(0, Math.min(1, scrollY / 600)); 
-            heroBg.style.transform = `scale(${1.05 - (0.05 * progress)})`;
-            heroBg.style.opacity = 1 - (0.5 * progress);
+            let progress = Math.max(0, Math.min(1, scrollY / 500)); 
+            heroBg.style.transform = scrollY < 0 ? `scale(${1.05 - scrollY*0.002})` : `scale(${1.05 - (0.05 * progress)})`;
+            heroBg.style.opacity = scrollY < 0 ? 1 : 1 - (0.4 * progress);
+            heroBg.style.filter = scrollY > 10 ? `blur(${progress * 8}px)` : 'blur(0px)';
         }
 
         // 2. Header Frosted Glass
@@ -1197,11 +1201,17 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
               if (navL2) navL2.style.opacity = '1';
               if (navL3) navL3.style.transform = 'none';
               
+              // Remove heavy blur filters instantly to prevent GPU frame drops during scroll
+              mobileMenu.style.backdropFilter = 'none';
+              mobileMenu.style.webkitBackdropFilter = 'none';
+              
               mobileMenu.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
               mobileMenu.style.opacity = '0';
               mobileMenu.style.transform = 'translateY(-20px) scale(0.98)';
               
               if (menuOverlay) {
+                  menuOverlay.style.backdropFilter = 'none';
+                  menuOverlay.style.webkitBackdropFilter = 'none';
                   menuOverlay.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
                   menuOverlay.style.opacity = '0';
               }
@@ -1324,12 +1334,20 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
           mobileMenu.style.pointerEvents = 'none'; // Lock interaction
           if (menuOverlay) menuOverlay.style.pointerEvents = 'none';
           
+          // Remove heavy blur filters instantly to prevent GPU frame drops during transition
+          mobileMenu.style.backdropFilter = 'none';
+          mobileMenu.style.webkitBackdropFilter = 'none';
+          
           // Trigger smooth exit
           mobileMenu.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
           mobileMenu.style.opacity = '0';
           mobileMenu.style.transform = 'translateY(-20px) scale(0.98)';
           
-          if (menuOverlay) menuOverlay.style.opacity = '0';
+          if (menuOverlay) {
+              menuOverlay.style.backdropFilter = 'none';
+              menuOverlay.style.webkitBackdropFilter = 'none';
+              menuOverlay.style.opacity = '0';
+          }
           
           // X to Burger
           if (navL1) navL1.style.transform = 'none';
@@ -1345,10 +1363,14 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             mobileMenu.classList.add('hidden');
             mobileMenu.style.pointerEvents = '';
             mobileMenu.style.transform = 'none';
+            mobileMenu.style.backdropFilter = ''; // Restore for next open
+            mobileMenu.style.webkitBackdropFilter = '';
             if (menuOverlay) {
                 menuOverlay.classList.add('hidden');
                 menuOverlay.classList.remove('pointer-events-auto');
                 menuOverlay.classList.add('pointer-events-none');
+                menuOverlay.style.backdropFilter = '';
+                menuOverlay.style.webkitBackdropFilter = '';
             }
           }, 400);
         }
