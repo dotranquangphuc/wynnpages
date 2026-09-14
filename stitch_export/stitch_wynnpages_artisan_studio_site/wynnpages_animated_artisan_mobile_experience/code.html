@@ -1,0 +1,1081 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>WynnPages — Animated Artisan Mobile Experience</title>
+<!-- Google Fonts for Editorial Aesthetic -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&amp;family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,500;1,9..144,600&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Caveat:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: {
+              50: '#fdfcf9',
+              100: '#fbf8f2',
+              200: '#f6f1e8',
+              300: '#ede4d3',
+              800: '#3a3329',
+              900: '#231f1a',
+            },
+            terracotta: {
+              400: '#e58f55',
+              500: '#d97736',
+              600: '#b8581f',
+            },
+            gold: {
+              400: '#e8b948',
+              500: '#d49b28',
+              600: '#b27b14',
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          boxShadow: {
+            'glow-soft': '0 10px 35px -5px rgba(212, 155, 40, 0.15)',
+            'card-float': '0 20px 40px -15px rgba(58, 51, 41, 0.08), 0 0 1px 1px rgba(255, 255, 255, 0.8) inset',
+            'card-lift': '0 24px 45px -12px rgba(58, 51, 41, 0.14), 0 0 0 1px rgba(212, 155, 40, 0.25)',
+            'pill': '0 4px 20px -2px rgba(0, 0, 0, 0.06)',
+            'cta-glow': '0 12px 32px -4px rgba(35, 31, 26, 0.35), 0 0 20px 2px rgba(212, 155, 40, 0.25)',
+            'ios-nav': '0 8px 24px -4px rgba(35, 31, 26, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Layout & Custom Styles -->
+<style data-purpose="custom-typography">
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f6f1e8;
+      color: #2b251e;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .text-balance {
+      text-wrap: balance;
+    }
+    /* Dynamic Typewriter Blink Cursor */
+    .typewriter-cursor {
+      display: inline-block;
+      margin-left: 2px;
+      font-weight: 300;
+      color: #d97736;
+      animation: cursor-blink 0.85s steps(2, start) infinite;
+      vertical-align: baseline;
+    }
+    @keyframes cursor-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+<style data-purpose="micro-interactions-and-motion">
+    /* Subtle paper noise texture simulation */
+    .bg-paper-grain {
+      background-image: radial-gradient(#d3c6af 0.75px, transparent 0.75px);
+      background-size: 16px 16px;
+      opacity: 0.25;
+    }
+    /* Hide scrollbars for slick mobile carousels */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Ambient breathing / gentle parallax for watercolor hero */
+    @keyframes hero-breathe {
+      0%, 100% { transform: scale(1.02) translateY(0px); }
+      50% { transform: scale(1.06) translateY(-4px); }
+    }
+    .animate-hero-breathe {
+      animation: hero-breathe 14s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    /* Ambient float/breathing for stars and badges */
+    @keyframes float-gentle {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-3px) rotate(2deg); }
+    }
+    .animate-float {
+      display: inline-block;
+      animation: float-gentle 4s ease-in-out infinite;
+    }
+
+    /* Gentle pulsing CTA ring glow */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 12px 32px -4px rgba(35, 31, 26, 0.35), 0 0 0 0 rgba(212, 155, 40, 0.35); }
+      50% { box-shadow: 0 16px 36px -4px rgba(35, 31, 26, 0.45), 0 0 18px 4px rgba(212, 155, 40, 0.35); }
+    }
+    .animate-cta-glow {
+      animation: pulse-glow 3.2s ease-in-out infinite;
+    }
+
+    /* Apple-Grade Shimmer Sweep */
+    .shimmer-btn {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.22s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.2s ease;
+      will-change: transform;
+    }
+    .shimmer-btn:active {
+      transform: scale(0.975);
+    }
+    .shimmer-btn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 150%;
+      height: 200%;
+      background: linear-gradient(
+        115deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 35%,
+        rgba(255, 255, 255, 0.35) 50%,
+        rgba(255, 255, 255, 0.08) 65%,
+        transparent 100%
+      );
+      transform: rotate(22deg);
+      animation: shimmer-sweep 5.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes shimmer-sweep {
+      0%, 100% { transform: translateX(0); }
+      35%, 60% { transform: translateX(260%); }
+    }
+
+    /* Cutting Grid Pulsating Neon Border Accent */
+    @keyframes neon-border-pulse {
+      0%, 100% { box-shadow: 0 0 0 1.5px rgba(232, 185, 72, 0.4), 0 20px 45px -10px rgba(107, 59, 167, 0.45); }
+      50% { box-shadow: 0 0 0 2.5px rgba(232, 185, 72, 0.85), 0 24px 50px -8px rgba(184, 93, 67, 0.5); }
+    }
+    .pulse-cutting-card {
+      animation: neon-border-pulse 4.5s ease-in-out infinite;
+    }
+
+    /* Apple Spring Motion & Tactile Press Feedback */
+    .apple-spring-btn {
+      transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+      will-change: transform;
+    }
+    .apple-spring-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Tilt/Snap Card Lift for Carousel */
+    .carousel-tilt-card {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    .carousel-tilt-card:hover {
+      transform: translateY(-4px) rotate(-0.5deg) scale(1.015);
+      box-shadow: 0 20px 35px -10px rgba(58, 51, 41, 0.14), 0 0 0 1.5px rgba(212, 155, 40, 0.3);
+    }
+    .carousel-tilt-card:active {
+      transform: translateY(0px) scale(0.985);
+    }
+
+    /* Apple Card Micro-Lift and Compression */
+    .interactive-card {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+      will-change: transform;
+    }
+    .interactive-card:hover {
+      transform: translateY(-3px) scale(1.008);
+      box-shadow: 0 20px 35px -10px rgba(58, 51, 41, 0.12), 0 0 0 1.5px rgba(212, 155, 40, 0.28);
+    }
+    .interactive-card:active {
+      transform: translateY(0px) scale(0.985);
+      transition-duration: 0.12s;
+    }
+
+    /* Scroll-Driven Entrance Reveals */
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .reveal-on-scroll.is-revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Fluid FAQ Accordion with Rotating + to × */
+    .faq-grid-content {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.38s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0;
+      will-change: grid-template-rows, opacity;
+    }
+    .faq-item.is-open .faq-grid-content {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+    .faq-icon-rotator {
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.25s ease, color 0.25s ease;
+      will-change: transform;
+    }
+    .faq-item.is-open .faq-icon-rotator {
+      transform: rotate(45deg);
+      background-color: rgba(217, 119, 54, 0.2);
+      color: #96432b;
+    }
+
+    /* Stitched thread & step highlight animations */
+    @keyframes thread-flow {
+      0% { stroke-dashoffset: 40; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .animate-thread-dash {
+      stroke-dasharray: 6 5;
+      animation: thread-flow 3.5s linear infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.22); opacity: 0.15; }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 2.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+    }
+    .craft-step-card {
+      transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .craft-step-card.active-step {
+      border-color: rgba(217, 119, 54, 0.55) !important;
+      background: rgba(255, 255, 255, 0.98) !important;
+      box-shadow: 0 16px 36px -10px rgba(217, 119, 54, 0.2), 0 0 0 1.5px rgba(217, 119, 54, 0.35);
+      transform: translateY(-2px) scale(1.015);
+    }
+
+    /* Ink Reveal Blur-To-Focus & Live Signature Wipe */
+    .ink-word {
+      display: inline-block;
+      opacity: 0;
+      filter: blur(4px);
+      transform: translateY(3px);
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, filter, transform;
+    }
+    .ink-word.ink-settled {
+      opacity: 1;
+      filter: blur(0px);
+      transform: translateY(0);
+    }
+
+    .signature-wipe {
+      clip-path: inset(0 100% 0 0);
+      opacity: 0;
+      filter: blur(4px);
+      transition: clip-path 1.65s cubic-bezier(0.33, 1, 0.68, 1), 
+                  filter 1.8s cubic-bezier(0.25, 1, 0.5, 1), 
+                  opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: clip-path, opacity, filter;
+    }
+    .signature-wipe.is-drawn {
+      clip-path: inset(0 0% 0 0);
+      opacity: 1;
+      filter: blur(0px);
+    }
+    .signature-signoff {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .signature-signoff.is-drawn {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Confetti Sparkles Keyframes for Launch Approval */
+    @keyframes pop-sparkle {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+      100% { transform: scale(1) rotate(360deg); opacity: 0; }
+    }
+    .animate-sparkle {
+      animation: pop-sparkle 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Respect prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .animate-hero-breathe, .animate-float, .animate-cta-glow, .shimmer-btn::after, .typewriter-cursor, .animate-thread-dash, .animate-pulse-ring, .pulse-cutting-card {
+        animation: none !important;
+      }
+      .reveal-on-scroll {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .ink-word {
+        opacity: 1 !important;
+        filter: none !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .signature-wipe {
+        clip-path: inset(0 0% 0 0) !important;
+        opacity: 1 !important;
+        filter: none !important;
+        transition: none !important;
+      }
+      .signature-signoff {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-parchment-200 text-parchment-900 overflow-x-hidden selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
+<!-- Background Texture Layer -->
+<div aria-hidden="true" class="fixed inset-0 bg-paper-grain pointer-events-none z-0"></div>
+<!-- BEGIN: NavigationBar -->
+<header class="fixed top-0 inset-x-0 z-50 backdrop-blur-xl border-b border-black/[0.05] transition-all duration-300 bg-[#fcf9f3]/80" id="main-header">
+<div class="max-w-md mx-auto px-5 h-16 flex items-center justify-between">
+<!-- Logo Brand (Preserving https://lh3.googleusercontent.com/aida/AEtjO1WWHFRCQM4E01y5_Jvsu70jO7OufDvf2DzvuRzjPztYei1_zNk4aWfqU5rm5BuN3VJA54GhRyyTMP2BWNmBvHYJNOQyiHzoUoBwhR-h2ozi4BCFUJguZ-n5LdxGG5U1NLXbfABZH08UUJY3It2rKl7tIZmIJHBI3yYLuCDfvXTKCyfdf2dWVvhDr4Gqx82TWSn1d98rbQBbyXP7VnbnRU9k_rySkS0JKpBU4rL9xJLWuBs3OsFzVVTD6MQ) -->
+<a class="flex items-center gap-2.5 group active:scale-95 transition-transform duration-200" href="#"><div class="h-7 flex items-center transition-transform duration-300 group-hover:scale-105"><img alt="WynnPages — Handcrafted Websites" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WWHFRCQM4E01y5_Jvsu70jO7OufDvf2DzvuRzjPztYei1_zNk4aWfqU5rm5BuN3VJA54GhRyyTMP2BWNmBvHYJNOQyiHzoUoBwhR-h2ozi4BCFUJguZ-n5LdxGG5U1NLXbfABZH08UUJY3It2rKl7tIZmIJHBI3yYLuCDfvXTKCyfdf2dWVvhDr4Gqx82TWSn1d98rbQBbyXP7VnbnRU9k_rySkS0JKpBU4rL9xJLWuBs3OsFzVVTD6MQ"></div></a>
+<!-- Action Nav Buttons -->
+<div class="flex items-center gap-2">
+<a class="apple-spring-btn text-xs font-semibold px-3 py-1.5 rounded-full bg-parchment-900 text-amber-50 hover:bg-black transition-all duration-200 shadow-sm" href="#quote-box">
+          Book $599
+        </a>
+<button aria-controls="mobile-menu" aria-expanded="false" aria-label="Open Navigation Menu" class="apple-spring-btn w-10 h-10 rounded-2xl bg-white/90 border border-white/80 flex flex-col items-center justify-center gap-1 shadow-sm transition-all duration-200 hover:bg-white" id="menu-toggle-btn">
+<span class="w-4 h-0.5 bg-parchment-800 rounded-full transition-all duration-300" id="nav-line-1"></span>
+<span class="w-4 h-0.5 bg-parchment-800 rounded-full transition-all duration-300" id="nav-line-2"></span>
+<span class="w-4 h-0.5 bg-parchment-800 rounded-full transition-all duration-300" id="nav-line-3"></span>
+</button>
+</div>
+</div>
+<!-- Mobile Drawer Menu -->
+<div class="max-w-md mx-auto px-4 pt-2 pb-4 transition-all duration-300 hidden" id="mobile-menu"><div class="bg-white/90 backdrop-blur-xl border border-white/80 rounded-3xl p-5 shadow-2xl ring-1 ring-black/5 flex flex-col space-y-1"><div class="flex items-center justify-between pb-3 mb-1 border-b border-parchment-200/60 text-[10px] uppercase font-bold tracking-widest text-parchment-800/60"><span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse"></span> WynnPages Studio</span><span class="font-mono">Bespoke Craft</span></div><nav class="flex flex-col space-y-1"><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#works"><span class="font-editorial text-base font-semibold tracking-tight">Our Work &amp; Gallery</span><span class="text-xs text-[#b85d43] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">Explore →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#philosophy"><span class="font-editorial text-base font-semibold tracking-tight">The Philosophy</span><span class="text-xs text-[#b85d43] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">Read →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#craft-journey"><span class="font-editorial text-base font-semibold tracking-tight">How It Works</span><span class="text-xs text-[#b85d43] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">3 Steps →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#pricing"><span class="font-editorial text-base font-semibold tracking-tight">Flat Pricing &amp; Guarantee</span><span class="text-xs text-[#b85d43] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">$599 AUD →</span></a><a class="group px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-parchment-900 hover:text-[#96432b] hover:bg-stone-100/80 transition-all duration-200" href="#faq"><span class="font-editorial text-base font-semibold tracking-tight">Common Questions</span><span class="text-xs text-[#b85d43] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-mono font-medium text-[11px]">FAQ →</span></a></nav><div class="pt-3 mt-1 border-t border-parchment-200/60 flex flex-col gap-2"><a class="apple-spring-btn shimmer-btn w-full py-2.5 px-4 rounded-xl bg-parchment-900 text-amber-50 font-medium text-xs shadow-sm flex items-center justify-between hover:bg-black transition-all duration-200" href="#quote-box"><span class="">Claim A Build Slot</span><span class="text-amber-200 font-semibold">$599 AUD ✦</span></a><div class="flex items-center justify-between px-2 pt-0.5 text-[11px] text-parchment-800/70"><span class="flex items-center gap-1"><span class="text-gold-600">✦</span> 72h Turnaround</span><a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="mailto:hello@wynnpages.com.au">Direct Email</a></div></div></div></div>
+</header>
+<!-- END: NavigationBar -->
+<main class="relative z-10 max-w-md mx-auto min-h-screen flex flex-col">
+<!-- BEGIN: HeroSection -->
+<section class="relative w-full min-h-[640px] pt-20 pb-8 px-5 flex flex-col justify-between items-center text-center overflow-hidden">
+<!-- Ambient Breathing Hero Watercolor Layer -->
+<div class="absolute inset-0 h-full w-full -z-10 pointer-events-none overflow-hidden"><img alt="Enchanting Scandinavian and Australian watercolor studio desk artwork" class="w-full h-full object-cover object-top transition-transform duration-1000 animate-hero-breathe" src="https://lh3.googleusercontent.com/aida/AEtjO1UecUkuw4k2175QvffhLZZruS5HbwxXmoUgLbjSAPSE9c0NL0RkLuqJvk3l_aJqOyT-uYEFbulTu5c0wvgF_lEg4BNyDo77o9Lw7jKbr2IlXyUdQR2_fPySIE6E5FlIPLipJqS57oC4zESZXrjjCXdypGdedZOWm3xoElel7mkMEN9DdvOmFqalf7SF2ge9EGzj8FCBD8Rp7dmzdMPeEIp5qAwo8ibTrcSi6CTtj0UQOBlSmyahQboJ60I"><div class="absolute inset-0 bg-gradient-to-b from-[#fbf8f2]/60 via-transparent to-[#f6f1e8]"></div><div class="absolute inset-0 bg-gradient-to-t from-[#f6f1e8] via-transparent to-transparent"></div></div>
+<div class="w-full flex flex-col items-center pt-2 relative z-10"><div class="pill-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/80 shadow-pill mb-5 cursor-default hover:scale-105 transition-transform duration-200"><span class="w-2 h-2 rounded-full bg-gold-500 animate-pulse"></span><span class="text-xs font-semibold tracking-wide text-parchment-800 uppercase">Honest Web Design for Local Businesses</span></div>
+<!-- Dynamic Typewriter & Accessible Hero Title -->
+<h1 class="font-editorial text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-parchment-900 text-balance mb-4 drop-shadow-sm"><span class="sr-only">A Beautiful Space for local businesses, tradies and creators on the web.</span><span aria-hidden="true" class="">A Beautiful Space<br><span class="inline-flex items-center justify-center whitespace-nowrap">for <span class="italic text-[#c96549] whitespace-nowrap inline-block pl-1.5" id="typewriter-text">tradies &amp; builders</span><span class="typewriter-cursor text-[#d97736]">|</span></span><br>on the web.</span></h1>
+<p class="text-sm sm:text-base text-parchment-800/90 font-normal max-w-xs leading-relaxed text-balance backdrop-blur-[2px] rounded-lg py-0.5 px-2">Hand-crafted, lightning-fast websites for Aussie trades, cafes, and creators. Flat $599, zero monthly retainers. Yours forever.</p></div>
+<div class="w-full flex flex-col items-center pt-6 pb-2 relative z-10"><div class="w-full" id="quote-box"><a class="shimmer-btn animate-cta-glow w-full py-4 px-6 rounded-full bg-stone-900 text-amber-50 font-medium text-base shadow-xl flex items-center justify-center gap-2 hover:bg-stone-800 transition-all duration-200 backdrop-blur-sm" href="#pricing"><span class="">Begin your journey — $599 AUD</span><span class="text-amber-300 animate-float">✦</span></a></div><p class="mt-2.5 text-sm italic font-editorial font-medium text-parchment-900 drop-shadow-sm">No technical knowledge required — we craft your website in 72 hours.</p><div class="mt-4 flex items-center justify-center gap-2"><span class="text-xs text-parchment-900 uppercase tracking-widest font-bold">Bespoke Craft</span><span class="text-gold-600 font-bold animate-float">✦</span><span class="text-xs text-parchment-900 uppercase tracking-widest font-bold">100% Australian Owned</span></div></div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: LivePreviewsCarousel -->
+<section class="py-6 px-4 overflow-hidden reveal-on-scroll is-revealed" id="works">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<span class="text-gold-500 animate-float">✦</span>
+<h2 class="font-editorial text-2xl font-bold text-parchment-900">Recent Creations</h2>
+</div>
+<span class="text-xs font-medium text-parchment-800/60 flex items-center gap-1">Swipe sideways <span class="inline-block transition-transform duration-300 hover:translate-x-1">→</span></span>
+</div>
+<!-- Horizontal Scrollable Cards with Lift & Tilt Micro-interactions -->
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-4 pt-1 px-1 snap-x snap-mandatory">
+<!-- Showcase Card 1: Emerald Cafe (Preserving https://lh3.googleusercontent.com/aida/AEtjO1X-9_OVJ0RDeb10hCxOjdgUwxVDLdExZiAfsNz_7NXIyeyPx66H1CnNE05BqUTvKT8pJ_2ALVLqEeqgJznoPBga7ErfrVtf0BwzFci4BBmxccTo0SJmgi9Lo4EOXXY8qVn6cW300GUNNOrBf2w3hYwpY3vOYuaezti7-0Js5RkJLPwqBlEB2Cyk7_9fXTASpNUzmDJ9zeVw_c2y4C0TTwBLCp6iuABV3L9c-zcaWt3v_7YTSvMIFbpZ_19D) -->
+<article class="carousel-tilt-card snap-center shrink-0 w-[240px] rounded-3xl bg-white/85 backdrop-blur-md border border-white/90 p-4 shadow-card-float flex flex-col justify-between cursor-pointer">
+<div>
+<div class="flex items-center justify-between text-[11px] font-semibold text-parchment-800/70 mb-2.5">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+Brassall, QLD
+</span>
+<span class="px-2 py-0.5 rounded-full bg-parchment-100 border border-parchment-200">Artisan Cafe</span>
+</div>
+<div class="h-32 rounded-2xl bg-stone-800 overflow-hidden relative mb-3 group">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-80"></div>
+<img alt="Emerald Cafe artisanal watercolor branding" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AEtjO1X-9_OVJ0RDeb10hCxOjdgUwxVDLdExZiAfsNz_7NXIyeyPx66H1CnNE05BqUTvKT8pJ_2ALVLqEeqgJznoPBga7ErfrVtf0BwzFci4BBmxccTo0SJmgi9Lo4EOXXY8qVn6cW300GUNNOrBf2w3hYwpY3vOYuaezti7-0Js5RkJLPwqBlEB2Cyk7_9fXTASpNUzmDJ9zeVw_c2y4C0TTwBLCp6iuABV3L9c-zcaWt3v_7YTSvMIFbpZ_19D">
+<span class="absolute bottom-2 left-2 z-20 text-white font-editorial text-sm font-semibold tracking-wide">Emerald Cafe</span>
+</div>
+<p class="font-editorial italic text-xs text-parchment-800/90 leading-snug">"WynnPages crafted an online presence as refined as our cafe. Bookings and takeaway orders increased the very first weekend."</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-parchment-200/60 flex items-center justify-between text-[11px]">
+<span class="font-medium text-parchment-800/60">Load time</span>
+<span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0.32s (Grade A)</span>
+</div>
+</article>
+<!-- Showcase Card 2: BS Tiling Specialists (Preserving https://lh3.googleusercontent.com/aida/AEtjO1Xr6dbmEJSSHjeRyyVRRYo1r4zDYJS4OupTCKyw222aycjEZayWLPFCrMzHw1mfOlQZAprwUex5Z5ZaKnCH-kJB1Qq-5F1NbZjSqAxSdjyW4NwWjE-Q5IYLtgaMjaPqx6NtlGHyIZuPQIACIVTENtyMGVnw2pAmhWsKMAbAFsWV8oyEyi6d_6SSPZo0jyPQDuOMoSnbry0CuMclvGa-DfHMpJrZPuqvAfX8Zp0t6bJ8_iAbaF22JzwUlH4) -->
+<article class="carousel-tilt-card snap-center shrink-0 w-[240px] rounded-3xl bg-white/85 backdrop-blur-md border border-white/90 p-4 shadow-card-float flex flex-col justify-between cursor-pointer">
+<div>
+<div class="flex items-center justify-between text-[11px] font-semibold text-parchment-800/70 mb-2.5">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+QLD, AU
+</span>
+<span class="px-2 py-0.5 rounded-full bg-parchment-100 border border-parchment-200">Commercial Tiling</span>
+</div>
+<div class="h-32 rounded-2xl bg-stone-800 overflow-hidden relative mb-3 group">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-80"></div>
+<img alt="BS Tiling Specialists commercial master craftsmanship watercolor branding" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AEtjO1Xr6dbmEJSSHjeRyyVRRYo1r4zDYJS4OupTCKyw222aycjEZayWLPFCrMzHw1mfOlQZAprwUex5Z5ZaKnCH-kJB1Qq-5F1NbZjSqAxSdjyW4NwWjE-Q5IYLtgaMjaPqx6NtlGHyIZuPQIACIVTENtyMGVnw2pAmhWsKMAbAFsWV8oyEyi6d_6SSPZo0jyPQDuOMoSnbry0CuMclvGa-DfHMpJrZPuqvAfX8Zp0t6bJ8_iAbaF22JzwUlH4">
+<span class="absolute bottom-2 left-2 z-20 text-white font-editorial text-sm font-semibold tracking-wide">BS Tiling Specialists</span>
+</div>
+<p class="font-editorial italic text-xs text-parchment-800/90 leading-snug">"WynnPages gave our tier-1 commercial tenders the digital authority they deserve. Builders and head contractors take us seriously before we even pick up the phone."</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-parchment-200/60 flex items-center justify-between text-[11px]">
+<span class="font-medium text-parchment-800/60">QBCC Licensed</span>
+<span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0.28s (Grade A)</span>
+</div>
+</article>
+<!-- Showcase Card 3: BeerLens Companion (Preserving https://lh3.googleusercontent.com/aida/AEtjO1WCCIF-SdpLr8Iy3s3oSYZk6nrIBtHoitF4lT4S5mwOdMwAWnIm9T-8AzIGARv0Ra00l61GLG9wQvMynnIaD0ALwcZGO9XZY7R_qBCnMn5CyQuusK8b6b6Pmr5xv5_gJcSBprgO_aUOroy3KRQr7vkf6Ivmp3EfsBgZhrjGsRyHH4FjPfIw1ad2T08rrGj63cCnCcjm10kKeJtwtHwgk8GU5xJ4vfxIRaOFnT_lkN_T_Bv1XWtojjKjyi29) -->
+<article class="carousel-tilt-card snap-center shrink-0 w-[240px] rounded-3xl bg-white/85 backdrop-blur-md border border-white/90 p-4 shadow-card-float flex flex-col justify-between cursor-pointer"><div><div class="flex items-center justify-between text-[11px] font-semibold text-parchment-800/70 mb-2.5"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Worldwide</span><span class="px-2 py-0.5 rounded-full bg-parchment-100 border border-parchment-200">Editorial App</span></div><div class="h-32 rounded-2xl bg-parchment-800 overflow-hidden relative mb-3 group"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-80"></div><img alt="BeerLens — Editorial Craft Companion" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AEtjO1WCCIF-SdpLr8Iy3s3oSYZk6nrIBtHoitF4lT4S5mwOdMwAWnIm9T-8AzIGARv0Ra00l61GLG9wQvMynnIaD0ALwcZGO9XZY7R_qBCnMn5CyQuusK8b6b6Pmr5xv5_gJcSBprgO_aUOroy3KRQr7vkf6Ivmp3EfsBgZhrjGsRyHH4FjPfIw1ad2T08rrGj63cCnCcjm10kKeJtwtHwgk8GU5xJ4vfxIRaOFnT_lkN_T_Bv1XWtojjKjyi29"><span class="absolute bottom-2 left-2 z-20 text-white font-editorial text-sm font-semibold tracking-wide">BeerLens</span></div><p class="font-editorial italic text-xs text-parchment-800/90 leading-snug">"A curated library of 1,470+ beers across 42 countries. Handcrafted digital companion with instant label recognition and bespoke palate seals."</p></div><div class="mt-3 pt-2.5 border-t border-parchment-200/60 flex items-center justify-between text-[11px]"><span class="font-medium text-parchment-800/60">1,470+ Beers</span><span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0.24s (Grade A)</span></div></article></div>
+<!-- Trust Badges Bar -->
+<div class="mt-4 pt-3 border-t border-parchment-300/60 flex items-center justify-around opacity-80 text-[11px] font-semibold tracking-wider text-parchment-800 uppercase"><span class="pill-badge hover:text-terracotta-600 transition-colors cursor-default">✦ Crazy Domains</span>
+<span class="pill-badge hover:text-terracotta-600 transition-colors cursor-default">✦ Stripe AU</span>
+<span class="pill-badge hover:text-terracotta-600 transition-colors cursor-default">✦ Netlify Edge</span></div>
+</section>
+<!-- END: LivePreviewsCarousel -->
+<!-- BEGIN: PhilosophySection -->
+<section class="py-10 px-5 reveal-on-scroll is-revealed overflow-hidden" id="philosophy">
+<div class="text-center mb-6">
+<span class="text-xs font-semibold tracking-widest text-gold-600 uppercase">✦ Our Philosophy</span>
+<h2 class="font-editorial text-3xl font-bold text-parchment-900 mt-1">
+          Crafted out of passion, <span class="italic text-[#b85d43]">not corporate KPIs.</span>
+</h2>
+</div>
+<!-- Storybook Card -->
+<div class="bg-white/95 backdrop-blur-md rounded-3xl border border-white/90 shadow-card-float relative overflow-hidden transition-all duration-300 hover:shadow-card-lift sm:p-7 p-5"><div class="absolute -right-6 -bottom-6 w-28 h-28 bg-gold-400/10 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Large Decorative Pull-Quote -->
+<blockquote class="font-editorial text-xl sm:text-[22px] italic font-normal text-parchment-900 leading-relaxed border-l-2 border-[#b85d43] pl-4 sm:pl-5 mb-5">
+  "You aren't paying for business overheads, project managers, or bloated agency software. You are simply paying for the time, care, and craft poured directly into your digital home."
+</blockquote>
+<!-- Story Narrative Body -->
+<div class="space-y-3.5 mb-6 text-stone-800 text-[14px] sm:text-[15px] font-normal leading-relaxed text-left">
+<p class="">Founded by Wynn, creator of <a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="https://beerlens.tapchibeer.net/" rel="noopener noreferrer" target="_blank">Beer Lens</a> and <a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="https://tapchibeer.net/en" rel="noopener noreferrer" target="_blank">Beer Magazine</a>. After years of running independent media and working with passionate artisans, I saw hardworking Aussie operators getting ripped off by $5,000 corporate agencies and clunky WordPress subscriptions.</p>
+<p class="text-stone-700/90">
+    WynnPages was born from the exact same craft ethos: pure, handcrafted, high-performance static websites built with genuine love and care.
+  </p>
+</div>
+<!-- Author Attribution Footer -->
+<div class="flex items-center gap-3.5 pt-4 border-t border-parchment-200/80">
+<div class="w-11 h-11 rounded-full bg-terracotta-400/20 border border-terracotta-400/40 flex items-center justify-center font-editorial font-bold text-terracotta-600 text-lg shadow-xs transition-transform duration-300 hover:rotate-6 shrink-0">
+    W
+  </div>
+<div class="text-left">
+<div class="font-editorial text-sm sm:text-base font-bold text-parchment-900 tracking-tight">Handcrafted by Wynn</div>
+<div class="text-[11px] font-medium text-stone-500 tracking-wide">Brisbane &amp; Sunshine Coast, QLD</div>
+</div>
+</div></div>
+</section>
+<!-- END: PhilosophySection -->
+<!-- BEGIN: InteractiveAnalysisStepSection -->
+<section class="py-10 px-5 reveal-on-scroll is-revealed" id="craft-journey">
+<div class="text-center mb-7">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/60 border border-amber-200/70 mb-2"><span class="text-gold-600 animate-float text-xs">✦</span><span class="text-[11px] font-semibold tracking-widest text-gold-600 uppercase">THE CRAFT JOURNEY</span></div>
+<h2 class="font-editorial text-3xl font-bold text-parchment-900 mt-1">Three steps to a<br class=""><span class="italic text-[#b85d43] font-normal"><b>beautiful web presence.</b></span></h2>
+<p class="text-xs text-parchment-800/80 mt-1.5 max-w-xs mx-auto leading-relaxed">Effortless, transparent, and completely free of agency jargon.</p>
+</div>
+<!-- Interactive Timeline Container with Vertical Artisan Connector Line -->
+<div class="relative max-w-sm mx-auto" id="craft-journey-flow">
+<div class="space-y-4 relative z-10" id="steps-card-stack">
+<!-- Artisanal Stitched Running Thread & Needle Track -->
+<div aria-hidden="true" class="absolute left-[38px] top-6 bottom-6 w-5 -translate-x-1/2 pointer-events-none z-0 hidden sm:block">
+<svg class="w-full h-full overflow-visible" fill="none" preserveAspectRatio="none" viewBox="0 0 20 400">
+<path d="M10 10 L10 390" stroke="rgba(184, 93, 67, 0.15)" stroke-linecap="round" stroke-width="3"></path>
+<path class="animate-thread-dash" d="M10 10 L10 390" stroke="#b85d43" stroke-dasharray="6 4.5" stroke-linecap="round" stroke-width="1.75"></path>
+<g transform="translate(10, 8) rotate(-25)">
+<line stroke="#d49b28" stroke-linecap="round" stroke-width="2" x1="0" x2="0" y1="-16" y2="12"></line>
+<ellipse cx="0" cy="-11" fill="#fcf9f3" rx="1" ry="3" stroke="#b8581f" stroke-width="0.8"></ellipse>
+<circle cx="0" cy="-11" fill="#b85d43" r="0.7"></circle>
+</g>
+<g transform="translate(10, 135)">
+<circle cx="0" cy="0" fill="#fcf9f3" r="3.5" stroke="#d97736" stroke-width="1.5"></circle>
+<circle cx="0" cy="0" fill="#96432b" r="1.5"></circle>
+</g>
+<g transform="translate(10, 268)">
+<circle cx="0" cy="0" fill="#fcf9f3" r="3.5" stroke="#d97736" stroke-width="1.5"></circle>
+<circle cx="0" cy="0" fill="#96432b" r="1.5"></circle>
+</g>
+<g transform="translate(10, 390)">
+<circle cx="0" cy="0" fill="#d49b28" r="4" stroke="#b8581f" stroke-width="1"></circle>
+<path d="M-2 -2 L2 2 M-2 2 L2 -2" stroke="#ffffff" stroke-width="1"></path>
+<path d="M2 3 Q 6 7, 4 12" fill="none" stroke="#b85d43" stroke-linecap="round" stroke-width="1.5"></path>
+</g>
+</svg>
+</div>
+<!-- Step 1 -->
+<div class="craft-step-card interactive-card backdrop-blur-md rounded-3xl p-5 border border-white shadow-card-float flex items-start gap-3.5 cursor-pointer relative overflow-hidden group bg-white/90 z-10" data-step="1">
+<div class="relative shrink-0 pt-0.5">
+<div class="step-num w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200/90 border border-amber-300 flex items-center justify-center font-editorial font-bold text-amber-900 text-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
+      1
+    </div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2 mb-1">
+<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">Share Your Story</h3>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">5-min brief</span>
+</div>
+<p class="text-xs text-parchment-900 font-normal leading-relaxed">A short 5-minute questionnaire or quick chat. No 20-page briefs or endless discovery workshops. Tell us what makes your craft special.</p>
+<div class="mt-2.5 pt-2 border-t border-parchment-200/50 flex items-center gap-2 text-[10px] text-parchment-800/70">
+<span class="text-gold-600 font-bold">✦</span>
+<span class="">Zero technical prep or jargon required</span>
+</div>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="craft-step-card interactive-card backdrop-blur-md rounded-3xl p-5 border border-white/80 shadow-card-float flex items-start gap-3.5 cursor-pointer relative overflow-hidden group active-step bg-white/95 z-10" data-step="2">
+<div class="relative shrink-0 pt-0.5">
+<div class="step-num w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-100/90 to-parchment-100 border border-amber-200/80 flex items-center justify-center font-editorial font-bold text-amber-900 text-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
+      2
+    </div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2 mb-1">
+<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">View The Canvas</h3>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> 48h staging link</span>
+</div>
+<p class="text-xs text-parchment-900 font-normal leading-relaxed">Within 48 hours, explore your private, fully functioning interactive web preview on your phone. See your colors, words, and photos come alive.</p>
+<div class="mt-2.5 pt-2 border-t border-parchment-200/50 flex items-center gap-2 text-[10px] text-parchment-800/70">
+<span class="text-gold-600 font-bold">✦</span>
+<span class="">Test live touch &amp; mobile tap interactions</span>
+</div>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="craft-step-card interactive-card bg-white/90 backdrop-blur-md rounded-3xl p-5 border border-white/80 shadow-card-float flex items-start gap-3.5 cursor-pointer relative overflow-hidden group z-10" data-step="3">
+<div class="relative shrink-0 pt-0.5">
+<div class="step-num w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-100/90 to-parchment-100 border border-amber-200/80 flex items-center justify-center font-editorial font-bold text-amber-900 text-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
+      3
+    </div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2 mb-1">
+<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">Welcome Home</h3>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+<span class="text-gold-600">✦</span> .com.au live &amp; secured
+      </span>
+</div>
+<p class="text-xs text-parchment-900 font-normal leading-relaxed">We connect your custom .com.au domain, launch with lightning-fast CDN edge hosting, and hand you 100% eternal ownership. Done in 72 hours.</p>
+<div class="mt-2.5 pt-2 border-t border-parchment-200/50 flex items-center gap-2 text-[10px] text-parchment-800/70">
+<span class="text-gold-600 font-bold">✦</span>
+<span class="">Zero lock-in · 100% eternal business ownership</span>
+</div>
+</div>
+</div></div>
+<!-- Small progress tracker footer -->
+<div class="mt-4 pt-3 border-t border-parchment-300/60 flex items-center justify-between px-2 text-[11px] text-parchment-800/75">
+<span class="flex items-center gap-1.5 font-medium">
+<span class="text-gold-500 animate-float">✦</span> Interactive journey
+      </span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-terracotta-600">Tap card to focus step</span>
+</div>
+</div>
+</section>
+<!-- END: InteractiveAnalysisStepSection -->
+<!-- BEGIN: ClientCategoriesSection -->
+<section class="py-10 px-5 reveal-on-scroll is-revealed"><div class="text-center mb-6">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/60 border border-amber-200/70 mb-2"><span class="text-gold-600 font-bold text-xs animate-float">✦</span><span class="text-[11px] font-semibold tracking-widest text-gold-600 uppercase">THE ZERO-RISK GUARANTEE</span></div>
+<h2 class="font-editorial text-3xl font-bold text-parchment-900 mt-1">Built for local legends who<br class=""><span class="italic text-[#b85d43]">value simplicity.</span></h2>
+<p class="text-xs text-parchment-800/80 mt-2 max-w-xs mx-auto leading-relaxed">
+Every website is hand-coded to highlight your unique craft, convert visitors, and load instantly.
+</p>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<!-- Tile 1 (Preserving https://lh3.googleusercontent.com/aida/AEtjO1WDHwnW0A4aIlWvv9LXI_6DP_kkHFwMH4rGwNfHtzPgRZylU8XaCn3auckeNo8kfJYhO0Qy_OWsh_XyDjhxaOqCh09msxlVQtnrKRwj6zxmu56SxsbnTEpmmxRD2obLZNmSYtr5SnV5MkK5-Ia1qR5GpDhmkknPIO_Aunu-2NNPuH9_EDqQ4gq_IT5YqnwbCh_UMAtGLbBDjaMqlGvFrZLnFMA9P3ff9tlU4bKOIILVXJpLZ3nnPKubi7TP) -->
+<div class="interactive-card bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col justify-between cursor-pointer group">
+<div class="h-28 w-full rounded-2xl overflow-hidden mb-3 bg-stone-100 relative shadow-xs">
+<img alt="Trades &amp; Builders" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" src="https://lh3.googleusercontent.com/aida/AEtjO1WDHwnW0A4aIlWvv9LXI_6DP_kkHFwMH4rGwNfHtzPgRZylU8XaCn3auckeNo8kfJYhO0Qy_OWsh_XyDjhxaOqCh09msxlVQtnrKRwj6zxmu56SxsbnTEpmmxRD2obLZNmSYtr5SnV5MkK5-Ia1qR5GpDhmkknPIO_Aunu-2NNPuH9_EDqQ4gq_IT5YqnwbCh_UMAtGLbBDjaMqlGvFrZLnFMA9P3ff9tlU4bKOIILVXJpLZ3nnPKubi7TP">
+</div>
+<div>
+<h3 class="font-editorial font-bold text-base text-parchment-900">Trades &amp; Builders</h3>
+<p class="text-[11px] text-parchment-800/70 mt-1">Plumbing, sparkies, roofing. Direct click-to-call buttons.</p>
+</div>
+</div>
+<!-- Tile 2 (Preserving https://lh3.googleusercontent.com/aida/AEtjO1V5FqFVkAYF50zUmb0hoQ0lKu3Sr1QbFAZr8IzcFW7_yzeao5yZRGeDuiGIDO2wroRRQp1QQzZLndQKGwpdYLkURdnElJVzm5a93uzayPg7bpKBOVQnDZ-nB8nfr_ijW_Kz9GflJgLemlSrPssamqxSV0U2DlYf3rUqgWu0Kj2aELUbm3fDgqpF6qi8N-NNP-qkh6-abqqvaiK731QwMSHsjD5ciXaZDfQJ-MJYZK9WIf9n3H6Mrh7R8Wk5) -->
+<div class="interactive-card bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col justify-between cursor-pointer group">
+<div class="h-28 w-full rounded-2xl overflow-hidden mb-3 bg-stone-100 relative shadow-xs">
+<img alt="Cafes &amp; Bakeries" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" src="https://lh3.googleusercontent.com/aida/AEtjO1V5FqFVkAYF50zUmb0hoQ0lKu3Sr1QbFAZr8IzcFW7_yzeao5yZRGeDuiGIDO2wroRRQp1QQzZLndQKGwpdYLkURdnElJVzm5a93uzayPg7bpKBOVQnDZ-nB8nfr_ijW_Kz9GflJgLemlSrPssamqxSV0U2DlYf3rUqgWu0Kj2aELUbm3fDgqpF6qi8N-NNP-qkh6-abqqvaiK731QwMSHsjD5ciXaZDfQJ-MJYZK9WIf9n3H6Mrh7R8Wk5">
+</div>
+<div>
+<h3 class="font-editorial font-bold text-base text-parchment-900">Cafes &amp; Bakeries</h3>
+<p class="text-[11px] text-parchment-800/70 mt-1">Mobile digital menus, opening hours &amp; location map.</p>
+</div>
+</div>
+<!-- Tile 3 (Preserving https://lh3.googleusercontent.com/aida/AEtjO1XhUIBMf9Hh89Sj-5xAH3gocWRi4AUA5q_mdaZhEaoUvUjqBKVfx9CosFY_wBk_V4xc3fcrIUa-TiBXGOCFMAyTc3fwCYbObDjfrOeRyR_tu1imG5luyHbefYkQJ0J3ITU5-jtvcAceLw1QPvAeF9AlIAkSdeeZOZy6vWqfkGn8Yd9RDrk8PS5mtQDjiOzmyrWmaxrR3bUnPiPQnDNikkYwFplE03ppDU1du4ou7_vRxxpCvf0ISEWBwK4y) -->
+<div class="interactive-card bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col justify-between cursor-pointer group">
+<div class="h-28 w-full rounded-2xl overflow-hidden mb-3 bg-stone-100 relative shadow-xs">
+<img alt="Salons &amp; Studios" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" src="https://lh3.googleusercontent.com/aida/AEtjO1XhUIBMf9Hh89Sj-5xAH3gocWRi4AUA5q_mdaZhEaoUvUjqBKVfx9CosFY_wBk_V4xc3fcrIUa-TiBXGOCFMAyTc3fwCYbObDjfrOeRyR_tu1imG5luyHbefYkQJ0J3ITU5-jtvcAceLw1QPvAeF9AlIAkSdeeZOZy6vWqfkGn8Yd9RDrk8PS5mtQDjiOzmyrWmaxrR3bUnPiPQnDNikkYwFplE03ppDU1du4ou7_vRxxpCvf0ISEWBwK4y">
+</div>
+<div>
+<h3 class="font-editorial font-bold text-base text-parchment-900">Salons &amp; Studios</h3>
+<p class="text-[11px] text-parchment-800/70 mt-1">Direct links to your Fresha, Timely, or online booking pages.</p>
+</div>
+</div>
+<!-- Tile 4 (Preserving https://lh3.googleusercontent.com/aida/AEtjO1XxQ48pEANEbL_04ZDVw0HPq1n3UoCoSZaemIlOTGsvC3I-sQfBmGKdupmIp3X-JIFH0SuFkzw3RsLviHCCYZLjHKPuAaHcGnBg5m9FY-r6FxGKpnZCXTV388MIDvPg9JKQxcVYiehU8W3ZQc7xZxiToqJe9gcOMKULJ-bMaZuvQOpfRrXFWKVI0g5v-vT5Gx7pOC_-uRP3tkXe2_ErAxXG3DmpOTqWNl8Vz1XqYGe0K3BhRA6WMtojGFfC) -->
+<div class="interactive-card bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col justify-between cursor-pointer group">
+<div class="h-28 w-full rounded-2xl overflow-hidden mb-3 bg-stone-100 relative shadow-xs">
+<img alt="Mobile Services" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" src="https://lh3.googleusercontent.com/aida/AEtjO1XxQ48pEANEbL_04ZDVw0HPq1n3UoCoSZaemIlOTGsvC3I-sQfBmGKdupmIp3X-JIFH0SuFkzw3RsLviHCCYZLjHKPuAaHcGnBg5m9FY-r6FxGKpnZCXTV388MIDvPg9JKQxcVYiehU8W3ZQc7xZxiToqJe9gcOMKULJ-bMaZuvQOpfRrXFWKVI0g5v-vT5Gx7pOC_-uRP3tkXe2_ErAxXG3DmpOTqWNl8Vz1XqYGe0K3BhRA6WMtojGFfC">
+</div>
+<div>
+<h3 class="font-editorial font-bold text-base text-parchment-900">Mobile Services</h3>
+<p class="text-[11px] text-parchment-800/70 mt-1">Car detailing, pet grooming, mobile health clinics.</p>
+</div>
+</div>
+</div></section>
+<!-- END: ClientCategoriesSection -->
+<!-- BEGIN: SwipeApprovalSection -->
+<section class="py-10 px-5 flex flex-col items-center reveal-on-scroll is-revealed"><div class="text-center mb-6">
+<span class="text-xs font-semibold tracking-widest text-gold-600 uppercase mb-2 inline-block">✦ THE ZERO-RISK GUARANTEE</span>
+<h2 class="font-editorial text-3xl font-bold text-parchment-900 mt-1">You approve. <span class="italic text-[#b85d43]">We publish.</span></h2>
+<p class="text-xs text-parchment-800/80 mt-2 max-w-xs leading-relaxed">Within 48 hours, a private staging link is sent directly to your phone. Review your handcrafted site, request tweaks with a tap, or approve it for an immediate global launch. You hold all the power.</p>
+</div>
+<!-- Sleek Realistic Smartphone / iPhone Mockup Container -->
+<div class="w-full max-w-[320px] mx-auto relative">
+<!-- Confetti celebration container -->
+<div class="absolute inset-0 pointer-events-none z-50 overflow-hidden hidden" id="confetti-holder"></div>
+<div class="relative rounded-[48px] p-2.5 bg-gradient-to-b from-[#e8decb] via-[#dcd2be] to-[#c8bba4] border-[4px] border-[#ede3cf] shadow-2xl ring-1 ring-black/10 transition-all duration-300" style="box-shadow: 0 28px 65px -12px rgba(78, 64, 49, 0.28), 0 10px 24px -6px rgba(78, 64, 49, 0.16), inset 0 0 0 1.5px rgba(255, 255, 255, 0.85);"><div class="relative rounded-[38px] bg-[#fcf9f3] overflow-hidden border border-stone-300/80 flex flex-col min-h-[510px] shadow-sm"><div class="pt-2.5 px-5 pb-1.5 flex items-center justify-between text-[11px] font-semibold text-stone-800 select-none z-30 bg-[#fcf9f3]"><span class="tracking-tight font-medium">9:41</span><div class="w-20 h-4 bg-[#231f1a] rounded-full mx-auto -mt-0.5 flex items-center justify-center"><div class="w-2 h-2 rounded-full bg-stone-800 mr-6"></div><div class="w-1.5 h-1.5 rounded-full bg-stone-700"></div></div><div class="flex items-center gap-1.5 text-[10px]"><svg class="w-3 h-3 fill-current text-stone-700" viewBox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21L24 8.98C20.93 5.9 16.69 4 12 4Z"></path></svg><svg class="w-4 h-2.5 text-stone-700" viewBox="0 0 24 12"><rect fill="none" height="12" rx="3" stroke="currentColor" stroke-width="2" width="20"></rect><rect fill="currentColor" height="8" rx="1.5" width="14" x="2" y="2"></rect><path d="M22 4v4" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></svg></div></div><div class="px-3 pb-2 pt-0.5 bg-[#fcf9f3] z-20 border-b border-stone-200/80"><div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/95 border border-stone-200/90 shadow-xs text-[10px] text-stone-700"><div class="flex items-center gap-1.5 truncate pr-1"><svg class="w-3 h-3 text-emerald-600 fill-current shrink-0" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"></path></svg><span class="font-mono font-medium text-stone-800 tracking-tight text-[9px] truncate">emeraldcafe.com.au</span></div><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[8px] font-bold text-emerald-800 border border-emerald-200 shrink-0" id="staging-status-badge"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE STAGING</span></div></div><div class="p-3 flex-1 flex flex-col justify-between bg-[#FAF7F2] relative"><div class="bg-white rounded-2xl border border-stone-200 shadow-card-float overflow-hidden flex flex-col text-left transition-all" id="swipeable-card"><div class="px-3 py-2 bg-[#fcf9f3] border-b border-stone-200/70 flex items-center justify-between"><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-amber-100 text-[#96432b] flex items-center justify-center font-editorial font-bold text-xs border border-amber-200/80">E</span><span class="font-editorial font-bold text-xs text-parchment-900 tracking-tight">Emerald Cafe</span></div><div class="flex items-center gap-1.5"><span class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-parchment-900 text-white tracking-tight">Book Table</span><span class="text-xs text-stone-600 font-bold px-1">☰</span></div></div><div class="relative w-full overflow-hidden bg-stone-100 group"><img alt="Emerald Cafe" class="w-full h-44 object-cover rounded-xl" src="https://lh3.googleusercontent.com/aida/AEtjO1X-9_OVJ0RDeb10hCxOjdgUwxVDLdExZiAfsNz_7NXIyeyPx66H1CnNE05BqUTvKT8pJ_2ALVLqEeqgJznoPBga7ErfrVtf0BwzFci4BBmxccTo0SJmgi9Lo4EOXXY8qVn6cW300GUNNOrBf2w3hYwpY3vOYuaezti7-0Js5RkJLPwqBlEB2Cyk7_9fXTASpNUzmDJ9zeVw_c2y4C0TTwBLCp6iuABV3L9c-zcaWt3v_7YTSvMIFbpZ_19D"><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-3 text-white"><span class="text-[8px] uppercase tracking-widest text-amber-200 font-bold mb-0.5">Est. 2025 · Brassall, QLD</span><h4 class="font-editorial italic font-bold text-sm leading-tight text-white drop-shadow-sm">"Where every moment is a precious gem"</h4></div></div><div class="p-3 bg-white flex flex-col gap-2"><div class="flex items-center justify-between text-[9px] text-stone-600 border-b border-stone-100 pb-1.5"><span class="flex items-center gap-1 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 7am – 3pm Daily</span><span class="font-semibold text-stone-500">Ipswich, Brisbane</span></div><p class="text-[10px] text-stone-700 leading-snug font-normal">Artisanal single-origin espresso, sourdough pastries &amp; local seasonal breakfast.</p><div class="flex items-center gap-2 pt-0.5"><div class="flex-1 text-center py-1 rounded-lg bg-amber-50 text-amber-900 font-semibold text-[9px] border border-amber-200/70">Explore Menu (80+)</div><div class="text-center px-2 py-1 rounded-lg bg-stone-100 text-stone-800 font-medium text-[9px]">Directions</div></div></div></div><div class="mt-3 mb-1 flex items-center justify-center z-10"><div class="inline-flex items-center gap-2 bg-white/95 backdrop-blur-xl p-1.5 rounded-full border border-stone-200 shadow-md"><button aria-label="Request tweak" class="apple-spring-btn px-3 h-8 rounded-full bg-stone-100 text-stone-700 hover:bg-stone-200/70 border border-stone-200 flex items-center gap-1.5 text-[11px] font-bold active:scale-95 transition-all duration-200 shadow-xs whitespace-nowrap shrink-0" id="btn-reject"><span class="text-xs font-black">✕</span><span class="">Request tweak</span></button><button aria-label="Approve and publish" class="apple-spring-btn px-3 h-8 rounded-full bg-emerald-600 text-white hover:bg-emerald-500 border border-emerald-700/30 flex items-center gap-1.5 text-[11px] font-bold active:scale-95 transition-all duration-200 shadow-sm whitespace-nowrap shrink-0" id="btn-approve"><span class="text-xs font-black text-amber-200" id="approve-icon">✓</span><span id="approve-label" class="">Approve &amp; Launch</span></button></div></div></div><div class="pb-2 pt-1 flex justify-center bg-[#FAF7F2]"><div class="w-24 h-1 bg-stone-300 rounded-full"></div></div></div></div><p class="text-center text-[10px] tracking-widest text-parchment-800/60 uppercase mt-3 font-semibold" id="approval-instruction">Tap checkmark to publish live to your .com.au domain</p></div></section>
+<!-- END: SwipeApprovalSection -->
+<!-- BEGIN: PricingAndIndependenceSection -->
+<section class="py-10 px-5 reveal-on-scroll is-revealed" id="pricing">
+<!-- Contrast Section: Antidote vs Traditional Agency with tactile taps -->
+<div class="mb-10"><div class="text-center mb-6"><span class="text-xs font-semibold tracking-widest text-gold-600 uppercase">✦ THE HONEST CONTRAST</span><h2 class="font-editorial text-3xl font-bold text-parchment-900 mt-1">A different kind of <span class="italic text-[#b85d43]">web studio.</span></h2></div><div class="space-y-4">
+<!-- Traditional Card -->
+<div class="interactive-card bg-stone-100/90 rounded-3xl p-5 border border-parchment-200/80 shadow-xs opacity-80 cursor-pointer" id="agency-card">
+<div class="flex items-center justify-between pb-3 mb-3.5 border-b border-parchment-200/60">
+<h3 class="font-editorial text-lg font-bold text-parchment-800/70">The Standard Agency</h3>
+<span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-parchment-200/70 text-parchment-800/60">Traditional</span>
+</div>
+<ul class="space-y-2.5 text-xs text-parchment-800/70 font-medium">
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-stone-100 text-parchment-800/60 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs">✕</span>
+<span class="font-medium">$2,000+ upfront setup costs.</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-stone-100 text-parchment-800/60 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs">✕</span>
+<span class="font-medium">$50 - $150 in monthly 'maintenance' retainers.</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-stone-100 text-parchment-800/60 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs">✕</span>
+<span class="font-medium">They own your domain name, locking you in.</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-stone-100 text-parchment-800/60 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs">✕</span>
+<span class="font-medium">Built on clunky, slow platforms requiring constant updates.</span>
+</li>
+</ul>
+</div>
+<!-- WynnPages Antidote Card -->
+<div class="interactive-card bg-white rounded-3xl p-5 border border-amber-300 shadow-xl relative overflow-hidden cursor-pointer" id="antidote-card">
+<div class="flex items-center justify-between pb-3 mb-3.5 border-b border-parchment-200/70">
+<div class="flex items-center gap-1.5">
+<span class="text-gold-600 font-bold text-xs animate-float">✦</span>
+<h3 class="font-editorial text-lg font-bold text-parchment-900">WynnPages</h3>
+</div>
+<span class="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">The Antidote</span>
+</div>
+<ul class="space-y-2.5 text-xs text-parchment-900 font-semibold">
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold shrink-0 shadow-xs">✓</span>
+<span class="font-medium">A flat $599 one-time fee.</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold shrink-0 shadow-xs">✓</span>
+<span class="font-medium">$0 monthly agency retainers.</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold shrink-0 shadow-xs">✓</span>
+<span class="font-medium">You hold the keys: 100% ownership of your domain.</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold shrink-0 shadow-xs">✓</span>
+<span class="font-medium">Hand-coded from scratch for instant load times and zero maintenance.</span>
+</li>
+</ul>
+</div></div></div>
+<!-- Bespoke Cutting Grid Pricing Card with Pulsating Glow Accent -->
+<div class="pulse-cutting-card relative rounded-3xl p-6 sm:p-7 mb-8 shadow-2xl overflow-hidden text-parchment-900 border border-amber-300/40" style="background: linear-gradient(145deg, rgb(107, 59, 167) 0%, rgb(85, 45, 140) 50%, rgb(70, 34, 121) 100%);"><div class="artisan-watermarks-layer absolute inset-0 pointer-events-none z-0 overflow-hidden"><svg class="watermark-tool absolute -top-3 -right-2 w-28 h-28 text-amber-200/20 stroke-current -rotate-12 transition-transform duration-300 pointer-events-none" data-speed="0.12" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4L8.12 15.88"></path><path d="M14.47 14.48L20 20"></path><path d="M8.12 8.12L12 12"></path></svg><svg class="watermark-tool absolute top-1/3 -left-5 w-24 h-24 text-white/15 stroke-current rotate-12 transition-transform duration-300 pointer-events-none" data-speed="-0.08" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><path d="M12 7v3"></path><path d="M6 21l5-11"></path><path d="M18 21l-5-11"></path><path d="M8.5 15.5a9.5 9.5 0 0 0 7 0"></path><circle cx="12" cy="10" r="1"></circle></svg><svg class="watermark-tool absolute -bottom-4 -right-4 w-32 h-32 text-amber-200/20 stroke-current rotate-45 transition-transform duration-300 pointer-events-none" data-speed="0.18" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" viewBox="0 0 24 24"><path d="m15.5 3.5 5 5"></path><path d="M17 2l5 5-11 11-5-5L17 2z"></path><path d="m7 11 3 3"></path><path d="M10 8l3 3"></path><path d="m4 14 3 3"></path><path d="m13 5 3 3"></path><path d="M2 22l4-1.5L4.5 19 2 22z"></path></svg><svg class="watermark-tool absolute bottom-12 -left-3 w-28 h-28 text-white/15 stroke-current -rotate-6 transition-transform duration-300 pointer-events-none" data-speed="-0.14" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.1" viewBox="0 0 32 32"><path d="M24 4 L28 8 L8 28 L4 24 Z"></path><path d="M7 21 L11 25"></path><path d="M10 18 L14 22"></path><path d="M13 15 L17 19"></path><path d="M16 12 L20 16"></path><path d="M19 9 L23 13"></path><path d="M22 6 L26 10"></path><path d="M4 28 C 4 22, 12 20, 16 26 C 20 30, 28 26, 29 20" stroke-dasharray="2 2"></path></svg></div><div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(rgba(255, 255, 255, 0.38) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.38) 1px, transparent 1px); background-size: 24px 24px;"></div><div class="absolute top-2 left-3 right-3 flex items-center justify-between text-[9px] font-mono tracking-widest text-white/40 pointer-events-none select-none z-10"><span class="">+ 00.0</span><span class="hidden sm:inline">SCALE 1:1 · BESPOKE PATTERN</span><span class="">+ 72h</span></div><div class="absolute top-0 left-0 right-0 h-1.5 flex justify-between px-3 pointer-events-none opacity-30 select-none overflow-hidden"><div class="flex gap-1.5"><span class="">|</span><span class="">·</span><span class="">|</span><span class="">·</span><span class="">|</span><span class="">·</span><span class="">|</span><span class="">·</span><span class="">|</span></div><div class="flex gap-1.5"><span class="">|</span><span class="">·</span><span class="">|</span><span class="">·</span><span class="">|</span><span class="">·</span><span class="">|</span><span class="">·</span><span class="">|</span></div></div><div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/15 blur-2xl pointer-events-none"></div><div class="relative z-10 text-center mb-6 pt-2"><div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-[10px] uppercase font-bold tracking-widest text-amber-200 mb-3.5 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></span>Bespoke Client Launch</div><h3 class="font-editorial text-3xl sm:text-4xl font-normal italic tracking-wide text-white drop-shadow-sm mb-2.5 leading-tight">Your bespoke web<br>presence, crafted for good.</h3><p class="text-xs sm:text-sm text-purple-100/90 font-medium max-w-xs mx-auto leading-relaxed">Transparent flat pricing. No subscriptions, zero agency retainers.</p></div><div class="relative z-10 bg-[#fdfbf7]/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 shadow-card-float mb-5 border border-white/90 transition-transform duration-300 hover:scale-[1.01]"><div class="pb-4 mb-4 border-b border-parchment-200/80"><div class="flex items-center gap-2 mb-3"><span class="w-5 h-5 rounded-full bg-amber-100 border border-amber-200/80 flex items-center justify-center text-[#96432b] shrink-0 animate-float"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L14.2 8.3L20.5 10.5L14.2 12.7L12 19L9.8 12.7L3.5 10.5L9.8 8.3L12 2Z" fill="#96432b" stroke="#96432b" stroke-linejoin="round" stroke-width="1"></path><circle cx="12" cy="10.5" fill="#fcf9f3" r="1.5"></circle></svg></span><span class="font-editorial font-bold italic text-lg sm:text-xl text-parchment-900 leading-tight">The Complete Build</span></div><div class="flex flex-wrap items-center justify-between pt-1 gap-2"><div class="flex items-baseline gap-1.5 shrink-0"><span class="font-mono font-bold text-3xl text-parchment-900 tracking-tight">$599</span><span class="text-xs font-bold text-parchment-800/80 uppercase">AUD</span></div><span class="inline-flex items-center px-3 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-900 border border-amber-200/80 shadow-xs shrink-0">One-Off · Forever Yours</span></div></div><div class="space-y-3.5 text-xs sm:text-[13px] text-parchment-900 pb-1"><div class="flex items-start gap-3"><span class="w-5 h-5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs mt-0.5">✦</span><span class="font-medium leading-relaxed">Bespoke, hand-crafted one-page design.</span></div><div class="flex items-start gap-3"><span class="w-5 h-5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs mt-0.5">✦</span><span class="font-medium leading-relaxed">Flawless mobile &amp; desktop experience.</span></div><div class="flex items-start gap-3"><span class="w-5 h-5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs mt-0.5">✦</span><span class="font-medium leading-relaxed">Seamless contact (Click-to-call, SMS, WhatsApp &amp; Email).</span></div><div class="flex items-start gap-3"><span class="w-5 h-5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs mt-0.5">✦</span><span class="font-medium leading-relaxed">Ready for Google Search, Local Maps &amp; Facebook.</span></div><div class="flex items-start gap-3"><span class="w-5 h-5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs mt-0.5">✦</span><span class="font-medium leading-relaxed">Lifetime secure hosting—on us.</span></div></div></div><a class="shimmer-btn apple-spring-btn relative z-10 w-full py-4 px-6 rounded-2xl bg-stone-900 text-white flex items-center justify-between shadow-sm hover:bg-black transition-all duration-200 border border-white/20 cursor-pointer" href="#quote-box"><div class="flex items-center gap-2"><span class="font-bold text-sm sm:text-base text-white tracking-wide">Claim Build Slot</span></div><div class="flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20"><span class="font-semibold text-xs sm:text-sm text-amber-200 tracking-wide">$599 AUD</span><span class="text-amber-300 text-xs animate-float">✦</span></div></a></div>
+<!-- FAQ Accordion with '+' to '×' Rotating Icon -->
+<div class="mt-10" id="faq"><div class="text-center mb-6"><span class="text-xs font-semibold tracking-widest text-gold-600 uppercase">✦ Honest Clarifications</span><h4 class="font-editorial text-2xl sm:text-3xl font-bold text-parchment-900 mt-1">Frequently Answered</h4><p class="text-xs text-parchment-800/75 mt-1 max-w-xs mx-auto leading-relaxed">Everything you need to know about independent ownership, domains, and zero retainers.</p></div><div class="space-y-3.5" id="faq-accordion-container">
+<!-- FAQ Item 1 -->
+<div class="faq-item bg-white rounded-2xl border p-5 sm:p-6 transition-all duration-300 bg-white/80 border-white shadow-xs"><button aria-controls="faq-answer-1" aria-expanded="false" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/60 px-2.5 py-1 rounded-full shrink-0">01</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">Since there are no monthly fees, how do you maintain my site?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-1"><div class="overflow-hidden"><div class="mt-3 pt-3 border-t border-amber-100 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/85 leading-relaxed space-y-2.5"><p class="">The secret is in how we craft it. Agencies use heavy, bloated platforms (like WordPress) that require constant security updates and expensive servers. We hand-write pure, clean code.</p><p class="italic font-editorial text-base sm:text-lg text-parchment-900 leading-relaxed">This means your site's server costs are practically zero, and it can't be 'hacked'. We simply pass that freedom on to you. You pay once for our design time. That's it.</p></div></div></div></div>
+<!-- FAQ Item 2 -->
+<div class="faq-item bg-white hover:bg-white/95 rounded-2xl border border-parchment-200/80 p-5 sm:p-6 transition-all duration-300 bg-white/80 border-white shadow-xs"><button aria-controls="faq-answer-2" aria-expanded="false" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/40 px-2.5 py-1 rounded-full shrink-0">02</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">Do I actually own my .com.au domain name?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-2"><div class="overflow-hidden"><div class="mt-3 pt-2.5 border-t border-parchment-200/60 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/80 leading-relaxed"><p class="">100% yes. We never register domains under our name—that's how shady agencies trap you. You will buy it yourself directly (usually about $20/year) so you are the legal owner. You then simply grant us "technical access" to connect it. If you ever outgrow us, you take everything and walk away freely.</p></div></div></div></div>
+<!-- FAQ Item 3 (Initially open) -->
+<div class="faq-item bg-white hover:bg-white/95 rounded-2xl border border-parchment-200/80 p-5 sm:p-6 transition-all duration-300 is-open bg-white/95 border-amber-200/70 shadow-card-float"><button aria-controls="faq-answer-3" aria-expanded="true" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/40 px-2.5 py-1 rounded-full shrink-0">03</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">I am terrible with tech. Is buying a domain hard?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-3"><div class="overflow-hidden"><div class="mt-3 pt-2.5 border-t border-parchment-200/60 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/80 leading-relaxed"><p class="">Not at all, mate. Once you start your project, we send you a simple 1-minute video showing exactly what buttons to click to buy it securely. You do that one step, and we handle all the complex coding and DNS setups in the background.</p></div></div></div></div>
+<!-- FAQ Item 4 -->
+<div class="faq-item bg-white hover:bg-white/95 rounded-2xl border border-parchment-200/80 p-5 sm:p-6 transition-all duration-300 bg-white/80 border-white shadow-xs"><button aria-controls="faq-answer-4" aria-expanded="false" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/40 px-2.5 py-1 rounded-full shrink-0">04</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">What if I need updates or change a service in 6 months?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-4"><div class="overflow-hidden"><div class="mt-3 pt-2.5 border-t border-parchment-200/60 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/80 leading-relaxed"><p class="">Our sites are designed to be timeless, but businesses evolve. If you ever need to swap a photo or update some text down the track, just send us an email. We handle minor updates for a transparent, small one-off fee—only when you actually need it. No forced monthly maintenance retainers.</p></div></div></div></div>
+<!-- FAQ Item 5 -->
+<div class="faq-item bg-white hover:bg-white/95 rounded-2xl border border-parchment-200/80 p-5 sm:p-6 transition-all duration-300 bg-white/80 border-white shadow-xs"><button aria-controls="faq-answer-5" aria-expanded="false" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/40 px-2.5 py-1 rounded-full shrink-0">05</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">Will this website help me show up on Google Maps?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-5"><div class="overflow-hidden"><div class="mt-3 pt-2.5 border-t border-parchment-200/60 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/80 leading-relaxed"><p class="">Absolutely. Your digital home is built with lightning-fast load times and a flawless mobile-first structure—things Google loves. We also embed your exact service area or physical location directly into the site to boost your local SEO foundations.</p></div></div></div></div>
+<!-- FAQ Item 6 -->
+<div class="faq-item bg-white hover:bg-white/95 rounded-2xl border border-parchment-200/80 p-5 sm:p-6 transition-all duration-300 bg-white/80 border-white shadow-xs"><button aria-controls="faq-answer-6" aria-expanded="false" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/40 px-2.5 py-1 rounded-full shrink-0">06</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">What if I don't have a proper logo or professional photos yet?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-6"><div class="overflow-hidden"><div class="mt-3 pt-2.5 border-t border-parchment-200/60 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/80 leading-relaxed"><p class="">No worries at all. We can design a clean, elegant typographic logo for you. For visuals, we have access to high-quality, authentic imagery that matches your specific trade or craft to get your presence looking highly professional from day one.</p></div></div></div></div>
+<!-- FAQ Item 7 -->
+<div class="faq-item bg-white hover:bg-white/95 rounded-2xl border border-parchment-200/80 p-5 sm:p-6 transition-all duration-300 bg-white/80 border-white shadow-xs"><button aria-controls="faq-answer-7" aria-expanded="false" class="faq-toggle w-full min-h-[48px] py-1 flex items-center justify-between text-left gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85d43] rounded-2xl select-none cursor-pointer" type="button"><div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2"><span class="font-mono font-bold text-xs text-terracotta-500 bg-amber-100/40 px-2.5 py-1 rounded-full shrink-0">07</span><span class="font-medium text-base text-parchment-900 leading-normal tracking-tight">How does the 72-hour turnaround &amp; revision work?</span></div><span class="faq-icon-rotator w-7 h-7 rounded-full bg-amber-100/80 text-amber-900 flex items-center justify-center text-sm font-bold shrink-0">+</span></button><div class="faq-grid-content" id="faq-answer-7"><div class="overflow-hidden"><div class="mt-3 pt-2.5 border-t border-parchment-200/60 pl-7 sm:pl-9 text-sm sm:text-base text-parchment-800/80 leading-relaxed"><p class="">Once you submit your quick onboarding brief, we head into the studio. Within 72 hours, we'll send you a private link. You'll see your live website side-by-side with our simple review tool. You can request any tweaks with one click before we officially launch it to the world.</p></div></div></div></div></div></div>
+</section>
+<!-- END: PricingAndIndependenceSection -->
+<!-- BEGIN: FinalCTAAndNewsletter -->
+<section class="py-12 px-5 text-center bg-gradient-to-b from-transparent to-parchment-300/40 reveal-on-scroll is-revealed">
+<span class="text-2xl mb-2 inline-block animate-float">✦</span>
+<h2 class="font-editorial text-3xl sm:text-4xl font-bold text-parchment-900 mb-3">
+        Ready for a website that <br><span class="italic text-[#b85d43]">feels like you?</span>
+</h2>
+<p class="text-xs text-parchment-800/80 max-w-xs mx-auto mb-6 leading-relaxed">Reserve your custom build. Only 4 client slots open per week to maintain pristine bespoke quality.</p>
+<a class="shimmer-btn inline-flex items-center justify-center gap-2 w-full py-4 px-6 rounded-2xl bg-parchment-900 text-amber-50 font-semibold text-sm hover:bg-black transition-all duration-200 mb-8 shadow-sm" href="#quote-box">
+<span class="">Begin your journey — $599</span>
+<span class="text-gold-400 animate-float">✦</span>
+</a>
+</section>
+<!-- END: FinalCTAAndNewsletter -->
+<!-- BEGIN: MainFooter -->
+<section class="py-8 px-5 reveal-on-scroll is-revealed" id="artisans-guarantee"><div class="interactive-card bg-[#fbf8f2]/95 backdrop-blur-md rounded-3xl p-6 border border-amber-200/60 shadow-card-float relative overflow-hidden text-center"><div class="absolute -right-6 -bottom-6 w-28 h-28 bg-gold-400/10 rounded-full blur-2xl pointer-events-none"></div><div class="w-10 h-10 mx-auto rounded-full bg-gold-400/20 border border-gold-500 flex items-center justify-center text-gold-600 text-sm font-bold mb-3 shadow-xs"><svg aria-hidden="true" class="w-5 h-5 transition-transform duration-300 hover:scale-110" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15 8L16.5 13.5L12 22L7.5 13.5L9 8L12 2Z" fill="#c26549" fill-opacity="0.18" stroke="#b8581f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path><path d="M12 2V12" stroke="#b8581f" stroke-linecap="round" stroke-width="1.5"></path><circle cx="12" cy="12.5" fill="#b8581f" r="1"></circle></svg></div><span class="text-[10px] font-bold uppercase tracking-widest text-terracotta-500 block mb-1">The Artisan's Guarantee</span><h3 class="font-editorial text-2xl font-bold text-stone-900 mb-3">My Personal Promise.</h3><div class="max-w-xs mx-auto mb-4 text-center" id="promise-text-container" style="font-family: Caveat, cursive;"><p class="text-xl sm:text-[22px] font-medium tracking-wide transition-all duration-700 mb-3 ink-reveal-para" style="color: rgb(35, 31, 29); line-height: 1.28; letter-spacing: 0.02em;"><span class="ink-word ink-settled">When</span> <span class="ink-word ink-settled">you</span> <span class="ink-word ink-settled">choose</span> <span class="ink-word ink-settled">WynnPages,</span> <span class="ink-word ink-settled">you</span> <span class="ink-word ink-settled">aren't</span> <span class="ink-word ink-settled">dealing</span> <span class="ink-word ink-settled">with</span> <span class="ink-word ink-settled">a</span> <span class="ink-word ink-settled">faceless</span> <span class="ink-word ink-settled">agency.</span> <span class="ink-word ink-settled">You</span> <span class="ink-word ink-settled">are</span> <span class="ink-word ink-settled">working</span> <span class="ink-word ink-settled">directly</span> <span class="ink-word ink-settled">with</span> <span class="ink-word ink-settled">the</span> <span class="ink-word ink-settled">person</span> <span class="ink-word ink-settled">who</span> <span class="ink-word ink-settled">designs</span> <span class="ink-word ink-settled">and</span> <span class="ink-word ink-settled">codes</span> <span class="ink-word ink-settled">your</span> <span class="ink-word ink-settled">site.</span></p><p class="text-xl sm:text-[22px] font-medium tracking-wide transition-all duration-700 ink-reveal-para" style="color: rgb(35, 31, 29); line-height: 1.28; letter-spacing: 0.02em;"><span class="ink-word ink-settled">I</span> <span class="ink-word ink-settled">take</span> <span class="ink-word ink-settled">immense</span> <span class="ink-word ink-settled">personal</span> <span class="ink-word ink-settled">pride</span> <span class="ink-word ink-settled">in</span> <span class="ink-word ink-settled">every</span> <span class="ink-word ink-settled">digital</span> <span class="ink-word ink-settled">home</span> <span class="ink-word ink-settled">I</span> <span class="ink-word ink-settled">build.</span> <span class="ink-word ink-settled">If</span> <span class="ink-word ink-settled">something</span> <span class="ink-word ink-settled">isn't</span> <span class="ink-word ink-settled">right,</span> <span class="ink-word ink-settled">I</span> <span class="ink-word ink-settled">am</span> <span class="ink-word ink-settled">just</span> <span class="ink-word ink-settled">a</span> <span class="ink-word ink-settled">direct</span> <span class="ink-word ink-settled">email</span> <span class="ink-word ink-settled">away.</span> <span class="ink-word ink-settled">Honest</span> <span class="ink-word ink-settled">work,</span> <span class="ink-word ink-settled">crafted</span> <span class="ink-word ink-settled">for</span> <span class="ink-word ink-settled">good.</span></p></div><div class="pt-3 border-t border-parchment-200/70"><div class="flex flex-col items-center justify-center">
+<!-- Authentic transparent signature (Preserving https://lh3.googleusercontent.com/aida-public/AB6AXuCyzwy54VK9fgCunckEdDSXtRtEfzvY7P9Gkq9-CNV9AQE7Sbn6BwRC7oFXAGznZrBcWE8baU0LB4jcpYDHMzw-MBHJRMSS8pSYzJ1KAleRrn-kjYAfW5WMq4KIe6tfMr3uVpaacXoqUhVQW34TohOWJJJUPbHoxN8uqbTxNdcVmcA9Q1c8P3qYZkP6cgTjbOPchwXriMeeuUdniboV67cIXH9VOXWWK6NoM8JdFhz05Oq1FSUn-UQMshzY6FfaCctAKpI) -->
+<img alt="Wynn's authentic signature — Creator of WynnPages" class="h-16 sm:h-20 w-auto object-contain mx-auto mb-2 signature-wipe" id="guarantee-signature" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa3vm1t5edSTcEN7PZLxL4OqvBal7gDLQv5PRVlQ_Al0RYFkwQCZbouJnTFtaCEohMHb-uwa-M_wKRcZx8dyUeYt-urKpX9B-HZOtuHwHI9nUMgn7dKGq2jpdM2c8foWgSUX4qZEGycsqOThswfiQ04XozC6R6kis98YOeABB4R1MI8CiUXJbp9XuXwaxlX513jEjRExzhXvUQG3fkevpLku6eBNHXkUB7B8UUFDrBY4v7gKCq0lM-VJllz7moXkgvH2k"><p class="font-editorial text-xs text-parchment-800 font-medium signature-signoff" id="guarantee-signoff">Cheers, <span class="font-editorial italic text-lg font-bold text-[#b8581f] inline-block hover:scale-105 transition-transform">Wynn</span> — The Creator of WynnPages.</p></div></div></div></section><footer class="pt-6 pb-12 px-6 border-t border-parchment-300/60 text-center text-xs text-parchment-900">
+<!-- Brand Lockup in footer (Preserving https://lh3.googleusercontent.com/aida/AEtjO1WWHFRCQM4E01y5_Jvsu70jO7OufDvf2DzvuRzjPztYei1_zNk4aWfqU5rm5BuN3VJA54GhRyyTMP2BWNmBvHYJNOQyiHzoUoBwhR-h2ozi4BCFUJguZ-n5LdxGG5U1NLXbfABZH08UUJY3It2rKl7tIZmIJHBI3yYLuCDfvXTKCyfdf2dWVvhDr4Gqx82TWSn1d98rbQBbyXP7VnbnRU9k_rySkS0JKpBU4rL9xJLWuBs3OsFzVVTD6MQ) -->
+<div class="flex justify-center items-center gap-1 mb-2 font-editorial text-sm font-semibold text-parchment-900"><img alt="WynnPages — Handcrafted Websites" class="h-7 w-auto object-contain mx-auto transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida/AEtjO1WWHFRCQM4E01y5_Jvsu70jO7OufDvf2DzvuRzjPztYei1_zNk4aWfqU5rm5BuN3VJA54GhRyyTMP2BWNmBvHYJNOQyiHzoUoBwhR-h2ozi4BCFUJguZ-n5LdxGG5U1NLXbfABZH08UUJY3It2rKl7tIZmIJHBI3yYLuCDfvXTKCyfdf2dWVvhDr4Gqx82TWSn1d98rbQBbyXP7VnbnRU9k_rySkS0JKpBU4rL9xJLWuBs3OsFzVVTD6MQ"></div>
+<p class="text-xs leading-relaxed max-w-xs mx-auto mb-4 text-parchment-900 font-normal">
+        Handcrafted code, high-performance web architecture, and organic aesthetics for Australian small businesses.
+      </p>
+<div class="flex items-center justify-center gap-2 sm:gap-3 text-[11px] sm:text-xs font-semibold text-parchment-900 whitespace-nowrap mb-2"><a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="#works">Portfolio</a><span class="text-parchment-800/60">·</span><a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="#pricing">Flat Rate</a><span class="text-parchment-800/60">·</span><a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="#philosophy">Philosophy</a><span class="text-parchment-800/60">·</span><a class="text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors" href="mailto:hello@wynnpages.com.au">Direct Inquiries</a></div><a class="block text-center text-xs sm:text-sm text-[#b85d43] font-semibold hover:text-[#96432b] transition-colors mb-4" href="mailto:hello@wynnpages.com.au">hello@wynnpages.com.au</a>
+<div class="space-y-1 text-xs text-parchment-900 font-medium"><p class="">© 2026 WynnPages · ABN: 98 573 217 361</p><p class="text-[11px] text-parchment-800">Crafted with care in Brisbane, Queensland, Australia · Independent &amp; 100% Australian Owned</p></div>
+</footer>
+<!-- END: MainFooter -->
+</main>
+<!-- BEGIN: ClientSideInteractionScript -->
+<script data-purpose="event-handlers">
+    // iOS Frosted Glass Navigation dynamic scroll shadow & backdrop blur
+    const header = document.getElementById('main-header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        header.classList.add('shadow-ios-nav', 'bg-[#fcf9f3]/95');
+        header.classList.remove('bg-[#fcf9f3]/80');
+      } else {
+        header.classList.remove('shadow-ios-nav', 'bg-[#fcf9f3]/95');
+        header.classList.add('bg-[#fcf9f3]/80');
+      }
+    }, { passive: true });
+
+    // Mobile navigation toggle functionality with animated hamburger icon
+    const menuBtn = document.getElementById('menu-toggle-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const navL1 = document.getElementById('nav-line-1');
+    const navL2 = document.getElementById('nav-line-2');
+    const navL3 = document.getElementById('nav-line-3');
+    
+    if (menuBtn && mobileMenu) {
+      menuBtn.addEventListener('click', () => {
+        const isClosed = mobileMenu.classList.contains('hidden');
+        mobileMenu.classList.toggle('hidden');
+        menuBtn.setAttribute('aria-expanded', isClosed ? 'true' : 'false');
+        
+        if (isClosed) {
+          if (navL1) navL1.style.transform = 'translateY(6px) rotate(45deg)';
+          if (navL2) navL2.style.opacity = '0';
+          if (navL3) navL3.style.transform = 'translateY(-6px) rotate(-45deg)';
+        } else {
+          if (navL1) navL1.style.transform = 'none';
+          if (navL2) navL2.style.opacity = '1';
+          if (navL3) navL3.style.transform = 'none';
+        }
+      });
+
+      // Close menu on link click
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileMenu.classList.add('hidden');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          if (navL1) navL1.style.transform = 'none';
+          if (navL2) navL2.style.opacity = '1';
+          if (navL3) navL3.style.transform = 'none';
+        });
+      });
+    }
+
+    // Scroll-Driven Entrance Reveals (IntersectionObserver)
+    const revealElements = document.querySelectorAll('.reveal-on-scroll');
+    if ('IntersectionObserver' in window) {
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.12,
+        rootMargin: '0px 0px -40px 0px'
+      });
+
+      revealElements.forEach(el => revealObserver.observe(el));
+    } else {
+      revealElements.forEach(el => el.classList.add('is-revealed'));
+    }
+
+    // Dynamic Typewriter Effect for Hero
+    const typewriterEl = document.getElementById('typewriter-text');
+    if (typewriterEl) {
+      const words = [
+        "tradies & builders",
+        "beauty salons",
+        "cafes & bakeries",
+        "bespoke makers",
+        "your craft"
+      ];
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (prefersReducedMotion) {
+        typewriterEl.textContent = "your craft";
+      } else {
+        let wordIndex = 0;
+        let charIndex = words[0].length;
+        let isDeleting = false;
+        const typingSpeed = 85;
+        const deletingSpeed = 40;
+        const pauseTime = 1800;
+
+        function typeLoop() {
+          const currentWord = words[wordIndex];
+
+          if (isDeleting) {
+            charIndex--;
+            typewriterEl.textContent = currentWord.substring(0, charIndex);
+          } else {
+            charIndex++;
+            typewriterEl.textContent = currentWord.substring(0, charIndex);
+          }
+
+          let nextDelay = isDeleting ? deletingSpeed : typingSpeed;
+
+          if (!isDeleting && charIndex === currentWord.length) {
+            isDeleting = true;
+            nextDelay = pauseTime;
+          } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            wordIndex = (wordIndex + 1) % words.length;
+            nextDelay = 300;
+          }
+
+          setTimeout(typeLoop, nextDelay);
+        }
+
+        setTimeout(() => {
+          isDeleting = true;
+          typeLoop();
+        }, pauseTime);
+      }
+    }
+
+    // Interactive Step Journey cards tap & scroll highlight
+    const stepCards = document.querySelectorAll('.craft-step-card');
+    stepCards.forEach(card => {
+      card.addEventListener('click', () => {
+        stepCards.forEach(c => {
+          c.classList.remove('active-step');
+          c.classList.add('bg-white/90');
+          c.classList.remove('bg-white/95');
+        });
+        card.classList.add('active-step');
+        card.classList.remove('bg-white/90');
+        card.classList.add('bg-white/95');
+      });
+    });
+
+    // The Honest Contrast elevation shifts on tap
+    const agencyCard = document.getElementById('agency-card');
+    const antidoteCard = document.getElementById('antidote-card');
+    if (agencyCard && antidoteCard) {
+      agencyCard.addEventListener('click', () => {
+        agencyCard.classList.remove('opacity-80');
+        agencyCard.classList.add('opacity-100', 'ring-2', 'ring-stone-400');
+        antidoteCard.classList.add('opacity-90');
+        setTimeout(() => {
+          agencyCard.classList.add('opacity-80');
+          agencyCard.classList.remove('opacity-100', 'ring-2', 'ring-stone-400');
+          antidoteCard.classList.remove('opacity-90');
+        }, 1200);
+      });
+      antidoteCard.addEventListener('click', () => {
+        antidoteCard.classList.add('scale-[1.02]', 'ring-2', 'ring-amber-400');
+        setTimeout(() => {
+          antidoteCard.classList.remove('scale-[1.02]', 'ring-2', 'ring-amber-400');
+        }, 600);
+      });
+    }
+
+    // Expandable FAQ accordion with rotating '+' to '×' icons
+    const faqItems = document.querySelectorAll('.faq-item');
+    faqItems.forEach(item => {
+      const toggleBtn = item.querySelector('.faq-toggle');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          const isOpen = item.classList.contains('is-open');
+          
+          faqItems.forEach(other => {
+            if (other !== item) {
+              other.classList.remove('is-open');
+              other.classList.add('bg-white/80');
+              other.classList.remove('bg-white/95', 'border-amber-200/70', 'shadow-card-float');
+              other.classList.add('border-white', 'shadow-xs');
+              const otherBtn = other.querySelector('.faq-toggle');
+              if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+            }
+          });
+
+          if (isOpen) {
+            item.classList.remove('is-open');
+            item.classList.remove('bg-white/95', 'border-amber-200/70', 'shadow-card-float');
+            item.classList.add('bg-white/80', 'border-white', 'shadow-xs');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+          } else {
+            item.classList.add('is-open');
+            item.classList.add('bg-white/95', 'border-amber-200/70', 'shadow-card-float');
+            item.classList.remove('bg-white/80', 'border-white', 'shadow-xs');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      }
+    });
+
+    // Swipe / Approve Card Demo with Celebratory Confetti Sparkles
+    const btnApprove = document.getElementById('btn-approve');
+    const btnReject = document.getElementById('btn-reject');
+    const swipeCard = document.getElementById('swipeable-card');
+    const approveLabel = document.getElementById('approve-label');
+    const approveIcon = document.getElementById('approve-icon');
+    const stagingStatus = document.getElementById('staging-status-badge');
+    const confettiHolder = document.getElementById('confetti-holder');
+
+    function triggerConfetti() {
+      if (!confettiHolder) return;
+      confettiHolder.innerHTML = '';
+      confettiHolder.classList.remove('hidden');
+      const colors = ['#d49b28', '#b85d43', '#10b981', '#3b82f6', '#f59e0b'];
+      for (let i = 0; i < 24; i++) {
+        const p = document.createElement('div');
+        p.className = 'absolute animate-sparkle';
+        const size = Math.floor(Math.random() * 8) + 6;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        p.style.top = Math.floor(Math.random() * 70 + 15) + '%';
+        p.style.left = Math.floor(Math.random() * 80 + 10) + '%';
+        confettiHolder.appendChild(p);
+      }
+      setTimeout(() => {
+        confettiHolder.classList.add('hidden');
+      }, 1000);
+    }
+
+    if (btnApprove && swipeCard) {
+      btnApprove.addEventListener('click', () => {
+        triggerConfetti();
+        if (approveLabel) approveLabel.textContent = 'Published Live! ✦';
+        if (approveIcon) approveIcon.textContent = '🎉';
+        if (stagingStatus) {
+          stagingStatus.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-[8px] font-bold text-white shadow-xs shrink-0';
+          stagingStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> 100% LIVE';
+        }
+        swipeCard.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        swipeCard.style.transform = 'scale(1.03)';
+        setTimeout(() => {
+          swipeCard.style.transform = 'scale(1)';
+        }, 400);
+      });
+    }
+
+    if (btnReject && swipeCard) {
+      btnReject.addEventListener('click', () => {
+        swipeCard.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease';
+        swipeCard.style.transform = 'translateX(-80px) rotate(-6deg) scale(0.96)';
+        swipeCard.style.opacity = '0.4';
+        setTimeout(() => {
+          swipeCard.style.transform = 'translateX(0) rotate(0) scale(1)';
+          swipeCard.style.opacity = '1';
+          if (approveLabel) approveLabel.textContent = 'Approve & Launch';
+          if (approveIcon) approveIcon.textContent = '✓';
+          if (stagingStatus) {
+            stagingStatus.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[8px] font-bold text-emerald-800 border border-emerald-200 shrink-0';
+            stagingStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE STAGING';
+          }
+        }, 450);
+      });
+    }
+
+    // THE INK REVEAL & AUTHENTIC SIGNATURE DRAW ANIMATION
+    (function initInkReveal() {
+      const guaranteeSection = document.getElementById('artisans-guarantee');
+      const paras = document.querySelectorAll('.ink-reveal-para');
+      const signatureEl = document.getElementById('guarantee-signature');
+      const signoffEl = document.getElementById('guarantee-signoff');
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (!guaranteeSection || !paras.length) return;
+
+      const allWords = [];
+      paras.forEach(p => {
+        const text = p.textContent.trim();
+        const words = text.split(/\s+/);
+        p.innerHTML = '';
+        words.forEach((word, index) => {
+          const span = document.createElement('span');
+          span.className = 'ink-word';
+          span.textContent = word;
+          p.appendChild(span);
+          if (index < words.length - 1) {
+            p.appendChild(document.createTextNode(' '));
+          }
+          allWords.push(span);
+        });
+      });
+
+      if (prefersReduced) {
+        allWords.forEach(w => w.classList.add('ink-settled'));
+        if (signatureEl) signatureEl.classList.add('is-drawn');
+        if (signoffEl) signoffEl.classList.add('is-drawn');
+        return;
+      }
+
+      let hasTriggered = false;
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !hasTriggered) {
+            hasTriggered = true;
+            revealObserver.disconnect();
+
+            const wordDelay = 55;
+            allWords.forEach((wordSpan, idx) => {
+              setTimeout(() => {
+                wordSpan.classList.add('ink-settled');
+              }, idx * wordDelay);
+            });
+
+            const totalTextTime = allWords.length * wordDelay + 200;
+            setTimeout(() => {
+              if (signatureEl) signatureEl.classList.add('is-drawn');
+            }, totalTextTime);
+
+            setTimeout(() => {
+              if (signoffEl) signoffEl.classList.add('is-drawn');
+            }, totalTextTime + 1600);
+          }
+        });
+      }, {
+        threshold: 0.2,
+        rootMargin: '0px 0px -40px 0px'
+      });
+
+      revealObserver.observe(guaranteeSection);
+    })();
+  </script>
+<!-- END: ClientSideInteractionScript -->
+
+
+</body></html>
