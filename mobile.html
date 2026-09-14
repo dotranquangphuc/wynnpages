@@ -508,7 +508,7 @@
 <!-- BEGIN: HeroSection -->
 <section class="relative w-full min-h-[640px] pt-20 pb-8 px-5 flex flex-col justify-between items-center text-center overflow-hidden">
 <!-- Ambient Breathing Hero Watercolor Layer -->
-<div id="hero-parallax-wrapper" class="absolute -inset-y-[15%] inset-x-0 h-[130%] w-full -z-10 pointer-events-none overflow-hidden"><img alt="Enchanting Scandinavian and Australian watercolor studio desk artwork" id="hero-bg" class="w-full h-full object-cover object-top transform-gpu will-change-transform will-change-filter" src="https://lh3.googleusercontent.com/aida/AEtjO1UecUkuw4k2175QvffhLZZruS5HbwxXmoUgLbjSAPSE9c0NL0RkLuqJvk3l_aJqOyT-uYEFbulTu5c0wvgF_lEg4BNyDo77o9Lw7jKbr2IlXyUdQR2_fPySIE6E5FlIPLipJqS57oC4zESZXrjjCXdypGdedZOWm3xoElel7mkMEN9DdvOmFqalf7SF2ge9EGzj8FCBD8Rp7dmzdMPeEIp5qAwo8ibTrcSi6CTtj0UQOBlSmyahQboJ60I"><div class="absolute inset-0 bg-gradient-to-b from-[#fbf8f2]/60 via-transparent to-[#f6f1e8]"></div><div class="absolute inset-0 bg-gradient-to-t from-[#f6f1e8] via-transparent to-transparent"></div></div>
+<div id="hero-parallax-wrapper" class="absolute -inset-y-[15%] inset-x-0 h-[130%] w-full -z-10 pointer-events-none overflow-hidden"><img alt="Enchanting Scandinavian and Australian watercolor studio desk artwork" id="hero-bg" class="w-full h-full object-cover object-top transform-gpu will-change-transform" src="https://lh3.googleusercontent.com/aida/AEtjO1UecUkuw4k2175QvffhLZZruS5HbwxXmoUgLbjSAPSE9c0NL0RkLuqJvk3l_aJqOyT-uYEFbulTu5c0wvgF_lEg4BNyDo77o9Lw7jKbr2IlXyUdQR2_fPySIE6E5FlIPLipJqS57oC4zESZXrjjCXdypGdedZOWm3xoElel7mkMEN9DdvOmFqalf7SF2ge9EGzj8FCBD8Rp7dmzdMPeEIp5qAwo8ibTrcSi6CTtj0UQOBlSmyahQboJ60I"><div class="absolute inset-0 bg-gradient-to-b from-[#fbf8f2]/60 via-transparent to-[#f6f1e8]"></div><div class="absolute inset-0 bg-gradient-to-t from-[#f6f1e8] via-transparent to-transparent"></div></div>
 <div class="w-full flex flex-col items-center pt-2 relative z-10"><div class="pill-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md border border-white/80 shadow-pill mb-4 cursor-default hover:scale-105 transition-transform duration-200"><span class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse"></span><span class="text-[10px] font-bold tracking-widest text-parchment-800 uppercase">Honest Web Design</span></div>
 <!-- Dynamic Typewriter & Accessible Hero Title -->
 <h1 class="font-editorial text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-parchment-900 text-balance mb-4 drop-shadow-sm"><span class="sr-only">A Beautiful Space for local businesses, tradies and creators on the web.</span><span aria-hidden="true" class="">A Beautiful Space<br><span class="inline-flex items-center justify-center whitespace-nowrap">for <span class="italic text-[#c96549] whitespace-nowrap inline-block pl-1.5" id="typewriter-text">tradies &amp; builders</span><span class="typewriter-cursor text-[#d97736]">|</span></span><br>on the web.</span></h1>
@@ -919,27 +919,55 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     
     // Parallax Effects and Scroll-Linked Animations
     const heroParallax = document.getElementById('hero-parallax-wrapper');
+    const heroBg = document.getElementById('hero-bg');
     const blueprintGrid = document.getElementById('blueprint-grid');
     const antidoteCard = document.getElementById('antidote-card');
     const watermarkTools = document.querySelectorAll('.watermark-tool');
+    const phoneMockup = document.getElementById('phone-mockup');
+    const journeyNeedle = document.getElementById('journey-needle');
+    const journeyThread = document.getElementById('journey-thread-path');
+    const journeyFlow = document.getElementById('craft-journey-flow');
+    const journeyCards = document.querySelectorAll('.craft-step-card');
+    const header = document.getElementById('main-header');
     
     const handleScrollEffects = (scrollY) => {
+        // 1. Hero Scroll Parallax
         if (heroParallax) {
             heroParallax.style.transform = `translate3d(0, ${scrollY * 0.4}px, 0)`;
         }
+        if (heroBg) {
+            // Only use scale and opacity. Translate is handled by heroParallax wrapper.
+            // Avoid dynamic blur for mobile performance.
+            let progress = Math.max(0, Math.min(1, scrollY / 600)); 
+            heroBg.style.transform = `scale(${1.05 - (0.05 * progress)})`;
+            heroBg.style.opacity = 1 - (0.5 * progress);
+        }
+
+        // 2. Header Frosted Glass
+        if (header) {
+            if (scrollY > 20) {
+                header.classList.add('shadow-ios-nav', 'bg-[#fcf9f3]/95');
+                header.classList.remove('bg-[#fcf9f3]/80');
+            } else {
+                header.classList.remove('shadow-ios-nav', 'bg-[#fcf9f3]/95');
+                header.classList.add('bg-[#fcf9f3]/80');
+            }
+        }
+
+        // 3. Blueprint Grid & Watermarks
         if (blueprintGrid) {
             blueprintGrid.style.backgroundPositionY = `${scrollY * 0.15}px`;
         }
         if (watermarkTools.length > 0) {
             watermarkTools.forEach(tool => {
                 const rect = tool.getBoundingClientRect();
-                // Parallax based on distance from viewport center so they don't fly off screen
                 const offset = (window.innerHeight / 2) - (rect.top + rect.height / 2);
                 const speed = parseFloat(tool.getAttribute('data-speed')) || 0;
                 tool.style.setProperty('--tw-translate-y', `${offset * speed}px`);
             });
         }
-        const phoneMockup = document.getElementById('phone-mockup');
+
+        // 4. Phone Mockup Reveal
         if (phoneMockup) {
             const rect = phoneMockup.getBoundingClientRect();
             const windowHeight = window.innerHeight;
@@ -1005,7 +1033,6 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                     function runMockupLoop() {
                         const data = mockupData[currentMockupIndex];
                         
-                        // Update DOM elements
                         document.getElementById('mockup-url-typing').textContent = data.url;
                         document.getElementById('mockup-url-success').textContent = data.url;
                         
@@ -1033,37 +1060,27 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                         btn2.textContent = data.btn2Text;
                         btn2.className = `text-center px-2 py-1 rounded-lg ${data.btn2Bg} ${data.btn2Color} font-medium text-[9px] transition-colors`;
                         
-                        // Reset states
                         phoneMockup.classList.remove('state-success', 'state-fetching', 'state-typing');
                         
-                        // Start animation sequence
-                        // Wait a tiny bit for DOM updates to render before adding typing state
                         setTimeout(() => {
                             phoneMockup.classList.add('state-typing');
                         }, 50);
-                        
                         setTimeout(() => {
                             phoneMockup.classList.remove('state-typing');
                             phoneMockup.classList.add('state-fetching');
                         }, 1800);
-                        
                         setTimeout(() => {
                             phoneMockup.classList.remove('state-fetching');
                             phoneMockup.classList.add('state-success');
                         }, 3800);
-                        
-                        // Schedule next loop
                         setTimeout(() => {
                             phoneMockup.classList.remove('state-success');
-                            // Give it 1 second to fade out completely before swapping
                             setTimeout(() => {
                                 currentMockupIndex = (currentMockupIndex + 1) % mockupData.length;
                                 runMockupLoop();
                             }, 1000);
-                        }, 8000); // 3.8s setup + 4.2s display time
+                        }, 8000);
                     }
-                    
-                    // Start the loop
                     runMockupLoop();
                 }
                 
@@ -1082,6 +1099,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             }
         }
 
+        // 5. Antidote Card Reveal
         if (antidoteCard) {
             const rect = antidoteCard.getBoundingClientRect();
             const windowHeight = window.innerHeight;
@@ -1092,7 +1110,6 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                 let progress = (start - rect.top) / (start - end);
                 progress = Math.max(0, Math.min(1, progress));
                 const opacity = Math.min(1, progress * 2);
-                // Starts very large (1.4) and zooms down to normal (1.0)
                 const scale = 1.4 - (0.4 * progress);
                 antidoteCard.style.opacity = opacity;
                 antidoteCard.style.transform = `scale(${scale})`;
@@ -1104,20 +1121,8 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
                 antidoteCard.style.transform = `scale(1)`;
             }
         }
-
-        // 1. Hero Background Scroll-Linked Zoom & Blur
-        const heroBg = document.getElementById('hero-bg');
-        if (heroBg) {
-            let progress = Math.max(0, Math.min(1, scrollY / 600)); 
-            heroBg.style.transform = `scale(${1.05 - (0.05 * progress)})`;
-            heroBg.style.filter = `blur(${progress * 8}px)`;
-            heroBg.style.opacity = 1 - (0.5 * progress);
-        }
         
-        // 2. Craft Journey Thread Drawing
-        const journeyNeedle = document.getElementById('journey-needle');
-        const journeyThread = document.getElementById('journey-thread-path');
-        const journeyFlow = document.getElementById('craft-journey-flow');
+        // 6. Craft Journey Thread Drawing
         if (journeyFlow && journeyNeedle && journeyThread) {
             const rect = journeyFlow.getBoundingClientRect();
             const start = window.innerHeight * 0.8;
@@ -1129,8 +1134,32 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             journeyNeedle.setAttribute('transform', `translate(10, ${needleY}) rotate(-25)`);
             journeyThread.setAttribute('d', `M10 10 L10 ${Math.max(10, needleY)}`);
         }
-        
-        // (Signature wipe is handled by IntersectionObserver in initInkReveal instead)
+
+        // 7. 3D Card Stacking (Craft Journey)
+        if (journeyCards.length > 0) {
+            journeyCards.forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+                const stickyPoint = 100 + (index * 15);
+                if (rect.top <= stickyPoint + 5) {
+                    const distance = stickyPoint - rect.top;
+                    if (distance > 0 && distance < 200) {
+                        const scale = Math.max(0.9, 1 - (distance * 0.0005));
+                        const brightness = Math.max(0.6, 1 - (distance * 0.002));
+                        card.style.transform = `scale(${scale})`;
+                        card.style.filter = `brightness(${brightness})`;
+                    } else if (distance >= 200) {
+                        card.style.transform = `scale(0.9)`;
+                        card.style.filter = `brightness(0.6)`;
+                    } else {
+                        card.style.transform = 'scale(1)';
+                        card.style.filter = 'brightness(1)';
+                    }
+                } else {
+                    card.style.transform = 'scale(1)';
+                    card.style.filter = 'brightness(1)';
+                }
+            });
+        }
     };
 
     if (lenis) {
@@ -1203,49 +1232,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     });
 
     // --- APP-LIKE UX EFFECTS ---
-    
-    // 1. Hero Scroll Parallax
-    const heroBg = document.getElementById('hero-bg');
-    if (heroBg) {
-      window.addEventListener('scroll', () => {
-        if (window.scrollY < window.innerHeight) {
-          heroBg.style.transform = `translateY(${window.scrollY * 0.4}px) scale(1.05)`;
-        }
-      }, { passive: true });
-    }
-
-    // 2. 3D Card Stacking (Craft Journey)
-    const cards = document.querySelectorAll('.craft-step-card');
-    if (cards.length > 0) {
-      window.addEventListener('scroll', () => {
-        cards.forEach((card, index) => {
-          const rect = card.getBoundingClientRect();
-          // If the card hits its sticky point (around top 100-140px depending on index)
-          const stickyPoint = 100 + (index * 15);
-          if (rect.top <= stickyPoint + 5) {
-             // Calculate how far it has been pushed up by the next cards
-             // We apply a slight scale down and opacity reduction
-             const distance = stickyPoint - rect.top;
-             if (distance > 0 && distance < 200) {
-                const scale = Math.max(0.9, 1 - (distance * 0.0005));
-                const brightness = Math.max(0.6, 1 - (distance * 0.002));
-                card.style.transform = `scale(${scale})`;
-                card.style.filter = `brightness(${brightness})`;
-             } else if (distance >= 200) {
-                card.style.transform = `scale(0.9)`;
-                card.style.filter = `brightness(0.6)`;
-             } else {
-                card.style.transform = 'scale(1)';
-                card.style.filter = 'brightness(1)';
-             }
-          } else {
-             card.style.transform = 'scale(1)';
-             card.style.filter = 'brightness(1)';
-          }
-        });
-      }, { passive: true });
-    }
-
+    // Note: Scroll parallax and effects have been consolidated into handleScrollEffects above.
     // 3. Tactile Tilt on Swipe (Portfolio Carousel)
     const carouselContainer = document.querySelector('.snap-mandatory');
     const carouselCards = document.querySelectorAll('.carousel-tilt-card');
@@ -1276,17 +1263,6 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     }
     // --- END APP-LIKE UX EFFECTS ---
 
-    // iOS Frosted Glass Navigation dynamic scroll shadow & backdrop blur
-    const header = document.getElementById('main-header');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 20) {
-        header.classList.add('shadow-ios-nav', 'bg-[#fcf9f3]/95');
-        header.classList.remove('bg-[#fcf9f3]/80');
-      } else {
-        header.classList.remove('shadow-ios-nav', 'bg-[#fcf9f3]/95');
-        header.classList.add('bg-[#fcf9f3]/80');
-      }
-    }, { passive: true });
 
     // Mobile navigation toggle functionality with animated hamburger icon
     const menuBtn = document.getElementById('menu-toggle-btn');
