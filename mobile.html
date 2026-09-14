@@ -1643,14 +1643,19 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       
       let isPaused = false;
       let scrollSpeed = 0.5; 
+      let currentScroll = track.scrollLeft;
 
       function autoScroll() {
         if (!isPaused) {
-          track.scrollLeft += scrollSpeed;
+          currentScroll += scrollSpeed;
           // If we scrolled past the first set of cards, reset seamlessly
-          if (track.scrollLeft >= track.scrollWidth / 3) {
-            track.scrollLeft -= (track.scrollWidth / 3);
+          if (currentScroll >= track.scrollWidth / 3) {
+            currentScroll -= (track.scrollWidth / 3);
           }
+          track.scrollLeft = currentScroll;
+        } else {
+          // Sync internal state when user is dragging
+          currentScroll = track.scrollLeft;
         }
         requestAnimationFrame(autoScroll);
       }
