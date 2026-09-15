@@ -516,7 +516,7 @@
 <!-- BEGIN: HeroSection -->
 <section class="relative w-full min-h-[640px] pt-20 pb-8 px-5 flex flex-col justify-between items-center text-center overflow-hidden">
 <!-- Ambient Breathing Hero Watercolor Layer -->
-<div id="hero-parallax-wrapper" class="absolute -inset-y-[15%] inset-x-0 h-[130%] w-full -z-10 pointer-events-none overflow-hidden"><img alt="Enchanting Scandinavian and Australian watercolor studio desk artwork" id="hero-bg" class="w-full h-full object-cover object-top scale-105 transform-gpu will-change-transform" src="assets/asset_34a9c25d.jpg"><div class="absolute inset-0 bg-gradient-to-b from-[#fbf8f2]/60 via-transparent to-[#f6f1e8]"></div><div class="absolute inset-0 bg-gradient-to-t from-[#f6f1e8] via-transparent to-transparent"></div></div>
+<div id="hero-parallax-wrapper" class="absolute -inset-y-[15%] inset-x-0 h-[130%] w-full -z-10 pointer-events-none overflow-hidden transform-gpu will-change-transform"><img alt="Enchanting Scandinavian and Australian watercolor studio desk artwork" id="hero-bg" class="w-full h-full object-cover object-top scale-105" src="assets/asset_34a9c25d.jpg"><div class="absolute inset-0 bg-gradient-to-b from-[#fbf8f2]/60 via-transparent to-[#f6f1e8]"></div><div class="absolute inset-0 bg-gradient-to-t from-[#f6f1e8] via-transparent to-transparent"></div></div>
 <div class="w-full flex flex-col items-center pt-2 relative z-10"><div class="pill-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md border border-white/80 shadow-pill mb-4 cursor-default hover:scale-105 transition-transform duration-200"><span class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse"></span><span class="text-[10px] font-bold tracking-widest text-parchment-800 uppercase">Honest Web Design</span></div>
 <!-- Dynamic Typewriter & Accessible Hero Title -->
 <h1 class="font-editorial text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-parchment-900 text-balance mb-4 drop-shadow-sm"><span class="sr-only">A Beautiful Space for local businesses, tradies and creators on the web.</span><span aria-hidden="true" class="">A Beautiful Space<br><span class="inline-flex items-center justify-center whitespace-nowrap">for <span class="italic text-[#c96549] whitespace-nowrap inline-block pl-1.5" id="typewriter-text">tradies &amp; builders</span><span class="typewriter-cursor text-[#d97736]">|</span></span><br>on the web.</span></h1>
@@ -944,15 +944,18 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             if (scrollY < 0) {
                 // Pin to top on bounce scroll down (iOS pull-down)
                 heroParallax.style.transform = `translate3d(0, ${scrollY}px, 0)`;
+                if (heroBg) {
+                    heroBg.style.transform = `scale(${1.05 - scrollY*0.002})`;
+                }
             } else {
                 heroParallax.style.transform = `translate3d(0, ${scrollY * 0.4}px, 0)`;
+                if (heroBg) {
+                    let progress = Math.max(0, Math.min(1, scrollY / 500)); 
+                    // Remove dynamic scale and blur on scroll to save GPU memory on Safari
+                    heroBg.style.transform = `scale(1.05)`;
+                    heroBg.style.opacity = 1 - (0.4 * progress);
+                }
             }
-        }
-        if (heroBg) {
-            let progress = Math.max(0, Math.min(1, scrollY / 500)); 
-            heroBg.style.transform = scrollY < 0 ? `scale(${1.05 - scrollY*0.002})` : `scale(${1.05 - (0.05 * progress)})`;
-            heroBg.style.opacity = scrollY < 0 ? 1 : 1 - (0.4 * progress);
-            heroBg.style.filter = scrollY > 10 ? `blur(${progress * 8}px)` : 'blur(0px)';
         }
 
         // 2. Header Frosted Glass
@@ -1244,11 +1247,14 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
           }
 
           if (lenis) {
-              lenis.scrollTo(targetElement, { 
-                 offset: -70, 
-                 duration: 1.2, 
-                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
-              });
+              // Delay slightly to let the menu start closing before triggering heavy scroll
+              setTimeout(() => {
+                  lenis.scrollTo(targetElement, { 
+                     offset: -70, 
+                     duration: 0.8, // Faster, snappier
+                     easing: (t) => 1 - Math.pow(1 - t, 4) // Smooth easeOutQuart
+                  });
+              }, 50);
           } else {
               // Delay slightly to let the menu close smoothly before scrolling on mobile
               setTimeout(() => {
