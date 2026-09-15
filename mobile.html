@@ -243,9 +243,8 @@
     /* Premium Apple-Style Staggered Reveals */
     .reveal-on-scroll > * {
       opacity: 0;
-      transform: translateY(60px);
-      filter: blur(12px);
-      transition: all 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(25px);
+      transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform, filter;
     }
     .reveal-on-scroll.is-revealed > * {
@@ -411,8 +410,8 @@
 
     /* Scroll-linked JS animation targets */
     .scroll-zoom-card, .watermark-tool {
-      transition: none !important;
-      will-change: transform, opacity;
+      will-change: transform;
+      transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .signature-wipe {
@@ -778,7 +777,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 <p class="text-xs text-parchment-800/80 mt-2 max-w-xs leading-relaxed">Within 48 hours, a private staging link is sent directly to your phone. Review your handcrafted site, request tweaks with a tap, or approve it for an immediate global launch. You hold all the power.</p>
 </div>
 <!-- Sleek Realistic Smartphone / iPhone Mockup Container -->
-<div class="w-full max-w-[320px] mx-auto relative" id="phone-mockup" style="transform-origin: bottom center; will-change: transform, opacity; opacity: 0; transform: perspective(1000px) rotateX(25deg) scale(0.85) translateY(60px);">
+<div class="w-full max-w-[320px] mx-auto relative" id="phone-mockup" style="transform-origin: bottom center; will-change: transform, opacity; opacity: 0; transform: perspective(1000px) rotateX(25deg) scale(0.85) translateY(60px); transition: opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1), transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);">
 <!-- Confetti celebration container -->
 <div class="absolute inset-0 pointer-events-none z-50 overflow-hidden hidden" id="confetti-holder"></div>
 <div class="relative rounded-[48px] p-2.5 bg-gradient-to-b from-[#e8decb] via-[#dcd2be] to-[#c8bba4] border-[4px] border-[#ede3cf] shadow-2xl ring-1 ring-black/10 transition-all duration-300" style="box-shadow: 0 28px 65px -12px rgba(78, 64, 49, 0.28), 0 10px 24px -6px rgba(78, 64, 49, 0.16), inset 0 0 0 1.5px rgba(255, 255, 255, 0.85);"><div class="relative rounded-[38px] bg-[#fcf9f3] overflow-hidden border border-stone-300/80 flex flex-col min-h-[510px] shadow-sm"><div class="pt-2.5 px-5 pb-1.5 flex items-center justify-between text-[11px] font-semibold text-stone-800 select-none z-30 bg-[#fcf9f3]"><span class="tracking-tight font-medium">9:41</span><div class="w-20 h-4 bg-[#231f1a] rounded-full mx-auto -mt-0.5 flex items-center justify-center"><div class="w-2 h-2 rounded-full bg-stone-800 mr-6"></div><div class="w-1.5 h-1.5 rounded-full bg-stone-700"></div></div><div class="flex items-center gap-1.5 text-[10px]"><svg class="w-3 h-3 fill-current text-stone-700" viewBox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21L24 8.98C20.93 5.9 16.69 4 12 4Z"></path></svg><svg class="w-4 h-2.5 text-stone-700" viewBox="0 0 24 12"><rect fill="none" height="12" rx="3" stroke="currentColor" stroke-width="2" width="20"></rect><rect fill="currentColor" height="8" rx="1.5" width="14" x="2" y="2"></rect><path d="M22 4v4" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></svg></div></div><div class="px-3 pb-2 pt-0.5 bg-[#fcf9f3] z-20 border-b border-stone-200/80">
