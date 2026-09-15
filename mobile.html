@@ -911,7 +911,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             lenis = new Lenis({
                 duration: 1.2,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smoothTouch: true, 
+                smoothTouch: false, // CRITICAL: NEVER use true on iOS, it causes extreme scroll lag
                 touchMultiplier: 2,
             });
             function raf(time) {
@@ -1219,48 +1219,36 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
               mobileMenu.style.backdropFilter = 'none';
               mobileMenu.style.webkitBackdropFilter = 'none';
               
-              mobileMenu.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-              mobileMenu.style.opacity = '0';
-              mobileMenu.style.transform = 'translateY(-20px) scale(0.98)';
+              // Hide menu immediately without transition to avoid scroll jank
+              mobileMenu.classList.add('hidden');
+              mobileMenu.style.pointerEvents = '';
+              if (menuBtn) menuBtn.style.pointerEvents = '';
+              mobileMenu.style.transform = 'none'; 
               
               if (menuOverlay) {
+                  menuOverlay.classList.add('hidden');
+                  menuOverlay.style.pointerEvents = 'auto';
                   menuOverlay.style.backdropFilter = 'none';
                   menuOverlay.style.webkitBackdropFilter = 'none';
-                  menuOverlay.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-                  menuOverlay.style.opacity = '0';
               }
               
-              // Unlock scrolling immediately so Lenis can scroll without layout thrashing
+              // Unlock scrolling immediately
               document.documentElement.style.overflow = '';
               document.body.style.overflow = '';
-              
-              setTimeout(() => {
-                  mobileMenu.classList.add('hidden');
-                  mobileMenu.style.pointerEvents = '';
-                  if (menuBtn) menuBtn.style.pointerEvents = '';
-                  mobileMenu.style.transform = 'none'; 
-                  if (menuOverlay) {
-                      menuOverlay.classList.add('hidden');
-                      menuOverlay.style.pointerEvents = 'auto'; 
-                  }
-              }, 400);
           }
 
-          if (lenis) {
-              // Delay slightly to let the menu start closing before triggering heavy scroll
-              setTimeout(() => {
+          // Use native smooth scroll on mobile for the best hardware accelerated performance
+          setTimeout(() => {
+              if (lenis) {
                   lenis.scrollTo(targetElement, { 
                      offset: -70, 
-                     duration: 0.8, // Faster, snappier
-                     easing: (t) => 1 - Math.pow(1 - t, 4) // Smooth easeOutQuart
+                     duration: 0.8,
+                     easing: (t) => 1 - Math.pow(1 - t, 4)
                   });
-              }, 50);
-          } else {
-              // Delay slightly to let the menu close smoothly before scrolling on mobile
-              setTimeout(() => {
-                 targetElement.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
-          }
+              } else {
+                  targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+          }, 10);
         }
       });
     });
