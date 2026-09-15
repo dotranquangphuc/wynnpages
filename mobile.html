@@ -94,8 +94,8 @@
     }
     
     @keyframes mainFadeIn {
-      0% { opacity: 0; filter: blur(4px); transform: translateY(15px); }
-      100% { opacity: 1; filter: blur(0px); transform: none; }
+      0% { opacity: 0; transform: translateY(15px); }
+      100% { opacity: 1; transform: none; }
     }
     @keyframes headerFadeIn {
       0% { opacity: 0; transform: translateY(-15px); }
@@ -244,13 +244,14 @@
     .reveal-on-scroll > * {
       opacity: 0;
       transform: translateY(25px);
+      filter: blur(12px);
       transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform, filter;
     }
     .reveal-on-scroll.is-revealed > * {
       opacity: 1;
       transform: translateY(0) scale(1);
-      filter: blur(0);
+      filter: blur(0px);
     }
     .reveal-on-scroll.is-revealed > *:nth-child(1) { transition-delay: 0.05s; }
     .reveal-on-scroll.is-revealed > *:nth-child(2) { transition-delay: 0.2s; }
