@@ -1818,6 +1818,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         </div>
       </div>
 
+      <form id="checkoutForm" onsubmit="event.preventDefault(); processMockPayment();">
       <!-- Contact Fields -->
       <div class="flex flex-col gap-4 mb-6">
         <div class="flex flex-col gap-1.5">
@@ -1826,7 +1827,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
           </label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-3 text-stone-400 text-[18px]">person</span>
-            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutName" placeholder="e.g. John" type="text">
+            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutName" placeholder="e.g. John" type="text" required>
           </div>
         </div>
         <div class="flex flex-col gap-1.5">
@@ -1835,7 +1836,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
           </label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-3 text-stone-400 text-[18px]">call</span>
-            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutPhone" placeholder="e.g. 0412 345 678" type="tel">
+            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutPhone" placeholder="e.g. 0412 345 678" type="tel" required>
           </div>
         </div>
         <div class="flex flex-col gap-1.5">
@@ -1888,9 +1889,9 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       <!-- Payment Section -->
       <div class="flex flex-col gap-4">
         <!-- Apple Pay Button -->
-        <button class="w-full bg-black text-white rounded-xl py-4 flex items-center justify-center hover:bg-stone-800 transition-colors shadow-md active:scale-[0.98]">
-          <!-- Apple Pay Logo SVG -->
-          <svg class="h-6 w-auto fill-current" viewBox="0 0 50 20" xmlns="http://www.w3.org/2000/svg"><path d="M21.565 8.163c-.029-2.181 1.776-3.238 1.859-3.29-1.026-1.503-2.617-1.706-3.187-1.734-1.353-.138-2.646.8-3.342.8-.696 0-1.758-.781-2.883-.758-1.468.021-2.818.857-3.576 2.182-1.536 2.673-.393 6.626 1.107 8.802.731 1.06 1.597 2.25 2.71 2.207 1.082-.045 1.5-.705 2.809-.705 1.303 0 1.688.705 2.836.68 1.168-.02 1.916-1.077 2.635-2.133.83-1.218 1.171-2.399 1.189-2.46-.027-.01-2.296-.882-2.157-3.591m-1.921-5.184c.594-.72 1.002-1.728.887-2.729-.861.036-1.92.576-2.529 1.296-.484.568-.971 1.59-.838 2.574.96.074 1.887-.422 2.48-1.141m11.523 3.865c0-1.492.67-2.888 1.852-3.829-1.066-.757-2.361-1.173-3.693-1.173-3.535 0-6.195 2.73-6.195 6.368 0 3.738 2.777 6.368 6.275 6.368 1.525 0 2.946-.487 4.093-1.365-1.408-1.109-2.332-2.597-2.332-4.444v-1.925h4.153v-2.023l-4.153.023m.396 6.942c-.91.568-1.996.866-3.137.866-2.36 0-4.088-1.745-4.088-4.248 0-2.516 1.701-4.302 4.088-4.302.947 0 1.812.244 2.57.73l.635-1.758c-.947-.568-2.083-.88-3.29-.88-3.481 0-6.195 2.64-6.195 6.249 0 3.596 2.714 6.208 6.195 6.208 1.3 0 2.45-.365 3.396-.947l-.174-1.918m21.144-8.877l-3.328 8.65h-2.181l-1.028-2.922-1.015 2.922h-2.22l-3.219-8.65h2.245l1.961 5.762 1.136-3.18h2.259l1.123 3.165 1.948-5.748h2.319m-17.653 7.036c-.473.474-1.11.758-1.894.758-1.474 0-2.34-.866-2.34-2.191v-1.61h4.221v-3.987h-4.221v-1.867h-2.137v1.867h-1.894v1.854h1.894v1.88c0 2.395 1.745 3.842 4.234 3.842 1.015 0 1.826-.298 2.394-.744l-.257-1.802m-12.836-7.036h-4.316v11.45h2.15v-3.529h1.99c2.786 0 4.653-1.84 4.653-4.018 0-2.137-1.772-3.903-4.477-3.903m.135 6.046h-2.286v-4.179h2.286c1.474 0 2.448.974 2.448 2.083s-.974 2.096-2.448 2.096"/></svg>
+        <button type="button" class="w-full bg-black text-white rounded-xl py-4 flex items-center justify-center gap-2 hover:bg-stone-800 transition-colors shadow-md active:scale-[0.98]">
+          <svg viewBox="0 0 384 512" class="h-5 w-auto fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"></path></svg>
+          <span class="font-semibold text-lg tracking-wide">Pay</span>
         </button>
 
         <!-- Divider -->
@@ -1913,7 +1914,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         </div>
 
         <!-- CTA Submit -->
-        <button class="w-full mt-2 bg-[#96432b] hover:bg-[#b55b41] text-white font-semibold text-[15px] py-4 px-6 rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] relative overflow-hidden group" id="checkoutSubmitBtn" onclick="processMockPayment()">
+        <button type="submit" class="w-full mt-2 bg-[#96432b] hover:bg-[#b55b41] text-white font-semibold text-[15px] py-4 px-6 rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] relative overflow-hidden group" id="checkoutSubmitBtn">
           <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
           <span id="btn-text">Reserve Slot • $599 AUD</span>
           <span class="material-symbols-outlined text-[18px]" id="btn-icon">lock</span>
@@ -1923,6 +1924,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
           <span>Secured by Pin Payments AU</span>
         </div>
       </div>
+      </form>
     </div>
 
     <!-- Step 2: Success Handoff (Hidden initially) -->
@@ -1994,9 +1996,8 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
   });
 
   function processMockPayment() {
-    const email = document.getElementById('checkoutEmail').value;
-    if (!email) {
-      alert("Please enter your email for the receipt.");
+    const form = document.getElementById('checkoutForm');
+    if (!form.reportValidity()) {
       return;
     }
     
