@@ -508,11 +508,12 @@
   </style>
 <script src="https://unpkg.com/lenis@1.1.9/dist/lenis.min.js"></script>
 </head>
-<body class="min-h-screen bg-parchment-200 text-parchment-900 w-full selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
+<body class="min-h-screen bg-parchment-200 text-parchment-900 w-full overflow-x-hidden selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
 <!-- Background Texture Layer -->
 <div aria-hidden="true" class="fixed inset-0 bg-paper-grain pointer-events-none z-0"></div>
 <!-- BEGIN: NavigationBar -->
 <header class="fixed top-0 opacity-0 animate-[headerFadeIn_1s_ease-out_forwards] inset-x-0 z-50 border-b border-black/[0.05] transition-colors transition-shadow duration-300 bg-[#fcf9f3]/95" id="main-header">
+<header class="fixed top-0 opacity-0 animate-[headerFadeIn_1s_ease-out_forwards] inset-x-0 z-50 border-b border-black/[0.05] transition-transform duration-300 bg-[#fcf9f3]/95" id="main-header">
 <div class="max-w-7xl mx-auto px-5 lg:px-12 h-16 lg:h-20 flex items-center justify-between">
 <!-- Logo Brand (Preserving assets/logo.png) -->
 <a class="flex items-center gap-2.5 group active:scale-95 transition-transform duration-200" href="javascript:window.location.reload();"><div class="h-7 flex items-center transition-transform duration-300 group-hover:scale-105"><img alt="WynnPages — Handcrafted Websites" class="h-7 w-auto object-contain" src="assets/logo.png"></div></a>
@@ -719,13 +720,13 @@ QLD, AU
 </div>
 <div class="flex-1 min-w-0">
 <div class="flex items-center justify-between gap-2 mb-1">
-<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">Share Your Story</h3>
-<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">5-min brief</span>
+<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">Secure & Brief</h3>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">5-min async brief</span>
 </div>
-<p class="text-xs text-parchment-900 font-normal leading-relaxed">A short 5-minute online questionnaire. No 20-page briefs, no phone calls, and no endless discovery workshops. Tell us what makes your craft special and send over any existing photos.</p>
+<p class="text-xs text-parchment-900 font-normal leading-relaxed">Lock in your flat-fee slot and complete a short 5-minute online questionnaire. No 20-page agency briefs, no phone calls, and no endless discovery workshops. Tell us what makes your craft special.</p>
 <div class="mt-2.5 pt-2 border-t border-parchment-200/50 flex items-center gap-2 text-[10px] text-parchment-800/70">
 <span class="text-gold-600 font-bold">✦</span>
-<span class="">Zero technical prep or jargon required</span>
+<span class="">Zero technical prep required.</span>
 </div>
 </div>
 </div>
@@ -738,13 +739,13 @@ QLD, AU
 </div>
 <div class="flex-1 min-w-0">
 <div class="flex items-center justify-between gap-2 mb-1">
-<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">View The Canvas</h3>
-<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> 48h staging link</span>
+<h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">The Artisan Build</h3>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">Digital workshop</span>
 </div>
-<p class="text-xs text-parchment-900 font-normal leading-relaxed">Within 48 hours, explore your private, fully functioning interactive web preview on your phone. See your colors, words, and photos come alive.</p>
+<p class="text-xs text-parchment-900 font-normal leading-relaxed">We retreat to our digital workshop. Over the next few days, we hand-code your layouts, refine the typography, and meticulously bring your story to life. True bespoke work takes time to breathe.</p>
 <div class="mt-2.5 pt-2 border-t border-parchment-200/50 flex items-center gap-2 text-[10px] text-parchment-800/70">
 <span class="text-gold-600 font-bold">✦</span>
-<span class="">Test live touch &amp; mobile tap interactions</span>
+<span class="">Hand-crafted, no automated templates.</span>
 </div>
 </div>
 </div>
@@ -758,14 +759,12 @@ QLD, AU
 <div class="flex-1 min-w-0">
 <div class="flex items-center justify-between gap-2 mb-1">
 <h3 class="font-editorial font-bold text-base text-parchment-900 tracking-tight">Welcome Home</h3>
-<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-<span class="text-gold-600">✦</span> .com.au live &amp; secured
-      </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">Day 7 Handover</span>
 </div>
-<p class="text-xs text-parchment-900 font-normal leading-relaxed">We connect your custom .com.au domain, launch with lightning-fast global edge hosting, and hand you 100% eternal ownership. All done in 1 week flat.</p>
+<p class="text-xs text-parchment-900 font-normal leading-relaxed">We send you a private link to your fully functioning site. Once approved, we connect your custom .com.au domain, launch with lightning-fast edge hosting, and hand you 100% eternal ownership.</p>
 <div class="mt-2.5 pt-2 border-t border-parchment-200/50 flex items-center gap-2 text-[10px] text-parchment-800/70">
 <span class="text-gold-600 font-bold">✦</span>
-<span class="">Zero lock-in · 100% eternal business ownership</span>
+<span class="">Zero lock-in. 100% eternal business ownership.</span>
 </div>
 </div>
 </div></div>
