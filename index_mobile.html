@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WynnPages — Bespoke Web Atelier | Artisan Web Design</title>
+    <meta name="description" content="WynnPages builds bespoke, hand-crafted websites for artisans, trades, and independent businesses with a transparent, one-off fee and no monthly retainers.">
+    <meta name="keywords" content="web design, artisan websites, small business websites, custom web design Australia, zero retainer web design">
+    <meta property="og:title" content="WynnPages — Bespoke Web Atelier | Artisan Web Design">
+    <meta property="og:description" content="WynnPages builds bespoke, hand-crafted websites for artisans, trades, and independent businesses with a transparent, one-off fee and no monthly retainers.">
+    <meta property="og:image" content="https://wynnpages.com.au/assets/og_image.jpg">
+    <meta property="og:url" content="https://wynnpages.com.au/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="apple-touch-icon" href="assets/favicon.png">
+    <style>
+        body { margin: 0; background: #FAF7F2; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        .loader { width: 40px; height: 40px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #b85d43; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <script>
+        // Static Site Device Router (Maintains single URL)
+        const isMobile = window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent);
+        const targetFile = isMobile ? 'mobile.html' : 'desktop.html';
+
+        fetch(targetFile + '?v=' + new Date().getTime())
+            .then(response => response.text())
+            .then(html => {
+                document.open();
+                document.write(html);
+                document.close();
+                
+                // Add resize listener to reload if user significantly resizes window (e.g. desktop rotating to mobile)
+                let lastIsMobile = isMobile;
+                window.addEventListener('resize', () => {
+                    const currentIsMobile = window.innerWidth < 768;
+                    if (currentIsMobile !== lastIsMobile) {
+                        window.location.reload();
+                    }
+                });
+            })
+            .catch(err => {
+                console.error('Error loading layout:', err);
+                document.body.innerHTML = '<p>Error loading site. Please refresh.</p>';
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<script>
+window.onload = () => {
+  const b = document.body;
+  const h = document.documentElement;
+  console.log("Body overflow:", window.getComputedStyle(b).overflow);
+  console.log("HTML overflow:", window.getComputedStyle(h).overflow);
+  console.log("Main overflow:", window.getComputedStyle(document.querySelector('main')).overflow);
+  console.log("Lenis:", window.lenis);
+}
+</script>

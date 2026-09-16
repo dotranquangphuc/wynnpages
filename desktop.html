@@ -1,7 +1,16 @@
 <!DOCTYPE html><html class="fouc-cloak" lang="en"><head>
 <script>
+  // Hide /desktop URL from the address bar immediately
+  if (window.history && window.history.replaceState) {
+    var newUrl = '/';
+    if (window.location.hash) {
+      newUrl += window.location.hash;
+    }
+    window.history.replaceState(null, '', newUrl);
+  }
+
   if (window.innerWidth < 1024) {
-    window.location.replace('index.html' + window.location.hash);
+    window.location.replace('/' + window.location.hash);
   }
 </script>
 <style>
@@ -34,7 +43,13 @@
     <meta name="twitter:card" content="summary_large_image"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"><link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="apple-touch-icon" href="assets/favicon.png">
     <link href="assets/fonts.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed": "#3b0900", "background": "#fcf9f3", "cream-canvas": "#FAF7F2", "on-secondary-fixed": "#111f11", "terracotta-soft": "#D97D64", "sage-wash": "#E4EBE1", "surface-tint": "#99452d", "on-surface-variant": "#55433e", "inverse-primary": "#ffb5a0", "primary-fixed-dim": "#ffb5a0", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#dec29f", "secondary-fixed-dim": "#bbcbb6", "surface-container-highest": "#e5e2dc", "surface-container-low": "#f6f3ed", "primary-fixed": "#ffdbd1", "surface-bright": "#fcf9f3", "secondary": "#536251", "sand-surface": "#EFEAE1", "tertiary-container": "#8a7354", "on-primary-container": "#fffbff", "on-error": "#ffffff", "on-primary": "#ffffff", "surface-container": "#f0eee8", "charcoal-muted": "#484742", "on-tertiary-container": "#ffffff", "inverse-surface": "#31312d", "vellum-glass": "rgba(249, 246, 240, 0.72)", "outline-variant": "#dbc1ba", "primary-container": "#b55b41", "on-secondary-fixed-variant": "#3c4b3a", "error": "#ba1a1a", "surface-container-lowest": "#ffffff", "deep-charcoal": "#1C1C1A", "surface-container-high": "#ebe8e2", "surface-dim": "#dcdad4", "on-tertiary-fixed-variant": "#564428", "on-error-container": "#93000a", "secondary-container": "#d4e4ce", "on-surface": "#1c1c18", "inverse-on-surface": "#f3f0ea", "on-primary-fixed-variant": "#7a2f18", "error-container": "#ffdad6", "on-secondary-container": "#586755", "outline": "#88726c", "surface-variant": "#e5e2dc", "secondary-fixed": "#d7e7d1", "on-background": "#1c1c18", "primary": "#96432b", "tertiary-fixed": "#fbdeb9", "tertiary": "#6f5b3e", "on-tertiary-fixed": "#271903", "surface": "#fcf9f3", "on-secondary": "#ffffff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-mobile": "1.25rem", "margin": "3.5rem", "space-sm": "0.75rem", "space-xl": "4rem", "gutter": "2rem", "space-md": "1.25rem", "space-xs": "0.375rem", "space-lg": "2.25rem", "gutter-mobile": "1rem" }, "fontFamily": { "label-lg": [ "Plus Jakarta Sans" ], "quote-pull": [ "Playfair Display" ], "headline-lg-mobile": [ "Playfair Display" ], "headline-md": [ "Playfair Display" ], "body-sm": [ "Plus Jakarta Sans" ], "quote-pull-mobile": [ "Playfair Display" ], "body-lg": [ "Plus Jakarta Sans" ], "display-hero-mobile": [ "Playfair Display" ], "body-md": [ "Plus Jakarta Sans" ], "display-hero": [ "Playfair Display" ], "headline-lg": [ "Playfair Display" ], "label-md": [ "Plus Jakarta Sans" ], "headline-sm": [ "Playfair Display" ] }, "fontSize": { "label-lg": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.06em", "fontWeight": "600" } ], "quote-pull": [ "30px", { "lineHeight": "42px", "fontWeight": "400" } ], "headline-lg-mobile": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-md": [ "28px", { "lineHeight": "36px", "fontWeight": "400" } ], "body-sm": [ "13px", { "lineHeight": "20px", "fontWeight": "400" } ], "quote-pull-mobile": [ "22px", { "lineHeight": "32px", "fontWeight": "400" } ], "body-lg": [ "18px", { "lineHeight": "30px", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "body-md": [ "15px", { "lineHeight": "26px", "fontWeight": "400" } ], "display-hero": [ "64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" } ], "headline-lg": [ "44px", { "lineHeight": "52px", "letterSpacing": "-0.015em", "fontWeight": "400" } ], "label-md": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" } ], "headline-sm": [ "22px", { "lineHeight": "30px", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed-variant"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-high/80 shadow-[0_1px_12px_rgba(28,28,26,0.03)]"><div class="h-20 max-w-7xl mx-auto px-margin-mobile lg:px-margin flex items-center justify-between gap-6"><div class="flex items-center gap-2 shrink-0"><a href="javascript:window.location.reload();" class="flex items-center transition-opacity hover:opacity-90"><img src="assets/logo.png" alt="WynnPages" class="h-8 w-auto object-contain"></a><span class="hidden xl:inline-block h-4 w-px bg-outline-variant/30 mx-2"></span><span class="hidden xl:inline-block font-label-md text-label-md tracking-wider uppercase text-charcoal-muted">Bespoke Web Atelier</span></div><nav class="hidden lg:flex items-center gap-6 xl:gap-7"><a href="#creations" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Selected Works</a><a href="#philosophy" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Philosophy</a><a href="#journey" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Craft Journey</a><a href="#built-for-you" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Tailored For You</a><a href="#contrast" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">The Contrast</a><a href="#pricing" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Pricing</a><a href="#faq" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">FAQ</a></nav><div class="flex items-center gap-4 xl:gap-6 shrink-0"><a href="mailto:hello@wynnpages.com.au" class="hidden md:inline-flex items-center gap-1.5 font-label-md text-label-md tracking-wider text-charcoal-muted hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px] text-primary">mail</span><span class="">hello@wynnpages.com.au</span></a><a href="javascript:void(0)" onclick="openCheckoutDrawer(event)" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-deep-charcoal hover:bg-primary text-cream-canvas font-label-lg text-label-lg tracking-wide shadow-sm transition-all duration-200"><span class="">Book Slot</span><span class="w-1.5 h-1.5 rounded-full bg-[#82d68e] animate-pulse"></span><span class="text-[11px] text-tertiary-fixed font-normal">$599 AUD</span></a></div></div></header><main class="w-full pt-20 bg-background"><div class="flex flex-col w-full">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed": "#3b0900", "background": "#fcf9f3", "cream-canvas": "#FAF7F2", "on-secondary-fixed": "#111f11", "terracotta-soft": "#D97D64", "sage-wash": "#E4EBE1", "surface-tint": "#99452d", "on-surface-variant": "#55433e", "inverse-primary": "#ffb5a0", "primary-fixed-dim": "#ffb5a0", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#dec29f", "secondary-fixed-dim": "#bbcbb6", "surface-container-highest": "#e5e2dc", "surface-container-low": "#f6f3ed", "primary-fixed": "#ffdbd1", "surface-bright": "#fcf9f3", "secondary": "#536251", "sand-surface": "#EFEAE1", "tertiary-container": "#8a7354", "on-primary-container": "#fffbff", "on-error": "#ffffff", "on-primary": "#ffffff", "surface-container": "#f0eee8", "charcoal-muted": "#484742", "on-tertiary-container": "#ffffff", "inverse-surface": "#31312d", "vellum-glass": "rgba(249, 246, 240, 0.72)", "outline-variant": "#dbc1ba", "primary-container": "#b55b41", "on-secondary-fixed-variant": "#3c4b3a", "error": "#ba1a1a", "surface-container-lowest": "#ffffff", "deep-charcoal": "#1C1C1A", "surface-container-high": "#ebe8e2", "surface-dim": "#dcdad4", "on-tertiary-fixed-variant": "#564428", "on-error-container": "#93000a", "secondary-container": "#d4e4ce", "on-surface": "#1c1c18", "inverse-on-surface": "#f3f0ea", "on-primary-fixed-variant": "#7a2f18", "error-container": "#ffdad6", "on-secondary-container": "#586755", "outline": "#88726c", "surface-variant": "#e5e2dc", "secondary-fixed": "#d7e7d1", "on-background": "#1c1c18", "primary": "#96432b", "tertiary-fixed": "#fbdeb9", "tertiary": "#6f5b3e", "on-tertiary-fixed": "#271903", "surface": "#fcf9f3", "on-secondary": "#ffffff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-mobile": "1.25rem", "margin": "3.5rem", "space-sm": "0.75rem", "space-xl": "4rem", "gutter": "2rem", "space-md": "1.25rem", "space-xs": "0.375rem", "space-lg": "2.25rem", "gutter-mobile": "1rem" }, "fontFamily": { "label-lg": [ "Plus Jakarta Sans" ], "quote-pull": [ "Playfair Display" ], "headline-lg-mobile": [ "Playfair Display" ], "headline-md": [ "Playfair Display" ], "body-sm": [ "Plus Jakarta Sans" ], "quote-pull-mobile": [ "Playfair Display" ], "body-lg": [ "Plus Jakarta Sans" ], "display-hero-mobile": [ "Playfair Display" ], "body-md": [ "Plus Jakarta Sans" ], "display-hero": [ "Playfair Display" ], "headline-lg": [ "Playfair Display" ], "label-md": [ "Plus Jakarta Sans" ], "headline-sm": [ "Playfair Display" ] }, "fontSize": { "label-lg": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.06em", "fontWeight": "600" } ], "quote-pull": [ "30px", { "lineHeight": "42px", "fontWeight": "400" } ], "headline-lg-mobile": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-md": [ "28px", { "lineHeight": "36px", "fontWeight": "400" } ], "body-sm": [ "13px", { "lineHeight": "20px", "fontWeight": "400" } ], "quote-pull-mobile": [ "22px", { "lineHeight": "32px", "fontWeight": "400" } ], "body-lg": [ "18px", { "lineHeight": "30px", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "body-md": [ "15px", { "lineHeight": "26px", "fontWeight": "400" } ], "display-hero": [ "64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" } ], "headline-lg": [ "44px", { "lineHeight": "52px", "letterSpacing": "-0.015em", "fontWeight": "400" } ], "label-md": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" } ], "headline-sm": [ "22px", { "lineHeight": "30px", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed-variant"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-high/80 shadow-[0_1px_12px_rgba(28,28,26,0.03)]"><div class="h-20 max-w-7xl mx-auto px-margin-mobile lg:px-margin flex items-center justify-between gap-6"><div class="flex items-center gap-2 shrink-0"><a href="javascript:window.location.reload();" class="flex items-center transition-opacity hover:opacity-90"><img src="assets/logo.png" alt="WynnPages" class="h-8 w-auto object-contain"></a><span class="hidden xl:inline-block h-4 w-px bg-outline-variant/30 mx-2"></span><span class="hidden xl:inline-block font-label-md text-label-md tracking-wider uppercase text-charcoal-muted">Bespoke Web Atelier</span></div><nav class="hidden lg:flex items-center gap-6 xl:gap-7">
+<a href="#works" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Works</a>
+<a href="#philosophy" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Philosophy</a>
+<a href="#craft-journey" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Journey</a>
+<a href="#pricing" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">Pricing</a>
+<a href="#faq" class="font-label-lg text-[13px] tracking-wide text-on-surface-variant hover:text-primary transition-colors font-medium">FAQ</a>
+</nav><div class="flex items-center gap-4 xl:gap-6 shrink-0"><a href="mailto:hello@wynnpages.com.au" class="hidden md:inline-flex items-center gap-1.5 font-label-md text-label-md tracking-wider text-charcoal-muted hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px] text-primary">mail</span><span class="">hello@wynnpages.com.au</span></a><a href="javascript:void(0)" onclick="openCheckoutDrawer(event)" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-deep-charcoal hover:bg-primary text-cream-canvas font-label-lg text-label-lg tracking-wide shadow-sm transition-all duration-200"><span class="">Book Slot</span><span class="w-1.5 h-1.5 rounded-full bg-[#82d68e] animate-pulse"></span><span class="text-[11px] text-tertiary-fixed font-normal">$599 AUD</span></a></div></div></header><main class="w-full pt-20 bg-background"><div class="flex flex-col w-full">
 <!-- SECTION 1: HERO SECTION -->
 <section class="relative w-full overflow-hidden bg-background pt-8 pb-20 lg:pt-14 lg:pb-28">
 <div class="max-w-7xl mx-auto px-margin-mobile lg:px-margin">
@@ -62,7 +77,7 @@
 </a>
 <div class="flex items-center gap-2 text-charcoal-muted">
 <span class="material-symbols-outlined text-primary text-[20px]">verified_user</span>
-<span class="font-body-sm text-body-sm">No tech knowledge required — ready in 72h.</span>
+<span class="font-body-sm text-body-sm">No tech knowledge required — ready in 1 week.</span>
 </div>
 </div>
 <!-- Trust Badges Row -->
@@ -71,14 +86,14 @@
 <span class="hidden sm:inline text-outline-variant">•</span>
 <span class="flex items-center gap-1.5"><span class="text-primary">✦</span> 100% Australian Owned</span>
 <span class="hidden sm:inline text-outline-variant">•</span>
-<span class="flex items-center gap-1.5"><span class="text-primary">✦</span> Delivered in 72H</span>
+<span class="flex items-center gap-1.5"><span class="text-primary">✦</span> Delivered in 7 Days</span>
 </div>
 </div>
 <!-- Right Visual Artwork Column -->
 <div class="lg:col-span-5 relative flex justify-center">
 <div class="relative w-full max-w-md lg:max-w-none rounded-xl overflow-hidden shadow-xl bg-sand-surface p-3 pb-4">
 <div class="rounded-lg overflow-hidden relative aspect-[3/4] bg-surface-container">
-<img id="desktop-hero-bg" alt="Artisanal watercolor illustration of the WynnPages web design workbench with hand-drawn wireframes and brass tools" class="absolute -inset-y-[15%] w-full h-[130%] object-cover transform-gpu" src="assets/asset_34a9c25d.jpg">
+<img id="desktop-hero-bg" alt="Artisanal watercolor illustration of the WynnPages web design workbench with hand-drawn wireframes and brass tools" class="absolute -inset-y-[15%] w-full h-[130%] object-cover transform-gpu" src="assets/banner-web.jpg">
 <div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal/40 via-transparent to-transparent"></div>
 <div class="absolute bottom-4 left-4 right-4 p-4 rounded bg-vellum-glass backdrop-blur-md shadow-sm">
 <div class="flex items-center justify-between text-deep-charcoal">
@@ -96,10 +111,10 @@
 </div>
 </section>
 <!-- SECTION 2: RECENT CREATIONS -->
-<section class="w-full bg-sand-surface py-20 lg:py-28">
+<section class="w-full bg-sand-surface py-20 lg:py-28" id="works">
 <div class="max-w-7xl mx-auto px-margin-mobile lg:px-margin">
 <!-- Section Header -->
-<div class="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
+<div class="flex flex-col mb-14">
 <div>
 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cream-canvas text-primary font-label-md text-label-md uppercase tracking-wider mb-3">
 <span class="">✦</span> Recent Creations
@@ -110,13 +125,6 @@
 <p class="font-body-md text-body-md text-charcoal-muted mt-2 max-w-lg">
             Real Australian businesses powered by hand-coded architecture. Instant load times, zero plugins, enduring charm.
           </p>
-</div>
-<!-- Category Filters -->
-<div class="flex flex-wrap items-center gap-2 font-label-md text-label-md">
-<button class="px-4 py-2 rounded-full bg-deep-charcoal text-cream-canvas shadow-sm">All Works</button>
-<button class="px-4 py-2 rounded-full bg-cream-canvas text-charcoal-muted hover:text-deep-charcoal transition-colors">Hospitality</button>
-<button class="px-4 py-2 rounded-full bg-cream-canvas text-charcoal-muted hover:text-deep-charcoal transition-colors">Licensed Trades</button>
-<button class="px-4 py-2 rounded-full bg-cream-canvas text-charcoal-muted hover:text-deep-charcoal transition-colors">Digital Companions</button>
 </div>
 </div>
 <!-- 3-Column Showcase Cards Grid -->
@@ -156,7 +164,7 @@
 </div>
 <h3 class="font-headline-sm text-headline-sm text-deep-charcoal mb-3">BS Tiling Specialists</h3>
 <p class="font-body-sm text-body-sm text-charcoal-muted italic mb-6 leading-relaxed flex-1">
-            "WynnPages gave our tier-1 commercial tiling the digital authority it deserved. Head contractors now call us directly to discuss BOQs."
+            "WynnPages gave our tier-1 commercial tenders the digital authority they deserve. Builders and head contractors take us seriously before we even pick up the phone."
           </p>
 <div class="pt-4 border-t border-surface-container flex items-center justify-between">
 <span class="font-label-md text-label-md text-charcoal-muted uppercase">AS 3958.1 Compliant</span>
@@ -177,7 +185,7 @@
 </div>
 <h3 class="font-headline-sm text-headline-sm text-deep-charcoal mb-3">BeerLens</h3>
 <p class="font-body-sm text-body-sm text-charcoal-muted italic mb-6 leading-relaxed flex-1">
-            "Over 1,470+ curated beers, 131 styles, and AI weather pairing. An editorial app crafted for discerning beer lovers."
+            "A curated library of 1,470+ beers across 42 countries. Handcrafted digital companion with instant label recognition and bespoke palate seals."
           </p>
 <div class="pt-4 border-t border-surface-container flex items-center justify-between">
 <span class="font-label-md text-label-md text-charcoal-muted uppercase">8 Languages Supported</span>
@@ -195,48 +203,41 @@
 </div>
 </section>
 <!-- SECTION 3: OUR PHILOSOPHY -->
-<section class="w-full bg-background py-20 lg:py-28">
-<div class="max-w-5xl mx-auto px-margin-mobile lg:px-margin">
-<div class="relative p-8 lg:p-14 rounded-2xl bg-sand-surface shadow-sm">
-<div class="absolute -top-5 left-10 px-4 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest">
-          The Manifesto
-        </div>
-<div class="flex flex-col space-y-8">
-<!-- Pull Quote -->
-<blockquote class="font-quote-pull text-quote-pull-mobile lg:text-quote-pull text-deep-charcoal italic leading-relaxed border-l-4 border-primary pl-6 lg:pl-8">
-            “You aren’t paying for business overheads, project managers, or bloated agency software. You are simply paying for the time, care, and craft poured directly into your digital home.”
-          </blockquote>
-<!-- Narrative Text -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 font-body-md text-body-md text-charcoal-muted leading-relaxed">
-<p class="">
-              Founded by Wynn, creator of BeerLens and Beer Magazine. After years of running independent media and working alongside passionate Aussie artisans, a frustrating pattern became impossible to ignore: hardworking local operators getting charged $5,000 upfront by corporate agencies, only to be saddled with clunky WordPress templates and $150 monthly hostage retainers.
-            </p>
-<p class="">
-              WynnPages is the antidote. We design and code directly by hand. Zero layers of management, zero automated page-builder bloat, and zero hostage fees. Just high-speed, bespoke digital architecture delivered with quiet pride and total client independence.
-            </p>
+<section class="w-full bg-background py-20 lg:py-28" id="philosophy">
+<div class="max-w-4xl mx-auto px-margin-mobile lg:px-margin">
+<div class="text-center mb-10">
+<span class="font-label-md text-label-md font-semibold tracking-widest text-primary uppercase">✦ Our Philosophy</span>
+<h2 class="font-headline-lg text-headline-lg-mobile lg:text-headline-lg text-deep-charcoal mt-2">
+          Crafted out of passion, <span class="italic text-primary">not corporate KPIs.</span>
+</h2>
 </div>
-<!-- Author Signoff Lockup -->
-<div class="pt-6 border-t border-outline-variant/30 flex items-center justify-between flex-wrap gap-4">
+<div class="relative p-8 lg:p-12 rounded-3xl bg-sand-surface shadow-sm border border-outline-variant/20 overflow-hidden">
+<div class="absolute -right-10 -bottom-10 w-40 h-40 bg-tertiary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+<blockquote class="font-headline-md text-[22px] lg:text-[28px] text-deep-charcoal italic leading-relaxed border-l-4 border-primary pl-6 lg:pl-8 mb-8">
+  "You aren't paying for business overheads, project managers, or bloated agency software. You are simply paying for the time, care, and craft poured directly into your digital home."
+</blockquote>
+<div class="space-y-4 mb-8 text-charcoal-muted font-body-md text-body-md lg:text-[17px] leading-relaxed">
+<p>Founded by Wynn, creator of Beer Lens and Beer Magazine. After years of running independent media and working with passionate artisans, I saw hardworking Aussie operators getting ripped off by $5,000 corporate agencies and clunky WordPress subscriptions.</p>
+<p>
+    WynnPages was born from the exact same craft ethos: pure, handcrafted, high-performance static websites built with genuine love and care. Specializing in Apple-standard UI design, we craft premium, authoritative digital experiences that instantly build trust.
+  </p>
+</div>
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-outline-variant/30">
 <div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-full bg-cream-canvas flex items-center justify-center text-primary font-bold text-lg shadow-sm">
-                W
-              </div>
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed/40 border border-primary/20 flex items-center justify-center font-headline-sm font-bold text-primary text-xl shadow-sm">
+    W
+  </div>
 <div>
-<p class="font-headline-sm text-headline-sm text-deep-charcoal">Wynn</p>
-<p class="font-label-md text-label-md text-charcoal-muted uppercase">Brisbane &amp; Sunshine Coast, QLD</p>
+<p class="font-headline-sm text-[18px] text-deep-charcoal">Handcrafted by Wynn</p>
+<p class="font-label-md text-[11px] text-charcoal-muted uppercase">Apple Designer</p>
 </div>
-</div>
-<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sage-wash text-secondary font-label-md text-label-md font-semibold">
-<span class="material-symbols-outlined text-[18px]">verified</span>
-              Crafted out of passion, not corporate KPIs
-            </div>
 </div>
 </div>
 </div>
 </div>
 </section>
 <!-- SECTION 4: THE CRAFT JOURNEY -->
-<section class="w-full bg-cream-canvas py-20 lg:py-28">
+<section class="w-full bg-cream-canvas py-20 lg:py-28" id="craft-journey">
 <div class="max-w-7xl mx-auto px-margin-mobile lg:px-margin">
 <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
 <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-md text-label-md uppercase tracking-wider">
@@ -305,255 +306,9 @@
 </div>
 </div>
 </section>
-<!-- SECTION 5: BUILT FOR LOCAL LEGENDS (4 Archetypes) -->
-<section class="w-full bg-sand-surface py-20 lg:py-28">
-<div class="max-w-7xl mx-auto px-margin-mobile lg:px-margin">
-<div class="max-w-3xl mb-16 space-y-3">
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cream-canvas text-primary font-label-md text-label-md uppercase tracking-wider">
-          ✦ Tailored Architecture
-        </div>
-<h2 class="font-headline-lg text-headline-lg-mobile lg:text-headline-lg text-deep-charcoal">
-          Built for Local Legends Who <span class="italic text-[#b85d43]">Value Simplicity.</span>
-        </h2>
-<p class="font-body-md text-body-md text-charcoal-muted">
-          Every website is hand-coded to highlight your unique craft, convert local visitors, and load instantly on mobile networks.
-        </p>
-</div>
-<!-- 4 Columns of Industry Archetypes with Watercolor Paintings -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-<!-- Archetype 1: Trades & Builders -->
-<div class="flex flex-col rounded-xl bg-cream-canvas overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
-<div class="aspect-[4/3] w-full bg-surface-container overflow-hidden">
-<img loading="lazy" decoding="async" alt="Artisanal watercolor illustration of carpenter and builder workshop tools" class="w-full h-full object-cover" src="assets/asset_30bad888.jpg">
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<span class="font-label-md text-label-md uppercase tracking-wider text-primary">Trade Archetype</span>
-<h3 class="font-headline-sm text-headline-sm text-deep-charcoal mt-1 mb-2">Trades &amp; Builders</h3>
-<p class="font-body-sm text-body-sm text-charcoal-muted leading-relaxed">
-                Plumbing, sparkies, roofing, and carpenters. Direct click-to-call buttons, license verifications, and instant quote capture.
-              </p>
-</div>
-<div class="pt-4 mt-4 border-t border-outline-variant/30 flex items-center justify-between text-charcoal-muted font-label-md text-label-md">
-<span class="">Instant Call Actions</span>
-<span class="material-symbols-outlined text-[18px] text-primary">call</span>
-</div>
-</div>
-</div>
-<!-- Archetype 2: Cafes & Bakeries -->
-<div class="flex flex-col rounded-xl bg-cream-canvas overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
-<div class="aspect-[4/3] w-full bg-surface-container overflow-hidden">
-<img loading="lazy" decoding="async" alt="Artisanal watercolor illustration of a boutique bakery with sourdough and flat white" class="w-full h-full object-cover" src="assets/asset_036dd6fb.jpg">
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<span class="font-label-md text-label-md uppercase tracking-wider text-primary">Hospitality Archetype</span>
-<h3 class="font-headline-sm text-headline-sm text-deep-charcoal mt-1 mb-2">Cafes &amp; Bakeries</h3>
-<p class="font-body-sm text-body-sm text-charcoal-muted leading-relaxed">
-                Specialty roasters, sourdough bakers, and bistros. Mobile digital menus, dynamic opening hours, and precise Google Maps pins.
-              </p>
-</div>
-<div class="pt-4 mt-4 border-t border-outline-variant/30 flex items-center justify-between text-charcoal-muted font-label-md text-label-md">
-<span class="">Mobile-First Menus</span>
-<span class="material-symbols-outlined text-[18px] text-primary">restaurant_menu</span>
-</div>
-</div>
-</div>
-<!-- Archetype 3: Salons & Studios -->
-<div class="flex flex-col rounded-xl bg-cream-canvas overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
-<div class="aspect-[4/3] w-full bg-surface-container overflow-hidden">
-<img loading="lazy" decoding="async" alt="Artisanal watercolor illustration of a quiet boutique salon table with ceramic bottles" class="w-full h-full object-cover" src="assets/asset_afba4093.jpg">
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<span class="font-label-md text-label-md uppercase tracking-wider text-primary">Wellness Archetype</span>
-<h3 class="font-headline-sm text-headline-sm text-deep-charcoal mt-1 mb-2">Salons &amp; Studios</h3>
-<p class="font-body-sm text-body-sm text-charcoal-muted leading-relaxed">
-                Boutique hair salons, tattoo studios, and physiotherapists. Seamless direct links to your Fresha, Timely, or Square bookings.
-              </p>
-</div>
-<div class="pt-4 mt-4 border-t border-outline-variant/30 flex items-center justify-between text-charcoal-muted font-label-md text-label-md">
-<span class="">Fresha &amp; Timely Links</span>
-<span class="material-symbols-outlined text-[18px] text-primary">calendar_today</span>
-</div>
-</div>
-</div>
-<!-- Archetype 4: Mobile Services -->
-<div class="flex flex-col rounded-xl bg-cream-canvas overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
-<div class="aspect-[4/3] w-full bg-surface-container overflow-hidden">
-<img loading="lazy" decoding="async" alt="Artisanal watercolor illustration of mobile craftsman tool roll in Australian outdoor landscape" class="w-full h-full object-cover" src="assets/asset_47912cec.jpg">
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<span class="font-label-md text-label-md uppercase tracking-wider text-primary">On-The-Road Archetype</span>
-<h3 class="font-headline-sm text-headline-sm text-deep-charcoal mt-1 mb-2">Mobile Services</h3>
-<p class="font-body-sm text-body-sm text-charcoal-muted leading-relaxed">
-                Car detailing, mobile pet groomers, and pop-up mechanics. Service radius coverage maps and immediate WhatsApp chat buttons.
-              </p>
-</div>
-<div class="pt-4 mt-4 border-t border-outline-variant/30 flex items-center justify-between text-charcoal-muted font-label-md text-label-md">
-<span class="">Direct WhatsApp Hookup</span>
-<span class="material-symbols-outlined text-[18px] text-primary">chat_bubble</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- SECTION 6: ZERO-RISK GUARANTEE INTERACTIVE DEMONSTRATION -->
-<section class="w-full bg-background py-20 lg:py-28">
-<div class="max-w-6xl mx-auto px-margin-mobile lg:px-margin">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-<!-- Copy Column -->
-<div class="lg:col-span-6 space-y-6">
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage-wash text-secondary font-label-md text-label-md uppercase tracking-wider">
-            ✦ Zero-Risk Guarantee
-          </div>
-<h2 class="font-headline-lg text-headline-lg-mobile lg:text-headline-lg text-deep-charcoal">
-            You approve. <span class="italic text-[#b85d43]">We publish.</span>
-          </h2>
-<p class="font-body-lg text-body-lg text-charcoal-muted leading-relaxed">
-            Within 48 hours, a private staging link is sent directly to your phone. Review your handcrafted site, request tweaks with a tap, or approve it for an immediate global launch.
-          </p>
-<p class="font-body-md text-body-md text-charcoal-muted leading-relaxed">
-            You hold all the power. If the preview does not meet your expectations, we refine it until it does. No launch until you are 100% in love with your new digital home.
-          </p>
-<div class="flex items-center gap-4 pt-2">
-<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-<span class="material-symbols-outlined text-[20px]">thumb_up</span>
-</div>
-<span class="font-label-lg text-label-lg text-deep-charcoal">100% Satisfaction Guarantee Prior to Launch</span>
-</div>
-</div>
-<!-- Interactive Staging Preview Simulation -->
-<div class="lg:col-span-6">
-<div class="rounded-2xl bg-sand-surface p-6 lg:p-8 shadow-xl relative">
-<div class="flex items-center justify-between pb-4 border-b border-outline-variant/30 mb-5">
-<div class="flex items-center gap-2">
-<span class="w-3 h-3 rounded-full bg-terracotta-soft"></span>
-<span class="w-3 h-3 rounded-full bg-tertiary-fixed"></span>
-<span class="w-3 h-3 rounded-full bg-secondary"></span>
-<span class="font-label-md text-label-md text-charcoal-muted ml-2">preview.wynnpages.com.au/emerald-cafe</span>
-</div>
-<span class="px-2.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-md text-label-md font-semibold">STAGING LIVE</span>
-</div>
-<!-- Staging Screen Simulation -->
-<div class="rounded-lg overflow-hidden bg-cream-canvas p-4 shadow-sm mb-6">
-<div class="flex items-center justify-between mb-3">
-<span class="font-headline-sm text-headline-sm text-deep-charcoal">Emerald Cafe Preview</span>
-<span class="text-xs px-2 py-1 rounded bg-sand-surface text-charcoal-muted font-mono">v1.2</span>
-</div>
-<div class="w-full aspect-[16/9] rounded overflow-hidden mb-4">
-<img loading="lazy" decoding="async" alt="Emerald Cafe live interactive staging preview" class="w-full h-full object-cover" src="assets/asset_d73fd899.jpg">
-</div>
-<div class="p-3 rounded bg-secondary-container/50 text-secondary font-body-sm text-body-sm flex items-center gap-2" id="staging-status-msg">
-<span class="material-symbols-outlined text-[18px]">info</span>
-<span class="">Ready for your inspection. All mobile touchpoints active.</span>
-</div>
-</div>
-<!-- Simulated Client Action Controls -->
-<div class="flex items-center gap-4">
-<button class="flex-1 py-3 px-4 rounded bg-cream-canvas hover:bg-surface-container text-deep-charcoal font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2" id="tweak-btn">
-<span class="material-symbols-outlined text-[18px]">edit_note</span>
-                Request Minor Tweak
-              </button>
-<button class="flex-1 py-3 px-4 rounded bg-primary hover:bg-terracotta-soft text-on-primary font-label-lg text-label-lg transition-colors flex items-center justify-center gap-2 shadow-md" id="approve-btn">
-<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
-                Approve &amp; Launch
-              </button>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- SECTION 7: THE HONEST CONTRAST -->
-<section class="w-full bg-cream-canvas py-20 lg:py-28">
-<div class="max-w-6xl mx-auto px-margin-mobile lg:px-margin">
-<div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sand-surface text-primary font-label-md text-label-md uppercase tracking-wider">
-          ✦ The Honest Contrast
-        </div>
-<h2 class="font-headline-lg text-headline-lg-mobile lg:text-headline-lg text-deep-charcoal">
-          A different kind of <span class="italic text-[#b85d43]">web studio.</span>
-        </h2>
-<p class="font-body-md text-body-md text-charcoal-muted">
-          Compare the bloated agency model with our honest, one-time bespoke craftsmanship.
-        </p>
-</div>
-<!-- 2-Column Comparative Layout -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-<!-- Left: Standard Agency -->
-<div class="p-8 lg:p-10 rounded-2xl bg-stone-100/90 border border-parchment-200/80 shadow-xs opacity-60 flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-4">
-<span class="font-label-md text-label-md uppercase tracking-widest text-charcoal-muted">Traditional</span>
-<span class="px-2.5 py-1 rounded bg-surface-variant text-charcoal-muted font-label-md text-label-md">Agency Model</span>
-</div>
-<h3 class="font-headline-md text-headline-md text-deep-charcoal mb-6">The Standard Agency</h3>
-<ul class="space-y-4 font-body-md text-body-md text-charcoal-muted">
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">close</span>
-<span class=""><strong>$2,000 to $5,000+</strong> upfront setup fees.</span>
-</li>
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">close</span>
-<span class=""><strong>$50 – $150/month</strong> ongoing "maintenance retainers" that do nothing.</span>
-</li>
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">close</span>
-<span class="">They hold your domain name in their corporate account, locking you in forever.</span>
-</li>
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">close</span>
-<span class="">Built on sluggish WordPress or Wix platforms requiring continuous paid security updates.</span>
-</li>
-</ul>
-</div>
-<div class="mt-8 pt-4 border-t border-outline-variant/20 text-charcoal-muted font-body-sm text-body-sm">
-            Endless monthly subscriptions &amp; complex contracts.
-          </div>
-</div>
-<!-- Right: WynnPages Elevated Antidote -->
-<div class="p-8 lg:p-10 rounded-2xl bg-white text-deep-charcoal shadow-card-float border border-amber-200 flex flex-col justify-between relative overflow-hidden">
-<div class="absolute top-0 right-0 px-6 py-2 bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest rounded-bl-xl font-bold">
-            The Antidote
-          </div>
-<div>
-<div class="flex items-center justify-between mb-4">
-<span class="font-label-md text-label-md uppercase tracking-widest text-tertiary-fixed">Bespoke Studio</span>
-<span class="opacity-0">Placeholder</span>
-</div>
-<h3 class="font-headline-md text-headline-md text-deep-charcoal mb-6">WynnPages Atelier</h3>
-<ul class="space-y-4 font-body-md text-body-md text-charcoal-muted">
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-gold-500 text-[20px] shrink-0 mt-0.5">check_circle</span>
-<span class=""><strong class="text-deep-charcoal">A flat $599 AUD</strong> transparent one-off fee.</span>
-</li>
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-gold-500 text-[20px] shrink-0 mt-0.5">check_circle</span>
-<span class=""><strong class="text-deep-charcoal">$0 monthly agency retainers</strong>. Ever.</span>
-</li>
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-gold-500 text-[20px] shrink-0 mt-0.5">check_circle</span>
-<span class=""><strong class="text-deep-charcoal">You hold the keys:</strong> 100% eternal ownership of your domain and files.</span>
-</li>
-<li class="flex items-start gap-3">
-<span class="material-symbols-outlined text-gold-500 text-[20px] shrink-0 mt-0.5">check_circle</span>
-<span class=""><strong class="text-deep-charcoal">Hand-coded from scratch:</strong> Instant 0.3s loads, zero plugin bloat, zero security leaks.</span>
-</li>
-</ul>
-</div>
-<div class="mt-8 pt-4 border-t border-cream-canvas/20 flex items-center justify-between">
-<span class="font-body-sm text-body-sm text-sand-surface">Total freedom &amp; peace of mind.</span>
-<span class="font-label-md text-label-md text-tertiary-fixed uppercase tracking-wider font-semibold">Guaranteed</span>
-</div>
-</div>
-</div>
-</div>
-</section>
+
 <!-- SECTION 8: PRICING (Deep Purple Cutting-Mat Canvas) -->
-<section class="w-full bg-background py-20 lg:py-28" id="pricing-slot">
+<section class="w-full bg-background py-20 lg:py-28" id="pricing">
 <div class="max-w-4xl mx-auto px-margin-mobile lg:px-margin">
 <!-- Cutting Grid Card -->
 <div class="relative rounded-2xl bg-[#2d1b2e] text-[#fbf8ff] p-8 lg:p-14 shadow-2xl overflow-hidden pricing-parallax-container">
@@ -632,7 +387,7 @@
 </div>
 </section>
 <!-- SECTION 9: FREQUENTLY ANSWERED (FAQ Accordion) -->
-<section class="w-full bg-sand-surface py-20 lg:py-28">
+<section class="w-full bg-sand-surface py-20 lg:py-28" id="faq">
 <div class="max-w-4xl mx-auto px-margin-mobile lg:px-margin">
 <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cream-canvas text-primary font-label-md text-label-md uppercase tracking-wider">
@@ -710,11 +465,11 @@
 <!-- Q7 -->
 <div class="faq-item p-6">
 <button class="faq-toggle w-full flex items-center justify-between text-left font-headline-sm text-headline-sm font-medium text-deep-charcoal hover:text-primary transition-colors">
-<span class="">7. How does the 72-hour turnaround &amp; revision work?</span>
+<span class="">7. How does the 7-day turnaround &amp; revision work?</span>
 <span class="material-symbols-outlined text-primary text-[24px] transform transition-transform duration-300">expand_more</span>
 </button>
 <div class="faq-content hidden pt-4 text-charcoal-muted font-body-md text-body-md leading-relaxed">
-            Once you provide your basic business details, we deliver your live staging preview link within 48 hours. You test it, request any changes, and upon your final approval, we map your domain and take it live within 72 hours of project initiation.
+            Once you provide your basic business details, we deliver your live staging preview link within a few days. You test it, request any changes, and upon your final approval, we map your domain and take it live within 7 days of project initiation.
           </div>
 </div>
 </div>
@@ -828,7 +583,7 @@
       statusMsg.className = 'p-3 rounded bg-secondary-container text-secondary font-body-sm text-body-sm flex items-center gap-2 font-semibold';
     });
   }
-</script></main><footer class="w-full bg-cream-canvas border-t border-surface-container-high/90 text-on-surface mt-space-xl"><div class="max-w-7xl mx-auto px-margin-mobile lg:px-margin pt-16 pb-12"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16"><div class="lg:col-span-5 flex flex-col justify-between pr-4"><div class="space-y-4"><div class="flex items-center gap-3"><img loading="lazy" decoding="async" alt="WynnPages brand logo lockup with transparent background, edited according to annotation. The bottom bounding box and viewBox have been expanded to 520x108 so that the descender loop of the letter 'g' in Pages is fully visible with zero clipping, while keeping the tight cropped padding aesthetic intact." class="h-8 w-auto object-contain" src="assets/logo.png"><span class="font-headline-sm text-headline-sm text-deep-charcoal font-normal">WynnPages</span></div><p class="font-body-md text-body-md text-charcoal-muted max-w-md">Handcrafted code, high-performance web architecture, and organic aesthetics for Australian trades, cafes, and creators. Flat $599 AUD. Zero retainers.</p></div><div class="mt-8 pt-6 border-t border-outline-variant/30 space-y-1"><p class="font-body-sm text-body-sm text-on-surface-variant pt-1">Brisbane &amp; Sunshine Coast, Queensland · ABN 98 573 217 361</p></div></div><div class="lg:col-span-2 space-y-4"><p class="font-label-md text-label-md text-deep-charcoal uppercase tracking-widest font-semibold">Portfolio</p><ul class="space-y-2.5"><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="selected-works" href="#">Selected Works</a></li><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="built-for-you" href="#">Australian Trades</a></li><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="built-for-you" href="#">Cafes &amp; Hospitality</a></li><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="built-for-you" href="#">Independent Creators</a></li></ul></div><div class="lg:col-span-2 space-y-4"><p class="font-label-md text-label-md text-deep-charcoal uppercase tracking-widest font-semibold">Offer &amp; Method</p><ul class="space-y-2.5"><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="pricing" href="#">Flat Rate $599 AUD</a></li><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="craft-journey" href="#">The 7-Day Craft</a></li><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="the-contrast" href="#">The Contrast Guide</a></li><li role="none" class=""><a class="font-body-sm text-body-sm text-charcoal-muted hover:text-primary transition-colors" data-path="faq" href="#">Frequently Asked</a></li></ul></div><div class="lg:col-span-3 space-y-4"><p class="font-label-md text-label-md text-deep-charcoal uppercase tracking-widest font-semibold">Philosophy</p><p class="font-body-sm text-body-sm text-charcoal-muted leading-relaxed">Rejecting bloated drag-and-drop subscriptions. We deliver bespoke, lightweight digital craftsmanship that small business owners retain and own forever.</p><div class="pt-2"><a class="font-label-lg text-label-lg text-primary hover:underline underline-offset-4 inline-flex items-center gap-1.5" data-path="philosophy" href="#">Read our manifesto →</a></div></div></div><div class="pt-8 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4"><p class="font-body-sm text-body-sm text-charcoal-muted text-center md:text-left">Crafted with care in Brisbane, Queensland, Australia · Independent &amp; 100% Australian Owned · © 2026 WynnPages</p><div class="flex items-center gap-6"><a class="font-label-md text-label-md text-charcoal-muted hover:text-on-surface" data-path="philosophy" href="#">Ethos</a><a class="font-label-md text-label-md text-charcoal-muted hover:text-on-surface" data-path="pricing" href="#">Terms &amp; Delivery</a><a class="font-label-md text-label-md text-charcoal-muted hover:text-on-surface" data-path="contact" href="#">Inquiry Sheet</a></div></div></div></footer>
+</script></main><footer class="w-full bg-cream-canvas border-t border-surface-container-high/90 text-on-surface mt-space-xl"><div class="max-w-7xl mx-auto px-margin-mobile lg:px-margin pt-16 pb-12 flex flex-col items-center justify-center text-center"><div class="flex items-center justify-center gap-1.5 mb-4 opacity-90 hover:opacity-100 transition-opacity"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span class="font-label-md text-[11px] font-bold tracking-widest text-charcoal-muted uppercase">100% Australian Owned</span></div><p class="font-body-sm text-body-sm text-charcoal-muted mb-6 opacity-70">Hand-coded in Brisbane, Queensland.</p><div class="flex items-center justify-center gap-4 mb-6"><img src="assets/favicon.png" alt="WynnPages" class="w-6 h-6 object-contain opacity-50 grayscale contrast-125"></div><div class="flex flex-col gap-2 opacity-50 font-body-sm text-body-sm text-charcoal-muted"><p>© 2026 WynnPages. All rights reserved.</p><p>A bespoke division of Wynn Digital.</p></div></div></footer>
 <script>
     // Parallax logic for Hero Image
     document.addEventListener('scroll', () => {
@@ -882,7 +637,7 @@
             <span class="material-symbols-outlined text-[14px]">nest_eco_leaf</span>
             <span>Handcrafted in Brisbane</span>
           </div>
-          <h2 class="font-editorial text-3xl text-stone-900 font-bold tracking-tight leading-tight">Claim Your 72h<br>Build Slot</h2>
+          <h2 class="font-editorial text-3xl text-stone-900 font-bold tracking-tight leading-tight">Claim Your 7-Day<br>Build Slot</h2>
           <p class="text-sm text-stone-500 mt-2">Flat $599 AUD • No retainers • 100% yours forever</p>
         </div>
         <button onclick="closeCheckoutDrawer()" aria-label="Close" class="w-9 h-9 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 transition-colors shrink-0">
@@ -996,7 +751,7 @@
       <div class="w-20 h-20 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mb-6 scale-0 transition-transform duration-500 delay-100 shadow-sm border border-[#536251]/20" id="success-icon-wrap">
         <span class="material-symbols-outlined text-[40px]">check_circle</span>
       </div>
-      <h2 class="font-editorial text-3xl sm:text-4xl text-stone-900 font-bold tracking-tight text-center mb-3 text-balance leading-tight">Your 72h Build Slot is Locked, mate.</h2>
+      <h2 class="font-editorial text-3xl sm:text-4xl text-stone-900 font-bold tracking-tight text-center mb-3 text-balance leading-tight">Your 7-Day Build Slot is Locked, mate.</h2>
       <p class="text-center text-stone-500 text-[15px] max-w-sm mb-10 leading-relaxed">
         Payment secured. Let's not waste any time.<br>Complete your simple 5-minute brief now so we can start designing immediately.
       </p>
