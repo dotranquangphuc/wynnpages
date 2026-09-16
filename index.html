@@ -508,7 +508,7 @@
   </style>
 <script src="https://unpkg.com/lenis@1.1.9/dist/lenis.min.js"></script>
 </head>
-<body class="min-h-screen bg-parchment-200 text-parchment-900 overflow-x-clip w-full max-w-[100vw] selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
+<body class="min-h-screen bg-parchment-200 text-parchment-900 w-full selection:bg-amber-200 selection:text-parchment-900 relative" style="font-family: &quot;Plus Jakarta Sans&quot;, &quot;DM Sans&quot;, -apple-system, BlinkMacSystemFont, sans-serif; color: rgb(45, 40, 37); line-height: 1.6; letter-spacing: -0.01em;">
 <!-- Background Texture Layer -->
 <div aria-hidden="true" class="fixed inset-0 bg-paper-grain pointer-events-none z-0"></div>
 <!-- BEGIN: NavigationBar -->
@@ -991,7 +991,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             lenis = new Lenis({
                 duration: 1.2,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smoothTouch: true,
+                smoothTouch: false, // Turn OFF for mobile to prevent scroll fighting/stuttering
                 touchMultiplier: 2,
             });
             function raf(time) {
