@@ -474,18 +474,22 @@
 <section class="relative w-full min-h-[90vh] lg:min-h-[800px] overflow-hidden flex flex-col items-center justify-center pt-32 pb-28">
 <div id="hero-parallax-wrapper" class="absolute -inset-y-[15%] inset-x-0 h-[130%] w-full -z-10 pointer-events-none overflow-hidden transform-gpu" style="transform: translate3d(0px, 0px, 0px);">
   <img alt="Artisanal watercolor illustration of the WynnPages web design workbench with hand-drawn wireframes and brass tools" id="hero-bg" class="w-full h-full object-cover object-[center_30%] transform-gpu" style="transform: scale(1.05);" src="assets/banner-web.jpg">
-  <div class="absolute inset-0 bg-gradient-to-b from-[#fcf9f3]/40 via-transparent to-[#fcf9f3]/80"></div>
-  <div class="absolute inset-0 bg-gradient-to-t from-[#fcf9f3]/80 via-transparent to-transparent"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-[#fcf9f3]/10 via-transparent to-[#fcf9f3]/30"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-[#fcf9f3]/30 via-transparent to-transparent"></div>
 </div>
 
 <div class="max-w-5xl mx-auto px-margin flex flex-col items-center text-center relative z-10 pt-10">
-  <div class="pill-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-white/80 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)] mb-8 cursor-default hover:scale-105 transition-transform duration-200">
-    <span class="w-1.5 h-1.5 rounded-full bg-[#d49b28] animate-pulse"></span>
-    <span class="text-[10px] lg:text-xs font-bold tracking-widest text-[#231f1a] uppercase">Honest Web Design</span>
-  </div>
+  <div class="relative w-full flex flex-col items-center">
+    <!-- Soft blurred backdrop for text readability -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[140%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#fcf9f3]/70 via-[#fcf9f3]/30 to-transparent blur-xl rounded-[100%] -z-10 pointer-events-none"></div>
+    
+    <div class="pill-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-white/80 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)] mb-8 cursor-default hover:scale-105 transition-transform duration-200">
+      <span class="w-1.5 h-1.5 rounded-full bg-[#d49b28] animate-pulse"></span>
+      <span class="text-[10px] lg:text-xs font-bold tracking-widest text-[#231f1a] uppercase">Honest Web Design</span>
+    </div>
 
-  <h1 class="font-editorial text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-parchment-900 text-balance mb-6 drop-shadow-sm"><span class="sr-only">A Beautiful Space for local businesses, tradies and creators on the web.</span><span aria-hidden="true" class="">A Beautiful Space<br><span class="inline-flex items-center justify-center whitespace-nowrap">for <span class="italic text-[#c96549] whitespace-nowrap inline-block pl-1.5" id="typewriter-text">tradies &amp; builders</span><span class="typewriter-cursor text-[#d97736]">|</span></span><br>on the web.</span></h1>
-<p class="text-[14px] sm:text-[15px] text-[#2c2621] font-normal max-w-[300px] leading-relaxed text-balance text-center [text-shadow:_0_1px_12px_rgba(255,255,255,1),_0_0_4px_rgba(255,255,255,0.8)] mb-10">Hand-crafted, lightning-fast websites for Aussie trades, cafes, and salons. Flat $599, zero monthly retainers. Yours forever.</p>
+    <h1 class="font-editorial text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-parchment-900 text-balance mb-6 drop-shadow-md"><span class="sr-only">A Beautiful Space for local businesses, tradies and creators on the web.</span><span aria-hidden="true" class="">A Beautiful Space<br><span class="inline-flex items-center justify-center whitespace-nowrap">for <span class="italic text-[#c96549] whitespace-nowrap inline-block pl-1.5" id="typewriter-text">tradies &amp; builders</span><span class="typewriter-cursor text-[#d97736]">|</span></span><br>on the web.</span></h1>
+  <p class="text-[14px] sm:text-[15px] text-[#2c2621] font-normal max-w-[300px] leading-relaxed text-balance text-center [text-shadow:_0_1px_12px_rgba(255,255,255,1),_0_0_4px_rgba(255,255,255,0.8)] mb-10">Hand-crafted, lightning-fast websites for Aussie trades, cafes, and salons. Flat $599, zero monthly retainers. Yours forever.</p>
 
   <a class="group relative overflow-hidden inline-flex justify-center items-center px-10 py-5 rounded-full bg-gradient-to-b from-[#2a2a2a] to-[#1c1a19] border border-[#d4b996]/30 shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:shadow-[0_8px_20px_rgba(212,185,150,0.15),inset_0_1px_1px_rgba(255,255,255,0.1)] hover:border-[#d4b996]/60 hover:-translate-y-0.5 transition duration-300 ease-out" href="javascript:void(0)" onclick="openCheckoutDrawer(event)">
     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent auto-sweep"></div>
@@ -507,6 +511,7 @@
     <span class="text-xs text-parchment-900 uppercase tracking-widest font-bold">Bespoke Craft</span>
     <span class="text-[#d49b28] font-bold animate-float">✦</span>
     <span class="text-xs text-parchment-900 uppercase tracking-widest font-bold">100% Australian Owned</span>
+  </div>
   </div>
 </div>
 </section>
