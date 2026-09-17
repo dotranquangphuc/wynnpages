@@ -229,14 +229,14 @@
     /* Unique Grid Stagger Reveal */
     .corner-reveal-tl, .corner-reveal-tr, .corner-reveal-bl, .corner-reveal-br {
       opacity: 0;
-      filter: blur(10px);
-      transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      filter: blur(12px);
+      transition: all 1.8s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform, filter;
     }
-    .corner-reveal-tl { transform: translate(-15px, 25px) scale(0.96); }
-    .corner-reveal-tr { transform: translate(15px, 25px) scale(0.96); }
-    .corner-reveal-bl { transform: translate(-15px, 25px) scale(0.96); }
-    .corner-reveal-br { transform: translate(15px, 25px) scale(0.96); }
+    .corner-reveal-tl { transform: translate(-30px, 40px) scale(0.93); }
+    .corner-reveal-tr { transform: translate(30px, 40px) scale(0.93); }
+    .corner-reveal-bl { transform: translate(-30px, 40px) scale(0.93); }
+    .corner-reveal-br { transform: translate(30px, 40px) scale(0.93); }
     
     .is-revealed .corner-reveal-tl,
     .is-revealed .corner-reveal-tr,
@@ -246,6 +246,10 @@
       filter: blur(0px);
       transform: translate(0, 0) scale(1);
     }
+    .is-revealed .corner-reveal-tl { transition-delay: 0.05s; }
+    .is-revealed .corner-reveal-tr { transition-delay: 0.15s; }
+    .is-revealed .corner-reveal-bl { transition-delay: 0.25s; }
+    .is-revealed .corner-reveal-br { transition-delay: 0.35s; }
 
     .reveal-item {
       opacity: 0;
