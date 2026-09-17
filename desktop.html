@@ -225,24 +225,6 @@
     .reveal-on-scroll.is-revealed > *:nth-child(6) { transition-delay: 0.8s; }
 
     /* Deep Nested Reveal Items */
-    
-    /* Unique Grid Stagger Reveal */
-    .corner-reveal-tl, .corner-reveal-tr, .corner-reveal-bl, .corner-reveal-br {
-      opacity: 0;
-      filter: blur(12px);
-      transition: all 1.0s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform, filter;
-      transform: translateY(40px) scale(0.96);
-    }
-    
-    .is-revealed .corner-reveal-tl,
-    .is-revealed .corner-reveal-tr,
-    .is-revealed .corner-reveal-bl,
-    .is-revealed .corner-reveal-br {
-      opacity: 1;
-      filter: blur(0px);
-      transform: translateY(0) scale(1);
-    }
 
     .reveal-item {
       opacity: 0;
@@ -719,7 +701,8 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 <div class="grid grid-cols-2 lg:grid-cols-4 lg:gap-6 gap-3">
 <!-- Tile 1 -->
-<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group corner-reveal-tl" onclick="toggleFlipCard(this)">
+<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out -translate-x-16">
+<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
     <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col hover:shadow-lg">
@@ -750,9 +733,11 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     </div>
   </div>
 </div>
+</div>
 
 <!-- Tile 2 -->
-<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group corner-reveal-tr" onclick="toggleFlipCard(this)">
+<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out -translate-y-16">
+<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
     <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col hover:shadow-lg">
@@ -783,9 +768,11 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     </div>
   </div>
 </div>
+</div>
 
 <!-- Tile 3 -->
-<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group corner-reveal-bl" onclick="toggleFlipCard(this)">
+<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out translate-y-16">
+<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
     <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col hover:shadow-lg">
@@ -816,9 +803,11 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     </div>
   </div>
 </div>
+</div>
 
 <!-- Tile 4 -->
-<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group corner-reveal-br" onclick="toggleFlipCard(this)">
+<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out translate-x-16">
+<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
     <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col hover:shadow-lg">
@@ -848,6 +837,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       </button>
     </div>
   </div>
+</div>
 </div>
 </div></section>
 <!-- END: ClientCategoriesSection -->
@@ -1635,7 +1625,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
             entry.target.classList.add('is-revealed');
             
             // Auto-stagger deep reveal items
-            const items = entry.target.querySelectorAll('.reveal-item, .corner-reveal-tl, .corner-reveal-tr, .corner-reveal-bl, .corner-reveal-br');
+            const items = entry.target.querySelectorAll('.reveal-item');
             items.forEach((item, index) => {
                item.style.transitionDelay = `${0.15 + (index * 0.15)}s`;
             });
@@ -1649,8 +1639,28 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       });
 
       revealElements.forEach(el => revealObserver.observe(el));
+      
+      // 4-Direction Card Reveals
+      const wrapperElements = document.querySelectorAll('.reveal-wrapper');
+      const wrapperObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry, index) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              entry.target.classList.remove('opacity-0', '-translate-x-16', '-translate-y-16', 'translate-x-16', 'translate-y-16');
+              entry.target.classList.add('opacity-100', 'translate-x-0', 'translate-y-0');
+            }, index * 100); // Small stagger
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      wrapperElements.forEach(el => wrapperObserver.observe(el));
+      
     } else {
       revealElements.forEach(el => el.classList.add('is-revealed'));
+      document.querySelectorAll('.reveal-wrapper').forEach(el => {
+        el.classList.remove('opacity-0', '-translate-x-16', '-translate-y-16', 'translate-x-16', 'translate-y-16');
+        el.classList.add('opacity-100', 'translate-x-0', 'translate-y-0');
+      });
     }
 
     // Dynamic Typewriter Effect for Hero
