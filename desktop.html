@@ -720,7 +720,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 <div class="grid grid-cols-2 lg:grid-cols-4 lg:gap-6 gap-3">
 <!-- Tile 1 -->
-<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300" onclick="this.querySelector('.flipper').classList.toggle('[transform:rotateY(180deg)]')">
+<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
     <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col hover:shadow-lg">
@@ -753,7 +753,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 
 <!-- Tile 2 -->
-<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300" onclick="this.querySelector('.flipper').classList.toggle('[transform:rotateY(180deg)]')">
+<div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
     <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white/85 p-4 rounded-3xl border border-white shadow-xs flex flex-col hover:shadow-lg">
@@ -2120,6 +2120,21 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 
 <script>
+  function toggleFlipCard(container) {
+    const allFlippers = document.querySelectorAll('.flipper');
+    const targetFlipper = container.querySelector('.flipper');
+    
+    const isFlipped = targetFlipper.classList.contains('[transform:rotateY(180deg)]');
+    
+    allFlippers.forEach(flipper => {
+      flipper.classList.remove('[transform:rotateY(180deg)]');
+    });
+    
+    if (!isFlipped) {
+      targetFlipper.classList.add('[transform:rotateY(180deg)]');
+    }
+  }
+
   function openCheckoutDrawer(e) {
     if(e) e.preventDefault();
     const overlay = document.getElementById('checkout-overlay');
