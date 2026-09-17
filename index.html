@@ -272,19 +272,21 @@
     /* Unique Grid Stagger Reveal */
     .corner-reveal-tl, .corner-reveal-tr, .corner-reveal-bl, .corner-reveal-br {
       opacity: 0;
-      transition: all 2.2s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform;
+      filter: blur(10px);
+      transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform, filter;
     }
-    .corner-reveal-tl { transform: translate(-40px, -40px) scale(0.9); }
-    .corner-reveal-tr { transform: translate(40px, -40px) scale(0.9); }
-    .corner-reveal-bl { transform: translate(-40px, 40px) scale(0.9); }
-    .corner-reveal-br { transform: translate(40px, 40px) scale(0.9); }
+    .corner-reveal-tl { transform: translate(-15px, 25px) scale(0.96); }
+    .corner-reveal-tr { transform: translate(15px, 25px) scale(0.96); }
+    .corner-reveal-bl { transform: translate(-15px, 25px) scale(0.96); }
+    .corner-reveal-br { transform: translate(15px, 25px) scale(0.96); }
     
     .is-revealed .corner-reveal-tl,
     .is-revealed .corner-reveal-tr,
     .is-revealed .corner-reveal-bl,
     .is-revealed .corner-reveal-br {
       opacity: 1;
+      filter: blur(0px);
       transform: translate(0, 0) scale(1);
     }
 
