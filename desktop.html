@@ -701,7 +701,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 <div class="grid grid-cols-2 lg:grid-cols-4 lg:gap-6 gap-3">
 <!-- Tile 1 -->
-<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out -translate-x-16">
+<div class="reveal-wrapper opacity-0 blur-md transition-all duration-[1500ms] ease-out -translate-x-12 -translate-y-12">
 <div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
@@ -736,7 +736,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 
 <!-- Tile 2 -->
-<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out -translate-y-16">
+<div class="reveal-wrapper opacity-0 blur-md transition-all duration-[1500ms] ease-out translate-x-12 -translate-y-12">
 <div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
@@ -771,7 +771,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 
 <!-- Tile 3 -->
-<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out translate-y-16">
+<div class="reveal-wrapper opacity-0 blur-md transition-all duration-[1500ms] ease-out -translate-x-12 translate-y-12">
 <div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
@@ -806,7 +806,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
 </div>
 
 <!-- Tile 4 -->
-<div class="reveal-wrapper opacity-0 transition-all duration-1000 ease-out translate-x-16">
+<div class="reveal-wrapper opacity-0 blur-md transition-all duration-[1500ms] ease-out translate-x-12 translate-y-12">
 <div class="perspective-[1000px] w-full h-[220px] active:scale-105 transition-transform duration-300 group" onclick="toggleFlipCard(this)">
   <div class="flipper relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] cursor-pointer">
     <!-- FRONT -->
@@ -1643,12 +1643,20 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       // 4-Direction Card Reveals
       const wrapperElements = document.querySelectorAll('.reveal-wrapper');
       const wrapperObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry, index) => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            const elIndex = Array.from(wrapperElements).indexOf(entry.target);
+            let delay = 0;
+            if (elIndex === 0) delay = 50;
+            else if (elIndex === 1) delay = 150;
+            else if (elIndex === 2) delay = 400;
+            else if (elIndex === 3) delay = 500;
+            else delay = 100;
+
             setTimeout(() => {
-              entry.target.classList.remove('opacity-0', '-translate-x-16', '-translate-y-16', 'translate-x-16', 'translate-y-16');
-              entry.target.classList.add('opacity-100', 'translate-x-0', 'translate-y-0');
-            }, index * 100); // Small stagger
+              entry.target.classList.remove('opacity-0', 'blur-md', '-translate-x-12', 'translate-x-12', '-translate-y-12', 'translate-y-12');
+              entry.target.classList.add('opacity-100', 'blur-0', 'translate-x-0', 'translate-y-0');
+            }, delay);
             observer.unobserve(entry.target);
           }
         });
@@ -1658,8 +1666,8 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     } else {
       revealElements.forEach(el => el.classList.add('is-revealed'));
       document.querySelectorAll('.reveal-wrapper').forEach(el => {
-        el.classList.remove('opacity-0', '-translate-x-16', '-translate-y-16', 'translate-x-16', 'translate-y-16');
-        el.classList.add('opacity-100', 'translate-x-0', 'translate-y-0');
+        el.classList.remove('opacity-0', 'blur-md', '-translate-x-12', 'translate-x-12', '-translate-y-12', 'translate-y-12');
+        el.classList.add('opacity-100', 'blur-0', 'translate-x-0', 'translate-y-0');
       });
     }
 
