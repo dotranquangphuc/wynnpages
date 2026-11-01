@@ -112,14 +112,7 @@ export default {
       }
     }
 
-    // 3. Rewrite /brief to /brief.html (clean URL)
-    if (url.pathname === '/brief') {
-      const briefUrl = new URL('/brief.html', request.url);
-      briefUrl.search = url.search;
-      return env.ASSETS ? env.ASSETS.fetch(new Request(briefUrl, request)) : fetch(new Request(briefUrl, request));
-    }
-
-    // 4. Default static assets fetch
+    // 3. Default static assets fetch
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);
     }
