@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WynnPages — 5-Minute Onboarding Brief</title>
+  <meta name="description" content="Your 7-day build slot is locked. Complete your quick 5-minute brief so we can begin crafting your bespoke site.">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
+  <link href="assets/fonts.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: {
+              50: '#fdfcf9',
+              100: '#fbf8f2',
+              200: '#f6f1e8',
+              300: '#ede4d3',
+              800: '#3a3329',
+              900: '#231f1a',
+            },
+            terracotta: {
+              400: '#e58f55',
+              500: '#d97736',
+              600: '#b8581f',
+            },
+            gold: {
+              400: '#e8b948',
+              500: '#d49b28',
+              600: '#b27b14',
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f6f1e8;
+      color: #2b251e;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+  </style>
+  <script async src="https://tally.so/widgets/embed.js"></script>
+</head>
+<body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
+
+  <!-- Atelier Header -->
+  <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <span class="font-editorial text-2xl font-bold tracking-tight text-stone-900 group-hover:text-[#96432b] transition-colors">
+          WynnPages
+        </span>
+        <span class="text-xs uppercase tracking-widest text-[#96432b] font-semibold bg-[#fbdeb9]/50 px-2 py-0.5 rounded-full">
+          Atelier Brief
+        </span>
+      </a>
+      <a href="/" class="text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+        <span>Back to Site</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-10 lg:py-14">
+    <!-- Success Badge & Intro -->
+    <div class="text-center max-w-xl mx-auto mb-10">
+      <div class="w-16 h-16 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mx-auto mb-5 shadow-sm border border-[#536251]/20">
+        <span class="material-symbols-outlined text-[36px]">check_circle</span>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4e4ce] text-[#586755] font-semibold text-[10px] uppercase tracking-wider mb-3">
+        <span>Payment Secured via Stripe</span>
+      </div>
+      <h1 class="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 leading-tight mb-3">
+        Your 7-Day Build Slot is Locked, mate.
+      </h1>
+      <p class="text-stone-600 text-sm sm:text-base leading-relaxed">
+        Let's not waste any time. Fill in this quick 5-minute brief below so we can start designing your custom atelier website immediately.
+      </p>
+      <div id="client-info-pill" class="hidden mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-200/60 text-xs text-stone-700 font-mono">
+        <span class="w-2 h-2 rounded-full bg-[#82d68e] animate-pulse"></span>
+        <span id="client-email-display"></span>
+      </div>
+    </div>
+
+    <!-- Tally Embed Box -->
+    <div class="bg-white rounded-3xl p-4 sm:p-8 shadow-xl border border-stone-200/80 overflow-hidden relative min-h-[600px]">
+      <!-- Tally iframe container -->
+      <iframe 
+        id="tally-iframe"
+        data-tally-src="https://tally.so/embed/mZR68o?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+        loading="lazy" 
+        width="100%" 
+        height="600" 
+        frameborder="0" 
+        marginheight="0" 
+        marginwidth="0" 
+        title="WynnPages Client Onboarding Brief">
+      </iframe>
+
+      <!-- Fallback button if iframe fails or user prefers full window -->
+      <div class="mt-6 pt-6 border-t border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
+        <span>Prefer to complete this in a dedicated window?</span>
+        <a 
+          id="direct-tally-link" 
+          href="https://tally.so/r/mZR68o" 
+          target="_blank" 
+          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold transition-colors">
+          <span>Open Fullscreen Brief</span>
+          <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-[#dbc1ba]/30 py-6 text-center text-xs text-stone-400">
+    <p>WynnPages Australia • Hand-crafted bespoke digital craftsmanship • © 2026</p>
+  </footer>
+
+  <script>
+    // Extract query params (email, session_id, type)
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    const sessionId = urlParams.get('session_id');
+    const briefType = urlParams.get('type') || 'organic';
+
+    if (email) {
+      const emailPill = document.getElementById('client-info-pill');
+      const emailDisplay = document.getElementById('client-email-display');
+      if (emailPill && emailDisplay) {
+        emailDisplay.textContent = 'Account: ' + email;
+        emailPill.classList.remove('hidden');
+      }
+    }
+
+    // Append query params to Tally iframe src if available
+    const iframe = document.getElementById('tally-iframe');
+    const directLink = document.getElementById('direct-tally-link');
+    if (iframe) {
+      let tallySrc = iframe.getAttribute('data-tally-src') || iframe.src;
+      const paramsToPass = [];
+      if (email) paramsToPass.push('email=' + encodeURIComponent(email));
+      if (sessionId) paramsToPass.push('session_id=' + encodeURIComponent(sessionId));
+      if (briefType) paramsToPass.push('type=' + encodeURIComponent(briefType));
+
+      if (paramsToPass.length > 0) {
+        const joinChar = tallySrc.includes('?') ? '&' : '?';
+        tallySrc += joinChar + paramsToPass.join('&');
+        iframe.setAttribute('data-tally-src', tallySrc);
+        if (directLink) {
+          directLink.href = directLink.href + (directLink.href.includes('?') ? '&' : '?') + paramsToPass.join('&');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

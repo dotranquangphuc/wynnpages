@@ -34,6 +34,7 @@
     <link rel="apple-touch-icon" href="assets/favicon.png">
     <link href="assets/fonts.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
 <!-- Tailwind CSS v3 with Plugins -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Tailwind Custom Configuration -->
@@ -1826,14 +1827,35 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         </div>
       </div>
 
-      <!-- Email Field ONLY -->
-      <div class="flex flex-col gap-1.5 mb-6">
-        <label class="font-semibold text-[13px] text-stone-800 flex items-center justify-between" for="checkoutEmail">
-          <span>Email Address (For Receipt)</span>
-        </label>
-        <div class="relative flex items-center">
-          <span class="material-symbols-outlined absolute left-3 text-stone-400 text-[18px]">alternate_email</span>
-          <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutEmail" placeholder="wynn@wynnpages.com.au" type="email">
+      <form id="checkoutForm" onsubmit="handleStripeCheckout(event);">
+      <!-- Contact Fields -->
+      <div class="flex flex-col gap-4 mb-6">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-[13px] text-stone-800 flex items-center justify-between" for="checkoutName">
+            <span>First Name</span>
+          </label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-stone-400 text-[18px]">person</span>
+            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutName" placeholder="e.g. John" type="text" required>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-[13px] text-stone-800 flex items-center justify-between" for="checkoutPhone">
+            <span>Mobile Number (For SMS updates)</span>
+          </label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-stone-400 text-[18px]">call</span>
+            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutPhone" placeholder="e.g. 0412 345 678" type="tel" required>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-[13px] text-stone-800 flex items-center justify-between" for="checkoutEmail">
+            <span>Email Address (For Receipt &amp; Brief)</span>
+          </label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-stone-400 text-[18px]">alternate_email</span>
+            <input class="w-full bg-[#f6f3ed] text-stone-900 text-[15px] pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:bg-[#f0eee8] transition-all placeholder:text-stone-400 border border-transparent focus:border-[#dbc1ba]" id="checkoutEmail" placeholder="e.g. hello@business.com.au" type="email" required>
+          </div>
         </div>
       </div>
 
@@ -1863,54 +1885,32 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       </div>
 
       <!-- Guarantee -->
-      <div class="p-4 rounded-xl bg-[#d4e4ce]/30 text-[#586755] flex items-start gap-3 mb-8 border border-[#536251]/10">
+      <div class="p-4 rounded-xl bg-[#d4e4ce]/30 text-[#586755] flex items-start gap-3 mb-6 border border-[#536251]/10">
         <span class="material-symbols-outlined text-[20px] text-[#536251] shrink-0 mt-0.5">verified_user</span>
         <div class="flex flex-col">
           <span class="font-bold text-[13px] mb-0.5">100% Risk-Free Guarantee</span>
           <span class="text-xs leading-relaxed opacity-90">
-            Review your live interactive design in 48 hours. If you are not completely thrilled, receive an immediate 100% refund.
+            Review your live interactive design in 1 week. If you are not completely thrilled, receive an immediate 100% refund.
           </span>
         </div>
       </div>
 
-      <!-- Payment Section -->
-      <div class="flex flex-col gap-4">
-        <!-- Apple Pay Button -->
-        <button class="w-full bg-black text-white rounded-xl py-4 flex items-center justify-center hover:bg-stone-800 transition-colors shadow-md active:scale-[0.98]">
-          <!-- Apple Pay Logo SVG -->
-          <svg class="h-6 w-auto fill-current" viewBox="0 0 50 20" xmlns="http://www.w3.org/2000/svg"><path d="M21.565 8.163c-.029-2.181 1.776-3.238 1.859-3.29-1.026-1.503-2.617-1.706-3.187-1.734-1.353-.138-2.646.8-3.342.8-.696 0-1.758-.781-2.883-.758-1.468.021-2.818.857-3.576 2.182-1.536 2.673-.393 6.626 1.107 8.802.731 1.06 1.597 2.25 2.71 2.207 1.082-.045 1.5-.705 2.809-.705 1.303 0 1.688.705 2.836.68 1.168-.02 1.916-1.077 2.635-2.133.83-1.218 1.171-2.399 1.189-2.46-.027-.01-2.296-.882-2.157-3.591m-1.921-5.184c.594-.72 1.002-1.728.887-2.729-.861.036-1.92.576-2.529 1.296-.484.568-.971 1.59-.838 2.574.96.074 1.887-.422 2.48-1.141m11.523 3.865c0-1.492.67-2.888 1.852-3.829-1.066-.757-2.361-1.173-3.693-1.173-3.535 0-6.195 2.73-6.195 6.368 0 3.738 2.777 6.368 6.275 6.368 1.525 0 2.946-.487 4.093-1.365-1.408-1.109-2.332-2.597-2.332-4.444v-1.925h4.153v-2.023l-4.153.023m.396 6.942c-.91.568-1.996.866-3.137.866-2.36 0-4.088-1.745-4.088-4.248 0-2.516 1.701-4.302 4.088-4.302.947 0 1.812.244 2.57.73l.635-1.758c-.947-.568-2.083-.88-3.29-.88-3.481 0-6.195 2.64-6.195 6.249 0 3.596 2.714 6.208 6.195 6.208 1.3 0 2.45-.365 3.396-.947l-.174-1.918m21.144-8.877l-3.328 8.65h-2.181l-1.028-2.922-1.015 2.922h-2.22l-3.219-8.65h2.245l1.961 5.762 1.136-3.18h2.259l1.123 3.165 1.948-5.748h2.319m-17.653 7.036c-.473.474-1.11.758-1.894.758-1.474 0-2.34-.866-2.34-2.191v-1.61h4.221v-3.987h-4.221v-1.867h-2.137v1.867h-1.894v1.854h1.894v1.88c0 2.395 1.745 3.842 4.234 3.842 1.015 0 1.826-.298 2.394-.744l-.257-1.802m-12.836-7.036h-4.316v11.45h2.15v-3.529h1.99c2.786 0 4.653-1.84 4.653-4.018 0-2.137-1.772-3.903-4.477-3.903m.135 6.046h-2.286v-4.179h2.286c1.474 0 2.448.974 2.448 2.083s-.974 2.096-2.448 2.096"/></svg>
-        </button>
-
-        <!-- Divider -->
-        <div class="flex items-center gap-4 my-2">
-          <div class="h-px bg-stone-300 flex-1"></div>
-          <span class="text-[11px] font-bold tracking-widest text-stone-400 uppercase">Or pay with card</span>
-          <div class="h-px bg-stone-300 flex-1"></div>
-        </div>
-
-        <!-- Mock Credit Card Input (Stripe Style) -->
-        <div class="flex flex-col relative rounded-xl overflow-hidden ring-1 ring-stone-300 focus-within:ring-2 focus-within:ring-[#dbc1ba] transition-all bg-white shadow-sm">
-          <div class="absolute right-3 top-3.5 flex items-center gap-1 opacity-40">
-            <span class="material-symbols-outlined text-[20px] text-stone-500">credit_card</span>
-          </div>
-          <input class="w-full bg-white text-stone-900 text-[15px] px-4 py-3.5 focus:outline-none placeholder:text-stone-400 border-b border-stone-200" id="cc-number" placeholder="Card number" type="text" maxlength="19">
-          <div class="flex">
-            <input class="w-1/2 bg-white text-stone-900 text-[15px] px-4 py-3.5 focus:outline-none placeholder:text-stone-400 border-r border-stone-200" id="cc-exp" placeholder="MM / YY" type="text" maxlength="5">
-            <input class="w-1/2 bg-white text-stone-900 text-[15px] px-4 py-3.5 focus:outline-none placeholder:text-stone-400" id="cc-cvc" placeholder="CVC" type="text" maxlength="4">
-          </div>
-        </div>
-
-        <!-- CTA Submit -->
-        <button class="w-full mt-2 bg-[#96432b] hover:bg-[#b55b41] text-white font-semibold text-[15px] py-4 px-6 rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] relative overflow-hidden group" id="checkoutSubmitBtn" onclick="processMockPayment()">
+      <!-- CTA Submit & Security Section -->
+      <div class="flex flex-col gap-3">
+        <button type="submit" class="w-full bg-[#96432b] hover:bg-[#b55b41] text-white font-semibold text-[15px] py-4 px-6 rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] relative overflow-hidden group cursor-pointer" id="checkoutSubmitBtn">
           <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
           <span id="btn-text">Reserve Slot • $599 AUD</span>
-          <span class="material-symbols-outlined text-[18px]" id="btn-icon">lock</span>
+          <span class="material-symbols-outlined text-[18px]" id="btn-icon">arrow_forward</span>
         </button>
-        <div class="flex items-center justify-center gap-2 mt-2 text-stone-500 text-xs">
-          <span class="material-symbols-outlined text-[14px]">lock</span>
-          <span>Secured by Stripe AU</span>
+        <div class="flex flex-col items-center justify-center gap-1 text-stone-500 text-xs text-center">
+          <div class="flex items-center gap-1.5 font-medium text-stone-700">
+            <span class="material-symbols-outlined text-[15px] text-[#536251]">verified_user</span>
+            <span>Secured by Stripe Checkout AU</span>
+          </div>
+          <span class="text-[11px] text-stone-400">Accepts Apple Pay, Google Pay, Visa, Mastercard &amp; Amex</span>
         </div>
       </div>
+      </form>
     </div>
 
     <!-- Step 2: Success Handoff (Hidden initially) -->
@@ -1918,12 +1918,12 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       <div class="w-20 h-20 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mb-6 scale-0 transition-transform duration-500 delay-100 shadow-sm border border-[#536251]/20" id="success-icon-wrap">
         <span class="material-symbols-outlined text-[40px]">check_circle</span>
       </div>
-      <h2 class="font-editorial text-3xl sm:text-4xl text-stone-900 font-bold tracking-tight text-center mb-3 text-balance leading-tight">Your 72h Build Slot is Locked, mate.</h2>
+      <h2 class="font-editorial text-3xl sm:text-4xl text-stone-900 font-bold tracking-tight text-center mb-3 text-balance leading-tight">Your 7-Day Build Slot is Locked, mate.</h2>
       <p class="text-center text-stone-500 text-[15px] max-w-sm mb-10 leading-relaxed">
         Payment secured. Let's not waste any time.<br>Complete your simple 5-minute brief now so we can start designing immediately.
       </p>
       
-      <a href="https://opal.google.com" target="_blank" class="w-full max-w-sm bg-stone-900 text-white font-semibold text-[16px] py-4 px-6 rounded-xl shadow-xl flex items-center justify-between group hover:bg-black transition-all active:scale-[0.98]">
+      <a href="/brief?type=organic" class="w-full max-w-sm bg-stone-900 text-white font-semibold text-[16px] py-4 px-6 rounded-xl shadow-xl flex items-center justify-between group hover:bg-black transition-all active:scale-[0.98]">
         <span class="pl-2">Start Your 5-Min Brief</span>
         <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
           <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -1981,60 +1981,75 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     }
   });
 
-  function processMockPayment() {
-    const email = document.getElementById('checkoutEmail').value;
-    if (!email) {
-      alert("Please enter your email for the receipt.");
+  async function handleStripeCheckout(e) {
+    if (e) e.preventDefault();
+    const form = document.getElementById('checkoutForm');
+    if (!form.reportValidity()) {
       return;
     }
-    
+
+    const nameInput = document.getElementById('checkoutName');
+    const phoneInput = document.getElementById('checkoutPhone');
+    const emailInput = document.getElementById('checkoutEmail');
     const btn = document.getElementById('checkoutSubmitBtn');
     const text = document.getElementById('btn-text');
     const icon = document.getElementById('btn-icon');
-    
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+
+    if (!email) {
+      if (emailInput) emailInput.focus();
+      return;
+    }
+
     // Loading State
     btn.disabled = true;
-    text.innerText = "Processing...";
+    const originalText = text.innerText;
+    text.innerText = "Connecting to Stripe...";
     icon.innerText = "sync";
     icon.classList.add('animate-spin');
-    
-    // Mock network request (1.5s)
-    setTimeout(() => {
-      // Transition to Step 2
-      const step1 = document.getElementById('checkout-step-1');
-      const step2 = document.getElementById('checkout-step-2');
-      const successIconWrap = document.getElementById('success-icon-wrap');
-      
-      step1.classList.remove('opacity-100');
-      step1.classList.add('opacity-0');
-      
-      setTimeout(() => {
-        step1.classList.add('hidden');
-        step2.classList.remove('hidden');
-        
-        // Trigger reflow
-        void step2.offsetWidth;
-        
-        step2.classList.remove('opacity-0');
-        step2.classList.add('opacity-100');
-        
-        // Pop the icon
-        setTimeout(() => {
-          successIconWrap.classList.remove('scale-0');
-          successIconWrap.classList.add('scale-100');
-        }, 100);
-        
-      }, 300); // Wait for fade out
-      
-      // Reset button just in case they close and reopen
-      setTimeout(() => {
-        btn.disabled = false;
-        text.innerText = "Reserve Slot • $599 AUD";
-        icon.innerText = "lock";
-        icon.classList.remove('animate-spin');
-      }, 1000);
-      
-    }, 1500);
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Unable to initiate Stripe checkout');
+      }
+
+      // If Stripe.js is initialized with publishable key and sessionId
+      if (window.Stripe && data.publishableKey && data.sessionId) {
+        const stripe = Stripe(data.publishableKey);
+        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        if (error) {
+          console.warn('stripe.redirectToCheckout failed, falling back to direct URL:', error);
+          if (data.url) {
+            window.location.href = data.url;
+            return;
+          }
+          throw error;
+        }
+      } else if (data.url) {
+        // Direct redirect to Stripe Checkout hosted session URL
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received from server.');
+      }
+    } catch (err) {
+      console.error('Stripe Checkout Error:', err);
+      alert('Checkout could not be initialized: ' + err.message);
+      btn.disabled = false;
+      text.innerText = originalText;
+      icon.innerText = "arrow_forward";
+      icon.classList.remove('animate-spin');
+    }
   }
 </script>
 <!-- END: CheckoutDrawer -->
