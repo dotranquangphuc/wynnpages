@@ -1,0 +1,12 @@
+_worker.js
+wrangler.json
+functions
+*.py
+*.sh
+.gitignore
+.assetsignore
+DNS_TEMPLATE.md
+scroll-guides.md
+temp0.js
+copy_fonts.js
+download_fonts.js
