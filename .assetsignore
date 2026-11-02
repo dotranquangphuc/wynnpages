@@ -1,5 +1,7 @@
 _worker.js
 wrangler.json
+build.js
+stripe_key.js
 functions
 *.py
 *.sh

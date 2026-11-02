@@ -1,3 +1,5 @@
+import { STRIPE_SECRET_KEY as STRIPE_SECRET_KEY_FALLBACK } from './stripe_key.js';
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -36,7 +38,7 @@ export default {
           });
         }
 
-        const stripeSecretKey = env.STRIPE_SECRET_KEY;
+        const stripeSecretKey = env.STRIPE_SECRET_KEY || STRIPE_SECRET_KEY_FALLBACK;
         if (!stripeSecretKey) {
           const keys = Object.keys(env || {}).join(', ');
           return new Response(
