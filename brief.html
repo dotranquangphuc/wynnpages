@@ -25,8 +25,8 @@
             },
             terracotta: {
               400: '#e58f55',
-              500: '#d97736',
-              600: '#b8581f',
+              500: '#96432b',
+              600: '#7d3520',
             },
             gold: {
               400: '#e8b948',
@@ -52,6 +52,61 @@
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
     }
+    .atelier-input {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .atelier-input:hover {
+      border-color: #cbbba0;
+    }
+    .atelier-input:focus {
+      background-color: #ffffff;
+      border-color: #96432b;
+      box-shadow: 0 0 0 4px rgba(150, 67, 43, 0.1);
+      outline: none;
+    }
+    .choice-card {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .choice-card:hover {
+      border-color: #b89f82;
+      background-color: #faf5eb;
+    }
+    .choice-card.selected {
+      background-color: #fffaf2;
+      border-color: #96432b;
+      box-shadow: 0 0 0 3px rgba(150, 67, 43, 0.12);
+    }
+    .choice-card.selected .choice-badge {
+      background-color: #96432b;
+      color: #ffffff;
+      border-color: #96432b;
+    }
+    .upload-zone {
+      background-color: #fcf9f3;
+      border: 1.5px dashed #d5c7b2;
+      transition: all 0.2s ease;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #96432b;
+      background-color: #fff9f0;
+    }
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-reveal {
+      animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
@@ -75,11 +130,11 @@
   </header>
 
   <!-- Main Content Container -->
-  <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-10 lg:py-14">
+  <main class="flex-1 max-w-3xl w-full mx-auto px-5 sm:px-6 py-10 lg:py-14">
     <!-- Success Badge & Intro -->
-    <div class="text-center max-w-xl mx-auto mb-10">
-      <div class="w-16 h-16 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mx-auto mb-5 shadow-sm border border-[#536251]/20">
-        <span class="material-symbols-outlined text-[36px]">check_circle</span>
+    <div class="text-center max-w-xl mx-auto mb-9">
+      <div class="w-14 h-14 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mx-auto mb-4 shadow-sm border border-[#536251]/20">
+        <span class="material-symbols-outlined text-[32px]">check_circle</span>
       </div>
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4e4ce] text-[#586755] font-semibold text-[10px] uppercase tracking-wider mb-3">
         <span>Payment Secured via Stripe</span>
@@ -88,41 +143,321 @@
         Your 7-Day Build Slot is Locked, mate.
       </h1>
       <p class="text-stone-600 text-sm sm:text-base leading-relaxed">
-        Let's not waste any time. Fill in this quick 5-minute brief below so we can start designing your custom atelier website immediately.
+        Welcome to WynnPages! Let's get your artisan website ready.
       </p>
-      <div id="client-info-pill" class="hidden mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-200/60 text-xs text-stone-700 font-mono">
-        <span class="w-2 h-2 rounded-full bg-[#82d68e] animate-pulse"></span>
+      <div id="client-info-pill" class="hidden mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-200/70 text-xs text-stone-700 font-mono">
+        <span class="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse"></span>
         <span id="client-email-display"></span>
       </div>
     </div>
 
-    <!-- Tally Embed Box -->
-    <div class="bg-white rounded-3xl p-4 sm:p-8 shadow-xl border border-stone-200/80 overflow-hidden relative min-h-[600px]">
-      <!-- Tally iframe container -->
-      <iframe 
-        id="tally-iframe"
-        data-tally-src="https://tally.so/embed/DqB1d5?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
-        loading="lazy" 
-        width="100%" 
-        height="600" 
-        frameborder="0" 
-        marginheight="0" 
-        marginwidth="0" 
-        title="WynnPages Client Onboarding Brief">
-      </iframe>
-
-      <!-- Fallback button if iframe fails or user prefers full window -->
-      <div class="mt-6 pt-6 border-t border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-        <span>Prefer to complete this in a dedicated window?</span>
-        <a 
-          id="direct-tally-link" 
-          href="https://tally.so/r/DqB1d5" 
-          target="_blank" 
-          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold transition-colors">
-          <span>Open Fullscreen Brief</span>
-          <span class="material-symbols-outlined text-[14px]">open_in_new</span>
-        </a>
+    <!-- Bespoke Atelier Form Card -->
+    <div id="brief-card" class="bg-white rounded-3xl shadow-xl border border-[#e5dec9] overflow-hidden relative">
+      
+      <!-- Decorative Atelier Studio Header Banner -->
+      <div class="relative h-32 sm:h-36 bg-[#f4ece0] overflow-hidden border-b border-[#e5dec9]">
+        <img 
+          src="assets/hero_watercolor_desk.png" 
+          alt="WynnPages Atelier Desk" 
+          class="w-full h-full object-cover object-center opacity-85"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent"></div>
+        <div class="absolute bottom-3 left-6 sm:left-10 right-6 sm:right-10 flex items-end justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] shadow-md flex items-center justify-center font-editorial text-2xl font-bold text-[#96432b]">
+              W
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b] block">Client Specifications</span>
+              <h2 class="font-editorial text-xl sm:text-2xl font-bold text-stone-900 leading-none">5-Minute Studio Brief</h2>
+            </div>
+          </div>
+          <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-stone-500 bg-[#fcf9f3]/90 px-3 py-1 rounded-full border border-[#e5dec9]">
+            <span class="material-symbols-outlined text-[14px] text-[#96432b]">schedule</span>
+            Takes ~2 mins
+          </span>
+        </div>
       </div>
+
+      <!-- FORM VIEW -->
+      <form id="atelier-brief-form" class="p-6 sm:p-10 space-y-8" novalidate>
+        
+        <!-- Conditional Banner for Demo Mode (type=demo) -->
+        <div id="demo-banner" class="hidden rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 sm:p-5 flex items-start gap-3.5 animate-reveal">
+          <span class="material-symbols-outlined text-[#4c6b47] text-[22px] mt-0.5">verified</span>
+          <div>
+            <p class="text-sm font-bold text-[#2f442c]">Great news! Your custom demo is ready to go.</p>
+            <p class="text-xs text-[#4c6b47] mt-0.5">Upload your final brand assets below so we can polish and launch your live website.</p>
+          </div>
+        </div>
+
+        <!-- Email Input (only visible if not already provided in URL) -->
+        <div id="email-fallback-wrap" class="hidden space-y-2">
+          <label for="brief-email" class="block text-sm font-bold text-stone-900">
+            Your Email Address <span class="text-[#96432b]">*</span>
+          </label>
+          <p class="text-xs text-stone-500">Use the email address associated with your booking so we can link your brief.</p>
+          <input 
+            type="email" 
+            id="brief-email" 
+            name="email"
+            placeholder="you@yourbusiness.com.au" 
+            class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400"
+          >
+        </div>
+
+        <!-- ========================================== -->
+        <!-- BRANCH A: ORGANIC QUESTIONS (type=organic) -->
+        <!-- ========================================== -->
+        <div id="organic-questions" class="space-y-7">
+          
+          <!-- Question 1: Industry -->
+          <div class="space-y-2">
+            <label for="brief-industry" class="block text-base font-bold text-stone-900">
+              1. What is your industry? <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">Tell us what your business does and where you are based.</p>
+            <input 
+              type="text" 
+              id="brief-industry" 
+              name="industry"
+              placeholder="e.g. Interior Design" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+
+          <!-- Question 2: Preferred Brand Colors -->
+          <div class="space-y-2.5">
+            <label for="brief-colors" class="block text-base font-bold text-stone-900">
+              2. Preferred Brand Colors <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">Type your brand colors or tap one of our curated atelier palettes below.</p>
+            <input 
+              type="text" 
+              id="brief-colors" 
+              name="brandColors"
+              placeholder="e.g. Sage Green, Cream" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+            <!-- Curated Palette Quick Chips -->
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button type="button" data-palette="Sage Green, Warm Cream" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#7c9070]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#f5efe6] border border-stone-300 -ml-1"></span>
+                <span>Sage Green &amp; Cream</span>
+              </button>
+              <button type="button" data-palette="Terracotta, Warm Parchment" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#96432b]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#f6f1e8] border border-stone-300 -ml-1"></span>
+                <span>Terracotta &amp; Parchment</span>
+              </button>
+              <button type="button" data-palette="Espresso Brown, Warm Linen" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#3a2618]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#efe8dc] border border-stone-300 -ml-1"></span>
+                <span>Espresso &amp; Linen</span>
+              </button>
+              <button type="button" data-palette="Charcoal Ink, Antique Gold" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#1e1e1e]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#c99e42] -ml-1"></span>
+                <span>Charcoal &amp; Gold</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Question 3: Websites you like the vibe of -->
+          <div class="space-y-2">
+            <label for="brief-vibes" class="block text-base font-bold text-stone-900">
+              3. Websites you like the vibe of (1-2 links) <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">Share 1–2 links of websites whose look and feel you admire (or describe the style you want).</p>
+            <textarea 
+              id="brief-vibes" 
+              name="vibeLinks"
+              rows="3" 
+              placeholder="Paste links here" 
+              class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 resize-y"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- BRANCH B: DEMO QUESTIONS (type=demo)       -->
+        <!-- ========================================== -->
+        <div id="demo-questions" class="hidden space-y-7">
+          
+          <!-- Demo Question 1: Upload high-res Logo -->
+          <div class="space-y-2.5">
+            <label class="block text-base font-bold text-stone-900">
+              1. Upload your high-res Logo <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">PNG, SVG, JPG, or PDF (up to 4MB), or paste a shared drive link below.</p>
+            
+            <label for="logo-file-input" id="logo-dropzone" class="upload-zone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+              <input type="file" id="logo-file-input" accept="image/*,.pdf,.svg" class="hidden">
+              <div class="w-10 h-10 rounded-full bg-[#f3eae0] text-[#96432b] flex items-center justify-center mb-2">
+                <span class="material-symbols-outlined text-[22px]">cloud_upload</span>
+              </div>
+              <p id="logo-file-label" class="text-sm font-semibold text-stone-800">Choose file or drag here</p>
+              <p class="text-xs text-stone-400 mt-0.5">Size limit: 4 MB</p>
+            </label>
+
+            <input 
+              type="text" 
+              id="brief-logo-link" 
+              placeholder="Or paste a link to your logo (Google Drive / Dropbox / Website)" 
+              class="atelier-input w-full rounded-xl px-4 py-2.5 text-xs text-stone-900 placeholder-stone-400"
+            >
+          </div>
+
+          <!-- Demo Question 2: Upload pricing/menu -->
+          <div class="space-y-2.5">
+            <label class="block text-base font-bold text-stone-900">
+              2. Upload your pricing/menu <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">Upload your service list, price sheet, or menu file — or paste a link/notes below.</p>
+            
+            <label for="menu-file-input" id="menu-dropzone" class="upload-zone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+              <input type="file" id="menu-file-input" accept="image/*,.pdf,.doc,.docx,.txt,.csv" class="hidden">
+              <div class="w-10 h-10 rounded-full bg-[#f3eae0] text-[#96432b] flex items-center justify-center mb-2">
+                <span class="material-symbols-outlined text-[22px]">description</span>
+              </div>
+              <p id="menu-file-label" class="text-sm font-semibold text-stone-800">Choose file or drag here</p>
+              <p class="text-xs text-stone-400 mt-0.5">Size limit: 4 MB</p>
+            </label>
+
+            <input 
+              type="text" 
+              id="brief-menu-link" 
+              placeholder="Or paste a link / key services &amp; prices here" 
+              class="atelier-input w-full rounded-xl px-4 py-2.5 text-xs text-stone-900 placeholder-stone-400"
+            >
+          </div>
+        </div>
+
+        <hr class="border-[#ece5d8]">
+
+        <!-- ========================================== -->
+        <!-- COMMON QUESTION: DOMAIN NAME               -->
+        <!-- ========================================== -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-base font-bold text-stone-900">
+              <span id="domain-q-number">4.</span> Do you already have a domain name? <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500 mt-0.5">Select an option below so we know how to configure your launch DNS.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Do you already have a domain name?">
+            <!-- Option A -->
+            <button 
+              type="button" 
+              data-domain-choice="Yes, I have one"
+              class="choice-card rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                A
+              </span>
+              <span class="text-sm font-semibold text-stone-800">Yes, I have one</span>
+            </button>
+
+            <!-- Option B -->
+            <button 
+              type="button" 
+              data-domain-choice="No, please help me get one"
+              class="choice-card rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                B
+              </span>
+              <span class="text-sm font-semibold text-stone-800">No, please help me get one</span>
+            </button>
+          </div>
+
+          <!-- Conditional Input A: What is your domain? -->
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-2 animate-reveal">
+            <label for="brief-existing-domain" class="block text-sm font-bold text-stone-900">
+              What is your domain? <span class="text-[#96432b]">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="brief-existing-domain" 
+              placeholder="www.example.com" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+
+          <!-- Conditional Input B: List 1-2 domain names you'd like us to check -->
+          <div id="domain-no-wrap" class="hidden pt-2 space-y-2 animate-reveal">
+            <label for="brief-desired-domains" class="block text-sm font-bold text-stone-900">
+              List 1-2 domain names you'd like us to check <span class="text-[#96432b]">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="brief-desired-domains" 
+              placeholder="e.g. wynnpages.com" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+        </div>
+
+        <!-- Form Validation Error Banner -->
+        <div id="brief-error" class="hidden rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-700 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-red-600">error</span>
+          <span id="brief-error-text">Please complete all required fields.</span>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button 
+            type="submit" 
+            id="brief-submit-btn"
+            class="w-full py-4 px-6 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all flex items-center justify-center gap-2"
+          >
+            <span id="brief-submit-label">Complete Onboarding Brief</span>
+            <span id="brief-submit-icon" class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+          <p class="text-center text-[11px] text-stone-400 mt-3 flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-[13px]">lock</span>
+            <span>Directly linked to your WynnPages Studio build slot</span>
+          </p>
+        </div>
+      </form>
+
+      <!-- ========================================== -->
+      <!-- THANK YOU VIEW (Shown after submit)        -->
+      <!-- ========================================== -->
+      <div id="thank-you-view" class="hidden p-8 sm:p-12 text-center space-y-6 animate-reveal">
+        <div class="w-16 h-16 rounded-full bg-[#d4e4ce] text-[#4c6b47] flex items-center justify-center mx-auto shadow-sm border border-[#4c6b47]/20">
+          <span class="material-symbols-outlined text-[36px]">auto_awesome</span>
+        </div>
+
+        <div class="space-y-3 max-w-lg mx-auto">
+          <span class="inline-block text-[11px] font-bold uppercase tracking-widest text-[#96432b] bg-[#fbdeb9]/60 px-3 py-1 rounded-full">
+            Brief Received • Studio Active
+          </span>
+          <h3 class="font-editorial text-3xl sm:text-4xl font-bold text-stone-900 leading-tight">
+            Thank you! We are firing up the code editor.
+          </h3>
+          <p class="text-stone-600 text-base leading-relaxed">
+            Your pristine website will be live in <strong>7 days</strong>. We have logged all your specifications and our lead artisan designer is getting started right away.
+          </p>
+        </div>
+
+        <!-- Submitted Summary Card -->
+        <div id="submitted-summary" class="max-w-md mx-auto bg-[#fcf9f3] border border-[#e5dec9] rounded-2xl p-5 text-left text-xs space-y-2.5 text-stone-700">
+        </div>
+
+        <div class="pt-4">
+          <a 
+            href="/" 
+            class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors"
+          >
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Return to WynnPages Homepage</span>
+          </a>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -131,62 +466,268 @@
   </footer>
 
   <script>
-    // Extract query params (email, session_id, type)
-    const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email');
-    const sessionId = urlParams.get('session_id');
-    const briefType = urlParams.get('type') || 'organic';
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = (urlParams.get('email') || '').trim();
+      const sessionId = (urlParams.get('session_id') || '').trim();
+      const briefType = (urlParams.get('type') || 'organic').toLowerCase() === 'demo' ? 'demo' : 'organic';
 
-    if (email) {
+      // Elements
       const emailPill = document.getElementById('client-info-pill');
       const emailDisplay = document.getElementById('client-email-display');
-      if (emailPill && emailDisplay) {
-        emailDisplay.textContent = 'Account: ' + email;
+      const emailFallbackWrap = document.getElementById('email-fallback-wrap');
+      const emailInput = document.getElementById('brief-email');
+
+      const demoBanner = document.getElementById('demo-banner');
+      const organicQuestions = document.getElementById('organic-questions');
+      const demoQuestions = document.getElementById('demo-questions');
+      const domainQNumber = document.getElementById('domain-q-number');
+
+      const industryInput = document.getElementById('brief-industry');
+      const colorsInput = document.getElementById('brief-colors');
+      const vibesInput = document.getElementById('brief-vibes');
+
+      const logoFileInput = document.getElementById('logo-file-input');
+      const logoFileLabel = document.getElementById('logo-file-label');
+      const logoLinkInput = document.getElementById('brief-logo-link');
+
+      const menuFileInput = document.getElementById('menu-file-input');
+      const menuFileLabel = document.getElementById('menu-file-label');
+      const menuLinkInput = document.getElementById('brief-menu-link');
+
+      const domainChoiceBtns = document.querySelectorAll('[data-domain-choice]');
+      const domainYesWrap = document.getElementById('domain-yes-wrap');
+      const domainNoWrap = document.getElementById('domain-no-wrap');
+      const existingDomainInput = document.getElementById('brief-existing-domain');
+      const desiredDomainsInput = document.getElementById('brief-desired-domains');
+
+      const form = document.getElementById('atelier-brief-form');
+      const errorBox = document.getElementById('brief-error');
+      const errorText = document.getElementById('brief-error-text');
+      const submitBtn = document.getElementById('brief-submit-btn');
+      const submitLabel = document.getElementById('brief-submit-label');
+      const submitIcon = document.getElementById('brief-submit-icon');
+      const thankYouView = document.getElementById('thank-you-view');
+      const submittedSummary = document.getElementById('submitted-summary');
+
+      let selectedDomainOption = '';
+      let logoFileObj = null;
+      let menuFileObj = null;
+
+      // 1. Setup Email display or fallback field
+      if (emailParam) {
+        emailDisplay.textContent = 'Account: ' + emailParam;
         emailPill.classList.remove('hidden');
+        emailInput.value = emailParam;
+      } else {
+        emailFallbackWrap.classList.remove('hidden');
       }
-    }
 
-    // Append query params to Tally iframe src before loading Tally embed widget
-    const iframe = document.getElementById('tally-iframe');
-    const directLink = document.getElementById('direct-tally-link');
-    if (iframe) {
-      let tallySrc = iframe.getAttribute('data-tally-src') || iframe.src;
-      const paramsToPass = [];
-      if (email) paramsToPass.push('email=' + encodeURIComponent(email));
-      if (sessionId) paramsToPass.push('session_id=' + encodeURIComponent(sessionId));
-      if (briefType) paramsToPass.push('type=' + encodeURIComponent(briefType));
+      // 2. Setup Branch Mode (organic vs demo)
+      if (briefType === 'demo') {
+        demoBanner.classList.remove('hidden');
+        organicQuestions.classList.add('hidden');
+        demoQuestions.classList.remove('hidden');
+        domainQNumber.textContent = '3.';
+      } else {
+        demoBanner.classList.add('hidden');
+        organicQuestions.classList.remove('hidden');
+        demoQuestions.classList.add('hidden');
+        domainQNumber.textContent = '4.';
+      }
 
-      if (paramsToPass.length > 0) {
-        const joinChar = tallySrc.includes('?') ? '&' : '?';
-        tallySrc += joinChar + paramsToPass.join('&');
-        iframe.setAttribute('data-tally-src', tallySrc);
-        if (directLink) {
-          directLink.href = directLink.href + (directLink.href.includes('?') ? '&' : '?') + paramsToPass.join('&');
+      // 3. Curated Color Palette Chips
+      document.querySelectorAll('.palette-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          colorsInput.value = chip.getAttribute('data-palette') || '';
+          colorsInput.focus();
+        });
+      });
+
+      // 4. File Upload Readers (for Demo mode)
+      function bindFileUpload(inputEl, labelEl, onLoaded) {
+        if (!inputEl) return;
+        inputEl.addEventListener('change', () => {
+          const file = inputEl.files && inputEl.files[0];
+          if (!file) return;
+          if (file.size > 4.5 * 1024 * 1024) {
+            showError('File size exceeds 4MB. Please choose a smaller file or paste a shared link below.');
+            inputEl.value = '';
+            return;
+          }
+          labelEl.textContent = '✓ ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+          labelEl.classList.add('text-[#96432b]');
+          const reader = new FileReader();
+          reader.onload = () => {
+            onLoaded({
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              dataUrl: reader.result
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      bindFileUpload(logoFileInput, logoFileLabel, (obj) => { logoFileObj = obj; });
+      bindFileUpload(menuFileInput, menuFileLabel, (obj) => { menuFileObj = obj; });
+
+      // 5. Domain Radio Choice Cards
+      domainChoiceBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedDomainOption = btn.getAttribute('data-domain-choice') || '';
+          domainChoiceBtns.forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+
+          if (selectedDomainOption === 'Yes, I have one') {
+            domainYesWrap.classList.remove('hidden');
+            domainNoWrap.classList.add('hidden');
+            existingDomainInput.focus();
+          } else {
+            domainNoWrap.classList.remove('hidden');
+            domainYesWrap.classList.add('hidden');
+            desiredDomainsInput.focus();
+          }
+          hideError();
+        });
+      });
+
+      function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.classList.remove('hidden');
+      }
+
+      function hideError() {
+        errorBox.classList.add('hidden');
+      }
+
+      // 6. Form Submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideError();
+
+        const resolvedEmail = (emailParam || emailInput.value || '').trim();
+        if (!resolvedEmail || !resolvedEmail.includes('@')) {
+          showError('Please enter a valid email address so we can link your brief.');
+          emailInput.focus();
+          return;
         }
-      }
-    }
 
-    // Load Tally embeds with fallback to direct iframe src
-    var d = document,
-      w = "https://tally.so/widgets/embed.js",
-      v = function () {
-        if (typeof Tally !== "undefined") {
-          Tally.loadEmbeds();
+        if (briefType === 'organic') {
+          if (!industryInput.value.trim()) {
+            showError('Please let us know your industry (Question 1).');
+            industryInput.focus();
+            return;
+          }
+          if (!colorsInput.value.trim()) {
+            showError('Please enter or select your preferred brand colors (Question 2).');
+            colorsInput.focus();
+            return;
+          }
+          if (!vibesInput.value.trim()) {
+            showError('Please share 1–2 websites or describe the vibe you like (Question 3).');
+            vibesInput.focus();
+            return;
+          }
         } else {
-          d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach(function (e) {
-            e.src = e.dataset.tallySrc;
-          });
+          if (!logoFileObj && !logoLinkInput.value.trim()) {
+            showError('Please upload your high-res logo or paste a link to it (Question 1).');
+            return;
+          }
+          if (!menuFileObj && !menuLinkInput.value.trim()) {
+            showError('Please upload your pricing/menu or paste a link/notes (Question 2).');
+            return;
+          }
         }
-      };
-    if (typeof Tally !== "undefined") {
-      v();
-    } else if (d.querySelector('script[src="' + w + '"]') == null) {
-      var s = d.createElement("script");
-      s.src = w;
-      s.onload = v;
-      s.onerror = v;
-      d.body.appendChild(s);
-    }
+
+        if (!selectedDomainOption) {
+          showError('Please select whether you already have a domain name.');
+          return;
+        }
+
+        if (selectedDomainOption === 'Yes, I have one' && !existingDomainInput.value.trim()) {
+          showError('Please enter your existing domain name.');
+          existingDomainInput.focus();
+          return;
+        }
+
+        if (selectedDomainOption === 'No, please help me get one' && !desiredDomainsInput.value.trim()) {
+          showError('Please list 1–2 domain names you would like us to check.');
+          desiredDomainsInput.focus();
+          return;
+        }
+
+        // Disable button & show loading state
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+        submitLabel.textContent = 'Saving your studio brief...';
+        submitIcon.textContent = 'hourglass_top';
+
+        const payload = {
+          sessionId,
+          email: resolvedEmail,
+          briefType,
+          industry: industryInput.value.trim(),
+          brandColors: colorsInput.value.trim(),
+          vibeLinks: vibesInput.value.trim(),
+          hasDomain: selectedDomainOption,
+          existingDomain: existingDomainInput.value.trim(),
+          desiredDomains: desiredDomainsInput.value.trim(),
+          logoFile: logoFileObj,
+          logoLink: logoLinkInput ? logoLinkInput.value.trim() : '',
+          menuFile: menuFileObj,
+          menuLink: menuLinkInput ? menuLinkInput.value.trim() : ''
+        };
+
+        try {
+          const res = await fetch('/api/submit-brief', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || 'Could not submit brief. Please try again.');
+          }
+
+          // Render summary & transition to Thank You view
+          const rows = [];
+          rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Account</span><span class="font-semibold text-stone-900">${escapeHtml(resolvedEmail)}</span></div>`);
+          if (briefType === 'organic') {
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Industry</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.industry)}</span></div>`);
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Brand Palette</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.brandColors)}</span></div>`);
+          } else {
+            const logoLabel = logoFileObj ? logoFileObj.name : payload.logoLink;
+            const menuLabel = menuFileObj ? menuFileObj.name : payload.menuLink;
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Logo Asset</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(logoLabel)}</span></div>`);
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Menu / Pricing</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(menuLabel)}</span></div>`);
+          }
+          const domainVal = selectedDomainOption === 'Yes, I have one' ? payload.existingDomain : payload.desiredDomains;
+          rows.push(`<div class="flex justify-between gap-4"><span class="text-stone-400 font-medium">Domain</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(domainVal)}</span></div>`);
+          submittedSummary.innerHTML = rows.join('');
+
+          form.classList.add('hidden');
+          thankYouView.classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+          showError(err.message || 'Something went wrong while saving your brief.');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+          submitLabel.textContent = 'Complete Onboarding Brief';
+          submitIcon.textContent = 'arrow_forward';
+        }
+      });
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+    })();
   </script>
 </body>
 </html>
