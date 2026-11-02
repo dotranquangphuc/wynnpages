@@ -1,1 +1,9 @@
 export const STRIPE_SECRET_KEY = "";
+export const CLICKSEND_USERNAME = "";
+export const CLICKSEND_API_KEY = "";
+export const CLICKSEND_FROM = "";
+export const RESEND_API_KEY = "";
+export const RESEND_FROM_EMAIL = "";
+export const ADMIN_KEY = "";
+export const ADMIN_NOTIFY_EMAIL = "";
+export const ADMIN_NOTIFY_PHONE = "";

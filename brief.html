@@ -523,6 +523,15 @@
         emailFallbackWrap.classList.remove('hidden');
       }
 
+      // 1b. Trigger post-payment welcome SMS + Email if arriving from Stripe Checkout
+      if (sessionId && sessionId.startsWith('cs_')) {
+        fetch('/api/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        }).catch(() => {});
+      }
+
       // 2. Setup Branch Mode (organic vs demo)
       if (briefType === 'demo') {
         demoBanner.classList.remove('hidden');

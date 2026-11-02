@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WynnPages — Studio Command Center (/admin)</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f6f1e8;
+      color: #231f1a;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .atelier-input {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s ease;
+    }
+    .atelier-input:focus {
+      background-color: #ffffff;
+      border-color: #96432b;
+      box-shadow: 0 0 0 3px rgba(150, 67, 43, 0.12);
+      outline: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
+
+  <!-- Top Header -->
+  <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a href="/" class="font-editorial text-2xl font-bold tracking-tight text-stone-900 hover:text-[#96432b] transition-colors">
+          WynnPages
+        </a>
+        <span class="text-[11px] uppercase tracking-widest text-white font-bold bg-[#96432b] px-2.5 py-0.5 rounded-full">
+          Studio Admin
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs">
+          <span class="material-symbols-outlined text-[16px] text-[#96432b]">key</span>
+          <span>Cấu hình ClickSend &amp; Resend</span>
+        </button>
+        <button id="btn-new-client" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs">
+          <span class="material-symbols-outlined text-[16px]">person_add</span>
+          <span>+ Thêm / Test Khách</span>
+        </button>
+        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
+          <span class="material-symbols-outlined text-[16px]">refresh</span>
+          <span>Làm mới</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8 space-y-6">
+
+    <!-- Login Gate -->
+    <div id="auth-gate" class="max-w-md mx-auto my-12 bg-white rounded-3xl p-8 shadow-xl border border-[#e5dec9] text-center space-y-5">
+      <div class="w-12 h-12 rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] flex items-center justify-center mx-auto font-editorial text-2xl font-bold text-[#96432b]">
+        W
+      </div>
+      <div>
+        <h1 class="font-editorial text-3xl font-bold text-stone-900">Atelier Command Center</h1>
+        <p class="text-xs text-stone-500 mt-1">Nhập mã khoá quản trị (Mặc định: <code class="bg-stone-100 px-1.5 py-0.5 rounded font-mono text-[#96432b]">wynn2026</code>)</p>
+      </div>
+      <form id="auth-form" class="space-y-3">
+        <input 
+          type="password" 
+          id="admin-key-input" 
+          placeholder="Nhập mã khoá Admin..." 
+          value="wynn2026"
+          class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-center font-mono"
+        >
+        <button type="submit" class="w-full py-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-semibold text-sm transition-colors">
+          Mở Bảng Điều Khiển
+        </button>
+      </form>
+    </div>
+
+    <!-- Dashboard Workspace -->
+    <div id="dashboard-content" class="hidden space-y-6">
+
+      <!-- Status & AI Endpoint Bar -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Integration Status Card -->
+        <div class="bg-white rounded-2xl p-5 border border-[#e5dec9] shadow-sm flex flex-col justify-between gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-stone-400">Trạng thái kết nối</span>
+            <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="text-[11px] font-semibold text-[#96432b] hover:underline">Cài đặt Key</button>
+          </div>
+          <div class="flex flex-wrap gap-2" id="integration-pills">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Stripe DB
+            </span>
+            <span id="pill-clicksend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+              <span class="w-2 h-2 rounded-full bg-stone-400"></span> ClickSend SMS
+            </span>
+            <span id="pill-resend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+              <span class="w-2 h-2 rounded-full bg-stone-400"></span> Resend Email
+            </span>
+          </div>
+        </div>
+
+        <!-- AI Retrieval Endpoint Box -->
+        <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#e5dec9] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-[#96432b]">smart_toy</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#96432b]">Cổng Dữ Liệu Trực Tiếp Cho AI Thiết Kế Web</span>
+            </div>
+            <p class="text-xs text-stone-600">
+              Khi cần AI thiết kế web cho khách, bấm nút bên phải để copy lệnh cho AI (AI sẽ tự động đọc ngành nghề, bảng màu, web mẫu, tên miền &amp; logo).
+            </p>
+          </div>
+          <button 
+            type="button" 
+            id="btn-copy-ai-command"
+            class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
+          >
+            <span class="material-symbols-outlined text-[16px]">content_copy</span>
+            <span id="copy-ai-cmd-label">Copy Lệnh Gọi API Cho AI</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Toast Notification Banner -->
+      <div id="toast-banner" class="hidden rounded-2xl p-4 border text-xs font-semibold flex items-center justify-between gap-4">
+        <span id="toast-message"></span>
+        <button type="button" onclick="document.getElementById('toast-banner').classList.add('hidden')" class="text-stone-500 hover:text-stone-900">✕</button>
+      </div>
+
+      <!-- Client List Section -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">
+            Danh Sách Khách Hàng &amp; Luồng Tự Động (<span id="client-count">0</span>)
+          </h2>
+          <a href="/brief?type=organic" target="_blank" class="text-xs font-semibold text-[#96432b] hover:underline flex items-center gap-1">
+            <span>Mở form Brief (Organic)</span>
+            <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+          </a>
+        </div>
+
+        <div id="clients-container" class="space-y-4">
+          <div class="bg-white rounded-2xl p-8 text-center text-sm text-stone-500 border border-[#e5dec9]">
+            Đang tải danh sách khách hàng từ Stripe...
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal: ClickSend & Resend Credentials -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-editorial text-2xl font-bold text-stone-900">Cấu Hình ClickSend SMS &amp; Resend Email</h3>
+          <p class="text-xs text-stone-500 mt-0.5">Nhập key tại đây để gửi ngay lập tức từ trình duyệt hoặc thêm vào biến môi trường Cloudflare.</p>
+        </div>
+        <button type="button" id="btn-close-settings" class="text-stone-400 hover:text-stone-800">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="p-3.5 rounded-xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2">
+          <p class="font-bold text-stone-800">1. ClickSend SMS (Gửi tin nhắn số Úc +61)</p>
+          <p class="text-stone-500">Lấy trong <strong>ClickSend Dashboard → Developers → API Credentials</strong>.</p>
+          <div class="space-y-2 pt-1">
+            <input type="text" id="cfg-clicksend-user" placeholder="ClickSend Username (email hoặc username)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+            <input type="password" id="cfg-clicksend-key" placeholder="ClickSend API Key" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <input type="text" id="cfg-clicksend-from" placeholder="Sender ID / Brand (Tuỳ chọn, VD: WynnPages hoặc để trống dùng số mặc định)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2">
+          <p class="font-bold text-stone-800">2. Resend.com (Gửi Email HTML chuẩn Atelier)</p>
+          <p class="text-stone-500">Lấy API Key (`re_...`) tại <strong>resend.com/api-keys</strong>.</p>
+          <div class="space-y-2 pt-1">
+            <input type="password" id="cfg-resend-key" placeholder="Resend API Key (re_...)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <input type="text" id="cfg-resend-from" placeholder="From Email (VD: WynnPages Atelier <hello@wynnpages.com.au>)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-[11px] text-amber-900 space-y-1">
+          <p class="font-bold">💡 Mẹo để chạy tự động ngầm 24/7 khi khách vừa thanh toán:</p>
+          <p>Bạn có thể thêm các biến <code class="font-mono">CLICKSEND_USERNAME</code>, <code class="font-mono">CLICKSEND_API_KEY</code>, <code class="font-mono">RESEND_API_KEY</code> vào cùng chỗ với <code class="font-mono">STRIPE_SECRET_KEY</code> trên Cloudflare (<em>Workers &amp; Pages → wynnpages → Settings → Build → Variables and secrets</em>).</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" id="btn-save-settings" class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-semibold">
+          Lưu Cấu Hình
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Test Client -->
+  <div id="new-client-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="font-editorial text-2xl font-bold text-stone-900">Thêm / Test Khách Hàng</h3>
+        <button type="button" id="btn-close-new-client" class="text-stone-400 hover:text-stone-800">✕</button>
+      </div>
+      <form id="new-client-form" class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold block mb-1">Tên khách hàng</label>
+          <input type="text" id="new-name" placeholder="VD: Wynn Do" required class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Email khách hàng *</label>
+          <input type="email" id="new-email" placeholder="you@example.com" required class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Số điện thoại (Úc 04... hoặc +61...)</label>
+          <input type="tel" id="new-phone" placeholder="0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Ngành nghề (Tuỳ chọn)</label>
+          <input type="text" id="new-industry" placeholder="VD: Artisan Bakery &amp; Cafe" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Link Demo (Nếu đã có)</label>
+          <input type="text" id="new-demo-url" placeholder="https://demo.wynnpages.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="submit" class="w-full py-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-semibold text-xs">
+            Tạo Hồ Sơ Khách Hàng
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      let adminKey = localStorage.getItem('wynn_admin_key') || '';
+      let localCreds = JSON.parse(localStorage.getItem('wynn_Messaging_creds') || '{}');
+      let clientsCache = [];
+
+      const authGate = document.getElementById('auth-gate');
+      const authForm = document.getElementById('auth-form');
+      const adminKeyInput = document.getElementById('admin-key-input');
+      const dashboardContent = document.getElementById('dashboard-content');
+      const clientsContainer = document.getElementById('clients-container');
+      const clientCountEl = document.getElementById('client-count');
+      const toastBanner = document.getElementById('toast-banner');
+      const toastMessage = document.getElementById('toast-message');
+
+      const pillClicksend = document.getElementById('pill-clicksend');
+      const pillResend = document.getElementById('pill-resend');
+
+      // Settings modal elements
+      const settingsModal = document.getElementById('settings-modal');
+      const cfgClicksendUser = document.getElementById('cfg-clicksend-user');
+      const cfgClicksendKey = document.getElementById('cfg-clicksend-key');
+      const cfgClicksendFrom = document.getElementById('cfg-clicksend-from');
+      const cfgResendKey = document.getElementById('cfg-resend-key');
+      const cfgResendFrom = document.getElementById('cfg-resend-from');
+
+      function showToast(msg, isError = false) {
+        toastMessage.textContent = msg;
+        toastBanner.className = `rounded-2xl p-4 border text-xs font-semibold flex items-center justify-between gap-4 ${
+          isError ? 'bg-red-50 border-red-200 text-red-800' : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+        }`;
+        toastBanner.classList.remove('hidden');
+      }
+
+      function updateIntegrationPills(serverIntegrations = {}) {
+        const hasClicksend = serverIntegrations.clicksend || (localCreds.clicksendUsername && localCreds.clicksendApiKey);
+        const hasResend = serverIntegrations.resend || Boolean(localCreds.resendApiKey);
+
+        if (hasClicksend) {
+          pillClicksend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
+          pillClicksend.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ClickSend SMS: Sẵn sàng';
+        } else {
+          pillClicksend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200';
+          pillClicksend.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> ClickSend SMS: Chưa nhập Key';
+        }
+
+        if (hasResend) {
+          pillResend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
+          pillResend.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Resend Email: Sẵn sàng';
+        } else {
+          pillResend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200';
+          pillResend.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Resend Email: Chưa nhập Key';
+        }
+      }
+
+      async function loadClients() {
+        try {
+          const res = await fetch(`/api/briefs?key=${encodeURIComponent(adminKey)}`);
+          if (res.status === 401) {
+            authGate.classList.remove('hidden');
+            dashboardContent.classList.add('hidden');
+            return;
+          }
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Lỗi tải dữ liệu');
+
+          authGate.classList.add('hidden');
+          dashboardContent.classList.remove('hidden');
+          localStorage.setItem('wynn_admin_key', adminKey);
+
+          updateIntegrationPills(data.integrations || {});
+          clientsCache = data.clients || [];
+          clientCountEl.textContent = clientsCache.length;
+          renderClients(clientsCache);
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      }
+
+      function getStageBadge(stage) {
+        const map = {
+          checkout_started: { label: 'Đang thanh toán', cls: 'bg-stone-100 text-stone-600' },
+          paid: { label: '1. Đã thanh toán ($599)', cls: 'bg-blue-50 text-blue-800 border border-blue-200' },
+          brief_completed: { label: '2. Đã điền Brief • Chờ làm Demo', cls: 'bg-amber-50 text-amber-900 border border-amber-200' },
+          demo_sent: { label: '3. Đã gửi Demo cho khách', cls: 'bg-purple-50 text-purple-900 border border-purple-200' },
+          reminder_sent: { label: '4. Đã nhắc duyệt Demo', cls: 'bg-orange-50 text-orange-900 border border-orange-200' },
+          launched: { label: '5. Đã lên sóng (Live)', cls: 'bg-emerald-50 text-emerald-900 border border-emerald-200' }
+        };
+        const item = map[stage] || { label: stage, cls: 'bg-stone-100 text-stone-700' };
+        return `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${item.cls}">${item.label}</span>`;
+      }
+
+      function renderClients(list) {
+        if (!list.length) {
+          clientsContainer.innerHTML = `
+            <div class="bg-white rounded-2xl p-10 text-center text-sm text-stone-500 border border-[#e5dec9]">
+              Chưa có khách hàng nào. Bấm <strong>"+ Thêm / Test Khách"</strong> ở góc trên để tạo thử ngay!
+            </div>
+          `;
+          return;
+        }
+
+        clientsContainer.innerHTML = list.map((c, idx) => {
+          const domainText = c.existingDomain
+            ? `Đã có: <strong>${escapeHtml(c.existingDomain)}</strong>`
+            : (c.desiredDomains ? `Muốn đăng ký: <strong>${escapeHtml(c.desiredDomains)}</strong>` : '<span class="text-stone-400">Chưa điền</span>');
+
+          return `
+            <div class="bg-white rounded-3xl p-6 border border-[#e5dec9] shadow-xs space-y-4">
+              <!-- Top Row -->
+              <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <h3 class="font-editorial text-2xl font-bold text-stone-900">${escapeHtml(c.name || 'Khách hàng mới')}</h3>
+                    ${getStageBadge(c.stage)}
+                  </div>
+                  <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600 font-mono">
+                    <span>📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
+                    <span>📱 ${escapeHtml(c.phone || 'Chưa có SĐT')}</span>
+                    <span class="text-stone-400">🕒 ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
+                  </div>
+                </div>
+
+                <!-- Copy AI Brief Button -->
+                <div class="flex items-center gap-2">
+                  <button 
+                    type="button" 
+                    data-copy-idx="${idx}"
+                    class="btn-copy-brief inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-[15px]">smart_toy</span>
+                    <span>Copy Brief Cho AI Thiết Kế</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Brief Details Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs bg-[#fcf9f3] p-4 rounded-2xl border border-[#ece4d5]">
+                <div>
+                  <span class="text-stone-400 block font-semibold uppercase text-[10px]">Ngành nghề (Industry)</span>
+                  <span class="font-semibold text-stone-900 mt-0.5 block">${escapeHtml(c.industry || '—')}</span>
+                </div>
+                <div>
+                  <span class="text-stone-400 block font-semibold uppercase text-[10px]">Bảng màu (Brand Colors)</span>
+                  <span class="font-semibold text-stone-900 mt-0.5 block">${escapeHtml(c.brandColors || '—')}</span>
+                </div>
+                <div>
+                  <span class="text-stone-400 block font-semibold uppercase text-[10px]">Web mẫu (Vibe Links)</span>
+                  <span class="font-semibold text-stone-900 mt-0.5 block break-all">${escapeHtml(c.vibeLinks || '—')}</span>
+                </div>
+                <div>
+                  <span class="text-stone-400 block font-semibold uppercase text-[10px]">Tên miền (Domain)</span>
+                  <span class="text-stone-900 mt-0.5 block">${domainText}</span>
+                </div>
+                ${(c.logoFileName || c.menuFileName) ? `
+                <div class="sm:col-span-2 lg:col-span-4 pt-2 border-t border-[#e5dec9] flex flex-wrap gap-6">
+                  <div><span class="text-stone-400 font-semibold">Logo đã gửi:</span> <strong>${escapeHtml(c.logoFileName || '—')}</strong> ${c.logoFileId ? `<code class="text-[10px] bg-stone-200 px-1.5 py-0.5 rounded">${escapeHtml(c.logoFileId)}</code>` : ''}</div>
+                  <div><span class="text-stone-400 font-semibold">Menu/Bảng giá:</span> <strong>${escapeHtml(c.menuFileName || '—')}</strong> ${c.menuFileId ? `<code class="text-[10px] bg-stone-200 px-1.5 py-0.5 rounded">${escapeHtml(c.menuFileId)}</code>` : ''}</div>
+                </div>
+                ` : ''}
+              </div>
+
+              <!-- Demo Link & 1-Click Lifecycle SMS + Email Triggers -->
+              <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1">
+                <!-- Demo URL Input -->
+                <div class="flex items-center gap-2 flex-1">
+                  <span class="text-xs font-bold text-stone-700 shrink-0">Link Demo:</span>
+                  <input 
+                    type="text" 
+                    id="demo-url-${c.id}" 
+                    value="${escapeHtml(c.demoUrl || '')}" 
+                    placeholder="https://ten-khach.wynnpages.com.au" 
+                    class="atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono"
+                  >
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-save-demo px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 shrink-0"
+                  >
+                    Lưu Link
+                  </button>
+                </div>
+
+                <!-- Action Buttons for Each Stage -->
+                <div class="flex flex-wrap items-center gap-2">
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="payment_confirmed"
+                    class="btn-stage-action px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold transition-colors"
+                    title="Gửi SMS + Email xác nhận thanh toán & nhắc điền form Brief"
+                  >
+                    1. Nhắc Điền Brief
+                  </button>
+
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="demo_ready"
+                    class="btn-stage-action px-3.5 py-2 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-semibold transition-colors shadow-xs"
+                    title="Gửi SMS + Email báo đã có Demo kèm link upload Logo & Menu"
+                  >
+                    📩 3. Báo Đã Có Demo (SMS + Email)
+                  </button>
+
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="demo_reminder"
+                    class="btn-stage-action px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-colors shadow-xs"
+                    title="Gửi SMS + Email nhắc khách xem và duyệt bản Demo"
+                  >
+                    ⏰ 4. Nhắc Duyệt Demo
+                  </button>
+
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="site_launched"
+                    class="btn-stage-action px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold transition-colors"
+                    title="Gửi SMS + Email chúc mừng web chính thức lên sóng"
+                  >
+                    🚀 5. Báo Lên Sóng
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Bind Copy AI Prompt buttons
+        document.querySelectorAll('.btn-copy-brief').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.getAttribute('data-copy-idx'));
+            const client = clientsCache[idx];
+            if (!client) return;
+            navigator.clipboard.writeText(client.aiPrompt);
+            showToast(`Đã copy toàn bộ Brief của "${client.name || client.email}"! Bạn chỉ cần Paste (Dán) vào khung chat AI để AI thiết kế web.`);
+          });
+        });
+
+        // Bind Save Demo URL buttons
+        document.querySelectorAll('.btn-save-demo').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const demoInput = document.getElementById(`demo-url-${cid}`);
+            const demoUrl = demoInput ? demoInput.value.trim() : '';
+            btn.textContent = 'Đang lưu...';
+            await runAdminAction({ action: 'save_client', customerId: cid, demoUrl });
+            btn.textContent = 'Đã lưu ✓';
+            setTimeout(() => { btn.textContent = 'Lưu Link'; }, 1500);
+          });
+        });
+
+        // Bind Lifecycle Stage Trigger buttons
+        document.querySelectorAll('.btn-stage-action').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const stage = btn.getAttribute('data-stage');
+            const demoInput = document.getElementById(`demo-url-${cid}`);
+            const demoUrl = demoInput ? demoInput.value.trim() : '';
+
+            if ((stage === 'demo_ready' || stage === 'demo_reminder') && !demoUrl) {
+              showToast('Vui lòng nhập Link Demo vào ô "Link Demo" trước khi bấm gửi báo Demo cho khách!', true);
+              if (demoInput) demoInput.focus();
+              return;
+            }
+
+            const origText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang gửi SMS & Email...';
+
+            const res = await runAdminAction({
+              action: 'trigger_stage',
+              customerId: cid,
+              stage,
+              demoUrl
+            });
+
+            btn.disabled = false;
+            btn.textContent = origText;
+
+            if (res && res.notifyRes) {
+              const smsStatus = res.notifyRes.smsResult && res.notifyRes.smsResult.sent
+                ? `SMS: Đã gửi tới ${res.notifyRes.smsResult.to} ✅`
+                : `SMS: ${res.notifyRes.smsResult ? res.notifyRes.smsResult.reason : 'Bỏ qua'}`;
+              const emailStatus = res.notifyRes.emailResult && res.notifyRes.emailResult.sent
+                ? `Email: Đã gửi tới ${res.notifyRes.emailResult.to} ✅`
+                : `Email: ${res.notifyRes.emailResult ? res.notifyRes.emailResult.reason : 'Bỏ qua'}`;
+
+              const anyError = !(res.notifyRes.smsResult && res.notifyRes.smsResult.sent) && !(res.notifyRes.emailResult && res.notifyRes.emailResult.sent);
+              showToast(`Kết quả gửi [${stage}] → ${smsStatus} | ${emailStatus}`, anyError);
+            }
+          });
+        });
+      }
+
+      async function runAdminAction(payload) {
+        try {
+          const res = await fetch('/api/admin/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...payload,
+              adminKey,
+              credentials: localCreds
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Thao tác thất bại');
+          await loadClients();
+          return data;
+        } catch (err) {
+          showToast(err.message, true);
+          return null;
+        }
+      }
+
+      // Auth Form
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        adminKey = adminKeyInput.value.trim();
+        loadClients();
+      });
+
+      // Refresh
+      document.getElementById('btn-refresh').addEventListener('click', () => loadClients());
+
+      // Copy AI API Command
+      document.getElementById('btn-copy-ai-command').addEventListener('click', () => {
+        const apiUrl = `${window.location.origin}/api/briefs?key=${encodeURIComponent(adminKey)}`;
+        const commandText = `Hãy truy cập API ${apiUrl} để lấy thông tin Brief của khách hàng mới nhất trên WynnPages và thiết kế trang web hoàn chỉnh theo đúng ngành nghề, bảng màu và phong cách khách yêu cầu.`;
+        navigator.clipboard.writeText(commandText);
+        showToast('Đã copy câu lệnh cho AI! Bạn có thể dán thẳng câu lệnh đó vào khung chat của AI bất cứ lúc nào.');
+      });
+
+      // Settings Modal
+      document.getElementById('btn-open-settings').addEventListener('click', () => {
+        cfgClicksendUser.value = localCreds.clicksendUsername || '';
+        cfgClicksendKey.value = localCreds.clicksendApiKey || '';
+        cfgClicksendFrom.value = localCreds.clicksendFrom || '';
+        cfgResendKey.value = localCreds.resendApiKey || '';
+        cfgResendFrom.value = localCreds.resendFromEmail || 'WynnPages Atelier <hello@wynnpages.com.au>';
+        settingsModal.classList.remove('hidden');
+      });
+      document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
+      document.getElementById('btn-save-settings').addEventListener('click', () => {
+        localCreds = {
+          clicksendUsername: cfgClicksendUser.value.trim(),
+          clicksendApiKey: cfgClicksendKey.value.trim(),
+          clicksendFrom: cfgClicksendFrom.value.trim(),
+          resendApiKey: cfgResendKey.value.trim(),
+          resendFromEmail: cfgResendFrom.value.trim()
+        };
+        localStorage.setItem('wynn_Messaging_creds', JSON.stringify(localCreds));
+        settingsModal.classList.add('hidden');
+        updateIntegrationPills({});
+        showToast('Đã lưu cấu hình ClickSend & Resend trên trình duyệt của bạn!');
+      });
+
+      // New Client Modal
+      const newClientModal = document.getElementById('new-client-modal');
+      document.getElementById('btn-new-client').addEventListener('click', () => newClientModal.classList.remove('hidden'));
+      document.getElementById('btn-close-new-client').addEventListener('click', () => newClientModal.classList.add('hidden'));
+      document.getElementById('new-client-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('new-name').value.trim();
+        const email = document.getElementById('new-email').value.trim();
+        const phone = document.getElementById('new-phone').value.trim();
+        const industry = document.getElementById('new-industry').value.trim();
+        const demoUrl = document.getElementById('new-demo-url').value.trim();
+        newClientModal.classList.add('hidden');
+        await runAdminAction({
+          action: 'save_client',
+          name,
+          email,
+          phone,
+          industry,
+          demoUrl,
+          stage: industry ? 'brief_completed' : 'paid'
+        });
+        showToast(`Đã tạo hồ sơ khách hàng ${name} (${email})!`);
+      });
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      // Auto-login if adminKey saved
+      if (adminKey) {
+        adminKeyInput.value = adminKey;
+        loadClients();
+      }
+    })();
+  </script>
+</body>
+</html>
