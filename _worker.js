@@ -60,7 +60,6 @@ export default {
         params.append('customer_email', email);
         params.append('success_url', successUrl);
         params.append('cancel_url', cancelUrl);
-        params.append('payment_method_types[0]', 'card');
         params.append('allow_promotion_codes', 'true');
         params.append('billing_address_collection', 'auto');
 
