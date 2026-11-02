@@ -38,9 +38,10 @@ export default {
 
         const stripeSecretKey = env.STRIPE_SECRET_KEY;
         if (!stripeSecretKey) {
+          const keys = Object.keys(env || {}).join(', ');
           return new Response(
             JSON.stringify({
-              error: 'STRIPE_SECRET_KEY is not configured in Cloudflare environment variables.'
+              error: `STRIPE_SECRET_KEY is not configured in Cloudflare environment variables. (Detected env keys: [${keys}])`
             }),
             { status: 500, headers: corsHeaders }
           );
