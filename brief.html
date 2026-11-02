@@ -53,7 +53,6 @@
       font-family: 'Cormorant Garamond', Georgia, serif;
     }
   </style>
-  <script async src="https://tally.so/widgets/embed.js"></script>
 </head>
 <body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
 
@@ -102,7 +101,7 @@
       <!-- Tally iframe container -->
       <iframe 
         id="tally-iframe"
-        data-tally-src="https://tally.so/embed/mZR68o?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+        data-tally-src="https://tally.so/embed/DqB1d5?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
         loading="lazy" 
         width="100%" 
         height="600" 
@@ -117,7 +116,7 @@
         <span>Prefer to complete this in a dedicated window?</span>
         <a 
           id="direct-tally-link" 
-          href="https://tally.so/r/mZR68o" 
+          href="https://tally.so/r/DqB1d5" 
           target="_blank" 
           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold transition-colors">
           <span>Open Fullscreen Brief</span>
@@ -147,7 +146,7 @@
       }
     }
 
-    // Append query params to Tally iframe src if available
+    // Append query params to Tally iframe src before loading Tally embed widget
     const iframe = document.getElementById('tally-iframe');
     const directLink = document.getElementById('direct-tally-link');
     if (iframe) {
@@ -165,6 +164,28 @@
           directLink.href = directLink.href + (directLink.href.includes('?') ? '&' : '?') + paramsToPass.join('&');
         }
       }
+    }
+
+    // Load Tally embeds with fallback to direct iframe src
+    var d = document,
+      w = "https://tally.so/widgets/embed.js",
+      v = function () {
+        if (typeof Tally !== "undefined") {
+          Tally.loadEmbeds();
+        } else {
+          d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach(function (e) {
+            e.src = e.dataset.tallySrc;
+          });
+        }
+      };
+    if (typeof Tally !== "undefined") {
+      v();
+    } else if (d.querySelector('script[src="' + w + '"]') == null) {
+      var s = d.createElement("script");
+      s.src = w;
+      s.onload = v;
+      s.onerror = v;
+      d.body.appendChild(s);
     }
   </script>
 </body>
