@@ -99,8 +99,7 @@ export default {
         return new Response(
           JSON.stringify({
             sessionId: session.id,
-            url: session.url,
-            publishableKey: env.STRIPE_PUBLISHABLE_KEY || ''
+            url: session.url
           }),
           { status: 200, headers: corsHeaders }
         );

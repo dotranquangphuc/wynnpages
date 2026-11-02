@@ -34,7 +34,6 @@
     <link rel="apple-touch-icon" href="assets/favicon.png">
     <link href="assets/fonts.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<script src="https://js.stripe.com/v3/"></script>
 <!-- Tailwind CSS v3 with Plugins -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Tailwind Custom Configuration -->
@@ -2024,24 +2023,11 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         throw new Error(data.error || 'Unable to initiate Stripe checkout');
       }
 
-      // If Stripe.js is initialized with publishable key and sessionId
-      if (window.Stripe && data.publishableKey && data.sessionId) {
-        const stripe = Stripe(data.publishableKey);
-        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
-        if (error) {
-          console.warn('stripe.redirectToCheckout failed, falling back to direct URL:', error);
-          if (data.url) {
-            window.location.href = data.url;
-            return;
-          }
-          throw error;
-        }
-      } else if (data.url) {
-        // Direct redirect to Stripe Checkout hosted session URL
-        window.location.href = data.url;
-      } else {
+      if (!data.url) {
         throw new Error('No checkout URL received from server.');
       }
+      // Redirect to the Stripe-hosted Checkout Session (email pre-filled via customer_email)
+      window.location.href = data.url;
     } catch (err) {
       console.error('Stripe Checkout Error:', err);
       alert('Checkout could not be initialized: ' + err.message);
