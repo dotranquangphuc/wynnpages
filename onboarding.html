@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WynnPages — Atelier Studio Onboarding Brief</title>
+  <meta name="description" content="Your 7-day build slot is locked. Complete your quick studio onboarding brief so we can begin crafting your bespoke website.">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: {
+              50: '#fdfcf9',
+              100: '#fbf8f2',
+              200: '#f6f1e8',
+              300: '#ede4d3',
+              800: '#3a3329',
+              900: '#231f1a',
+            },
+            terracotta: {
+              400: '#e58f55',
+              500: '#96432b',
+              600: '#7d3520',
+            },
+            gold: {
+              400: '#e8b948',
+              500: '#d49b28',
+              600: '#b27b14',
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f6f1e8;
+      color: #2b251e;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .atelier-input {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .atelier-input:hover {
+      border-color: #cbbba0;
+    }
+    .atelier-input:focus {
+      background-color: #ffffff;
+      border-color: #96432b;
+      box-shadow: 0 0 0 4px rgba(150, 67, 43, 0.1);
+      outline: none;
+    }
+    .choice-card {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .choice-card:hover {
+      border-color: #b89f82;
+      background-color: #faf5eb;
+    }
+    .choice-card.selected {
+      background-color: #fffaf2;
+      border-color: #96432b;
+      box-shadow: 0 0 0 3px rgba(150, 67, 43, 0.12);
+    }
+    .choice-card.selected .choice-badge {
+      background-color: #96432b;
+      color: #ffffff;
+      border-color: #96432b;
+    }
+    .upload-zone {
+      background-color: #fcf9f3;
+      border: 1.5px dashed #d5c7b2;
+      transition: all 0.2s ease;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #96432b;
+      background-color: #fff9f0;
+    }
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-reveal {
+      animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
+
+  <!-- Atelier Header -->
+  <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <span class="font-editorial text-2xl font-bold tracking-tight text-stone-900 group-hover:text-[#96432b] transition-colors">
+          WynnPages
+        </span>
+        <span class="text-xs uppercase tracking-widest text-[#96432b] font-semibold bg-[#fbdeb9]/50 px-2 py-0.5 rounded-full">
+          Atelier Brief
+        </span>
+      </a>
+      <a href="/" class="text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+        <span>Back to Site</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-5 sm:px-6 py-10 lg:py-14">
+    <!-- Success Badge & Intro -->
+    <div class="text-center max-w-xl mx-auto mb-9">
+      <div class="w-14 h-14 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mx-auto mb-4 shadow-sm border border-[#536251]/20">
+        <span class="material-symbols-outlined text-[32px]">check_circle</span>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4e4ce] text-[#586755] font-semibold text-[10px] uppercase tracking-wider mb-3">
+        <span>Payment Secured via Stripe</span>
+      </div>
+      <h1 class="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 leading-tight mb-3">
+        Your 7-Day Build Slot is Locked, mate.
+      </h1>
+      <p class="text-stone-600 text-sm sm:text-base leading-relaxed">
+        Welcome to WynnPages! Fill in your studio specifications below so our artisans can craft your bespoke website.
+      </p>
+      <div id="client-info-pill" class="hidden mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-200/70 text-xs text-stone-700 font-mono">
+        <span class="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse"></span>
+        <span id="client-email-display"></span>
+      </div>
+    </div>
+
+    <!-- Bespoke Atelier Form Card -->
+    <div id="brief-card" class="bg-white rounded-3xl shadow-xl border border-[#e5dec9] overflow-hidden relative">
+      
+      <!-- Decorative Atelier Studio Header Banner -->
+      <div class="relative h-36 sm:h-44 bg-[#f4ece0] overflow-hidden border-b border-[#e5dec9]">
+        <img 
+          src="/assets/banner-web.jpg" 
+          alt="WynnPages Atelier Desk" 
+          class="w-full h-full object-cover object-[center_45%] opacity-90"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent"></div>
+        <div class="absolute bottom-3 left-6 sm:left-10 right-6 sm:right-10 flex items-end justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] shadow-md flex items-center justify-center font-editorial text-2xl font-bold text-[#96432b]">
+              W
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b] block">Client Specifications</span>
+              <h2 class="font-editorial text-xl sm:text-2xl font-bold text-stone-900 leading-none">Atelier Studio Brief</h2>
+            </div>
+          </div>
+          <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-stone-500 bg-[#fcf9f3]/90 px-3 py-1 rounded-full border border-[#e5dec9]">
+            <span class="material-symbols-outlined text-[14px] text-[#96432b]">schedule</span>
+            Takes ~3 mins
+          </span>
+        </div>
+      </div>
+
+      <!-- FORM VIEW (Compatible with Cloudflare Workers /api/submit-brief or Formspree) -->
+      <form 
+        id="atelier-brief-form" 
+        action="/api/submit-brief" 
+        method="POST" 
+        enctype="multipart/form-data" 
+        class="p-6 sm:p-10 space-y-9" 
+        novalidate
+      >
+        <input type="hidden" name="session_id" id="hidden-session-id" value="">
+        <input type="hidden" name="brief_type" id="hidden-brief-type" value="organic">
+
+        <!-- Conditional Banner for Demo Mode (type=demo) -->
+        <div id="demo-banner" class="hidden rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 sm:p-5 flex items-start gap-3.5 animate-reveal">
+          <span class="material-symbols-outlined text-[#4c6b47] text-[22px] mt-0.5">verified</span>
+          <div>
+            <p class="text-sm font-bold text-[#2f442c]">Great news! Your custom demo is ready to go.</p>
+            <p class="text-xs text-[#4c6b47] mt-0.5">Upload your final brand assets and confirm your details below so we can polish and launch your live website.</p>
+          </div>
+        </div>
+
+        <!-- Email Input (only visible if not already provided in URL) -->
+        <div id="email-fallback-wrap" class="hidden space-y-2">
+          <label for="brief-email" class="block text-sm font-bold text-stone-900">
+            Your Account Email Address <span class="text-[#96432b]">*</span>
+          </label>
+          <p class="text-xs text-stone-500">Use the email address associated with your booking so we can link your brief.</p>
+          <input 
+            type="email" 
+            id="brief-email" 
+            name="email"
+            placeholder="you@yourbusiness.com.au" 
+            class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+          >
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- SECTION I: BUSINESS DETAILS (Shown in Organic / Full)    -->
+        <!-- ======================================================== -->
+        <div id="organic-questions" class="space-y-7">
+          <div class="border-b border-[#ece5d8] pb-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Part I • Business Profile</span>
+            <h3 class="font-editorial text-2xl font-bold text-stone-900">Your Business Details</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Business Name -->
+            <div class="space-y-1.5">
+              <label for="brief-business-name" class="block text-sm font-bold text-stone-900">
+                Business Name <span class="text-[#96432b]">*</span>
+              </label>
+              <p class="text-[11px] text-stone-500">Exact trading name for your header &amp; footer.</p>
+              <input 
+                type="text" 
+                id="brief-business-name" 
+                name="business_name"
+                placeholder="e.g. Emerald Cafe &amp; Bakery" 
+                required
+                class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+
+            <!-- Industry / Niche -->
+            <div class="space-y-1.5">
+              <label for="brief-industry" class="block text-sm font-bold text-stone-900">
+                What is your industry / craft? <span class="text-[#96432b]">*</span>
+              </label>
+              <p class="text-[11px] text-stone-500">What do you specialise in?</p>
+              <input 
+                type="text" 
+                id="brief-industry" 
+                name="industry"
+                placeholder="e.g. Artisan Bakery, Interior Design, Plumbing" 
+                required
+                class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Phone Number (for website display) -->
+            <div class="space-y-1.5">
+              <label for="brief-display-phone" class="block text-sm font-bold text-stone-900">
+                Phone Number (for website display) <span class="text-[#96432b]">*</span>
+              </label>
+              <p class="text-[11px] text-stone-500">Shown on your "Call Now" &amp; contact section.</p>
+              <input 
+                type="tel" 
+                id="brief-display-phone" 
+                name="display_phone"
+                placeholder="e.g. 0412 345 678 or (07) 3123 4567" 
+                required
+                class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+
+            <!-- Business Address -->
+            <div class="space-y-1.5">
+              <label for="brief-address" class="block text-sm font-bold text-stone-900">
+                Business Address / Service Area <span class="text-[#96432b]">*</span>
+              </label>
+              <p class="text-[11px] text-stone-500">Street address for maps, or regions you service.</p>
+              <input 
+                type="text" 
+                id="brief-address" 
+                name="business_address"
+                placeholder="e.g. 124 High St, Brassall QLD (or Greater Brisbane)" 
+                required
+                class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+          </div>
+
+          <!-- Social / Booking Links -->
+          <div class="space-y-1.5">
+            <label for="brief-socials" class="block text-sm font-bold text-stone-900">
+              Social Media &amp; Booking Links <span class="text-stone-400 font-normal text-xs">(Optional)</span>
+            </label>
+            <p class="text-xs text-stone-500">Paste your Instagram, Facebook, Google Maps, Fresha, OpenTable, or booking system links.</p>
+            <textarea 
+              id="brief-socials" 
+              name="social_links"
+              rows="2" 
+              placeholder="e.g. instagram.com/yourbusiness, booking link..." 
+              class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 resize-y"
+            ></textarea>
+          </div>
+
+          <!-- ======================================================== -->
+          <!-- SECTION II: AESTHETIC & DESIGN VIBE                      -->
+          <!-- ======================================================== -->
+          <div class="border-b border-[#ece5d8] pt-3 pb-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Part II • Creative Direction</span>
+            <h3 class="font-editorial text-2xl font-bold text-stone-900">Aesthetic &amp; Brand Vibe</h3>
+          </div>
+
+          <!-- Preferred Brand Colors -->
+          <div class="space-y-2.5">
+            <label for="brief-colors" class="block text-sm font-bold text-stone-900">
+              Preferred Brand Colors <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">Type your brand colors or tap one of our curated atelier palettes below.</p>
+            <input 
+              type="text" 
+              id="brief-colors" 
+              name="brand_colors"
+              placeholder="e.g. Sage Green, Warm Cream" 
+              required
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+            <!-- Curated Palette Quick Chips -->
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button type="button" data-palette="Sage Green, Warm Cream" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#7c9070]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#f5efe6] border border-stone-300 -ml-1"></span>
+                <span>Sage Green &amp; Cream</span>
+              </button>
+              <button type="button" data-palette="Terracotta, Warm Parchment" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#96432b]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#f6f1e8] border border-stone-300 -ml-1"></span>
+                <span>Terracotta &amp; Parchment</span>
+              </button>
+              <button type="button" data-palette="Espresso Brown, Warm Linen" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#3a2618]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#efe8dc] border border-stone-300 -ml-1"></span>
+                <span>Espresso &amp; Linen</span>
+              </button>
+              <button type="button" data-palette="Charcoal Ink, Antique Gold" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#1e1e1e]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#c99e42] -ml-1"></span>
+                <span>Charcoal &amp; Gold</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Websites you like the vibe of -->
+          <div class="space-y-2">
+            <label for="brief-vibes" class="block text-sm font-bold text-stone-900">
+              Websites you like the vibe of (1–2 URLs) <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500">Share 1–2 links of websites whose look and feel you admire (or describe the style you want).</p>
+            <textarea 
+              id="brief-vibes" 
+              name="vibe_links"
+              rows="2" 
+              placeholder="Paste 1–2 website URLs or style notes here..." 
+              required
+              class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 resize-y"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- SECTION III: BRAND ASSETS (LOGO & MENU / PRICE LIST)     -->
+        <!-- ======================================================== -->
+        <div id="assets-questions" class="space-y-6">
+          <div class="border-b border-[#ece5d8] pb-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Part III • Brand Assets</span>
+            <h3 class="font-editorial text-2xl font-bold text-stone-900">Logo &amp; Menu / Service List</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Upload high-res Logo -->
+            <div class="space-y-2.5">
+              <label for="logo-file-input" class="block text-sm font-bold text-stone-900">
+                Upload your high-res Logo <span id="logo-req-star" class="text-stone-400 font-normal text-xs">(Optional)</span>
+              </label>
+              <p class="text-[11px] text-stone-500">PNG, SVG, JPG, or PDF (up to 4MB).</p>
+              
+              <label for="logo-file-input" id="logo-dropzone" class="upload-zone rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer">
+                <input type="file" id="logo-file-input" name="logo_file" accept="image/*,.pdf,.svg" class="hidden">
+                <div class="w-10 h-10 rounded-full bg-[#f3eae0] text-[#96432b] flex items-center justify-center mb-2">
+                  <span class="material-symbols-outlined text-[22px]">cloud_upload</span>
+                </div>
+                <p id="logo-file-label" class="text-xs font-bold text-stone-800">Choose Logo file or drag here</p>
+                <p class="text-[11px] text-stone-400 mt-0.5">PNG, JPG, SVG, PDF • Max 4 MB</p>
+              </label>
+
+              <input 
+                type="text" 
+                id="brief-logo-link" 
+                name="logo_link"
+                placeholder="Or paste a Google Drive / Dropbox link" 
+                class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400"
+              >
+            </div>
+
+            <!-- Upload pricing/menu -->
+            <div class="space-y-2.5">
+              <label for="menu-file-input" class="block text-sm font-bold text-stone-900">
+                Upload your Menu / Price List <span id="menu-req-star" class="text-stone-400 font-normal text-xs">(Optional)</span>
+              </label>
+              <p class="text-[11px] text-stone-500">Service list, menu, or price sheet.</p>
+              
+              <label for="menu-file-input" id="menu-dropzone" class="upload-zone rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer">
+                <input type="file" id="menu-file-input" name="menu_file" accept="image/*,.pdf,.doc,.docx,.txt,.csv" class="hidden">
+                <div class="w-10 h-10 rounded-full bg-[#f3eae0] text-[#96432b] flex items-center justify-center mb-2">
+                  <span class="material-symbols-outlined text-[22px]">description</span>
+                </div>
+                <p id="menu-file-label" class="text-xs font-bold text-stone-800">Choose Menu/Services file</p>
+                <p class="text-[11px] text-stone-400 mt-0.5">PDF, Image, Word, CSV • Max 4 MB</p>
+              </label>
+
+              <input 
+                type="text" 
+                id="brief-menu-link" 
+                name="menu_link"
+                placeholder="Or paste a link / key services &amp; prices" 
+                class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- SECTION IV: DOMAIN PREFERENCE                            -->
+        <!-- ======================================================== -->
+        <div class="space-y-4">
+          <div class="border-b border-[#ece5d8] pb-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Part IV • Launch Domain</span>
+            <h3 class="font-editorial text-2xl font-bold text-stone-900">Do you already have a domain name? <span class="text-[#96432b]">*</span></h3>
+          </div>
+
+          <input type="hidden" name="has_domain" id="hidden-has-domain" value="">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Do you already have a domain name?">
+            <!-- Option A -->
+            <button 
+              type="button" 
+              data-domain-choice="Yes, I have one"
+              class="choice-card rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                A
+              </span>
+              <span class="text-sm font-semibold text-stone-800">Yes, I have one</span>
+            </button>
+
+            <!-- Option B -->
+            <button 
+              type="button" 
+              data-domain-choice="No, please help me get one"
+              class="choice-card rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                B
+              </span>
+              <span class="text-sm font-semibold text-stone-800">No, please help me get one</span>
+            </button>
+          </div>
+
+          <!-- Conditional Input A: What is your domain? -->
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-2 animate-reveal">
+            <label for="brief-existing-domain" class="block text-sm font-bold text-stone-900">
+              What is your domain? <span class="text-[#96432b]">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="brief-existing-domain" 
+              name="existing_domain"
+              placeholder="www.example.com.au" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+
+          <!-- Conditional Input B: List 1-2 domain names you'd like us to check -->
+          <div id="domain-no-wrap" class="hidden pt-2 space-y-2 animate-reveal">
+            <label for="brief-desired-domains" class="block text-sm font-bold text-stone-900">
+              List 1–2 domain names you'd like us to check <span class="text-[#96432b]">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="brief-desired-domains" 
+              name="desired_domains"
+              placeholder="e.g. wynnpages.com.au" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+        </div>
+
+        <!-- Form Validation Error Banner -->
+        <div id="brief-error" class="hidden rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-700 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-red-600">error</span>
+          <span id="brief-error-text">Please complete all required fields.</span>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button 
+            type="submit" 
+            id="brief-submit-btn"
+            class="w-full py-4 px-6 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all flex items-center justify-center gap-2"
+          >
+            <span id="brief-submit-label">Complete Onboarding Brief</span>
+            <span id="brief-submit-icon" class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+          <p class="text-center text-[11px] text-stone-400 mt-3 flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-[13px]">lock</span>
+            <span>Directly linked to your WynnPages Studio build slot</span>
+          </p>
+        </div>
+      </form>
+
+      <!-- ========================================== -->
+      <!-- THANK YOU VIEW (Shown after submit)        -->
+      <!-- ========================================== -->
+      <div id="thank-you-view" class="hidden p-8 sm:p-12 text-center space-y-6 animate-reveal">
+        <div class="w-16 h-16 rounded-full bg-[#d4e4ce] text-[#4c6b47] flex items-center justify-center mx-auto shadow-sm border border-[#4c6b47]/20">
+          <span class="material-symbols-outlined text-[36px]">auto_awesome</span>
+        </div>
+
+        <div class="space-y-3 max-w-lg mx-auto">
+          <span class="inline-block text-[11px] font-bold uppercase tracking-widest text-[#96432b] bg-[#fbdeb9]/60 px-3 py-1 rounded-full">
+            Brief Received • Studio Active
+          </span>
+          <h3 class="font-editorial text-3xl sm:text-4xl font-bold text-stone-900 leading-tight">
+            Thank you! We are firing up the code editor.
+          </h3>
+          <p class="text-stone-600 text-base leading-relaxed">
+            Your pristine website will be live in <strong>7 days</strong>. We have logged all your specifications and our lead artisan designer is getting started right away.
+          </p>
+        </div>
+
+        <!-- Submitted Summary Card -->
+        <div id="submitted-summary" class="max-w-md mx-auto bg-[#fcf9f3] border border-[#e5dec9] rounded-2xl p-5 text-left text-xs space-y-2.5 text-stone-700">
+        </div>
+
+        <div class="pt-4">
+          <a 
+            href="/" 
+            class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors"
+          >
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Return to WynnPages Homepage</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="border-t border-[#dbc1ba]/30 py-6 text-center text-xs text-stone-400">
+    <p>WynnPages Australia • Hand-crafted bespoke digital craftsmanship • © 2026</p>
+  </footer>
+
+  <script>
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = (urlParams.get('email') || '').trim();
+      const sessionId = (urlParams.get('session_id') || '').trim();
+      const briefType = (urlParams.get('type') || 'organic').toLowerCase() === 'demo' ? 'demo' : 'organic';
+
+      document.getElementById('hidden-session-id').value = sessionId;
+      document.getElementById('hidden-brief-type').value = briefType;
+
+      // Elements
+      const emailPill = document.getElementById('client-info-pill');
+      const emailDisplay = document.getElementById('client-email-display');
+      const emailFallbackWrap = document.getElementById('email-fallback-wrap');
+      const emailInput = document.getElementById('brief-email');
+
+      const demoBanner = document.getElementById('demo-banner');
+      const organicQuestions = document.getElementById('organic-questions');
+      const logoReqStar = document.getElementById('logo-req-star');
+      const menuReqStar = document.getElementById('menu-req-star');
+
+      const businessNameInput = document.getElementById('brief-business-name');
+      const industryInput = document.getElementById('brief-industry');
+      const displayPhoneInput = document.getElementById('brief-display-phone');
+      const addressInput = document.getElementById('brief-address');
+      const socialsInput = document.getElementById('brief-socials');
+      const colorsInput = document.getElementById('brief-colors');
+      const vibesInput = document.getElementById('brief-vibes');
+
+      const logoFileInput = document.getElementById('logo-file-input');
+      const logoFileLabel = document.getElementById('logo-file-label');
+      const logoLinkInput = document.getElementById('brief-logo-link');
+
+      const menuFileInput = document.getElementById('menu-file-input');
+      const menuFileLabel = document.getElementById('menu-file-label');
+      const menuLinkInput = document.getElementById('brief-menu-link');
+
+      const domainChoiceBtns = document.querySelectorAll('[data-domain-choice]');
+      const hiddenHasDomain = document.getElementById('hidden-has-domain');
+      const domainYesWrap = document.getElementById('domain-yes-wrap');
+      const domainNoWrap = document.getElementById('domain-no-wrap');
+      const existingDomainInput = document.getElementById('brief-existing-domain');
+      const desiredDomainsInput = document.getElementById('brief-desired-domains');
+
+      const form = document.getElementById('atelier-brief-form');
+      const errorBox = document.getElementById('brief-error');
+      const errorText = document.getElementById('brief-error-text');
+      const submitBtn = document.getElementById('brief-submit-btn');
+      const submitLabel = document.getElementById('brief-submit-label');
+      const submitIcon = document.getElementById('brief-submit-icon');
+      const thankYouView = document.getElementById('thank-you-view');
+      const submittedSummary = document.getElementById('submitted-summary');
+
+      let selectedDomainOption = '';
+      let logoFileObj = null;
+      let menuFileObj = null;
+
+      // 1. Setup Email display or fallback field
+      if (emailParam) {
+        emailDisplay.textContent = 'Account: ' + emailParam;
+        emailPill.classList.remove('hidden');
+        emailInput.value = emailParam;
+      } else {
+        emailFallbackWrap.classList.remove('hidden');
+      }
+
+      // 1b. Trigger post-payment welcome SMS + Email if arriving from Stripe Checkout
+      if (sessionId && sessionId.startsWith('cs_')) {
+        fetch('/api/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        }).catch(() => {});
+      }
+
+      // 2. Setup Branch Mode (organic vs demo)
+      if (briefType === 'demo') {
+        demoBanner.classList.remove('hidden');
+        organicQuestions.classList.add('hidden');
+        logoReqStar.innerHTML = '<span class="text-[#96432b] font-bold">*</span>';
+        menuReqStar.innerHTML = '<span class="text-[#96432b] font-bold">*</span>';
+      } else {
+        demoBanner.classList.add('hidden');
+        organicQuestions.classList.remove('hidden');
+      }
+
+      // 3. Curated Color Palette Chips
+      document.querySelectorAll('.palette-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          colorsInput.value = chip.getAttribute('data-palette') || '';
+          colorsInput.focus();
+        });
+      });
+
+      // 4. File Upload Readers + Drag-and-Drop Support
+      function bindFileUpload(inputEl, labelEl, dropzoneId, onLoaded) {
+        if (!inputEl) return;
+        const dropzone = document.getElementById(dropzoneId);
+
+        function handleFile(file) {
+          if (!file) return;
+          if (file.size > 4.5 * 1024 * 1024) {
+            showError('File size exceeds 4MB. Please choose a smaller file or paste a shared link below.');
+            inputEl.value = '';
+            return;
+          }
+          labelEl.textContent = '✓ ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+          labelEl.classList.add('text-[#96432b]');
+          const reader = new FileReader();
+          reader.onload = () => {
+            onLoaded({
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              dataUrl: reader.result
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+
+        inputEl.addEventListener('change', () => {
+          handleFile(inputEl.files && inputEl.files[0]);
+        });
+
+        if (dropzone) {
+          ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+              e.preventDefault();
+              dropzone.classList.add('dragover');
+            });
+          });
+          ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+              e.preventDefault();
+              dropzone.classList.remove('dragover');
+            });
+          });
+          dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files[0]) {
+              handleFile(dt.files[0]);
+            }
+          });
+        }
+      }
+
+      bindFileUpload(logoFileInput, logoFileLabel, 'logo-dropzone', (obj) => { logoFileObj = obj; });
+      bindFileUpload(menuFileInput, menuFileLabel, 'menu-dropzone', (obj) => { menuFileObj = obj; });
+
+      // 5. Domain Radio Choice Cards
+      domainChoiceBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedDomainOption = btn.getAttribute('data-domain-choice') || '';
+          hiddenHasDomain.value = selectedDomainOption;
+          domainChoiceBtns.forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+
+          if (selectedDomainOption === 'Yes, I have one') {
+            domainYesWrap.classList.remove('hidden');
+            domainNoWrap.classList.add('hidden');
+            existingDomainInput.focus();
+          } else {
+            domainNoWrap.classList.remove('hidden');
+            domainYesWrap.classList.add('hidden');
+            desiredDomainsInput.focus();
+          }
+          hideError();
+        });
+      });
+
+      function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.classList.remove('hidden');
+      }
+
+      function hideError() {
+        errorBox.classList.add('hidden');
+      }
+
+      // 6. Form Submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideError();
+
+        const resolvedEmail = (emailParam || emailInput.value || '').trim();
+        if (!resolvedEmail || !resolvedEmail.includes('@')) {
+          showError('Please enter a valid email address so we can link your brief.');
+          emailInput.focus();
+          return;
+        }
+
+        if (briefType === 'organic') {
+          if (!businessNameInput.value.trim()) {
+            showError('Please enter your Business Name.');
+            businessNameInput.focus();
+            return;
+          }
+          if (!industryInput.value.trim()) {
+            showError('Please let us know your industry or craft.');
+            industryInput.focus();
+            return;
+          }
+          if (!displayPhoneInput.value.trim()) {
+            showError('Please enter your business phone number for display on the website.');
+            displayPhoneInput.focus();
+            return;
+          }
+          if (!addressInput.value.trim()) {
+            showError('Please enter your business address or service area.');
+            addressInput.focus();
+            return;
+          }
+          if (!colorsInput.value.trim()) {
+            showError('Please enter or select your preferred brand colors.');
+            colorsInput.focus();
+            return;
+          }
+          if (!vibesInput.value.trim()) {
+            showError('Please share 1–2 websites or describe the vibe you like.');
+            vibesInput.focus();
+            return;
+          }
+        } else {
+          if (!logoFileObj && !logoLinkInput.value.trim()) {
+            showError('Please upload your high-res logo or paste a link to it.');
+            return;
+          }
+          if (!menuFileObj && !menuLinkInput.value.trim()) {
+            showError('Please upload your menu/pricing or paste a link/notes.');
+            return;
+          }
+        }
+
+        if (!selectedDomainOption) {
+          showError('Please select whether you already have a domain name.');
+          return;
+        }
+
+        if (selectedDomainOption === 'Yes, I have one' && !existingDomainInput.value.trim()) {
+          showError('Please enter your existing domain name.');
+          existingDomainInput.focus();
+          return;
+        }
+
+        if (selectedDomainOption === 'No, please help me get one' && !desiredDomainsInput.value.trim()) {
+          showError('Please list 1–2 domain names you would like us to check.');
+          desiredDomainsInput.focus();
+          return;
+        }
+
+        // Disable button & show loading state
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+        submitLabel.textContent = 'Saving your studio brief...';
+        submitIcon.textContent = 'hourglass_top';
+
+        const payload = {
+          sessionId,
+          email: resolvedEmail,
+          briefType,
+          businessName: businessNameInput.value.trim(),
+          industry: industryInput.value.trim(),
+          displayPhone: displayPhoneInput.value.trim(),
+          businessAddress: addressInput.value.trim(),
+          socialLinks: socialsInput.value.trim(),
+          brandColors: colorsInput.value.trim(),
+          vibeLinks: vibesInput.value.trim(),
+          hasDomain: selectedDomainOption,
+          existingDomain: existingDomainInput.value.trim(),
+          desiredDomains: desiredDomainsInput.value.trim(),
+          logoFile: logoFileObj,
+          logoLink: logoLinkInput ? logoLinkInput.value.trim() : '',
+          menuFile: menuFileObj,
+          menuLink: menuLinkInput ? menuLinkInput.value.trim() : ''
+        };
+
+        try {
+          const actionUrl = form.getAttribute('action') || '/api/submit-brief';
+          const res = await fetch(actionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || 'Could not submit brief. Please try again.');
+          }
+
+          // Render summary & transition to Thank You view
+          const rows = [];
+          rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Account</span><span class="font-semibold text-stone-900">${escapeHtml(resolvedEmail)}</span></div>`);
+          if (payload.businessName) {
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Business Name</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.businessName)}</span></div>`);
+          }
+          if (briefType === 'organic') {
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Industry</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.industry)}</span></div>`);
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Display Phone</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.displayPhone)}</span></div>`);
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Brand Palette</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.brandColors)}</span></div>`);
+          }
+          if (logoFileObj || payload.logoLink) {
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Logo Asset</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(logoFileObj ? logoFileObj.name : payload.logoLink)}</span></div>`);
+          }
+          if (menuFileObj || payload.menuLink) {
+            rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Menu / Services</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(menuFileObj ? menuFileObj.name : payload.menuLink)}</span></div>`);
+          }
+          const domainVal = selectedDomainOption === 'Yes, I have one' ? payload.existingDomain : payload.desiredDomains;
+          rows.push(`<div class="flex justify-between gap-4"><span class="text-stone-400 font-medium">Domain</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(domainVal)}</span></div>`);
+          submittedSummary.innerHTML = rows.join('');
+
+          form.classList.add('hidden');
+          thankYouView.classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+          showError(err.message || 'Something went wrong while saving your brief.');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+          submitLabel.textContent = 'Complete Onboarding Brief';
+          submitIcon.textContent = 'arrow_forward';
+        }
+      });
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

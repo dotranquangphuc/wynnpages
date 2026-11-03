@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <style>
     body {
@@ -35,9 +35,10 @@
       transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .btn-action:disabled {
-      opacity: 0.42;
+      opacity: 0.38;
       cursor: not-allowed;
-      filter: grayscale(35%);
+      filter: grayscale(65%);
+      box-shadow: none !important;
     }
   </style>
 </head>
@@ -57,15 +58,15 @@
 
       <div class="flex items-center gap-2 flex-wrap">
         <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs">
-          <span class="material-symbols-outlined text-[16px] text-[#96432b]">key</span>
+          <span>🔑</span>
           <span>Cấu hình ClickSend &amp; Resend</span>
         </button>
         <button id="btn-new-client" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs">
-          <span class="material-symbols-outlined text-[16px]">person_add</span>
-          <span>+ Thêm / Test Khách</span>
+          <span>＋</span>
+          <span>Thêm / Test Khách</span>
         </button>
-        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
-          <span class="material-symbols-outlined text-[16px]">refresh</span>
+        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
+          <span>↻</span>
           <span>Làm mới</span>
         </button>
       </div>
@@ -126,11 +127,11 @@
         <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#e5dec9] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="space-y-1">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-[18px] text-[#96432b]">smart_toy</span>
+              <span class="text-sm">🤖</span>
               <span class="text-xs font-bold uppercase tracking-wider text-[#96432b]">Cổng Dữ Liệu Trực Tiếp Cho AI Thiết Kế Web</span>
             </div>
             <p class="text-xs text-stone-600 leading-relaxed">
-              Khi cần AI thiết kế web cho khách, bấm nút bên phải để copy lệnh cho AI (AI tự động đọc ngành nghề, bảng màu, web mẫu, tên miền &amp; logo).
+              Khi cần AI thiết kế web cho khách, bấm nút bên phải để copy lệnh cho AI (AI tự động đọc tên quán, SĐT, địa chỉ, ngành nghề, bảng màu, web mẫu, tên miền &amp; logo).
             </p>
           </div>
           <button 
@@ -138,7 +139,7 @@
             id="btn-copy-ai-command"
             class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
           >
-            <span class="material-symbols-outlined text-[16px]">content_copy</span>
+            <span>📋</span>
             <span>Copy Lệnh Gọi API Cho AI</span>
           </button>
         </div>
@@ -180,20 +181,18 @@
           <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">
             Danh Sách Khách Hàng &amp; Điều Khiển Tự Động (<span id="client-count">0</span>)
           </h2>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
             <input 
               type="search" 
               id="search-input" 
               placeholder="Tìm tên, email, SĐT, ngành nghề..." 
               class="atelier-input rounded-xl px-3.5 py-2 text-xs w-64"
             >
-            <a href="/brief?type=organic" target="_blank" class="text-xs font-bold text-[#96432b] hover:underline flex items-center gap-1 shrink-0">
-              <span>Form Organic</span>
-              <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+            <a href="/brief?type=organic" target="_blank" class="text-xs font-bold text-[#96432b] hover:underline inline-flex items-center gap-1 shrink-0">
+              <span>Form Organic ↗</span>
             </a>
-            <a href="/brief?type=demo" target="_blank" class="text-xs font-bold text-emerald-800 hover:underline flex items-center gap-1 shrink-0">
-              <span>Form Demo</span>
-              <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+            <a href="/brief?type=demo" target="_blank" class="text-xs font-bold text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0">
+              <span>Form Demo ↗</span>
             </a>
           </div>
         </div>
@@ -216,13 +215,13 @@
           <h3 class="text-xl font-extrabold text-stone-900">Cấu Hình ClickSend SMS &amp; Resend Email</h3>
           <p class="text-xs text-stone-500 mt-0.5">Ghi đè hoặc nhập nhanh API Key ngay trên trình duyệt.</p>
         </div>
-        <button type="button" id="btn-close-settings" class="text-stone-400 hover:text-stone-800">✕</button>
+        <button type="button" id="btn-close-settings" class="text-stone-400 hover:text-stone-800 font-bold">✕</button>
       </div>
 
       <div class="space-y-4 text-xs">
         <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
           <p class="font-bold text-stone-900">1. ClickSend SMS (Đã kết nối sẵn trên Cloudflare ✅)</p>
-          <p class="text-stone-500">Chỉ cần điền nếu bạn muốn đổi tài khoản ClickSend khác.</p>
+          <p class="text-stone-500">Chỉ cần điền nếu bạn muốn đổi sang tài khoản ClickSend khác.</p>
           <div class="space-y-2 pt-1">
             <input type="text" id="cfg-clicksend-user" placeholder="ClickSend Username (Mặc định dùng biến trên Cloudflare)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
             <input type="password" id="cfg-clicksend-key" placeholder="ClickSend API Key" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
@@ -253,7 +252,7 @@
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h3 id="client-modal-title" class="text-xl font-extrabold text-stone-900">Thêm / Chỉnh Sửa Hồ Sơ Khách Hàng</h3>
-        <button type="button" id="btn-close-client-modal" class="text-stone-400 hover:text-stone-800">✕</button>
+        <button type="button" id="btn-close-client-modal" class="text-stone-400 hover:text-stone-800 font-bold">✕</button>
       </div>
       <form id="client-form" class="space-y-3.5 text-xs">
         <input type="hidden" id="edit-cid" value="">
@@ -263,8 +262,18 @@
             <input type="text" id="edit-name" placeholder="VD: Phúc Đỗ" required class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
           </div>
           <div>
-            <label class="font-bold block mb-1">Số điện thoại (Úc 04... / +61...)</label>
+            <label class="font-bold block mb-1">Tên Thương Hiệu / Quán (Business Name)</label>
+            <input type="text" id="edit-business-name" placeholder="VD: Emerald Cafe &amp; Bakery" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold block mb-1">SĐT nhận SMS (04... / +61...)</label>
             <input type="tel" id="edit-phone" placeholder="0424 717 777" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+          <div>
+            <label class="font-bold block mb-1">SĐT hiển thị trên Web</label>
+            <input type="tel" id="edit-display-phone" placeholder="(07) 3123 4567" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -283,6 +292,10 @@
             </select>
           </div>
         </div>
+        <div>
+          <label class="font-bold block mb-1">Địa chỉ kinh doanh / Khu vực phục vụ</label>
+          <input type="text" id="edit-address" placeholder="124 High St, Brassall QLD" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="font-bold block mb-1">Ngành nghề (Industry)</label>
@@ -293,9 +306,15 @@
             <input type="text" id="edit-colors" placeholder="VD: Sage Green, Warm Cream" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
           </div>
         </div>
-        <div>
-          <label class="font-bold block mb-1">Web mẫu tham khảo (Vibe Links)</label>
-          <input type="text" id="edit-vibes" placeholder="https://..." class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold block mb-1">Web mẫu tham khảo (Vibe Links)</label>
+            <input type="text" id="edit-vibes" placeholder="https://..." class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+          </div>
+          <div>
+            <label class="font-bold block mb-1">Mạng xã hội / Link Booking</label>
+            <input type="text" id="edit-socials" placeholder="instagram.com/..." class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+          </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -357,12 +376,16 @@
       const clientModalTitle = document.getElementById('client-modal-title');
       const editCid = document.getElementById('edit-cid');
       const editName = document.getElementById('edit-name');
+      const editBusinessName = document.getElementById('edit-business-name');
       const editPhone = document.getElementById('edit-phone');
+      const editDisplayPhone = document.getElementById('edit-display-phone');
       const editEmail = document.getElementById('edit-email');
       const editStage = document.getElementById('edit-stage');
+      const editAddress = document.getElementById('edit-address');
       const editIndustry = document.getElementById('edit-industry');
       const editColors = document.getElementById('edit-colors');
       const editVibes = document.getElementById('edit-vibes');
+      const editSocials = document.getElementById('edit-socials');
       const editExistingDomain = document.getElementById('edit-existing-domain');
       const editDesiredDomains = document.getElementById('edit-desired-domains');
       const editDemoUrl = document.getElementById('edit-demo-url');
@@ -394,6 +417,18 @@
           pillResend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200';
           pillResend.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Resend Email: Chưa nhập Key';
         }
+      }
+
+      function getBriefStats(c) {
+        const fields = [
+          Boolean(c.industry),
+          Boolean(c.brandColors),
+          Boolean(c.vibeLinks),
+          Boolean(c.existingDomain || c.desiredDomains)
+        ];
+        const filledCount = fields.filter(Boolean).length;
+        const isComplete = filledCount >= 3 || (c.briefStatus === 'completed' && filledCount >= 2);
+        return { filledCount, total: 4, isComplete };
       }
 
       function updateMetrics(list) {
@@ -449,6 +484,7 @@
           const q = searchQuery.toLowerCase();
           filtered = filtered.filter(c =>
             (c.name || '').toLowerCase().includes(q) ||
+            (c.businessName || '').toLowerCase().includes(q) ||
             (c.email || '').toLowerCase().includes(q) ||
             (c.phone || '').toLowerCase().includes(q) ||
             (c.industry || '').toLowerCase().includes(q) ||
@@ -475,36 +511,74 @@
 
       function renderStepper(c) {
         const currentStep = getStepNumber(c.stage);
-        const hasBrief = Boolean(c.industry || c.briefStatus === 'completed');
-        const hasDemo = Boolean(c.demoUrl);
+        const bStats = getBriefStats(c);
+        const hasDemo = isValidUrl(c.demoUrl);
+        const hasSentDemo = c.stage === 'demo_sent' || c.stage === 'reminder_sent' || c.stage === 'launched' || Boolean(c.demoSentAt);
         const hasAssets = Boolean(c.logoFileName || c.menuFileName);
 
         const steps = [
-          { num: 1, title: 'Thanh Toán', sub: '$599 AUD', done: currentStep >= 1 },
-          { num: 2, title: 'Điền Brief', sub: hasBrief ? 'Đã điền đủ' : 'Chờ khách điền', done: hasBrief || currentStep >= 2 },
-          { num: 3, title: 'Gửi Demo', sub: hasDemo ? 'Đã gắn link' : 'Chưa có link', done: currentStep >= 3 },
-          { num: 4, title: 'Duyệt & Logo', sub: c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần` : (hasAssets ? 'Đã gửi file' : 'Chờ khách duyệt'), done: currentStep >= 4 || hasAssets },
-          { num: 5, title: 'Lên Sóng', sub: c.stage === 'launched' ? 'Đang chạy Live' : 'Bước cuối', done: c.stage === 'launched' }
+          {
+            num: 1,
+            title: 'Thanh Toán',
+            sub: '$599 AUD',
+            done: true,
+            warn: false
+          },
+          {
+            num: 2,
+            title: 'Điền Brief',
+            sub: bStats.isComplete
+              ? `Đã điền (${bStats.filledCount}/4)`
+              : (bStats.filledCount > 0 ? `⚠️ Thiếu (${bStats.filledCount}/4 mục)` : 'Chờ khách điền'),
+            done: bStats.isComplete,
+            warn: bStats.filledCount > 0 && !bStats.isComplete
+          },
+          {
+            num: 3,
+            title: 'Gửi Demo',
+            sub: hasSentDemo && hasDemo ? 'Đã gửi cho khách' : (hasDemo ? 'Đã nhập link (Chờ gửi)' : 'Chưa có link Demo'),
+            done: hasSentDemo && hasDemo,
+            warn: hasDemo && !hasSentDemo
+          },
+          {
+            num: 4,
+            title: 'Duyệt & Logo',
+            sub: hasAssets
+              ? 'Đã nhận Logo/Menu'
+              : (c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần` : 'Chờ khách duyệt'),
+            done: hasAssets || c.stage === 'launched',
+            warn: c.reminderCount > 0 && !hasAssets
+          },
+          {
+            num: 5,
+            title: 'Lên Sóng',
+            sub: c.stage === 'launched' ? 'Đang chạy Live' : 'Bước bàn giao',
+            done: c.stage === 'launched',
+            warn: false
+          }
         ];
 
         return `
-          <div class="grid grid-cols-5 gap-1.5 pt-2 pb-1">
+          <div class="grid grid-cols-5 gap-2 pt-2 pb-1">
             ${steps.map(s => {
               const isCurrent = s.num === currentStep && c.stage !== 'launched';
-              const barColor = s.done
-                ? (isCurrent ? 'bg-[#96432b]' : 'bg-emerald-600')
-                : 'bg-stone-200';
-              const textColor = s.done
-                ? (isCurrent ? 'text-[#96432b]' : 'text-emerald-800')
-                : 'text-stone-400';
+              let barColor = 'bg-stone-200';
+              let textColor = 'text-stone-400';
+              if (s.done) {
+                barColor = isCurrent ? 'bg-[#96432b]' : 'bg-emerald-600';
+                textColor = isCurrent ? 'text-[#96432b]' : 'text-emerald-800';
+              } else if (s.warn) {
+                barColor = 'bg-amber-500';
+                textColor = 'text-amber-800';
+              }
               return `
                 <div class="space-y-1">
                   <div class="h-1.5 w-full rounded-full ${barColor}"></div>
                   <div class="flex items-center justify-between text-[11px] font-bold ${textColor}">
                     <span>${s.num}. ${s.title}</span>
-                    ${s.done ? '<span>✓</span>' : ''}
+                    ${s.done ? '<span>✓</span>' : (s.warn ? '<span>!</span>' : '')}
                   </div>
-                  <span class="block text-[10px] text-stone-400 truncate">${s.sub}</span>
+                  <span class="block text-[10px] text-stone-500 truncate">${s.sub}</span>
                 </div>
               `;
             }).join('')}
@@ -529,14 +603,14 @@
       function isValidUrl(str) {
         if (!str) return false;
         const trimmed = str.trim();
-        return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.includes('.');
+        return trimmed.length >= 6 && (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.includes('.'));
       }
 
       function renderClients(list) {
         if (!list.length) {
           clientsContainer.innerHTML = `
             <div class="bg-white rounded-3xl p-10 text-center text-sm text-stone-500 border border-[#e5dec9]">
-              Không có khách hàng nào trong mục này. Bấm <strong>"+ Thêm / Test Khách"</strong> ở góc trên để tạo hồ sơ mới!
+              Không có khách hàng nào trong mục này. Bấm <strong>"＋ Thêm / Test Khách"</strong> ở góc trên để tạo hồ sơ mới!
             </div>
           `;
           return;
@@ -544,11 +618,11 @@
 
         clientsContainer.innerHTML = list.map((c) => {
           const hasPhone = Boolean(c.phone && c.phone.trim());
-          const hasBrief = Boolean(c.industry || c.briefStatus === 'completed');
+          const bStats = getBriefStats(c);
           const hasValidDemo = isValidUrl(c.demoUrl);
-          const hasSentDemo = c.stage === 'demo_sent' || c.stage === 'reminder_sent' || c.stage === 'launched' || Boolean(c.demoSentAt);
+          const hasSentDemo = (c.stage === 'demo_sent' || c.stage === 'reminder_sent' || c.stage === 'launched' || Boolean(c.demoSentAt)) && hasValidDemo;
           const canRemindDemo = hasValidDemo && hasSentDemo;
-          const canLaunch = (hasValidDemo || Boolean(c.existingDomain)) && hasSentDemo;
+          const canLaunch = hasValidDemo && hasSentDemo;
 
           const domainDisplay = c.existingDomain
             ? `<span class="text-emerald-800 font-bold">Đã có: ${escapeHtml(c.existingDomain)}</span>`
@@ -560,23 +634,29 @@
             ? `<span class="font-semibold text-stone-900 break-all">${escapeHtml(c.vibeLinks)}</span>`
             : '<span class="text-stone-400 italic">Chưa điền</span>';
 
+          const titleName = c.businessName
+            ? `${c.businessName} (${c.name || 'Khách'})`
+            : (c.name || 'Khách chưa đặt tên');
+
           return `
             <div class="bg-white rounded-3xl p-6 border border-[#e5dec9] shadow-xs space-y-5" id="card-${c.id}">
               <!-- Header Row -->
               <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2.5 flex-wrap">
-                    <h3 class="text-xl font-extrabold text-stone-900">${escapeHtml(c.name || 'Khách chưa đặt tên')}</h3>
+                    <h3 class="text-xl font-extrabold text-stone-900">${escapeHtml(titleName)}</h3>
                     ${computeDeadlineBadge(c)}
                     <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
                     <span class="font-mono">📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
                     ${hasPhone
-                      ? `<span class="font-mono text-emerald-800 font-semibold">📱 ${escapeHtml(c.phone)}</span>`
-                      : `<span class="text-red-600 font-bold">⚠️ Chưa có SĐT (Bấm "Sửa hồ sơ" để thêm SĐT nhận SMS)</span>`
+                      ? `<span class="font-mono text-emerald-800 font-semibold">📱 SMS: ${escapeHtml(c.phone)}</span>`
+                      : `<span class="text-red-600 font-bold">⚠️ Chưa có SĐT (Bấm "✏️ Sửa hồ sơ" để thêm SĐT nhận SMS)</span>`
                     }
-                    <span class="text-stone-400">🕒 Tạo lúc: ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
+                    ${c.displayPhone && c.displayPhone !== c.phone ? `<span class="font-mono text-stone-600">☎️ Web: ${escapeHtml(c.displayPhone)}</span>` : ''}
+                    ${c.businessAddress ? `<span>📍 ${escapeHtml(c.businessAddress)}</span>` : ''}
+                    <span class="text-stone-400">🕒 ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
                   </div>
                 </div>
 
@@ -587,7 +667,7 @@
                     data-cid="${c.id}"
                     class="btn-copy-brief inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
                   >
-                    <span class="material-symbols-outlined text-[15px]">smart_toy</span>
+                    <span>🤖</span>
                     <span>Copy Brief Cho AI</span>
                   </button>
                   <button 
@@ -595,17 +675,17 @@
                     data-cid="${c.id}"
                     class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors"
                   >
-                    <span class="material-symbols-outlined text-[15px]">edit</span>
+                    <span>✏️</span>
                     <span>Sửa hồ sơ</span>
                   </button>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
                     data-name="${escapeHtml(c.name || c.email)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-400 hover:text-red-700 text-xs transition-colors"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
                     title="Xoá khách hàng này"
                   >
-                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                    🗑️
                   </button>
                 </div>
               </div>
@@ -632,25 +712,32 @@
                   <div class="mt-1">${domainDisplay}</div>
                 </div>
 
+                ${c.socialLinks ? `
+                <div class="sm:col-span-2 lg:col-span-4 pt-2 border-t border-[#e5dec9] text-[11px]">
+                  <strong class="text-stone-500">Mạng xã hội &amp; Link Booking:</strong>
+                  <span class="text-stone-800 font-semibold ml-1">${escapeHtml(c.socialLinks)}</span>
+                </div>
+                ` : ''}
+
                 <!-- Demo Uploaded Assets Row -->
                 <div class="sm:col-span-2 lg:col-span-4 pt-2.5 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-4 text-[11px]">
                   <div class="flex flex-wrap items-center gap-5">
                     <span>
-                      <strong class="text-stone-500">Logo khách tải lên (Demo):</strong>
+                      <strong class="text-stone-500">Logo khách tải lên:</strong>
                       ${c.logoFileName
                         ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.logoFileName)}</span>`
                         : `<span class="text-stone-400 ml-1">Chưa tải lên</span>`}
                     </span>
                     <span>
-                      <strong class="text-stone-500">Menu / Bảng giá (Demo):</strong>
+                      <strong class="text-stone-500">Menu / Bảng giá:</strong>
                       ${c.menuFileName
                         ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.menuFileName)}</span>`
                         : `<span class="text-stone-400 ml-1">Chưa tải lên</span>`}
                     </span>
                   </div>
                   <div class="flex items-center gap-3">
-                    <a href="/brief?type=organic&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-[#96432b] font-semibold hover:underline">Link Brief Organic ↗</a>
-                    <a href="/brief?type=demo&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-emerald-800 font-semibold hover:underline">Link Upload Logo/Menu ↗</a>
+                    <a href="/brief?type=organic&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-[#96432b] font-semibold hover:underline">Mở Form Brief Organic ↗</a>
+                    <a href="/brief?type=demo&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-emerald-800 font-semibold hover:underline">Mở Form Upload Logo/Menu ↗</a>
                   </div>
                 </div>
               </div>
@@ -659,16 +746,17 @@
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
                 <!-- Row 1: Demo Link Input -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[16px] text-[#96432b]">link</span>
+                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5">
+                    <span>🔗</span>
                     <span>Link Demo của khách:</span>
                   </label>
                   <input 
                     type="url" 
                     id="demo-url-${c.id}" 
                     data-cid="${c.id}"
+                    data-sent="${hasSentDemo ? '1' : '0'}"
                     value="${escapeHtml(c.demoUrl || '')}" 
-                    placeholder="Nhập link Demo (VD: https://bakery-demo.wynnpages.com.au) để mở khoá Nút 3..." 
+                    placeholder="Dán link Demo (VD: https://bakery-demo.wynnpages.com.au) để mở khoá Nút 3..." 
                     class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
                   >
                   <button 
@@ -680,8 +768,7 @@
                   </button>
                   ${hasValidDemo ? `
                     <a href="${escapeHtml(c.demoUrl.startsWith('http') ? c.demoUrl : 'https://' + c.demoUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-stone-200/70 hover:bg-stone-300/70 text-xs font-bold text-stone-800 shrink-0 inline-flex items-center gap-1">
-                      <span>Mở xem</span>
-                      <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                      <span>Mở xem ↗</span>
                     </a>
                   ` : ''}
                 </div>
@@ -694,13 +781,13 @@
                     data-cid="${c.id}"
                     data-stage="payment_confirmed"
                     class="btn-action btn-stage-action px-3 py-2.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 border ${
-                      !hasBrief
+                      !bStats.isComplete
                         ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-700 shadow-xs'
                         : 'bg-white hover:bg-stone-100 text-stone-600 border-[#dfd5c3]'
                     }"
                   >
                     <span>1. Nhắc Điền Brief</span>
-                    <span class="text-[10px] font-normal opacity-80">${!hasBrief ? 'Khách chưa điền Brief' : '✓ Đã điền (Gửi lại)'}</span>
+                    <span class="text-[10px] font-normal opacity-85">${!bStats.isComplete ? `Cần điền (${bStats.filledCount}/4 mục)` : '✓ Đã điền (Gửi lại)'}</span>
                   </button>
 
                   <!-- Button 2: Xác Nhận Đã Nhận Brief -->
@@ -708,7 +795,7 @@
                     type="button"
                     data-cid="${c.id}"
                     data-stage="brief_completed"
-                    ${!hasBrief ? 'disabled' : ''}
+                    ${bStats.filledCount === 0 ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-3 py-2.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 border ${
                       c.stage === 'brief_completed'
                         ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600'
@@ -716,7 +803,7 @@
                     }"
                   >
                     <span>2. Báo Đang Code</span>
-                    <span class="text-[10px] font-normal opacity-80">${hasBrief ? 'Xác nhận đã nhận Brief' : '🔒 Chờ khách điền Brief'}</span>
+                    <span class="text-[10px] font-normal opacity-85">${bStats.filledCount > 0 ? 'Xác nhận đã nhận Brief' : '🔒 Chờ khách điền Brief'}</span>
                   </button>
 
                   <!-- Button 3: Báo Đã Có Demo (ONLY enabled when Demo Link is typed!) -->
@@ -736,7 +823,7 @@
                     }</span>
                   </button>
 
-                  <!-- Button 4: Nhắc Duyệt Demo (ONLY enabled after Demo was sent!) -->
+                  <!-- Button 4: Nhắc Duyệt Demo (ONLY enabled when Demo Link is valid AND Demo was sent!) -->
                   <button 
                     type="button"
                     id="btn-stage4-${c.id}"
@@ -746,23 +833,24 @@
                     class="btn-action btn-stage-action px-3 py-2.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
                   >
                     <span>⏰ 4. Nhắc Duyệt Demo</span>
-                    <span class="text-[10px] font-normal opacity-90">${
+                    <span id="btn-stage4-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
                       !canRemindDemo
                         ? '🔒 Cần gửi Bước 3 trước'
                         : (c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần (Nhắc tiếp)` : 'Nhắc khách duyệt & gửi Logo')
                     }</span>
                   </button>
 
-                  <!-- Button 5: Báo Lên Sóng (ONLY enabled after Demo sent) -->
+                  <!-- Button 5: Báo Lên Sóng (ONLY enabled when Demo Link is valid AND Demo was sent!) -->
                   <button 
                     type="button"
+                    id="btn-stage5-${c.id}"
                     data-cid="${c.id}"
                     data-stage="site_launched"
                     ${!canLaunch ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-3 py-2.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
                   >
                     <span>🚀 5. Báo Lên Sóng</span>
-                    <span class="text-[10px] font-normal opacity-90">${
+                    <span id="btn-stage5-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
                       !canLaunch
                         ? '🔒 Chờ gửi & duyệt Demo'
                         : (c.stage === 'launched' ? '✅ Đã lên sóng (Gửi lại)' : 'Chúc mừng web hoàn tất')
@@ -782,16 +870,35 @@
           `;
         }).join('');
 
-        // Real-time unlocking of Button 3 as user types in Link Demo!
+        // Real-time unlocking/locking of Buttons 3, 4, 5 as user types or clears Link Demo!
         document.querySelectorAll('.demo-url-input').forEach((input) => {
           input.addEventListener('input', () => {
             const cid = input.getAttribute('data-cid');
+            const alreadySent = input.getAttribute('data-sent') === '1';
+            const valid = isValidUrl(input.value);
+
             const btn3 = document.getElementById(`btn-stage3-${cid}`);
             const sub3 = document.getElementById(`btn-stage3-sub-${cid}`);
-            const valid = isValidUrl(input.value);
+            const btn4 = document.getElementById(`btn-stage4-${cid}`);
+            const sub4 = document.getElementById(`btn-stage4-sub-${cid}`);
+            const btn5 = document.getElementById(`btn-stage5-${cid}`);
+            const sub5 = document.getElementById(`btn-stage5-sub-${cid}`);
+
             if (btn3 && sub3) {
               btn3.disabled = !valid;
               sub3.textContent = valid ? 'Sẵn sàng gửi SMS + Email' : '🔒 Nhập Link Demo ở trên';
+            }
+            if (btn4 && sub4) {
+              const allow4 = valid && alreadySent;
+              btn4.disabled = !allow4;
+              if (!valid) sub4.textContent = '🔒 Cần có Link Demo';
+              else if (!alreadySent) sub4.textContent = '🔒 Cần gửi Bước 3 trước';
+            }
+            if (btn5 && sub5) {
+              const allow5 = valid && alreadySent;
+              btn5.disabled = !allow5;
+              if (!valid) sub5.textContent = '🔒 Cần có Link Demo';
+              else if (!alreadySent) sub5.textContent = '🔒 Chờ gửi & duyệt Demo';
             }
           });
         });
@@ -803,7 +910,7 @@
             const client = clientsCache.find(x => x.id === cid);
             if (!client) return;
             navigator.clipboard.writeText(client.aiPrompt);
-            showToast(`Đã copy toàn bộ Brief của "${client.name || client.email}"! Bạn chỉ cần dán vào khung chat AI để thiết kế web.`);
+            showToast(`Đã copy toàn bộ Brief của "${client.businessName || client.name || client.email}"! Bạn chỉ cần dán vào khung chat AI để thiết kế web.`);
           });
         });
 
@@ -813,15 +920,19 @@
             const cid = btn.getAttribute('data-cid');
             const c = clientsCache.find(x => x.id === cid);
             if (!c) return;
-            clientModalTitle.textContent = `Chỉnh Sửa Hồ Sơ: ${c.name || c.email}`;
+            clientModalTitle.textContent = `Chỉnh Sửa Hồ Sơ: ${c.businessName || c.name || c.email}`;
             editCid.value = c.id;
             editName.value = c.name || '';
+            editBusinessName.value = c.businessName || '';
             editPhone.value = c.phone || '';
+            editDisplayPhone.value = c.displayPhone || '';
             editEmail.value = c.email || '';
             editStage.value = c.stage || 'paid';
+            editAddress.value = c.businessAddress || '';
             editIndustry.value = c.industry || '';
             editColors.value = c.brandColors || '';
             editVibes.value = c.vibeLinks || '';
+            editSocials.value = c.socialLinks || '';
             editExistingDomain.value = c.existingDomain || '';
             editDesiredDomains.value = c.desiredDomains || '';
             editDemoUrl.value = c.demoUrl || '';
@@ -848,7 +959,7 @@
             const demoUrl = demoInput ? demoInput.value.trim() : '';
             btn.textContent = 'Đang lưu...';
             await runAdminAction({ action: 'save_client', customerId: cid, demoUrl });
-            showToast('Đã lưu Link Demo thành công! Bây giờ bạn có thể bấm Nút 3 để gửi báo khách.');
+            showToast(demoUrl ? 'Đã lưu Link Demo! Nút 3 đã sẵn sàng.' : 'Đã xoá Link Demo (Nút 3, 4, 5 đã khoá lại).');
           });
         });
 
@@ -982,12 +1093,16 @@
         clientModalTitle.textContent = 'Thêm / Test Khách Hàng Mới';
         editCid.value = '';
         editName.value = '';
+        editBusinessName.value = '';
         editPhone.value = '';
+        editDisplayPhone.value = '';
         editEmail.value = '';
         editStage.value = 'paid';
+        editAddress.value = '';
         editIndustry.value = '';
         editColors.value = '';
         editVibes.value = '';
+        editSocials.value = '';
         editExistingDomain.value = '';
         editDesiredDomains.value = '';
         editDemoUrl.value = '';
@@ -1003,19 +1118,23 @@
           action: 'save_client',
           customerId: cid,
           name: editName.value.trim(),
+          businessName: editBusinessName.value.trim(),
           phone: editPhone.value.trim(),
+          displayPhone: editDisplayPhone.value.trim(),
           email: editEmail.value.trim(),
           stage: editStage.value,
+          businessAddress: editAddress.value.trim(),
           industry: editIndustry.value.trim(),
           brandColors: editColors.value.trim(),
           vibeLinks: editVibes.value.trim(),
+          socialLinks: editSocials.value.trim(),
           existingDomain: editExistingDomain.value.trim(),
           desiredDomains: editDesiredDomains.value.trim(),
           demoUrl: editDemoUrl.value.trim()
         };
         clientModal.classList.add('hidden');
         await runAdminAction(payload);
-        showToast(cid ? `Đã cập nhật hồ sơ "${payload.name}"!` : `Đã tạo hồ sơ khách hàng "${payload.name}"!`);
+        showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ khách hàng "${payload.businessName || payload.name}"!`);
       });
 
       function escapeHtml(str) {

@@ -328,9 +328,13 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
 function buildAiPromptForClient(c) {
   return [
     `=== WYNNPAGES ATELIER AI DESIGN BRIEF ===`,
-    `Client Name: ${c.name || 'N/A'}`,
+    `Client / Account Name: ${c.name || 'N/A'}`,
+    `Business Name (Trading Name): ${c.businessName || c.name || 'N/A'}`,
     `Client Email: ${c.email || 'N/A'}`,
-    `Client Phone: ${c.phone || 'N/A'}`,
+    `Client Mobile (SMS): ${c.phone || 'N/A'}`,
+    `Display Phone (For Website): ${c.displayPhone || c.phone || 'N/A'}`,
+    `Business Address / Service Area: ${c.businessAddress || 'N/A'}`,
+    `Social Media & Booking Links: ${c.socialLinks || 'N/A'}`,
     `Brief Type: ${c.briefType || 'organic'}`,
     `Current Stage: ${c.stage || 'brief_completed'}`,
     `Industry / Niche: ${c.industry || 'See notes'}`,
@@ -344,7 +348,7 @@ function buildAiPromptForClient(c) {
     `Demo URL: ${c.demoUrl || 'Not assigned yet'}`,
     `Submitted At: ${c.submittedAt || 'N/A'}`,
     `=========================================`,
-    `Instruction for AI: Design and code a bespoke, high-converting Australian small-business website tailored to the industry "${c.industry || 'Local Business'}", incorporating the color palette "${c.brandColors || 'Warm Parchment & Terracotta'}" and drawing layout/vibe inspiration from "${c.vibeLinks || 'WynnPages Atelier aesthetic'}".`
+    `Instruction for AI: Design and code a bespoke, high-converting Australian small-business website for "${c.businessName || c.name || 'Local Business'}" (${c.industry || 'Service Business'}) located at "${c.businessAddress || 'Australia'}", displaying phone "${c.displayPhone || c.phone || ''}", social/booking links "${c.socialLinks || ''}", incorporating the color palette "${c.brandColors || 'Warm Parchment & Terracotta'}" and drawing layout/vibe inspiration from "${c.vibeLinks || 'WynnPages Atelier aesthetic'}".`
   ].join('\n');
 }
 
@@ -352,9 +356,13 @@ function formatCustomerRecord(cust) {
   const m = cust.metadata || {};
   const record = {
     id: cust.id,
-    name: cust.name || m.customer_name || '',
+    name: cust.name || m.customer_name || m.business_name || '',
+    businessName: m.business_name || '',
     email: cust.email || m.customer_email || '',
-    phone: cust.phone || m.customer_phone || '',
+    phone: cust.phone || m.customer_phone || m.display_phone || '',
+    displayPhone: m.display_phone || cust.phone || m.customer_phone || '',
+    businessAddress: m.business_address || '',
+    socialLinks: m.social_links || '',
     stage: m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'paid'),
     briefStatus: m.brief_status || 'pending',
     briefType: m.brief_type || 'organic',
@@ -682,7 +690,11 @@ export default {
         let existingCustomerId = '';
 
         const briefType = (body.briefType || 'organic').trim();
+        const businessName = (body.businessName || '').trim();
         const industry = (body.industry || '').trim();
+        const displayPhone = (body.displayPhone || '').trim();
+        const businessAddress = (body.businessAddress || '').trim();
+        const socialLinks = (body.socialLinks || '').trim();
         const brandColors = (body.brandColors || '').trim();
         const vibeLinks = (body.vibeLinks || '').trim();
         const hasDomain = (body.hasDomain || '').trim();
@@ -690,6 +702,9 @@ export default {
         const desiredDomains = (body.desiredDomains || '').trim();
         const logoLink = (body.logoLink || '').trim();
         const menuLink = (body.menuLink || '').trim();
+
+        if (!customerName && businessName) customerName = businessName;
+        if (!customerPhone && displayPhone) customerPhone = displayPhone;
 
         // Optional file uploads to Stripe Files API
         let logoFileId = null;
@@ -751,6 +766,10 @@ export default {
           customer_email: email.slice(0, 490),
           customer_name: customerName.slice(0, 490),
           customer_phone: customerPhone.slice(0, 490),
+          business_name: businessName.slice(0, 490),
+          display_phone: displayPhone.slice(0, 490),
+          business_address: businessAddress.slice(0, 490),
+          social_links: socialLinks.slice(0, 490),
           industry: industry.slice(0, 490),
           brand_colors: brandColors.slice(0, 490),
           vibe_links: vibeLinks.slice(0, 490),
@@ -941,6 +960,10 @@ export default {
           if (name) uParams.append('metadata[customer_name]', name);
           if (phone) uParams.append('metadata[customer_phone]', phone);
           if (email) uParams.append('metadata[customer_email]', email);
+          if (body.businessName !== undefined) uParams.append('metadata[business_name]', body.businessName);
+          if (body.displayPhone !== undefined) uParams.append('metadata[display_phone]', body.displayPhone);
+          if (body.businessAddress !== undefined) uParams.append('metadata[business_address]', body.businessAddress);
+          if (body.socialLinks !== undefined) uParams.append('metadata[social_links]', body.socialLinks);
           if (body.demoUrl !== undefined) uParams.append('metadata[demo_url]', demoUrl);
           if (body.industry !== undefined) {
             uParams.append('metadata[industry]', body.industry);
