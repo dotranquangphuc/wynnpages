@@ -452,7 +452,6 @@ function formatCustomerRecord(cust) {
     driveFolderUrl: m.drive_folder_url || '',
     demoUrl: m.demo_url || '',
     liveUrl: m.live_url || '',
-    liveUrl: m.live_url || '',
     checkoutSessionId: m.checkout_session_id || '',
     welcomeSent: m.welcome_sent || 'false',
     lastSmsLog: m.last_sms_log || '',
