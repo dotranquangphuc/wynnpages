@@ -218,14 +218,14 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   const shortDemoUrl = client.demoSlug ? `${origin}/d/${client.demoSlug}` : demoUrl;
 
   if (stage === 'payment_confirmed') {
-    smsText = `G'day ${firstName}! Your WynnPages 7-day build slot is locked in. Complete your 2-min studio brief here: ${origin}/onboarding`;
+    smsText = `Hi ${firstName}, thank you for choosing WynnPages Studio! Your 7-day build slot is locked in. Please complete your quick 2-min studio brief here: ${origin}/onboarding - Any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Your 7-Day Build Slot is Locked — Complete Your 2-Min Brief`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Payment Secured via Stripe',
       heading: `Your 7-Day Build Slot is Locked, ${firstName}.`,
       bodyHtml: `
         <p>Welcome to <strong>WynnPages</strong>! Your $599 AUD studio build slot is officially reserved.</p>
-        <p>To get our lead artisan designer started on your custom website right away, please complete your quick 2-minute onboarding brief using the button below:</p>
+        <p>To get our lead artisan designer started on your custom website right away, please complete your quick 2-minute onboarding brief using the button below (or email us anytime at <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>):</p>
       `,
       primaryCta: {
         label: 'Complete Your 2-Min Studio Brief',
@@ -234,7 +234,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
-    smsText = `Thanks ${firstName}! We received your WynnPages brief and started crafting your site. We'll text you once your live demo is ready!`;
+    smsText = `Hi ${firstName}, thank you! We have received your WynnPages brief and started crafting your bespoke website. We will text you once your live demo is ready. For any questions, please email hello@wynnpages.com.au - Warm regards, Wynn`;
     emailSubject = `Brief Received! We're Crafting Your WynnPages Website`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Studio Active • 7-Day Build Started',
@@ -248,7 +248,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
           ${client.vibeLinks ? `<div style="margin-top:6px;"><strong>Reference Vibes:</strong> ${client.vibeLinks}</div>` : ''}
           <div style="margin-top:6px;"><strong>Domain:</strong> ${domainInfo}</div>
         </div>
-        <p>We will send you a text message and email with your live interactive demo link as soon as it is ready for your review.</p>
+        <p>We will send you a text message and email with your live interactive demo link as soon as it is ready for your review. If you need anything in the meantime, please email <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
       `,
       primaryCta: {
         label: 'Visit WynnPages Studio',
@@ -256,7 +256,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'demo_ready') {
-    smsText = `Great news ${firstName}! Your custom WynnPages website demo is ready to preview here: ${shortDemoUrl}`;
+    smsText = `Hi ${firstName}, great news from WynnPages Studio! Your custom website demo is ready to preview here: ${shortDemoUrl} - For any questions or adjustments, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Great News! Your Custom WynnPages Website Demo is Ready`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Custom Demo Ready for Review',
@@ -266,7 +266,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${demoUrl}" style="color:#96432b;font-weight:bold;">${demoUrl}</a>
         </p>
-        <p>Once you're happy with the direction, click the second button below to upload your high-res logo, menu/price list, and domain details so we can polish and launch your site.</p>
+        <p>Once you're happy with the direction, click the second button below to upload your high-res logo, menu/price list, and domain details, or email any tweak requests to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
       `,
       primaryCta: {
         label: 'Preview Your Live Website Demo',
@@ -278,7 +278,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'demo_reminder') {
-    smsText = `Hey ${firstName}, quick check-in from WynnPages! Have you had a chance to preview your website demo? ${shortDemoUrl}`;
+    smsText = `Hi ${firstName}, hope your week is going well! Just a polite check-in from WynnPages Studio to see if you had a chance to preview your website demo: ${shortDemoUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Quick Check-in: Ready to Finalise Your WynnPages Website?`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Friendly Studio Reminder',
@@ -288,7 +288,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${demoUrl}" style="color:#96432b;font-weight:bold;">${demoUrl}</a>
         </p>
-        <p>To keep your 7-day launch right on track, please upload your final logo, pricing/menu, or any tweak requests using the link below:</p>
+        <p>To keep your 7-day launch right on track, please upload your final logo, pricing/menu, or email any tweak requests to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
       `,
       primaryCta: {
         label: 'Review Demo & Submit Final Assets',
@@ -302,8 +302,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'outbound_pitch') {
     const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
-    const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
-    smsText = `Hi ${firstName}, hope you're having a lovely week! I'm a local web designer at WynnPages Studio. I really admired ${bizLabel} and put together a custom website concept for you to preview whenever you have a moment: ${previewLink} - Warm regards, Wynn`;
+    smsText = `Hi ${firstName}, hope you're having a lovely week! I'm a local web designer at WynnPages Studio. I really admired ${bizLabel} and put together a custom website concept for you to preview here: ${previewLink} - If you have any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `A custom website concept we prepared for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'WynnPages Studio • Personal Note',
@@ -315,7 +314,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
-        <p>Please feel free to have a browse whenever you have a spare moment. If you like the direction and would like to make it officially yours, you can claim it directly from the preview page (or simply reply to let us know any thoughts or adjustments).</p>
+        <p>Please feel free to have a browse whenever you have a spare moment. If you like the direction and would like to make it officially yours, you can claim it directly from the preview page, or email us anytime at <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> with any thoughts or adjustments.</p>
         <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Lead Designer, WynnPages Studio</p>
       `,
       primaryCta: {
@@ -326,7 +325,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'outbound_followup') {
     const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
-    smsText = `Hi ${firstName}, hope your week is going well! Just a polite follow-up from WynnPages Studio in case you missed the custom website concept we prepared for ${bizLabel}: ${previewLink} - Please let me know if you have any feedback. Warm regards, Wynn`;
+    smsText = `Hi ${firstName}, hope your week is going well! Just a polite follow-up from WynnPages Studio in case you missed the custom website concept we prepared for ${bizLabel}: ${previewLink} - For any feedback or questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Following up on the website concept for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'WynnPages Studio • Polite Follow-up',
@@ -338,7 +337,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
-        <p>If you'd like any adjustments to the layout, colours, or services—or if you're ready for us to connect it to your domain—simply let us know or click the button on the preview page.</p>
+        <p>If you'd like any adjustments to the layout, colours, or services—or if you're ready for us to connect it to your domain—simply email us at <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> or click the button on the preview page.</p>
         <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Lead Designer, WynnPages Studio</p>
       `,
       primaryCta: {
@@ -350,7 +349,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const liveUrl = client.existingDomain
       ? (client.existingDomain.startsWith('http') ? client.existingDomain : `https://${client.existingDomain}`)
       : demoUrl;
-    smsText = `Congrats ${firstName}! Your bespoke WynnPages website is LIVE at ${liveUrl} - Thank you for trusting our studio!`;
+    smsText = `Congratulations ${firstName}! Your bespoke WynnPages website is officially LIVE at ${liveUrl} - If you ever need anything, please email hello@wynnpages.com.au. Thank you for trusting our studio! Warm regards, Wynn`;
     emailSubject = `Congratulations! Your WynnPages Website is Officially Live`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Officially Launched',
