@@ -299,8 +299,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'outbound_pitch') {
     const bizLabel = client.businessName || client.name || 'your business';
-    const previewLink = client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl;
-    const claimLink = client.id ? `${origin}/api/claim?cid=${encodeURIComponent(client.id)}` : `${origin}/api/claim?email=${encodeURIComponent(email)}`;
+    const previewLink = client.brandedDemoUrl || (client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl);
+    const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
     smsText = `G'day ${firstName}! We hand-crafted a custom website demo specifically for ${bizLabel}: ${previewLink} - If you love it, you can claim 100% ownership for a flat $599 AUD (zero monthly fees): ${claimLink}`;
     emailSubject = `We Built a Custom Website Demo for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
@@ -325,8 +325,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'outbound_followup') {
     const bizLabel = client.businessName || client.name || 'your business';
-    const previewLink = client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl;
-    const claimLink = client.id ? `${origin}/api/claim?cid=${encodeURIComponent(client.id)}` : `${origin}/api/claim?email=${encodeURIComponent(email)}`;
+    const previewLink = client.brandedDemoUrl || (client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl);
+    const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
     smsText = `Hey ${firstName}, quick check-in from WynnPages! Did you get a chance to see the custom website demo we built for ${bizLabel}? Preview it here: ${previewLink}`;
     emailSubject = `Quick Check-in: Your Custom Website Demo for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
@@ -404,15 +404,28 @@ function buildAiPromptForClient(c) {
   ].join('\n');
 }
 
+function slugifyName(str) {
+  return String(str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
 function formatCustomerRecord(cust) {
   const m = cust.metadata || {};
   const rawStage = m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'paid');
   const flowType = m.flow_type || (rawStage.startsWith('outbound_') ? 'outbound' : 'inbound');
   const paymentStatus = m.payment_status || ((flowType === 'outbound' && rawStage !== 'outbound_paid' && rawStage !== 'launched' && !m.checkout_session_id) ? 'unpaid' : 'paid');
+  const displayName = m.business_name || cust.name || m.customer_name || '';
+  const demoSlug = m.demo_slug || slugifyName(displayName) || cust.id.toLowerCase();
+  const brandedDemoUrl = `https://${demoSlug}.wynnpages.com.au`;
   const record = {
     id: cust.id,
     name: cust.name || m.customer_name || m.business_name || '',
     businessName: m.business_name || '',
+    demoSlug,
+    brandedDemoUrl,
     email: cust.email || m.customer_email || '',
     phone: cust.phone || m.customer_phone || m.display_phone || '',
     displayPhone: m.display_phone || cust.phone || m.customer_phone || '',
@@ -449,6 +462,132 @@ function formatCustomerRecord(cust) {
   };
   record.aiPrompt = buildAiPromptForClient(record);
   return record;
+}
+
+async function findCustomerBySlugOrId(slugOrId, stripeSecretKey) {
+  if (!slugOrId || !stripeSecretKey) return null;
+  const cleanSlug = slugifyName(slugOrId);
+  if (slugOrId.startsWith('cus_')) {
+    const res = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(slugOrId)}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+    });
+    if (res.ok) return formatCustomerRecord(await res.json());
+  }
+  const listRes = await fetch('https://api.stripe.com/v1/customers?limit=100', {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+  });
+  if (!listRes.ok) return null;
+  const data = await listRes.json().catch(() => ({}));
+  const list = (data.data || []).map(formatCustomerRecord);
+  return list.find(c =>
+    c.demoSlug === cleanSlug ||
+    slugifyName(c.businessName) === cleanSlug ||
+    slugifyName(c.name) === cleanSlug ||
+    c.id.toLowerCase() === slugOrId.toLowerCase()
+  ) || null;
+}
+
+function buildBrandedPreviewHtml(client) {
+  const bizName = (client && (client.businessName || client.name)) || 'Your Business';
+  const cid = (client && client.id) || '';
+  const email = (client && client.email) || '';
+  let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
+  if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
+  const claimHref = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${bizName} — Bespoke Website Demo by WynnPages</title>
+  <link rel="icon" type="image/png" href="https://wynnpages.com.au/assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1c1917; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; background: #f6f1e8; }
+    .claim-bar {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      z-index: 999999;
+      width: calc(100% - 28px);
+      max-width: 780px;
+      background: rgba(28, 25, 23, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(229, 222, 201, 0.24);
+      border-radius: 22px;
+      padding: 12px 16px 12px 20px;
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: #f6f1e8;
+    }
+    .claim-left { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .claim-badge {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: #96432b; color: #fff;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .claim-meta { min-width: 0; }
+    .claim-tag {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #fbdeb9; display: block;
+    }
+    .claim-title {
+      font-size: 14px; font-weight: 700; color: #ffffff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .claim-btn {
+      flex-shrink: 0;
+      background: #96432b;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 12px 22px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 24px rgba(150, 67, 43, 0.4);
+      transition: all 0.18s ease;
+    }
+    .claim-btn:hover { background: #b05035; transform: translateY(-1px); }
+    @media (max-width: 640px) {
+      .claim-bar { flex-direction: column; align-items: stretch; padding: 14px; bottom: 12px; }
+      .claim-btn { justify-content: center; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>
+  <div class="claim-bar">
+    <div class="claim-left">
+      <div class="claim-badge">W</div>
+      <div class="claim-meta">
+        <span class="claim-tag">WynnPages Bespoke Demo • Zero Monthly Retainers</span>
+        <div class="claim-title">Crafted exclusively for ${bizName}</div>
+      </div>
+    </div>
+    <a href="${claimHref}" class="claim-btn">
+      <span>Claim This Website — $599 AUD</span>
+      <span>&rarr;</span>
+    </a>
+  </div>
+</body>
+</html>`;
 }
 
 async function uploadStripeFile(fileObj, stripeSecretKey) {
@@ -524,6 +663,27 @@ export default {
     };
 
     const cfg = getConfig(env);
+
+    // 1a. Wildcard Subdomain Demo (`https://lushnailbar.wynnpages.com.au`) & Clean Path (`/d/lushnailbar`)
+    const hostLower = url.hostname.toLowerCase();
+    const isSubdomainDemo =
+      hostLower.endsWith('.wynnpages.com.au') &&
+      hostLower !== 'wynnpages.com.au' &&
+      hostLower !== 'www.wynnpages.com.au';
+    const isPathDemo = url.pathname.startsWith('/d/') && url.pathname.length > 3;
+
+    if ((isSubdomainDemo && (url.pathname === '/' || url.pathname === '')) || isPathDemo) {
+      const targetSlug = isSubdomainDemo
+        ? hostLower.replace(/\.wynnpages\.com\.au$/i, '')
+        : url.pathname.replace(/^\/d\//i, '').split('/')[0];
+      const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
+      if (client) {
+        return new Response(buildBrandedPreviewHtml(client), {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        });
+      }
+    }
 
     // 1b. Public Client Preview Info (GET /api/client-public?cid=cus_...)
     if (url.pathname === '/api/client-public' && request.method === 'GET') {
