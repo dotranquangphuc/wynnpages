@@ -15,7 +15,7 @@ function getConfig(env, overrides = {}) {
     stripeSecretKey: env.STRIPE_SECRET_KEY || STRIPE_SECRET_KEY_FALLBACK || '',
     clicksendUsername: overrides.clicksendUsername || env.CLICKSEND_USERNAME || CLICKSEND_USERNAME_FALLBACK || '',
     clicksendApiKey: overrides.clicksendApiKey || env.CLICKSEND_API_KEY || CLICKSEND_API_KEY_FALLBACK || '',
-    clicksendFrom: overrides.clicksendFrom || env.CLICKSEND_FROM || CLICKSEND_FROM_FALLBACK || '',
+    clicksendFrom: overrides.clicksendFrom || env.CLICKSEND_FROM || CLICKSEND_FROM_FALLBACK || 'WynnPages',
     resendApiKey: overrides.resendApiKey || env.RESEND_API_KEY || RESEND_API_KEY_FALLBACK || '',
     resendFromEmail: overrides.resendFromEmail || env.RESEND_FROM_EMAIL || RESEND_FROM_EMAIL_FALLBACK || 'WynnPages Atelier <hello@wynnpages.com.au>',
     adminKey: env.ADMIN_KEY || ADMIN_KEY_FALLBACK || 'wynn2026',
@@ -46,18 +46,18 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
     return { sent: false, reason: 'Missing recipient phone number' };
   }
   if (!cfg.clicksendUsername || !cfg.clicksendApiKey) {
-    return { sent: false, reason: 'ClickSend credentials (CLICKSEND_USERNAME / CLICKSEND_API_KEY) not configured' };
+    return { sent: false, reason: 'Chưa có ClickSend Username / API Key (Hãy bấm nút Cấu hình ClickSend trên /admin hoặc thêm vào Cloudflare)' };
   }
 
-  try {
+  async function attemptSend(fromValue) {
     const auth = btoa(`${cfg.clicksendUsername}:${cfg.clicksendApiKey}`);
     const msgObj = {
       source: 'wynnpages-atelier',
       body: bodyText,
       to: formattedTo
     };
-    if (cfg.clicksendFrom) {
-      msgObj.from = cfg.clicksendFrom;
+    if (fromValue) {
+      msgObj.from = fromValue;
     }
 
     const res = await fetch('https://rest.clicksend.com/v3/sms/send', {
@@ -70,10 +70,43 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
     });
 
     const data = await res.json().catch(() => ({}));
+    const firstMsg = data && data.data && Array.isArray(data.data.messages) ? data.data.messages[0] : null;
+    const msgStatus = firstMsg ? firstMsg.status : null;
+    return { res, data, firstMsg, msgStatus };
+  }
+
+  try {
+    let { res, data, firstMsg, msgStatus } = await attemptSend(cfg.clicksendFrom);
+
+    // At Australia (ACMA), unapproved alphanumeric Sender IDs return INVALID_SENDER_ID.
+    // Automatically retry without 'from' so ClickSend uses its shared Australian number pool!
+    if (cfg.clicksendFrom && msgStatus && msgStatus !== 'SUCCESS') {
+      const retry = await attemptSend('');
+      res = retry.res;
+      data = retry.data;
+      firstMsg = retry.firstMsg;
+      msgStatus = retry.msgStatus;
+    }
+
     if (!res.ok || data.response_code !== 'SUCCESS') {
       return { sent: false, reason: data.response_msg || `ClickSend HTTP ${res.status}`, raw: data };
     }
-    return { sent: true, to: formattedTo, raw: data };
+
+    if (msgStatus && msgStatus !== 'SUCCESS') {
+      return {
+        sent: false,
+        reason: `ClickSend từ chối gửi: ${msgStatus} (${firstMsg.error_text || 'Kiểm tra số dư hoặc Sender ID trên ClickSend'})`,
+        raw: firstMsg
+      };
+    }
+
+    return {
+      sent: true,
+      to: formattedTo,
+      messageId: firstMsg ? firstMsg.message_id : null,
+      status: msgStatus || 'SUCCESS',
+      price: firstMsg ? firstMsg.message_price : null
+    };
   } catch (err) {
     return { sent: false, reason: err.message };
   }
