@@ -215,8 +215,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   let emailSubject = '';
   let emailHtml = '';
 
+  const shortDemoUrl = client.demoSlug ? `${origin}/d/${client.demoSlug}` : demoUrl;
+
   if (stage === 'payment_confirmed') {
-    smsText = `G'day ${firstName}! Your WynnPages 7-day build slot is locked in. Complete your quick 2-min studio brief here so we can start crafting your website: ${organicBriefUrl}`;
+    smsText = `G'day ${firstName}! Your WynnPages 7-day build slot is locked in. Complete your 2-min studio brief here: ${origin}/onboarding`;
     emailSubject = `Your 7-Day Build Slot is Locked — Complete Your 2-Min Brief`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Payment Secured via Stripe',
@@ -232,7 +234,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
-    smsText = `Thanks ${firstName}! We've received your WynnPages brief. Our studio is firing up the code editor now—we'll text you as soon as your live demo is ready to preview!`;
+    smsText = `Thanks ${firstName}! We received your WynnPages brief and started crafting your site. We'll text you once your live demo is ready!`;
     emailSubject = `Brief Received! We're Crafting Your WynnPages Website`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Studio Active • 7-Day Build Started',
@@ -254,7 +256,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'demo_ready') {
-    smsText = `Great news ${firstName}! Your custom WynnPages website demo is ready to preview: ${demoUrl} — Once you've had a look, upload your high-res logo & menu here to finalise launch: ${demoBriefUrl}`;
+    smsText = `Great news ${firstName}! Your custom WynnPages website demo is ready to preview here: ${shortDemoUrl}`;
     emailSubject = `Great News! Your Custom WynnPages Website Demo is Ready`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Custom Demo Ready for Review',
@@ -276,7 +278,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'demo_reminder') {
-    smsText = `Hey ${firstName}, quick check-in from WynnPages! Have you had a chance to preview your website demo (${demoUrl})? Submit your final logo/menu here whenever you're ready so we can launch on schedule: ${demoBriefUrl}`;
+    smsText = `Hey ${firstName}, quick check-in from WynnPages! Have you had a chance to preview your website demo? ${shortDemoUrl}`;
     emailSubject = `Quick Check-in: Ready to Finalise Your WynnPages Website?`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Friendly Studio Reminder',
@@ -298,10 +300,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'outbound_pitch') {
-    const bizLabel = client.businessName || client.name || 'your business';
-    const previewLink = client.brandedDemoUrl || (client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl);
+    const bizLabel = (client.businessName || client.name || 'your business').slice(0, 28);
+    const previewLink = shortDemoUrl;
     const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
-    smsText = `G'day ${firstName}! We hand-crafted a custom website demo specifically for ${bizLabel}: ${previewLink} - If you love it, you can claim 100% ownership for a flat $599 AUD (zero monthly fees): ${claimLink}`;
+    smsText = `G'day ${firstName}! We crafted a custom website demo for ${bizLabel}. Preview it live here: ${previewLink}`;
     emailSubject = `We Built a Custom Website Demo for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Bespoke Demo Ready to Preview',
@@ -324,10 +326,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'outbound_followup') {
-    const bizLabel = client.businessName || client.name || 'your business';
-    const previewLink = client.brandedDemoUrl || (client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl);
+    const bizLabel = (client.businessName || client.name || 'your business').slice(0, 26);
+    const previewLink = shortDemoUrl;
     const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
-    smsText = `Hey ${firstName}, quick check-in from WynnPages! Did you get a chance to see the custom website demo we built for ${bizLabel}? Preview it here: ${previewLink}`;
+    smsText = `Hey ${firstName}, quick check-in from WynnPages! Did you get a chance to see the demo for ${bizLabel}? ${previewLink}`;
     emailSubject = `Quick Check-in: Your Custom Website Demo for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Custom Website Demo Preview',
@@ -352,7 +354,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const liveUrl = client.existingDomain
       ? (client.existingDomain.startsWith('http') ? client.existingDomain : `https://${client.existingDomain}`)
       : demoUrl;
-    smsText = `Congratulations ${firstName}! Your bespoke WynnPages website is officially LIVE at ${liveUrl} — Thank you for trusting our Australian studio!`;
+    smsText = `Congrats ${firstName}! Your bespoke WynnPages website is LIVE at ${liveUrl} - Thank you for trusting our studio!`;
     emailSubject = `Congratulations! Your WynnPages Website is Officially Live`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Officially Launched',

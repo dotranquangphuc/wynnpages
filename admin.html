@@ -734,7 +734,7 @@
                 ? `<span class="text-amber-900 font-bold">Muốn đăng ký: ${escapeHtml(c.desiredDomains)}</span>`
                 : `<span class="text-stone-400 italic">Khách sẽ điền tại /demo-success sau khi trả $599</span>`);
 
-          const previewOverlayUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(c.id)}`;
+          const previewOverlayUrl = `${window.location.origin}/d/${encodeURIComponent(c.demoSlug || c.id)}`;
 
           // 3-step Outbound Stepper
           const obSteps = [
@@ -1405,10 +1405,12 @@
         document.querySelectorAll('.btn-copy-preview').forEach((btn) => {
           btn.addEventListener('click', () => {
             const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const slug = (client && client.demoSlug) || cid;
             const name = btn.getAttribute('data-name') || 'khách';
-            const previewUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(cid)}`;
+            const previewUrl = `${window.location.origin}/d/${encodeURIComponent(slug)}`;
             navigator.clipboard.writeText(previewUrl);
-            showToast(`Đã copy Link Demo kèm thanh nổi Mua $599 cho "${name}": ${previewUrl}`);
+            showToast(`Đã copy Link Demo gọn đẹp kèm thanh Mua $599 cho "${name}": ${previewUrl}`);
           });
         });
 
