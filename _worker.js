@@ -216,7 +216,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   let emailSubject = '';
   let emailHtml = '';
 
-  const shortDemoUrl = client.demoSlug ? `${origin}/d/${client.demoSlug}` : demoUrl;
+  const shortDemoUrl = client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : demoUrl;
 
   if (stage === 'payment_confirmed') {
     smsText = `Hi ${firstName}, thank you for choosing WynnPages Studio! Your 7-day build slot is locked in. Please complete your quick 2-min studio brief here: ${origin}/onboarding - Any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
@@ -452,6 +452,7 @@ function formatCustomerRecord(cust) {
     driveFolderUrl: m.drive_folder_url || '',
     demoUrl: m.demo_url || '',
     liveUrl: m.live_url || '',
+    liveUrl: m.live_url || '',
     checkoutSessionId: m.checkout_session_id || '',
     welcomeSent: m.welcome_sent || 'false',
     lastSmsLog: m.last_sms_log || '',
@@ -665,6 +666,71 @@ function arrayBufferToBase64(buffer) {
     binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
   }
   return btoa(binary);
+}
+
+async function ensureCloudflareSubdomain(rawSlug, env) {
+  const slug = slugifyName(rawSlug);
+  if (!slug || slug === 'www' || !env || !env.WYNN_KV) return false;
+  const hostname = `${slug}.wynnpages.com.au`;
+  const accountId = '8daebe5da641a8b2fc3185586ba888e2';
+  const zoneId = '51b59bcb624848db459c145765a5b108';
+
+  try {
+    const alreadyDone = await env.WYNN_KV.get(`sub_${slug}`);
+    if (alreadyDone === '1') return true;
+
+    let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
+    if (!state || !state.accessToken) return false;
+
+    async function tryAttach(accessToken) {
+      return fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          zone_id: zoneId,
+          hostname,
+          service: 'wynnpages',
+          environment: 'production'
+        })
+      });
+    }
+
+    let res = await tryAttach(state.accessToken);
+    if ((res.status === 401 || res.status === 403) && state.refreshToken) {
+      const tokenParams = new URLSearchParams();
+      tokenParams.append('grant_type', 'refresh_token');
+      tokenParams.append('refresh_token', state.refreshToken);
+      tokenParams.append('client_id', '54d11594-84e4-41aa-b438-e81b8fa78ee7');
+      const refreshRes = await fetch('https://dash.cloudflare.com/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: tokenParams.toString()
+      });
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json().catch(() => ({}));
+        if (refreshData.access_token) {
+          state = {
+            accessToken: refreshData.access_token,
+            refreshToken: refreshData.refresh_token || state.refreshToken,
+            updatedAt: Date.now()
+          };
+          await env.WYNN_KV.put('cf_oauth_state', JSON.stringify(state));
+          res = await tryAttach(state.accessToken);
+        }
+      }
+    }
+
+    if (res.ok) {
+      await env.WYNN_KV.put(`sub_${slug}`, '1');
+      return true;
+    }
+  } catch (e) {
+    // Non-blocking
+  }
+  return false;
 }
 
 async function findStripeCustomerByEmail(email, stripeSecretKey) {
@@ -1327,6 +1393,12 @@ export default {
 
       const clients = rawList.map(formatCustomerRecord);
 
+      if (ctx && typeof ctx.waitUntil === 'function') {
+        ctx.waitUntil(
+          Promise.all(clients.map(c => ensureCloudflareSubdomain(c.demoSlug, env)))
+        );
+      }
+
       return new Response(
         JSON.stringify({
           ok: true,
@@ -1546,6 +1618,7 @@ export default {
           });
           let updatedCust = await saveRes.json();
           let formatted = formatCustomerRecord(updatedCust);
+          await ensureCloudflareSubdomain(formatted.demoSlug, env);
 
           let notifyRes = null;
           if (action === 'trigger_stage') {

@@ -797,7 +797,7 @@
                 ? `<span class="text-amber-900 font-bold">Muốn đăng ký: ${escapeHtml(c.desiredDomains)}</span>`
                 : `<span class="text-stone-400 italic">Khách sẽ điền tại /demo-success sau khi trả $599</span>`);
 
-          const previewOverlayUrl = `${window.location.origin}/d/${encodeURIComponent(c.demoSlug || c.id)}`;
+          const previewOverlayUrl = c.brandedDemoUrl || `https://${encodeURIComponent(c.demoSlug || c.id)}.wynnpages.com.au`;
 
           // 3-step Outbound Stepper
           const obSteps = [
@@ -1583,9 +1583,9 @@
             const client = clientsCache.find(x => x.id === cid);
             const slug = (client && client.demoSlug) || cid;
             const name = btn.getAttribute('data-name') || 'khách';
-            const previewUrl = `${window.location.origin}/d/${encodeURIComponent(slug)}`;
+            const previewUrl = (client && client.brandedDemoUrl) || `https://${encodeURIComponent(slug)}.wynnpages.com.au`;
             navigator.clipboard.writeText(previewUrl);
-            showToast(`Đã copy Link Demo gọn đẹp kèm thanh Mua $599 cho "${name}": ${previewUrl}`);
+            showToast(`Đã copy Link Demo thương hiệu kèm thanh Mua $599 cho "${name}": ${previewUrl}`);
           });
         });
 
@@ -1780,9 +1780,9 @@
           document.getElementById('qo-email').value = '';
           document.getElementById('qo-phone').value = '';
           document.getElementById('qo-demo-url').value = '';
-          const previewUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(res.client.id)}`;
+          const previewUrl = res.client.brandedDemoUrl || `https://${encodeURIComponent(res.client.demoSlug || res.client.id)}.wynnpages.com.au`;
           navigator.clipboard.writeText(previewUrl).catch(() => {});
-          showToast(`Đã tạo khách Outbound "${bizName}" và tự động copy Link Demo kèm nút Mua $599: ${previewUrl}`);
+          showToast(`Đã tạo khách Outbound "${bizName}" và tự động kích hoạt tên miền Demo: ${previewUrl}`);
         }
       });
 
