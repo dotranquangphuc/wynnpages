@@ -59,11 +59,11 @@
       <div class="flex items-center gap-2 flex-wrap">
         <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs">
           <span>🔑</span>
-          <span>Cấu hình ClickSend &amp; Resend</span>
+          <span>Cấu hình API &amp; Google Drive</span>
         </button>
-        <button id="btn-new-client" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs">
+        <button id="btn-new-client" type="button" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs">
           <span>＋</span>
-          <span>Thêm Hồ Sơ Đầy Đủ</span>
+          <span>Thêm Hồ Sơ Inbound</span>
         </button>
         <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
           <span>↻</span>
@@ -213,7 +213,7 @@
           </div>
           <div>
             <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo Bạn Đã Làm *</label>
-            <input type="url" id="qo-demo-url" required placeholder="https://lush-demo.pages.dev" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <input type="text" id="qo-demo-url" required placeholder="https://lush-demo.pages.dev" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div class="flex items-end">
             <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5">
@@ -276,19 +276,13 @@
           <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">
             <span id="list-heading-title">Danh Sách Chiến Dịch Outbound</span> (<span id="client-count">0</span>)
           </h2>
-          <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-3">
             <input 
               type="search" 
               id="search-input" 
               placeholder="Tìm tên tiệm, email, SĐT..." 
               class="atelier-input rounded-xl px-3.5 py-2 text-xs w-64"
             >
-            <a href="/onboarding" target="_blank" class="text-xs font-bold text-[#96432b] hover:underline inline-flex items-center gap-1 shrink-0">
-              <span>Wizard Onboarding ↗</span>
-            </a>
-            <a href="/demo-success" target="_blank" class="text-xs font-bold text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0">
-              <span>Trang Demo-Success ↗</span>
-            </a>
           </div>
         </div>
 
@@ -610,6 +604,7 @@
       function switchMainTab(tabName) {
         activeMainTab = tabName === 'inbound' ? 'inbound' : 'outbound';
         localStorage.setItem('wynn_active_tab', activeMainTab);
+        const btnNewClient = document.getElementById('btn-new-client');
 
         if (activeMainTab === 'outbound') {
           modeTabOutbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md';
@@ -619,6 +614,10 @@
           outboundFilters.classList.add('grid');
           inboundFilters.classList.add('hidden');
           inboundFilters.classList.remove('grid');
+          if (btnNewClient) {
+            btnNewClient.classList.add('hidden');
+            btnNewClient.classList.remove('inline-flex');
+          }
           listHeadingTitle.textContent = 'Danh Sách Chiến Dịch Outbound — Gửi Demo Trước';
         } else {
           modeTabInbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md';
@@ -628,6 +627,10 @@
           outboundFilters.classList.remove('grid');
           inboundFilters.classList.remove('hidden');
           inboundFilters.classList.add('grid');
+          if (btnNewClient) {
+            btnNewClient.classList.remove('hidden');
+            btnNewClient.classList.add('inline-flex');
+          }
           listHeadingTitle.textContent = 'Danh Sách Khách Inbound & Bàn Giao 5 Bước';
         }
         applyFiltersAndRender();
@@ -840,15 +843,6 @@
 
                 <!-- Right Utility Buttons -->
                 <div class="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-target-flow="inbound"
-                    class="btn-switch-flow px-3 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-stone-600 transition-colors"
-                    title="Chuyển khách này sang Tab 2 (Bàn giao 5 bước)"
-                  >
-                    ⇄ Chuyển sang Tab 2
-                  </button>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
@@ -892,26 +886,21 @@
                     <strong class="text-stone-500">File / Ghi chú cập nhật (/demo-success):</strong>
                     ${renderAssetBadge(c, 'menu', c.menuFileName, c.menuFileId, c.menuDriveUrl, 'Giữ nguyên theo Demo')}
                   </span>
-                  ${c.driveFolderUrl ? `
-                    <a href="${escapeHtml(c.driveFolderUrl)}" target="_blank" class="text-blue-700 font-bold hover:underline text-[11px]">
-                      📁 Thư mục Google Drive ↗
-                    </a>
-                  ` : ''}
                 </div>
                 <a href="/demo-success?email=${encodeURIComponent(c.email || '')}&amp;cid=${encodeURIComponent(c.id)}" target="_blank" class="text-[#96432b] font-bold hover:underline text-[11px]">
                   Xem trang /demo-success của khách ↗
                 </a>
               </div>
 
-              <!-- Outbound Demo Link & Live Domain + One-Click Sales Toolkit -->
-              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
-                <!-- Row 1: Demo URL Input -->
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
+              <!-- Outbound Demo Link & Live Domain + Streamlined Actions -->
+              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3">
+                <!-- Row 1: Demo URL Input + Compact Branded Demo Actions -->
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                   <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5 w-48">
                     <span>🔗 1. Link Web Demo:</span>
                   </label>
                   <input 
-                    type="url" 
+                    type="text" 
                     id="demo-url-${c.id}" 
                     data-cid="${c.id}"
                     value="${escapeHtml(c.demoUrl || '')}" 
@@ -921,19 +910,37 @@
                   <button 
                     type="button"
                     data-cid="${c.id}"
-                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors"
+                    class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors"
                   >
                     Lưu Link
                   </button>
                   ${hasValidDemo ? `
-                    <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-bold text-white shrink-0 inline-flex items-center gap-1">
-                      <span>Xem Demo + Nút Mua $599 ↗</span>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-name="${escapeHtml(titleName)}"
+                      class="btn-copy-preview px-3 py-2 rounded-xl bg-[#1c1917] hover:bg-[#96432b] text-xs font-bold text-[#f6f1e8] shrink-0 transition-colors inline-flex items-center gap-1"
+                      title="Copy link Demo thương hiệu: ${escapeHtml(previewOverlayUrl)}"
+                    >
+                      <span>📋 Copy Link Demo (${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au)</span>
+                    </button>
+                    <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-stone-200/80 hover:bg-stone-300 text-xs font-bold text-stone-900 shrink-0 inline-flex items-center gap-1">
+                      <span>Xem Demo ↗</span>
                     </a>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-name="${escapeHtml(titleName)}"
+                      class="btn-copy-claim px-2.5 py-2 rounded-xl bg-white hover:bg-[#fbdeb9]/50 border border-[#d8ccb8] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
+                      title="Copy link thanh toán Stripe $599 trực tiếp"
+                    >
+                      <span>💳 Link $599</span>
+                    </button>
                   ` : ''}
                 </div>
 
                 <!-- Row 2: Official Live Domain Input (Required to unlock Button 3 Launch!) -->
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                   <label for="live-url-${c.id}" class="text-xs font-extrabold text-emerald-900 shrink-0 flex items-center gap-1.5 w-48">
                     <span>🌐 2. Tên Miền Chính Thức:</span>
                   </label>
@@ -943,53 +950,21 @@
                     data-cid="${c.id}"
                     data-paid="${isPaid ? '1' : '0'}"
                     value="${escapeHtml(resolvedLiveUrl)}" 
-                    placeholder="${isPaid ? 'Nhập tên miền thật sau khi trỏ DNS (VD: https://lushnailsbar.com.au) để mở khoá Nút 3...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
+                    placeholder="${isPaid ? 'Nhập tên miền thật (VD: lushnailsbar.com.au) — Tự động gắn vào web & tắt thanh $599 khi lên sóng...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
                     class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
                   >
                   <button 
                     type="button"
                     data-cid="${c.id}"
-                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
+                    class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
                   >
                     Lưu Tên Miền
                   </button>
                   ${hasValidLive ? `
-                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
+                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
                       <span>Mở Web Thật ↗</span>
                     </a>
                   ` : ''}
-                </div>
-
-                <!-- Copy Links Row -->
-                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#ece4d5] text-[11px]">
-                  <span class="font-bold text-stone-600">Bộ công cụ lấy Link gửi cho chủ tiệm:</span>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-name="${escapeHtml(titleName)}"
-                      class="btn-copy-preview px-3 py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#96432b] text-[#f6f1e8] font-bold transition-colors inline-flex items-center gap-1"
-                    >
-                      <span>🖥️ 1. Copy Link Demo (Có sẵn thanh Mua $599)</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-name="${escapeHtml(titleName)}"
-                      class="btn-copy-claim px-3 py-1.5 rounded-lg bg-white hover:bg-[#fbdeb9]/50 border border-[#d8ccb8] text-[#96432b] font-bold transition-colors inline-flex items-center gap-1"
-                    >
-                      <span>💳 2. Copy Link Thanh Toán Stripe Riêng ($599)</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-email="${escapeHtml(c.email || '')}"
-                      data-name="${escapeHtml(titleName)}"
-                      class="btn-copy-widget px-3 py-1.5 rounded-lg bg-white hover:bg-stone-100 border border-[#dfd5c3] text-stone-700 font-semibold transition-colors inline-flex items-center gap-1"
-                    >
-                      <span>🧩 Copy Mã Nhúng &lt;script&gt;</span>
-                    </button>
-                  </div>
                 </div>
 
                 <!-- 3 Outbound Automated SMS + Email Action Buttons -->
@@ -1224,15 +1199,6 @@
 
                 <!-- Right Utility Buttons -->
                 <div class="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-target-flow="outbound"
-                    class="btn-switch-flow px-3 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-stone-600 transition-colors"
-                    title="Chuyển khách này sang Tab 1 (Outbound)"
-                  >
-                    ⇄ Chuyển sang Tab 1 (Outbound)
-                  </button>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
@@ -1309,9 +1275,6 @@
                     </span>
                   </div>
                   <div class="flex items-center gap-3">
-                    ${c.driveFolderUrl ? `
-                      <a href="${escapeHtml(c.driveFolderUrl)}" target="_blank" class="text-blue-700 font-bold hover:underline">📁 Thư mục Google Drive ↗</a>
-                    ` : ''}
                     <a href="/onboarding?type=organic&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-[#96432b] font-semibold hover:underline">Mở Form Onboarding ↗</a>
                   </div>
                 </div>
@@ -1325,7 +1288,7 @@
                     <span>🔗 1. Link Web Demo:</span>
                   </label>
                   <input 
-                    type="url" 
+                    type="text" 
                     id="demo-url-${c.id}" 
                     data-cid="${c.id}"
                     data-sent="${hasSentDemo ? '1' : '0'}"
@@ -1549,22 +1512,6 @@
           });
         });
 
-        // Switch client between Outbound (Tab 1) and Inbound (Tab 2)
-        document.querySelectorAll('.btn-switch-flow').forEach((btn) => {
-          btn.addEventListener('click', async () => {
-            const cid = btn.getAttribute('data-cid');
-            const targetFlow = btn.getAttribute('data-target-flow');
-            const newStage = targetFlow === 'outbound' ? 'outbound_pending' : 'paid';
-            await runAdminAction({
-              action: 'save_client',
-              customerId: cid,
-              flowType: targetFlow,
-              stage: newStage
-            });
-            showToast(`Đã chuyển hồ sơ sang ${targetFlow === 'outbound' ? 'Tab 1 (Outbound)' : 'Tab 2 (Inbound)'}!`);
-          });
-        });
-
         // Copy AI Brief
         document.querySelectorAll('.btn-copy-brief').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -1597,18 +1544,6 @@
             const claimUrl = `${window.location.origin}/api/claim?cid=${encodeURIComponent(cid)}`;
             navigator.clipboard.writeText(claimUrl);
             showToast(`Đã copy Link Thanh Toán Stripe $599 riêng cho "${name}"!`);
-          });
-        });
-
-        // Outbound Sales: Copy Embeddable Floating Bar Script
-        document.querySelectorAll('.btn-copy-widget').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const cid = btn.getAttribute('data-cid');
-            const email = btn.getAttribute('data-email') || '';
-            const name = btn.getAttribute('data-name') || '';
-            const snippet = `<script src="${window.location.origin}/claim-widget.js" data-cid="${cid}" data-email="${email}" data-name="${name.replace(/"/g, '&quot;')}"><\/script>`;
-            navigator.clipboard.writeText(snippet);
-            showToast(`Đã copy mã nhúng thanh nổi "Claim This Website - $599 AUD"!`);
           });
         });
 

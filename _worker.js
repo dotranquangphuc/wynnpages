@@ -491,6 +491,58 @@ async function findCustomerBySlugOrId(slugOrId, stripeSecretKey) {
   ) || null;
 }
 
+function extractCleanHost(rawUrlOrDomain) {
+  if (!rawUrlOrDomain || typeof rawUrlOrDomain !== 'string') return '';
+  return rawUrlOrDomain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/.*$/, '')
+    .replace(/^www\./i, '');
+}
+
+async function findCustomerByLiveDomain(hostname, stripeSecretKey) {
+  if (!hostname || !stripeSecretKey) return null;
+  const targetRoot = extractCleanHost(hostname);
+  if (!targetRoot || targetRoot.endsWith('wynnpages.com.au')) return null;
+  const listRes = await fetch('https://api.stripe.com/v1/customers?limit=100', {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+  });
+  if (!listRes.ok) return null;
+  const data = await listRes.json().catch(() => ({}));
+  const list = (data.data || []).map(formatCustomerRecord);
+  return list.find(c => {
+    const liveHost = extractCleanHost(c.liveUrl);
+    const existHost = extractCleanHost(c.existingDomain);
+    const desiredHost = extractCleanHost(c.desiredDomains);
+    return liveHost === targetRoot || existHost === targetRoot || desiredHost === targetRoot;
+  }) || null;
+}
+
+function buildCleanLiveHtml(client) {
+  const bizName = (client && (client.businessName || client.name)) || 'Official Website';
+  let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
+  if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${bizName}</title>
+  <link rel="icon" type="image/png" href="https://wynnpages.com.au/assets/favicon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f6f1e8; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; background: #f6f1e8; }
+  </style>
+</head>
+<body>
+  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')}" allow="fullscreen"></iframe>
+</body>
+</html>`;
+}
+
 function buildBrandedPreviewHtml(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const cid = (client && client.id) || '';
@@ -667,6 +719,36 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
+async function getValidCloudflareToken(env, forceRefresh = false) {
+  if (!env || !env.WYNN_KV) return null;
+  let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
+  if (!state || !state.accessToken) return null;
+
+  if (forceRefresh && state.refreshToken) {
+    const tokenParams = new URLSearchParams();
+    tokenParams.append('grant_type', 'refresh_token');
+    tokenParams.append('refresh_token', state.refreshToken);
+    tokenParams.append('client_id', '54d11594-84e4-41aa-b438-e81b8fa78ee7');
+    const refreshRes = await fetch('https://dash.cloudflare.com/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenParams.toString()
+    });
+    if (refreshRes.ok) {
+      const refreshData = await refreshRes.json().catch(() => ({}));
+      if (refreshData.access_token) {
+        state = {
+          accessToken: refreshData.access_token,
+          refreshToken: refreshData.refresh_token || state.refreshToken,
+          updatedAt: Date.now()
+        };
+        await env.WYNN_KV.put('cf_oauth_state', JSON.stringify(state));
+      }
+    }
+  }
+  return state.accessToken;
+}
+
 async function ensureCloudflareSubdomain(rawSlug, env) {
   const slug = slugifyName(rawSlug);
   if (!slug || slug === 'www' || !env || !env.WYNN_KV) return false;
@@ -678,14 +760,14 @@ async function ensureCloudflareSubdomain(rawSlug, env) {
     const alreadyDone = await env.WYNN_KV.get(`sub_${slug}`);
     if (alreadyDone === '1') return true;
 
-    let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
-    if (!state || !state.accessToken) return false;
+    let accessToken = await getValidCloudflareToken(env, false);
+    if (!accessToken) return false;
 
-    async function tryAttach(accessToken) {
+    async function tryAttach(token) {
       return fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -697,29 +779,10 @@ async function ensureCloudflareSubdomain(rawSlug, env) {
       });
     }
 
-    let res = await tryAttach(state.accessToken);
-    if ((res.status === 401 || res.status === 403) && state.refreshToken) {
-      const tokenParams = new URLSearchParams();
-      tokenParams.append('grant_type', 'refresh_token');
-      tokenParams.append('refresh_token', state.refreshToken);
-      tokenParams.append('client_id', '54d11594-84e4-41aa-b438-e81b8fa78ee7');
-      const refreshRes = await fetch('https://dash.cloudflare.com/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: tokenParams.toString()
-      });
-      if (refreshRes.ok) {
-        const refreshData = await refreshRes.json().catch(() => ({}));
-        if (refreshData.access_token) {
-          state = {
-            accessToken: refreshData.access_token,
-            refreshToken: refreshData.refresh_token || state.refreshToken,
-            updatedAt: Date.now()
-          };
-          await env.WYNN_KV.put('cf_oauth_state', JSON.stringify(state));
-          res = await tryAttach(state.accessToken);
-        }
-      }
+    let res = await tryAttach(accessToken);
+    if (res.status === 401 || res.status === 403) {
+      accessToken = await getValidCloudflareToken(env, true);
+      if (accessToken) res = await tryAttach(accessToken);
     }
 
     if (res.ok) {
@@ -730,6 +793,67 @@ async function ensureCloudflareSubdomain(rawSlug, env) {
     // Non-blocking
   }
   return false;
+}
+
+async function ensureCustomLiveDomainOnCloudflare(rawDomain, env) {
+  const rootDomain = extractCleanHost(rawDomain);
+  if (
+    !rootDomain ||
+    !rootDomain.includes('.') ||
+    rootDomain.endsWith('wynnpages.com.au') ||
+    rootDomain.endsWith('pages.dev') ||
+    rootDomain.endsWith('workers.dev') ||
+    !env ||
+    !env.WYNN_KV
+  ) {
+    return { attached: false, reason: 'skipped' };
+  }
+
+  const accountId = '8daebe5da641a8b2fc3185586ba888e2';
+  try {
+    let accessToken = await getValidCloudflareToken(env, false);
+    if (!accessToken) return { attached: false, reason: 'no_token' };
+
+    let zoneRes = await fetch(
+      `https://api.cloudflare.com/client/v4/zones?name=${encodeURIComponent(rootDomain)}`,
+      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+    );
+    if (zoneRes.status === 401 || zoneRes.status === 403) {
+      accessToken = await getValidCloudflareToken(env, true);
+      if (accessToken) {
+        zoneRes = await fetch(
+          `https://api.cloudflare.com/client/v4/zones?name=${encodeURIComponent(rootDomain)}`,
+          { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        );
+      }
+    }
+    const zoneData = await zoneRes.json().catch(() => ({}));
+    const zoneObj = zoneData.result && zoneData.result[0];
+    if (!zoneObj || !zoneObj.id) {
+      return { attached: false, reason: 'zone_not_in_cloudflare', rootDomain };
+    }
+
+    const hostnames = [rootDomain, `www.${rootDomain}`];
+    for (const h of hostnames) {
+      await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          zone_id: zoneObj.id,
+          hostname: h,
+          service: 'wynnpages',
+          environment: 'production'
+        })
+      });
+    }
+    await env.WYNN_KV.put(`livedom_${rootDomain}`, '1');
+    return { attached: true, rootDomain, zoneId: zoneObj.id };
+  } catch (e) {
+    return { attached: false, reason: e.message };
+  }
 }
 
 async function findStripeCustomerByEmail(email, stripeSecretKey) {
@@ -771,13 +895,29 @@ export default {
 
     const cfg = getConfig(env);
 
-    // 1a. Wildcard Subdomain Demo (`https://lushnailbar.wynnpages.com.au`) & Clean Path (`/d/lushnailbar`)
+    // 1a. Wildcard Subdomain Demo (`https://lushnailbar.wynnpages.com.au`), Clean Path (`/d/lushnailbar`), & Custom Official Client Domains
     const hostLower = url.hostname.toLowerCase();
     const isSubdomainDemo =
       hostLower.endsWith('.wynnpages.com.au') &&
       hostLower !== 'wynnpages.com.au' &&
       hostLower !== 'www.wynnpages.com.au';
     const isPathDemo = url.pathname.startsWith('/d/') && url.pathname.length > 3;
+    const isCustomClientDomain =
+      !hostLower.endsWith('wynnpages.com.au') &&
+      !hostLower.endsWith('.workers.dev') &&
+      !hostLower.endsWith('.pages.dev') &&
+      hostLower !== 'localhost' &&
+      hostLower !== '127.0.0.1';
+
+    if (isCustomClientDomain && (url.pathname === '/' || url.pathname === '')) {
+      const liveClient = await findCustomerByLiveDomain(hostLower, cfg.stripeSecretKey);
+      if (liveClient) {
+        return new Response(buildCleanLiveHtml(liveClient), {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        });
+      }
+    }
 
     if ((isSubdomainDemo && (url.pathname === '/' || url.pathname === '')) || isPathDemo) {
       const targetSlug = isSubdomainDemo
@@ -785,7 +925,11 @@ export default {
         : url.pathname.replace(/^\/d\//i, '').split('/')[0];
       const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
       if (client) {
-        return new Response(buildBrandedPreviewHtml(client), {
+        const forceBar = url.searchParams.get('bar') === '1';
+        const html = (client.stage === 'launched' && !forceBar)
+          ? buildCleanLiveHtml(client)
+          : buildBrandedPreviewHtml(client);
+        return new Response(html, {
           status: 200,
           headers: { 'Content-Type': 'text/html; charset=utf-8' }
         });
@@ -1618,6 +1762,10 @@ export default {
           let updatedCust = await saveRes.json();
           let formatted = formatCustomerRecord(updatedCust);
           await ensureCloudflareSubdomain(formatted.demoSlug, env);
+          let liveDomainBindResult = null;
+          if (formatted.liveUrl) {
+            liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env);
+          }
 
           let notifyRes = null;
           if (action === 'trigger_stage') {
@@ -1657,6 +1805,7 @@ export default {
             JSON.stringify({
               ok: true,
               client: formatted,
+              liveDomainBindResult,
               notifyRes
             }),
             { status: 200, headers: corsHeaders }
