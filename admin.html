@@ -63,7 +63,7 @@
         </button>
         <button id="btn-new-client" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs">
           <span>＋</span>
-          <span>Thêm / Test Khách</span>
+          <span>Thêm Hồ Sơ Đầy Đủ</span>
         </button>
         <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
           <span>↻</span>
@@ -145,27 +145,38 @@
         </div>
       </div>
 
-      <!-- Pipeline Summary Metrics Bar -->
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <button type="button" data-filter="all" class="filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả khách</span>
-          <span id="stat-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
+      <!-- ======================================================== -->
+      <!-- MAIN MODE SWITCHER: TAB 1 (OUTBOUND) vs TAB 2 (INBOUND)  -->
+      <!-- ======================================================== -->
+      <div class="bg-white rounded-3xl p-2 border border-[#e5dec9] shadow-xs grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          id="mode-tab-outbound"
+          class="px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md"
+        >
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg shrink-0">🎯</span>
+            <div>
+              <span class="text-xs sm:text-sm font-extrabold block">TAB 1: Chiến Dịch Outbound (Săn Khách &amp; Gửi Demo Trước)</span>
+              <span class="text-[11px] opacity-85 block">Làm sẵn Demo → Gửi khách xem → Khách bấm Mua $599 → Xác nhận tại /demo-success</span>
+            </div>
+          </div>
+          <span id="badge-count-outbound" class="px-3 py-1 rounded-full text-xs font-extrabold bg-white text-[#96432b] shrink-0">0</span>
         </button>
-        <button type="button" data-filter="paid" class="filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700 block">1. Chờ điền Brief</span>
-          <span id="stat-paid" class="text-2xl font-extrabold text-blue-900 mt-1 block">0</span>
-        </button>
-        <button type="button" data-filter="brief_completed" class="filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">2. Cần làm Demo</span>
-          <span id="stat-brief" class="text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
-        </button>
-        <button type="button" data-filter="demo_waiting" class="filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block">3-4. Chờ duyệt Demo</span>
-          <span id="stat-demo" class="text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
-        </button>
-        <button type="button" data-filter="launched" class="filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">5. Đã lên sóng</span>
-          <span id="stat-launched" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
+
+        <button
+          type="button"
+          id="mode-tab-inbound"
+          class="px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700"
+        >
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-xl bg-[#ebe3d5] flex items-center justify-center text-lg shrink-0">🌿</span>
+            <div>
+              <span class="text-xs sm:text-sm font-extrabold block">TAB 2: Khách Inbound &amp; Bàn Giao (5 Bước Có Điền Brief)</span>
+              <span class="text-[11px] opacity-75 block">Khách tự trả $599 trên web → Điền Wizard 4 Bước → Làm Demo → Lên sóng</span>
+            </div>
+          </div>
+          <span id="badge-count-inbound" class="px-3 py-1 rounded-full text-xs font-extrabold bg-stone-200 text-stone-800 shrink-0">0</span>
         </button>
       </div>
 
@@ -175,24 +186,108 @@
         <button type="button" onclick="document.getElementById('toast-banner').classList.add('hidden')" class="text-stone-500 hover:text-stone-900 font-bold">✕</button>
       </div>
 
+      <!-- ======================================================== -->
+      <!-- OUTBOUND ONLY: QUICK 1-ROW PROSPECT CREATOR              -->
+      <!-- ======================================================== -->
+      <div id="outbound-quick-creator" class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#96432b]/25 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-[#96432b] text-white text-[10px] font-extrabold uppercase tracking-wider">Bước 1 Outbound</span>
+            <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Tạo Nhanh Khách Chào Hàng (Đã Có Link Demo)</h3>
+          </div>
+          <span class="text-[11px] text-stone-500">Không cần điền Brief — Tạo xong có ngay Link Demo gắn nút <strong>"Claim This Website - $599 AUD"</strong>!</span>
+        </div>
+
+        <form id="quick-outbound-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">Tên Tiệm / Thương Hiệu *</label>
+            <input type="text" id="qo-biz-name" required placeholder="VD: Lush Nails &amp; Spa" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">Email Khách Hàng *</label>
+            <input type="email" id="qo-email" required placeholder="owner@lushnails.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">SĐT Chủ Tiệm (Nhận SMS)</label>
+            <input type="tel" id="qo-phone" placeholder="0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo Bạn Đã Làm *</label>
+            <input type="url" id="qo-demo-url" required placeholder="https://lush-demo.pages.dev" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+          <div class="flex items-end">
+            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5">
+              <span>＋ Tạo &amp; Lấy Link Mua $599</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- SUB-FILTER METRICS BAR (Dynamic per Tab)                 -->
+      <!-- ======================================================== -->
+      <!-- Outbound Sub-Filters -->
+      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button type="button" data-ob-filter="all" class="ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả Outbound</span>
+          <span id="stat-ob-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ob-filter="pending" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">1. Mới tạo Demo (Chờ gửi)</span>
+          <span id="stat-ob-pending" class="text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ob-filter="pitched" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block">2. Đã gửi chào hàng</span>
+          <span id="stat-ob-pitched" class="text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ob-filter="paid" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">3. Đã Chốt Đơn ($599 Paid)</span>
+          <span id="stat-ob-paid" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
+        </button>
+      </div>
+
+      <!-- Inbound Sub-Filters -->
+      <div id="inbound-filters" class="hidden grid-cols-2 sm:grid-cols-5 gap-3">
+        <button type="button" data-ib-filter="all" class="ib-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả Inbound</span>
+          <span id="stat-ib-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ib-filter="paid" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700 block">1. Chờ điền Brief</span>
+          <span id="stat-ib-paid" class="text-2xl font-extrabold text-blue-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ib-filter="brief_completed" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">2. Cần làm Demo</span>
+          <span id="stat-ib-brief" class="text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ib-filter="demo_waiting" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block">3-4. Chờ duyệt Demo</span>
+          <span id="stat-ib-demo" class="text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ib-filter="launched" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">5. Đã lên sóng</span>
+          <span id="stat-ib-launched" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
+        </button>
+      </div>
+
       <!-- Client List Header & Search -->
       <div class="space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">
-            Danh Sách Khách Hàng &amp; Điều Khiển Tự Động (<span id="client-count">0</span>)
+            <span id="list-heading-title">Danh Sách Chiến Dịch Outbound</span> (<span id="client-count">0</span>)
           </h2>
           <div class="flex items-center gap-3 flex-wrap">
             <input 
               type="search" 
               id="search-input" 
-              placeholder="Tìm tên, email, SĐT, ngành nghề..." 
+              placeholder="Tìm tên tiệm, email, SĐT..." 
               class="atelier-input rounded-xl px-3.5 py-2 text-xs w-64"
             >
-            <a href="/brief?type=organic" target="_blank" class="text-xs font-bold text-[#96432b] hover:underline inline-flex items-center gap-1 shrink-0">
-              <span>Form Organic ↗</span>
+            <a href="/onboarding" target="_blank" class="text-xs font-bold text-[#96432b] hover:underline inline-flex items-center gap-1 shrink-0">
+              <span>Wizard Onboarding ↗</span>
             </a>
-            <a href="/brief?type=demo" target="_blank" class="text-xs font-bold text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0">
-              <span>Form Demo ↗</span>
+            <a href="/demo-success" target="_blank" class="text-xs font-bold text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0">
+              <span>Trang Demo-Success ↗</span>
             </a>
           </div>
         </div>
@@ -258,12 +353,28 @@
         <input type="hidden" id="edit-cid" value="">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="font-bold block mb-1">Tên khách hàng *</label>
-            <input type="text" id="edit-name" placeholder="VD: Phúc Đỗ" required class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+            <label class="font-bold block mb-1">Phân luồng (Tab hiển thị)</label>
+            <select id="edit-flow-type" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold text-[#96432b]">
+              <option value="outbound">🎯 Tab 1: Outbound (Làm Demo Trước)</option>
+              <option value="inbound">🌿 Tab 2: Inbound (Chuẩn 5 Bước Brief)</option>
+            </select>
           </div>
           <div>
-            <label class="font-bold block mb-1">Tên Thương Hiệu / Quán (Business Name)</label>
-            <input type="text" id="edit-business-name" placeholder="VD: Emerald Cafe &amp; Bakery" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+            <label class="font-bold block mb-1">Trạng thái Thanh Toán ($599)</label>
+            <select id="edit-payment-status" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold">
+              <option value="unpaid">🟡 Chưa thanh toán (Đang chào hàng)</option>
+              <option value="paid">🟢 Đã thanh toán $599 AUD</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold block mb-1">Tên chủ / người liên hệ</label>
+            <input type="text" id="edit-name" placeholder="VD: Sarah" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+          </div>
+          <div>
+            <label class="font-bold block mb-1">Tên Tiệm / Thương Hiệu *</label>
+            <input type="text" id="edit-business-name" placeholder="VD: Emerald Cafe &amp; Bakery" required class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -284,13 +395,20 @@
           <div>
             <label class="font-bold block mb-1">Giai đoạn hiện tại (Stage)</label>
             <select id="edit-stage" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-semibold">
-              <option value="paid">1. Đã thanh toán (Chờ điền Brief)</option>
-              <option value="brief_completed">2. Đã điền Brief (Cần làm Demo)</option>
-              <option value="demo_sent">3. Đã gửi Demo cho khách</option>
-              <option value="reminder_sent">4. Đã nhắc duyệt Demo</option>
+              <option value="outbound_pending">Outbound: 1. Mới tạo Demo (Chờ gửi)</option>
+              <option value="outbound_pitched">Outbound: 2. Đã gửi Demo chào hàng</option>
+              <option value="outbound_paid">Outbound: 3. Khách Đã Mua $599</option>
+              <option value="paid">Inbound: 1. Đã thanh toán (Chờ điền Brief)</option>
+              <option value="brief_completed">Inbound: 2. Đã điền Brief (Cần làm Demo)</option>
+              <option value="demo_sent">Inbound: 3. Đã gửi Demo cho khách</option>
+              <option value="reminder_sent">Inbound: 4. Đã nhắc duyệt Demo</option>
               <option value="launched">5. Đã lên sóng chính thức (Live)</option>
             </select>
           </div>
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Link Bản Demo (Demo URL)</label>
+          <input type="text" id="edit-demo-url" placeholder="https://demo.wynnpages.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
         </div>
         <div>
           <label class="font-bold block mb-1">Địa chỉ kinh doanh / Khu vực phục vụ</label>
@@ -322,13 +440,9 @@
             <input type="text" id="edit-existing-domain" placeholder="www.example.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div>
-            <label class="font-bold block mb-1">Tên miền muốn kiểm tra (Desired)</label>
+            <label class="font-bold block mb-1">Tên miền muốn đăng ký mới (Desired)</label>
             <input type="text" id="edit-desired-domains" placeholder="wynnbakery.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
-        </div>
-        <div>
-          <label class="font-bold block mb-1">Link Bản Demo (Demo URL)</label>
-          <input type="text" id="edit-demo-url" placeholder="https://demo.wynnpages.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
         </div>
         <div class="pt-2 flex justify-end gap-2">
           <button type="button" id="btn-cancel-client-modal" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs">
@@ -347,7 +461,11 @@
       let adminKey = localStorage.getItem('wynn_admin_key') || '';
       let localCreds = JSON.parse(localStorage.getItem('wynn_Messaging_creds') || '{}');
       let clientsCache = [];
-      let currentFilter = 'all';
+
+      // Default to Outbound Tab first as requested!
+      let activeMainTab = localStorage.getItem('wynn_active_tab') || 'outbound';
+      let currentObFilter = 'all';
+      let currentIbFilter = 'all';
       let searchQuery = '';
 
       const authGate = document.getElementById('auth-gate');
@@ -356,9 +474,16 @@
       const dashboardContent = document.getElementById('dashboard-content');
       const clientsContainer = document.getElementById('clients-container');
       const clientCountEl = document.getElementById('client-count');
+      const listHeadingTitle = document.getElementById('list-heading-title');
       const toastBanner = document.getElementById('toast-banner');
       const toastMessage = document.getElementById('toast-message');
       const searchInput = document.getElementById('search-input');
+
+      const modeTabOutbound = document.getElementById('mode-tab-outbound');
+      const modeTabInbound = document.getElementById('mode-tab-inbound');
+      const outboundQuickCreator = document.getElementById('outbound-quick-creator');
+      const outboundFilters = document.getElementById('outbound-filters');
+      const inboundFilters = document.getElementById('inbound-filters');
 
       const pillClicksend = document.getElementById('pill-clicksend');
       const pillResend = document.getElementById('pill-resend');
@@ -375,6 +500,8 @@
       const clientModal = document.getElementById('client-modal');
       const clientModalTitle = document.getElementById('client-modal-title');
       const editCid = document.getElementById('edit-cid');
+      const editFlowType = document.getElementById('edit-flow-type');
+      const editPaymentStatus = document.getElementById('edit-payment-status');
       const editName = document.getElementById('edit-name');
       const editBusinessName = document.getElementById('edit-business-name');
       const editPhone = document.getElementById('edit-phone');
@@ -419,6 +546,10 @@
         }
       }
 
+      function isOutboundClient(c) {
+        return c.flowType === 'outbound' || (c.stage && c.stage.startsWith('outbound_'));
+      }
+
       function getBriefStats(c) {
         const fields = [
           Boolean(c.businessName || c.industry),
@@ -432,17 +563,63 @@
       }
 
       function updateMetrics(list) {
-        const countPaid = list.filter(c => c.stage === 'paid' || c.stage === 'checkout_started').length;
-        const countBrief = list.filter(c => c.stage === 'brief_completed').length;
-        const countDemo = list.filter(c => c.stage === 'demo_sent' || c.stage === 'reminder_sent').length;
-        const countLaunched = list.filter(c => c.stage === 'launched').length;
+        const obList = list.filter(isOutboundClient);
+        const ibList = list.filter(c => !isOutboundClient(c));
 
-        document.getElementById('stat-all').textContent = list.length;
-        document.getElementById('stat-paid').textContent = countPaid;
-        document.getElementById('stat-brief').textContent = countBrief;
-        document.getElementById('stat-demo').textContent = countDemo;
-        document.getElementById('stat-launched').textContent = countLaunched;
+        document.getElementById('badge-count-outbound').textContent = obList.length;
+        document.getElementById('badge-count-inbound').textContent = ibList.length;
+
+        // Outbound stats
+        const obPending = obList.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending').length;
+        const obPitched = obList.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup')).length;
+        const obPaid = obList.filter(c => c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched').length;
+
+        document.getElementById('stat-ob-all').textContent = obList.length;
+        document.getElementById('stat-ob-pending').textContent = obPending;
+        document.getElementById('stat-ob-pitched').textContent = obPitched;
+        document.getElementById('stat-ob-paid').textContent = obPaid;
+
+        // Inbound stats
+        const ibPaid = ibList.filter(c => c.stage === 'paid' || c.stage === 'checkout_started').length;
+        const ibBrief = ibList.filter(c => c.stage === 'brief_completed').length;
+        const ibDemo = ibList.filter(c => c.stage === 'demo_sent' || c.stage === 'reminder_sent').length;
+        const ibLaunched = ibList.filter(c => c.stage === 'launched').length;
+
+        document.getElementById('stat-ib-all').textContent = ibList.length;
+        document.getElementById('stat-ib-paid').textContent = ibPaid;
+        document.getElementById('stat-ib-brief').textContent = ibBrief;
+        document.getElementById('stat-ib-demo').textContent = ibDemo;
+        document.getElementById('stat-ib-launched').textContent = ibLaunched;
       }
+
+      function switchMainTab(tabName) {
+        activeMainTab = tabName === 'inbound' ? 'inbound' : 'outbound';
+        localStorage.setItem('wynn_active_tab', activeMainTab);
+
+        if (activeMainTab === 'outbound') {
+          modeTabOutbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md';
+          modeTabInbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700';
+          outboundQuickCreator.classList.remove('hidden');
+          outboundFilters.classList.remove('hidden');
+          outboundFilters.classList.add('grid');
+          inboundFilters.classList.add('hidden');
+          inboundFilters.classList.remove('grid');
+          listHeadingTitle.textContent = 'Danh Sách Chiến Dịch Outbound — Gửi Demo Trước';
+        } else {
+          modeTabInbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md';
+          modeTabOutbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700';
+          outboundQuickCreator.classList.add('hidden');
+          outboundFilters.classList.add('hidden');
+          outboundFilters.classList.remove('grid');
+          inboundFilters.classList.remove('hidden');
+          inboundFilters.classList.add('grid');
+          listHeadingTitle.textContent = 'Danh Sách Khách Inbound & Bàn Giao 5 Bước';
+        }
+        applyFiltersAndRender();
+      }
+
+      modeTabOutbound.addEventListener('click', () => switchMainTab('outbound'));
+      modeTabInbound.addEventListener('click', () => switchMainTab('inbound'));
 
       async function loadClients() {
         try {
@@ -462,22 +639,35 @@
           updateIntegrationPills(data.integrations || {});
           clientsCache = data.clients || [];
           updateMetrics(clientsCache);
-          applyFiltersAndRender();
+          switchMainTab(activeMainTab);
         } catch (err) {
           showToast(err.message, true);
         }
       }
 
       function applyFiltersAndRender() {
-        let filtered = clientsCache.slice();
-        if (currentFilter === 'paid') {
-          filtered = filtered.filter(c => c.stage === 'paid' || c.stage === 'checkout_started');
-        } else if (currentFilter === 'brief_completed') {
-          filtered = filtered.filter(c => c.stage === 'brief_completed');
-        } else if (currentFilter === 'demo_waiting') {
-          filtered = filtered.filter(c => c.stage === 'demo_sent' || c.stage === 'reminder_sent');
-        } else if (currentFilter === 'launched') {
-          filtered = filtered.filter(c => c.stage === 'launched');
+        let filtered = clientsCache.filter(c =>
+          activeMainTab === 'outbound' ? isOutboundClient(c) : !isOutboundClient(c)
+        );
+
+        if (activeMainTab === 'outbound') {
+          if (currentObFilter === 'pending') {
+            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending');
+          } else if (currentObFilter === 'pitched') {
+            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup'));
+          } else if (currentObFilter === 'paid') {
+            filtered = filtered.filter(c => c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched');
+          }
+        } else {
+          if (currentIbFilter === 'paid') {
+            filtered = filtered.filter(c => c.stage === 'paid' || c.stage === 'checkout_started');
+          } else if (currentIbFilter === 'brief_completed') {
+            filtered = filtered.filter(c => c.stage === 'brief_completed');
+          } else if (currentIbFilter === 'demo_waiting') {
+            filtered = filtered.filter(c => c.stage === 'demo_sent' || c.stage === 'reminder_sent');
+          } else if (currentIbFilter === 'launched') {
+            filtered = filtered.filter(c => c.stage === 'launched');
+          }
         }
 
         if (searchQuery) {
@@ -494,9 +684,284 @@
         }
 
         clientCountEl.textContent = filtered.length;
-        renderClients(filtered);
+        if (activeMainTab === 'outbound') {
+          renderOutboundClients(filtered);
+        } else {
+          renderInboundClients(filtered);
+        }
       }
 
+      function isValidUrl(str) {
+        if (!str) return false;
+        const trimmed = str.trim();
+        return trimmed.length >= 6 && (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.includes('.'));
+      }
+
+      // ================================================================
+      // RENDER TAB 1: OUTBOUND PROSPECT CARDS (Streamlined & Fast)
+      // ================================================================
+      function renderOutboundClients(list) {
+        if (!list.length) {
+          clientsContainer.innerHTML = `
+            <div class="bg-white rounded-3xl p-10 text-center text-sm text-stone-500 border border-[#e5dec9] space-y-2">
+              <p class="font-bold text-stone-800 text-base">Chưa có khách hàng Outbound nào trong mục này.</p>
+              <p>Hãy điền 4 ô ở khung <strong>"Tạo Nhanh Khách Chào Hàng"</strong> ngay phía trên để tạo link Demo kèm nút mua $599 AUD chỉ trong 5 giây!</p>
+            </div>
+          `;
+          return;
+        }
+
+        clientsContainer.innerHTML = list.map((c) => {
+          const hasPhone = Boolean(c.phone && c.phone.trim());
+          const hasValidDemo = isValidUrl(c.demoUrl);
+          const isPaid = c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched';
+          const isPitched = Boolean(c.demoSentAt) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
+          const isLaunched = c.stage === 'launched';
+
+          const titleName = c.businessName
+            ? `${c.businessName}${c.name && c.name !== c.businessName ? ` (${c.name})` : ''}`
+            : (c.name || 'Tiệm chưa đặt tên');
+
+          const paymentBadge = isLaunched
+            ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">🚀 ĐÃ LÊN SÓNG (LIVE)</span>`
+            : (isPaid
+                ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-600 text-white shadow-xs">🟢 ĐÃ CHỐT ĐƠN ($599 PAID)</span>`
+                : `<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">🟡 Đang chào hàng (Chưa trả $599)</span>`);
+
+          const domainInfo = c.existingDomain
+            ? `<span class="text-emerald-800 font-bold">Đã có domain: ${escapeHtml(c.existingDomain)}</span>`
+            : (c.desiredDomains
+                ? `<span class="text-amber-900 font-bold">Muốn đăng ký: ${escapeHtml(c.desiredDomains)}</span>`
+                : `<span class="text-stone-400 italic">Khách sẽ điền tại /demo-success sau khi trả $599</span>`);
+
+          const previewOverlayUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(c.id)}`;
+
+          // 3-step Outbound Stepper
+          const obSteps = [
+            {
+              label: '1. Tạo Web Demo Mẫu',
+              sub: hasValidDemo ? 'Đã gắn link Demo' : 'Chưa dán link Demo',
+              done: hasValidDemo
+            },
+            {
+              label: '2. Gửi Chào Hàng (Pitch)',
+              sub: isPitched ? (c.reminderCount > 0 ? `Đã gửi & nhắc ${c.reminderCount} lần` : 'Đã gửi cho chủ tiệm') : 'Chờ gửi SMS / Email',
+              done: isPitched
+            },
+            {
+              label: '3. Khách Mua $599 & Lên Sóng',
+              sub: isLaunched ? 'Đã bàn giao Live' : (isPaid ? 'Khách đã trả $599!' : 'Chờ khách bấm Claim $599'),
+              done: isPaid || isLaunched
+            }
+          ];
+
+          return `
+            <div class="bg-white rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : 'border-[#e5dec9]'} shadow-xs space-y-4">
+              <!-- Top Header -->
+              <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
+                <div class="space-y-1.5">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <h3 class="text-xl font-extrabold text-stone-900">${escapeHtml(titleName)}</h3>
+                    ${paymentBadge}
+                    <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
+                    <span class="font-mono">📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
+                    ${hasPhone
+                      ? `<span class="font-mono text-emerald-800 font-semibold">📱 SMS: ${escapeHtml(c.phone)}</span>`
+                      : `<span class="text-amber-700 font-semibold">📱 Chưa có SĐT (Bấm "✏️ Sửa" để thêm SĐT bắn SMS)</span>`
+                    }
+                    <span class="text-stone-400">🕒 ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
+                  </div>
+                </div>
+
+                <!-- Right Utility Buttons -->
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-target-flow="inbound"
+                    class="btn-switch-flow px-3 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-stone-600 transition-colors"
+                    title="Chuyển khách này sang Tab 2 (Bàn giao 5 bước)"
+                  >
+                    ⇄ Chuyển sang Tab 2
+                  </button>
+                  <button 
+                    type="button" 
+                    data-cid="${c.id}"
+                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors"
+                  >
+                    <span>✏️ Sửa</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    data-cid="${c.id}"
+                    data-name="${escapeHtml(titleName)}"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3-Step Outbound Progress Bar -->
+              <div class="grid grid-cols-3 gap-3">
+                ${obSteps.map(s => `
+                  <div class="space-y-1">
+                    <div class="h-1.5 w-full rounded-full ${s.done ? 'bg-emerald-600' : 'bg-stone-200'}"></div>
+                    <div class="flex items-center justify-between text-xs font-bold ${s.done ? 'text-emerald-800' : 'text-stone-400'}">
+                      <span>${s.label}</span>
+                      ${s.done ? '<span>✓</span>' : ''}
+                    </div>
+                    <span class="block text-[11px] text-stone-500 truncate">${s.sub}</span>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Post-Payment Confirmation Info (Shown prominently once Paid or if domain/files exist) -->
+              <div class="bg-[#fcf9f3] rounded-2xl px-4 py-3 border border-[#ece4d5] flex flex-wrap items-center justify-between gap-4 text-xs">
+                <div class="flex flex-wrap items-center gap-5">
+                  <span>
+                    <strong class="text-stone-500">Tên miền khách chọn:</strong>
+                    <span class="ml-1">${domainInfo}</span>
+                  </span>
+                  <span>
+                    <strong class="text-stone-500">File / Ghi chú cập nhật (/demo-success):</strong>
+                    ${c.menuFileName
+                      ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.menuFileName)}</span>`
+                      : `<span class="text-stone-400 ml-1">Giữ nguyên theo Demo</span>`}
+                  </span>
+                </div>
+                <a href="/demo-success?email=${encodeURIComponent(c.email || '')}&amp;cid=${encodeURIComponent(c.id)}" target="_blank" class="text-[#96432b] font-bold hover:underline text-[11px]">
+                  Xem trang /demo-success của khách ↗
+                </a>
+              </div>
+
+              <!-- Outbound Demo Link & One-Click Sales Toolkit -->
+              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
+                <!-- Demo URL Input + Quick Copy Links -->
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
+                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5">
+                    <span>🔗 Link Web Demo:</span>
+                  </label>
+                  <input 
+                    type="url" 
+                    id="demo-url-${c.id}" 
+                    data-cid="${c.id}"
+                    value="${escapeHtml(c.demoUrl || '')}" 
+                    placeholder="https://ten-tiem-demo.pages.dev" 
+                    class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+                  >
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors"
+                  >
+                    Lưu Link
+                  </button>
+                  ${hasValidDemo ? `
+                    <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-bold text-white shrink-0 inline-flex items-center gap-1">
+                      <span>Xem Demo + Nút Mua $599 ↗</span>
+                    </a>
+                  ` : ''}
+                </div>
+
+                <!-- Copy Links Row -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#ece4d5] text-[11px]">
+                  <span class="font-bold text-stone-600">Bộ công cụ lấy Link gửi cho chủ tiệm:</span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-name="${escapeHtml(titleName)}"
+                      class="btn-copy-preview px-3 py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#96432b] text-[#f6f1e8] font-bold transition-colors inline-flex items-center gap-1"
+                    >
+                      <span>🖥️ 1. Copy Link Demo (Có sẵn thanh Mua $599)</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-name="${escapeHtml(titleName)}"
+                      class="btn-copy-claim px-3 py-1.5 rounded-lg bg-white hover:bg-[#fbdeb9]/50 border border-[#d8ccb8] text-[#96432b] font-bold transition-colors inline-flex items-center gap-1"
+                    >
+                      <span>💳 2. Copy Link Thanh Toán Stripe Riêng ($599)</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-email="${escapeHtml(c.email || '')}"
+                      data-name="${escapeHtml(titleName)}"
+                      class="btn-copy-widget px-3 py-1.5 rounded-lg bg-white hover:bg-stone-100 border border-[#dfd5c3] text-stone-700 font-semibold transition-colors inline-flex items-center gap-1"
+                    >
+                      <span>🧩 Copy Mã Nhúng &lt;script&gt;</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 3 Outbound Automated SMS + Email Action Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  <!-- Button 1: Pitch Demo -->
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="outbound_pitch"
+                    ${!hasValidDemo ? 'disabled' : ''}
+                    class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#96432b] hover:bg-[#7d3520] text-white shadow-xs"
+                  >
+                    <span>📩 1. Gửi SMS + Email Chào Hàng</span>
+                    <span class="text-[10px] font-normal opacity-90">${
+                      !hasValidDemo
+                        ? '🔒 Nhập Link Demo trước'
+                        : (isPitched ? '✓ Đã gửi chào hàng (Bấm gửi lại)' : 'Gửi link Demo + nút Claim $599')
+                    }</span>
+                  </button>
+
+                  <!-- Button 2: Follow-up -->
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="outbound_followup"
+                    ${!hasValidDemo ? 'disabled' : ''}
+                    class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
+                  >
+                    <span>⏰ 2. Nhắc Xem Demo (Follow-up)</span>
+                    <span class="text-[10px] font-normal opacity-90">${
+                      c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần (Bấm nhắc tiếp)` : 'Hỏi thăm chủ tiệm đã xem Demo chưa'
+                    }</span>
+                  </button>
+
+                  <!-- Button 3: Launch Site -->
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-stage="site_launched"
+                    ${!hasValidDemo ? 'disabled' : ''}
+                    class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
+                  >
+                    <span>🚀 3. Báo Lên Sóng Chính Thức</span>
+                    <span class="text-[10px] font-normal opacity-90">${
+                      isLaunched ? '✅ Đã lên sóng (Bấm gửi lại)' : 'Chúc mừng web chính thức hoạt động'
+                    }</span>
+                  </button>
+                </div>
+
+                ${(c.lastSmsLog || c.lastEmailLog) ? `
+                  <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
+                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                    <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        bindCardEvents();
+      }
+
+      // ================================================================
+      // RENDER TAB 2: INBOUND / 5-STEP FULL BRIEF CARDS
+      // ================================================================
       function getStepNumber(stage) {
         const order = {
           checkout_started: 1,
@@ -600,17 +1065,11 @@
         return `<span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#fcf9f3] text-stone-700 border border-[#dfd5c3]">⏳ Còn ${diffDays} ngày bàn giao (Hạn: ${deadlineDateStr})</span>`;
       }
 
-      function isValidUrl(str) {
-        if (!str) return false;
-        const trimmed = str.trim();
-        return trimmed.length >= 6 && (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.includes('.'));
-      }
-
-      function renderClients(list) {
+      function renderInboundClients(list) {
         if (!list.length) {
           clientsContainer.innerHTML = `
             <div class="bg-white rounded-3xl p-10 text-center text-sm text-stone-500 border border-[#e5dec9]">
-              Không có khách hàng nào trong mục này. Bấm <strong>"＋ Thêm / Test Khách"</strong> ở góc trên để tạo hồ sơ mới!
+              Không có khách hàng Inbound nào trong mục này.
             </div>
           `;
           return;
@@ -627,15 +1086,15 @@
           const domainDisplay = c.existingDomain
             ? `<span class="text-emerald-800 font-bold">Đã có: ${escapeHtml(c.existingDomain)}</span>`
             : (c.desiredDomains
-                ? `<span class="text-amber-900 font-bold">Nhờ mua: ${escapeHtml(c.desiredDomains)}</span>`
+                ? `<span class="text-amber-900 font-bold">Đăng ký mới: ${escapeHtml(c.desiredDomains)}</span>`
                 : '<span class="text-stone-400 italic">Chưa chọn tên miền</span>');
 
           const vibeDisplay = c.vibeLinks
             ? `<span class="font-semibold text-stone-900 break-all">${escapeHtml(c.vibeLinks)}</span>`
-            : '<span class="text-stone-400 italic">Chưa điền</span>';
+            : '<span class="text-stone-400 italic">Không đính kèm (Tuỳ chọn)</span>';
 
           const titleName = c.businessName
-            ? `${c.businessName} (${c.name || 'Khách'})`
+            ? `${c.businessName}${c.name && c.name !== c.businessName ? ` (${c.name})` : ''}`
             : (c.name || 'Khách chưa đặt tên');
 
           return `
@@ -662,6 +1121,15 @@
 
                 <!-- Right Utility Buttons -->
                 <div class="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-target-flow="outbound"
+                    class="btn-switch-flow px-3 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-stone-600 transition-colors"
+                    title="Chuyển khách này sang Tab 1 (Outbound)"
+                  >
+                    ⇄ Chuyển sang Tab 1 (Outbound)
+                  </button>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
@@ -681,7 +1149,7 @@
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    data-name="${escapeHtml(c.name || c.email)}"
+                    data-name="${escapeHtml(titleName)}"
                     class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
                     title="Xoá khách hàng này"
                   >
@@ -696,8 +1164,8 @@
               <!-- Detailed Specifications Grid -->
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs bg-[#fcf9f3] p-4 rounded-2xl border border-[#ece4d5]">
                 <div>
-                  <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">1. Ngành nghề (Industry)</span>
-                  <span class="font-bold text-stone-900 mt-1 block">${c.industry ? escapeHtml(c.industry) : '<span class="text-stone-400 italic font-normal">Chưa điền</span>'}</span>
+                  <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">1. Tên thương hiệu / Ngành nghề</span>
+                  <span class="font-bold text-stone-900 mt-1 block">${c.businessName || c.industry ? escapeHtml(c.businessName || c.industry) : '<span class="text-stone-400 italic font-normal">Chưa điền</span>'}</span>
                 </div>
                 <div>
                   <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">2. Bảng màu (Brand Colors)</span>
@@ -723,7 +1191,7 @@
                 <div class="sm:col-span-2 lg:col-span-4 pt-2.5 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-4 text-[11px]">
                   <div class="flex flex-wrap items-center gap-5">
                     <span>
-                      <strong class="text-stone-500">Logo khách tải lên:</strong>
+                      <strong class="text-stone-500">Logo:</strong>
                       ${c.logoFileName
                         ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.logoFileName)}</span>`
                         : `<span class="text-stone-400 ml-1">Chưa tải lên</span>`}
@@ -742,15 +1210,13 @@
                     </span>
                   </div>
                   <div class="flex items-center gap-3">
-                    <a href="/brief?type=organic&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-[#96432b] font-semibold hover:underline">Mở Form Brief Organic ↗</a>
-                    <a href="/brief?type=demo&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-emerald-800 font-semibold hover:underline">Mở Form Upload Logo/Menu ↗</a>
+                    <a href="/onboarding?type=organic&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-[#96432b] font-semibold hover:underline">Mở Form Onboarding ↗</a>
                   </div>
                 </div>
               </div>
 
               <!-- Demo Link Input & Smart Stage Action Buttons -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
-                <!-- Row 1: Demo Link Input -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                   <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5">
                     <span>🔗</span>
@@ -779,47 +1245,8 @@
                   ` : ''}
                 </div>
 
-                <!-- Row 1.5: Outbound Sales Bar (Pre-configured Stripe Checkout & Demo Overlay) -->
-                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#ece4d5] text-[11px]">
-                  <div class="flex items-center gap-1.5 text-stone-600 font-semibold">
-                    <span class="px-2 py-0.5 rounded bg-[#96432b]/10 text-[#96432b] font-extrabold uppercase tracking-wider text-[10px]">Outbound Sales</span>
-                    <span>Gửi Demo kèm nút "Claim This Website - $599" (Không cần điền form trước):</span>
-                  </div>
-                  <div class="flex flex-wrap items-center gap-1.5">
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-name="${escapeHtml(c.businessName || c.name || c.email)}"
-                      class="btn-copy-preview px-2.5 py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#96432b] text-[#f6f1e8] font-bold transition-colors inline-flex items-center gap-1"
-                      title="Mở trang Demo có gắn sẵn thanh nổi Claim This Website - $599 AUD"
-                    >
-                      <span>🖥️ Copy Link Demo + Nút Mua ($599)</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-name="${escapeHtml(c.businessName || c.name || c.email)}"
-                      class="btn-copy-claim px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#fbdeb9]/50 border border-[#d8ccb8] text-[#96432b] font-bold transition-colors inline-flex items-center gap-1"
-                      title="Link thanh toán Stripe $599 điền sẵn email của khách, thanh toán xong chuyển thẳng tới /demo-success"
-                    >
-                      <span>💳 Copy Link Stripe Riêng ($599)</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-email="${escapeHtml(c.email || '')}"
-                      data-name="${escapeHtml(c.businessName || c.name || '')}"
-                      class="btn-copy-widget px-2.5 py-1.5 rounded-lg bg-white hover:bg-stone-100 border border-[#dfd5c3] text-stone-700 font-semibold transition-colors inline-flex items-center gap-1"
-                      title="Copy thẻ <script> để nhúng trực tiếp nút Claim $599 vào source code trang Demo"
-                    >
-                      <span>🧩 Copy Mã Nhúng Widget</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Row 2: 5 Smart Stage Trigger Buttons -->
+                <!-- 5 Smart Stage Trigger Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-                  <!-- Button 1: Nhắc Điền Brief -->
                   <button 
                     type="button"
                     data-cid="${c.id}"
@@ -834,7 +1261,6 @@
                     <span class="text-[10px] font-normal opacity-85">${!bStats.isComplete ? `Cần điền (${bStats.filledCount}/4 mục)` : '✓ Đã điền (Gửi lại)'}</span>
                   </button>
 
-                  <!-- Button 2: Xác Nhận Đã Nhận Brief -->
                   <button 
                     type="button"
                     data-cid="${c.id}"
@@ -850,7 +1276,6 @@
                     <span class="text-[10px] font-normal opacity-85">${bStats.filledCount > 0 ? 'Xác nhận đã nhận Brief' : '🔒 Chờ khách điền Brief'}</span>
                   </button>
 
-                  <!-- Button 3: Báo Đã Có Demo (ONLY enabled when Demo Link is typed!) -->
                   <button 
                     type="button"
                     id="btn-stage3-${c.id}"
@@ -867,7 +1292,6 @@
                     }</span>
                   </button>
 
-                  <!-- Button 4: Nhắc Duyệt Demo (ONLY enabled when Demo Link is valid AND Demo was sent!) -->
                   <button 
                     type="button"
                     id="btn-stage4-${c.id}"
@@ -884,7 +1308,6 @@
                     }</span>
                   </button>
 
-                  <!-- Button 5: Báo Lên Sóng (ONLY enabled when Demo Link is valid AND Demo was sent!) -->
                   <button 
                     type="button"
                     id="btn-stage5-${c.id}"
@@ -902,7 +1325,6 @@
                   </button>
                 </div>
 
-                <!-- Last SMS / Email Delivery Log Bar -->
                 ${(c.lastSmsLog || c.lastEmailLog) ? `
                   <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
                     <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
@@ -914,7 +1336,12 @@
           `;
         }).join('');
 
-        // Real-time unlocking/locking of Buttons 3, 4, 5 as user types or clears Link Demo!
+        bindCardEvents();
+      }
+
+      // Bind interactive events on rendered cards
+      function bindCardEvents() {
+        // Real-time unlocking/locking of Buttons 3, 4, 5 as user types or clears Link Demo
         document.querySelectorAll('.demo-url-input').forEach((input) => {
           input.addEventListener('input', () => {
             const cid = input.getAttribute('data-cid');
@@ -947,6 +1374,22 @@
           });
         });
 
+        // Switch client between Outbound (Tab 1) and Inbound (Tab 2)
+        document.querySelectorAll('.btn-switch-flow').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const targetFlow = btn.getAttribute('data-target-flow');
+            const newStage = targetFlow === 'outbound' ? 'outbound_pending' : 'paid';
+            await runAdminAction({
+              action: 'save_client',
+              customerId: cid,
+              flowType: targetFlow,
+              stage: newStage
+            });
+            showToast(`Đã chuyển hồ sơ sang ${targetFlow === 'outbound' ? 'Tab 1 (Outbound)' : 'Tab 2 (Inbound)'}!`);
+          });
+        });
+
         // Copy AI Brief
         document.querySelectorAll('.btn-copy-brief').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -954,7 +1397,7 @@
             const client = clientsCache.find(x => x.id === cid);
             if (!client) return;
             navigator.clipboard.writeText(client.aiPrompt);
-            showToast(`Đã copy toàn bộ Brief của "${client.businessName || client.name || client.email}"! Bạn chỉ cần dán vào khung chat AI để thiết kế web.`);
+            showToast(`Đã copy toàn bộ Brief của "${client.businessName || client.name || client.email}"!`);
           });
         });
 
@@ -965,7 +1408,7 @@
             const name = btn.getAttribute('data-name') || 'khách';
             const previewUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(cid)}`;
             navigator.clipboard.writeText(previewUrl);
-            showToast(`Đã copy Link Demo kèm nút Mua $599 cho "${name}": ${previewUrl}`);
+            showToast(`Đã copy Link Demo kèm thanh nổi Mua $599 cho "${name}": ${previewUrl}`);
           });
         });
 
@@ -976,11 +1419,11 @@
             const name = btn.getAttribute('data-name') || 'khách';
             const claimUrl = `${window.location.origin}/api/claim?cid=${encodeURIComponent(cid)}`;
             navigator.clipboard.writeText(claimUrl);
-            showToast(`Đã copy Link Thanh Toán Stripe $599 riêng cho "${name}" (Tự điền sẵn Email & chuyển về /demo-success sau khi trả tiền)!`);
+            showToast(`Đã copy Link Thanh Toán Stripe $599 riêng cho "${name}"!`);
           });
         });
 
-        // Outbound Sales: Copy Embeddable Floating Bar Script (<script src=".../claim-widget.js">)
+        // Outbound Sales: Copy Embeddable Floating Bar Script
         document.querySelectorAll('.btn-copy-widget').forEach((btn) => {
           btn.addEventListener('click', () => {
             const cid = btn.getAttribute('data-cid');
@@ -988,7 +1431,7 @@
             const name = btn.getAttribute('data-name') || '';
             const snippet = `<script src="${window.location.origin}/claim-widget.js" data-cid="${cid}" data-email="${email}" data-name="${name.replace(/"/g, '&quot;')}"><\/script>`;
             navigator.clipboard.writeText(snippet);
-            showToast(`Đã copy mã nhúng thanh nổi "Claim This Website - $599 AUD"! Dán trước thẻ </body> của trang Demo.`);
+            showToast(`Đã copy mã nhúng thanh nổi "Claim This Website - $599 AUD"!`);
           });
         });
 
@@ -1000,6 +1443,8 @@
             if (!c) return;
             clientModalTitle.textContent = `Chỉnh Sửa Hồ Sơ: ${c.businessName || c.name || c.email}`;
             editCid.value = c.id;
+            editFlowType.value = isOutboundClient(c) ? 'outbound' : 'inbound';
+            editPaymentStatus.value = c.paymentStatus || 'paid';
             editName.value = c.name || '';
             editBusinessName.value = c.businessName || '';
             editPhone.value = c.phone || '';
@@ -1023,7 +1468,7 @@
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const name = btn.getAttribute('data-name');
-            if (!confirm(`Bạn có chắc muốn xoá hồ sơ khách hàng "${name}" khỏi danh sách?`)) return;
+            if (!confirm(`Bạn có chắc muốn xoá hồ sơ "${name}" khỏi danh sách?`)) return;
             await runAdminAction({ action: 'delete_client', customerId: cid });
             showToast(`Đã xoá hồ sơ "${name}".`);
           });
@@ -1037,7 +1482,7 @@
             const demoUrl = demoInput ? demoInput.value.trim() : '';
             btn.textContent = 'Đang lưu...';
             await runAdminAction({ action: 'save_client', customerId: cid, demoUrl });
-            showToast(demoUrl ? 'Đã lưu Link Demo! Nút 3 đã sẵn sàng.' : 'Đã xoá Link Demo (Nút 3, 4, 5 đã khoá lại).');
+            showToast(demoUrl ? 'Đã lưu Link Demo!' : 'Đã xoá Link Demo.');
           });
         });
 
@@ -1049,7 +1494,7 @@
             const demoInput = document.getElementById(`demo-url-${cid}`);
             const demoUrl = demoInput ? demoInput.value.trim() : '';
 
-            if ((stage === 'demo_ready' || stage === 'demo_reminder') && !isValidUrl(demoUrl)) {
+            if ((stage === 'demo_ready' || stage === 'demo_reminder' || stage === 'outbound_pitch' || stage === 'outbound_followup') && !isValidUrl(demoUrl)) {
               showToast('Vui lòng nhập Link Demo hợp lệ trước khi gửi!', true);
               if (demoInput) demoInput.focus();
               return;
@@ -1106,14 +1551,66 @@
         }
       }
 
-      // Filter Tabs
-      document.querySelectorAll('.filter-tab').forEach((tab) => {
+      // Quick 1-Row Outbound Prospect Creator Form
+      document.getElementById('quick-outbound-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bizName = document.getElementById('qo-biz-name').value.trim();
+        const email = document.getElementById('qo-email').value.trim();
+        const phone = document.getElementById('qo-phone').value.trim();
+        const demoUrl = document.getElementById('qo-demo-url').value.trim();
+        const submitBtn = document.getElementById('qo-submit-btn');
+
+        if (!bizName || !email || !demoUrl) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Đang tạo...';
+
+        const res = await runAdminAction({
+          action: 'save_client',
+          name: bizName,
+          businessName: bizName,
+          email,
+          phone,
+          demoUrl,
+          flowType: 'outbound',
+          paymentStatus: 'unpaid',
+          stage: 'outbound_pending'
+        });
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = '＋ Tạo & Lấy Link Mua $599';
+
+        if (res && res.client) {
+          document.getElementById('qo-biz-name').value = '';
+          document.getElementById('qo-email').value = '';
+          document.getElementById('qo-phone').value = '';
+          document.getElementById('qo-demo-url').value = '';
+          const previewUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(res.client.id)}`;
+          navigator.clipboard.writeText(previewUrl).catch(() => {});
+          showToast(`Đã tạo khách Outbound "${bizName}" và tự động copy Link Demo kèm nút Mua $599: ${previewUrl}`);
+        }
+      });
+
+      // Outbound Sub-Filter Tabs
+      document.querySelectorAll('.ob-filter-tab').forEach((tab) => {
         tab.addEventListener('click', () => {
-          currentFilter = tab.getAttribute('data-filter') || 'all';
-          document.querySelectorAll('.filter-tab').forEach(t => {
-            t.className = 'filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all';
+          currentObFilter = tab.getAttribute('data-ob-filter') || 'all';
+          document.querySelectorAll('.ob-filter-tab').forEach(t => {
+            t.className = 'ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all';
           });
-          tab.className = 'filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all shadow-xs';
+          tab.className = 'ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all shadow-xs';
+          applyFiltersAndRender();
+        });
+      });
+
+      // Inbound Sub-Filter Tabs
+      document.querySelectorAll('.ib-filter-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          currentIbFilter = tab.getAttribute('data-ib-filter') || 'all';
+          document.querySelectorAll('.ib-filter-tab').forEach(t => {
+            t.className = 'ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all';
+          });
+          tab.className = 'ib-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all shadow-xs';
           applyFiltersAndRender();
         });
       });
@@ -1168,14 +1665,16 @@
 
       // Add / Edit Client Modal
       document.getElementById('btn-new-client').addEventListener('click', () => {
-        clientModalTitle.textContent = 'Thêm / Test Khách Hàng Mới';
+        clientModalTitle.textContent = 'Thêm Hồ Sơ Khách Hàng Mới';
         editCid.value = '';
+        editFlowType.value = activeMainTab;
+        editPaymentStatus.value = activeMainTab === 'outbound' ? 'unpaid' : 'paid';
         editName.value = '';
         editBusinessName.value = '';
         editPhone.value = '';
         editDisplayPhone.value = '';
         editEmail.value = '';
-        editStage.value = 'paid';
+        editStage.value = activeMainTab === 'outbound' ? 'outbound_pending' : 'paid';
         editAddress.value = '';
         editIndustry.value = '';
         editColors.value = '';
@@ -1195,7 +1694,9 @@
         const payload = {
           action: 'save_client',
           customerId: cid,
-          name: editName.value.trim(),
+          flowType: editFlowType.value,
+          paymentStatus: editPaymentStatus.value,
+          name: editName.value.trim() || editBusinessName.value.trim(),
           businessName: editBusinessName.value.trim(),
           phone: editPhone.value.trim(),
           displayPhone: editDisplayPhone.value.trim(),
@@ -1212,7 +1713,7 @@
         };
         clientModal.classList.add('hidden');
         await runAdminAction(payload);
-        showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ khách hàng "${payload.businessName || payload.name}"!`);
+        showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ "${payload.businessName || payload.name}"!`);
       });
 
       function escapeHtml(str) {

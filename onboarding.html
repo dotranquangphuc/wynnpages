@@ -444,53 +444,83 @@
 
           <!-- 5. Conditional Organic (If "type" is "organic") -->
           <div id="organic-questions" class="space-y-6">
-            <!-- What is your preferred Brand Color palette? (Short answer) -->
-            <div class="space-y-2.5">
+            <!-- What is your preferred Brand Color palette? -->
+            <div class="space-y-3">
               <label for="brief-colors" class="block text-sm font-bold text-stone-900">
-                What is your preferred Brand Color palette? <span class="text-[#96432b]">*</span>
+                What is your preferred Brand Color palette?
               </label>
-              <input 
-                type="text" 
-                id="brief-colors" 
-                name="brand_colors"
-                placeholder="e.g. Sage Green &amp; Warm Cream" 
-                class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+
+              <!-- Prominent Default-Selected Option for Busy Tradespeople -->
+              <button
+                type="button"
+                id="default-palette-card"
+                data-palette="Not sure? Let WynnPages designers decide based on your logo & industry."
+                class="palette-chip choice-card selected w-full rounded-2xl p-4 text-left flex items-center justify-between gap-3.5 group focus:outline-none"
               >
-              <!-- Curated Palette Quick Chips -->
-              <div class="flex flex-wrap gap-2 pt-1">
-                <button type="button" data-palette="Sage Green, Warm Cream" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#7c9070]"></span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#f5efe6] border border-stone-300 -ml-1"></span>
-                  <span>Sage Green &amp; Cream</span>
-                </button>
-                <button type="button" data-palette="Terracotta, Warm Parchment" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#96432b]"></span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#f6f1e8] border border-stone-300 -ml-1"></span>
-                  <span>Terracotta &amp; Parchment</span>
-                </button>
-                <button type="button" data-palette="Espresso Brown, Warm Linen" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#3a2618]"></span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#efe8dc] border border-stone-300 -ml-1"></span>
-                  <span>Espresso &amp; Linen</span>
-                </button>
-                <button type="button" data-palette="Charcoal Ink, Antique Gold" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#1e1e1e]"></span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#c99e42] -ml-1"></span>
-                  <span>Charcoal &amp; Gold</span>
-                </button>
+                <div class="flex items-center gap-3.5">
+                  <span class="choice-badge w-7 h-7 rounded-lg bg-[#96432b] border border-[#96432b] text-xs font-bold text-white flex items-center justify-center shrink-0 transition-colors">
+                    ✓
+                  </span>
+                  <div>
+                    <span class="text-sm font-bold text-stone-900 block">Not sure? Let WynnPages designers decide based on your logo &amp; industry.</span>
+                    <span class="text-[11px] text-stone-500 block mt-0.5">Recommended for busy business owners — our lead designer will craft a cohesive palette for you.</span>
+                  </div>
+                </div>
+                <span class="hidden sm:inline-block px-2.5 py-1 rounded-full bg-[#fbdeb9]/70 text-[#96432b] text-[10px] font-bold uppercase tracking-wider shrink-0">Default</span>
+              </button>
+
+              <div class="pt-1 space-y-2">
+                <span class="block text-xs font-semibold text-stone-500">Or choose a curated palette / type your own colors below:</span>
+                <!-- Curated Palette Quick Chips -->
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" data-palette="Sage Green, Warm Cream" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#7c9070]"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#f5efe6] border border-stone-300 -ml-1"></span>
+                    <span>Sage Green &amp; Cream</span>
+                  </button>
+                  <button type="button" data-palette="Terracotta, Warm Parchment" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#96432b]"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#f6f1e8] border border-stone-300 -ml-1"></span>
+                    <span>Terracotta &amp; Parchment</span>
+                  </button>
+                  <button type="button" data-palette="Espresso Brown, Warm Linen" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#3a2618]"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#efe8dc] border border-stone-300 -ml-1"></span>
+                    <span>Espresso &amp; Linen</span>
+                  </button>
+                  <button type="button" data-palette="Charcoal Ink, Antique Gold" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#1e1e1e]"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#c99e42] -ml-1"></span>
+                    <span>Charcoal &amp; Gold</span>
+                  </button>
+                  <button type="button" data-palette="Navy Blue, Crisp White &amp; Slate" class="palette-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 border border-[#e2d9c8] transition-colors">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#1e3a5f]"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#ffffff] border border-stone-300 -ml-1"></span>
+                    <span>Trades Navy &amp; Crisp White</span>
+                  </button>
+                </div>
+
+                <input 
+                  type="text" 
+                  id="brief-colors" 
+                  name="brand_colors"
+                  value="Not sure? Let WynnPages designers decide based on your logo &amp; industry."
+                  placeholder="Or type custom brand colors (e.g. Navy Blue &amp; Safety Orange)..." 
+                  class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+                >
               </div>
             </div>
 
-            <!-- Paste 1-2 links of websites you love the look of (Long answer) -->
+            <!-- Paste 1-2 links of websites you love the look of (Optional) -->
             <div class="space-y-2">
               <label for="brief-vibes" class="block text-sm font-bold text-stone-900">
-                Paste 1–2 links of websites you love the look of <span class="text-[#96432b]">*</span>
+                Paste 1–2 links of websites you love the look of <span class="text-stone-400 font-normal text-xs">(Optional)</span>
               </label>
               <textarea 
                 id="brief-vibes" 
                 name="vibe_links"
                 rows="3" 
-                placeholder="Paste 1–2 website URLs or describe the vibe you love..." 
+                placeholder="Paste 1–2 website URLs or describe the vibe you love (leave blank if you'd like us to handle it)..." 
                 class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 resize-y"
               ></textarea>
             </div>
@@ -512,69 +542,93 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- STEP 4: DOMAIN SETUP (Final Step)                        -->
+        <!-- STEP 4: DOMAIN NAME SETUP (Final Step)                   -->
         <!-- ======================================================== -->
         <div id="wizard-step-4" class="hidden space-y-5">
           <div class="border-b border-[#ece5d8] pb-2">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Step 4 of 4 • Domain Setup</span>
-            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Do you already have a domain name? <span class="text-[#96432b]">*</span></h3>
-            <p class="text-xs text-stone-500 mt-0.5">Select an option below so we know where to launch your live website.</p>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Step 4 of 4 • Final Step</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Domain Name Setup <span class="text-[#96432b]">*</span></h3>
+            <p class="text-xs text-stone-500 mt-0.5">Choose how you'd like to set up your web address. You always retain 100% ownership of your domain.</p>
           </div>
 
           <input type="hidden" name="has_domain" id="hidden-has-domain" value="">
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Do you already have a domain name?">
-            <!-- Option A -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Domain Name Setup">
+            <!-- Radio Option A: I already own a domain -->
             <button 
               type="button" 
-              data-domain-choice="Yes, I have one"
+              data-domain-choice="I already own a domain"
               class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
             >
               <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
                 A
               </span>
-              <span class="text-sm font-semibold text-stone-800">Yes, I have one</span>
+              <div>
+                <span class="text-sm font-bold text-stone-900 block">I already own a domain</span>
+                <span class="text-[11px] text-stone-500">Connect my existing domain name</span>
+              </div>
             </button>
 
-            <!-- Option B -->
+            <!-- Radio Option B: I need to register a new domain -->
             <button 
               type="button" 
-              data-domain-choice="No, please help me get one"
+              data-domain-choice="I need to register a new domain"
               class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
             >
               <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
                 B
               </span>
-              <span class="text-sm font-semibold text-stone-800">No, please help me get one</span>
+              <div>
+                <span class="text-sm font-bold text-stone-900 block">I need to register a new domain</span>
+                <span class="text-[11px] text-stone-500">Get a new .com.au or .com address</span>
+              </div>
             </button>
           </div>
 
-          <!-- Conditional Input A: What is it? -->
-          <div id="domain-yes-wrap" class="hidden pt-2 space-y-2 wizard-step-active">
-            <label for="brief-existing-domain" class="block text-sm font-bold text-stone-900">
-              What is it? <span class="text-[#96432b]">*</span>
-            </label>
-            <input 
-              type="text" 
-              id="brief-existing-domain" 
-              name="existing_domain"
-              placeholder="www.example.com.au" 
-              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
-            >
+          <!-- Conditional Input A: I already own a domain -->
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-3 wizard-step-active">
+            <div class="space-y-1.5">
+              <label for="brief-existing-domain" class="block text-sm font-bold text-stone-900">
+                What is your domain? (e.g., mybusiness.com.au) <span class="text-[#96432b]">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="brief-existing-domain" 
+                name="existing_domain"
+                placeholder="e.g., mybusiness.com.au" 
+                class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+            <!-- Informational Alert Box for Option A -->
+            <div class="rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] p-4 flex items-start gap-3 text-xs text-stone-700 leading-relaxed">
+              <span class="w-6 h-6 rounded-full bg-[#fbdeb9] text-[#96432b] font-bold flex items-center justify-center shrink-0 mt-0.5">i</span>
+              <p>
+                Great! After you submit this brief, please email your registrar login details (or delegate manager access) to <a href="mailto:hello@wynnpages.com.au" class="font-bold text-[#96432b] underline">hello@wynnpages.com.au</a> so we can configure the DNS and launch your site.
+              </p>
+            </div>
           </div>
 
-          <!-- Conditional Input B: List 1-2 domains you want us to check -->
-          <div id="domain-no-wrap" class="hidden pt-2 space-y-2 wizard-step-active">
-            <label for="brief-desired-domains" class="block text-sm font-bold text-stone-900">
-              List 1–2 domains you want us to check <span class="text-[#96432b]">*</span>
-            </label>
-            <input 
-              type="text" 
-              id="brief-desired-domains" 
-              name="desired_domains"
-              placeholder="e.g. wynnpages.com.au" 
-              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
-            >
+          <!-- Conditional Input B: I need to register a new domain -->
+          <div id="domain-no-wrap" class="hidden pt-2 space-y-3 wizard-step-active">
+            <div class="space-y-1.5">
+              <label for="brief-desired-domains" class="block text-sm font-bold text-stone-900">
+                What domain name would you like to use? (e.g., bobplumbing.com.au) <span class="text-[#96432b]">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="brief-desired-domains" 
+                name="desired_domains"
+                placeholder="e.g., bobplumbing.com.au" 
+                class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+            <!-- Informational Alert Box for Option B -->
+            <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 flex items-start gap-3 text-xs text-[#2f442c] leading-relaxed">
+              <span class="w-6 h-6 rounded-full bg-[#d4e4ce] text-[#2f442c] font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
+              <p>
+                To ensure you have 100% ownership and control over your annual renewals, we recommend registering via <strong>VentraIP</strong> (an Australian provider). After you submit this brief, we will email you a quick 2-minute guide on how to register it yourself using your own card, and how to add us as a Technical Manager.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -880,14 +934,7 @@
         if (step === 3) {
           if (briefType === 'organic') {
             if (!colorsInput.value.trim()) {
-              showError('Please enter or select your preferred Brand Color palette.');
-              colorsInput.focus();
-              return false;
-            }
-            if (!vibesInput.value.trim()) {
-              showError('Please paste 1–2 links of websites you love the look of.');
-              vibesInput.focus();
-              return false;
+              colorsInput.value = 'Not sure? Let WynnPages designers decide based on your logo & industry.';
             }
           }
           return true;
@@ -895,16 +942,16 @@
 
         if (step === 4) {
           if (!selectedDomainOption) {
-            showError('Please select whether you already have a domain name.');
+            showError('Please select a Domain Name Setup option (Option A or B).');
             return false;
           }
-          if (selectedDomainOption === 'Yes, I have one' && !existingDomainInput.value.trim()) {
-            showError('Please enter your existing domain name.');
+          if (selectedDomainOption === 'I already own a domain' && !existingDomainInput.value.trim()) {
+            showError('Please enter your domain name (e.g., mybusiness.com.au).');
             existingDomainInput.focus();
             return false;
           }
-          if (selectedDomainOption === 'No, please help me get one' && !desiredDomainsInput.value.trim()) {
-            showError('Please list 1–2 domains you want us to check.');
+          if (selectedDomainOption === 'I need to register a new domain' && !desiredDomainsInput.value.trim()) {
+            showError('Please enter the domain name you would like to use (e.g., bobplumbing.com.au).');
             desiredDomainsInput.focus();
             return false;
           }
@@ -936,13 +983,30 @@
         }
       });
 
-      // 4. Curated Color Palette Chips
+      // 4. Curated Color Palette Chips & Default Option
+      const defaultPaletteCard = document.getElementById('default-palette-card');
+      const defaultPaletteText = 'Not sure? Let WynnPages designers decide based on your logo & industry.';
+
+      function syncPaletteCardState() {
+        if (!defaultPaletteCard) return;
+        const isDefault = colorsInput.value.trim() === defaultPaletteText;
+        if (isDefault) {
+          defaultPaletteCard.classList.add('selected');
+        } else {
+          defaultPaletteCard.classList.remove('selected');
+        }
+      }
+
       document.querySelectorAll('.palette-chip').forEach((chip) => {
         chip.addEventListener('click', () => {
           colorsInput.value = chip.getAttribute('data-palette') || '';
-          colorsInput.focus();
+          syncPaletteCardState();
         });
       });
+
+      if (colorsInput) {
+        colorsInput.addEventListener('input', syncPaletteCardState);
+      }
 
       // 5. File Upload Readers + Drag-and-Drop Support
       function bindFileUpload(inputEl, labelEl, dropzoneId, onLoaded) {
@@ -1027,7 +1091,7 @@
           domainChoiceBtns.forEach((b) => b.classList.remove('selected'));
           btn.classList.add('selected');
 
-          if (selectedDomainOption === 'Yes, I have one') {
+          if (selectedDomainOption === 'I already own a domain') {
             domainYesWrap.classList.remove('hidden');
             domainNoWrap.classList.add('hidden');
             existingDomainInput.focus();
@@ -1108,7 +1172,7 @@
           if (briefType === 'organic' && payload.brandColors) {
             rows.push(`<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Brand Palette</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(payload.brandColors)}</span></div>`);
           }
-          const domainVal = selectedDomainOption === 'Yes, I have one' ? payload.existingDomain : payload.desiredDomains;
+          const domainVal = selectedDomainOption === 'I already own a domain' ? payload.existingDomain : payload.desiredDomains;
           rows.push(`<div class="flex justify-between gap-4"><span class="text-stone-400 font-medium">Domain</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(domainVal)}</span></div>`);
           submittedSummary.innerHTML = rows.join('');
 

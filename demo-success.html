@@ -227,65 +227,87 @@
 
         <hr class="border-[#ece5d8]">
 
-        <!-- Question 2: Do you have a domain name? -->
+        <!-- Question 2: Domain Name Setup -->
         <div class="space-y-4">
           <div>
             <label class="block text-base font-bold text-stone-900">
-              2. Do you have a domain name? <span class="text-[#96432b]">*</span>
+              2. Domain Name Setup <span class="text-[#96432b]">*</span>
             </label>
-            <p class="text-xs text-stone-500 mt-0.5">Tell us where we should connect your live website.</p>
+            <p class="text-xs text-stone-500 mt-0.5">Choose how you'd like to set up your web address. You always retain 100% ownership of your domain.</p>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Do you have a domain name?">
-            <!-- Option A: Yes -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Domain Name Setup">
+            <!-- Option A: I already own a domain -->
             <button 
               type="button" 
-              data-domain-choice="Yes, I have one"
+              data-domain-choice="I already own a domain"
               class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
             >
               <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
                 A
               </span>
-              <span class="text-sm font-semibold text-stone-800">Yes, I have one</span>
+              <div>
+                <span class="text-sm font-bold text-stone-900 block">I already own a domain</span>
+                <span class="text-[11px] text-stone-500">Connect my existing domain name</span>
+              </div>
             </button>
 
-            <!-- Option B: No -->
+            <!-- Option B: I need to register a new domain -->
             <button 
               type="button" 
-              data-domain-choice="No, please help me get one"
+              data-domain-choice="I need to register a new domain"
               class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
             >
               <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
                 B
               </span>
-              <span class="text-sm font-semibold text-stone-800">No, please help me get one</span>
+              <div>
+                <span class="text-sm font-bold text-stone-900 block">I need to register a new domain</span>
+                <span class="text-[11px] text-stone-500">Get a new .com.au or .com address</span>
+              </div>
             </button>
           </div>
 
           <!-- Conditional Input A -->
-          <div id="domain-yes-wrap" class="hidden pt-2 space-y-2 animate-reveal">
-            <label for="existing-domain-input" class="block text-sm font-bold text-stone-900">
-              What is your domain name? <span class="text-[#96432b]">*</span>
-            </label>
-            <input 
-              type="text" 
-              id="existing-domain-input" 
-              placeholder="www.yourbusiness.com.au" 
-              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
-            >
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-3 animate-reveal">
+            <div class="space-y-1.5">
+              <label for="existing-domain-input" class="block text-sm font-bold text-stone-900">
+                What is your domain? (e.g., mybusiness.com.au) <span class="text-[#96432b]">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="existing-domain-input" 
+                placeholder="e.g., mybusiness.com.au" 
+                class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+            <div class="rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] p-4 flex items-start gap-3 text-xs text-stone-700 leading-relaxed">
+              <span class="w-6 h-6 rounded-full bg-[#fbdeb9] text-[#96432b] font-bold flex items-center justify-center shrink-0 mt-0.5">i</span>
+              <p>
+                Great! After you submit this brief, please email your registrar login details (or delegate manager access) to <a href="mailto:hello@wynnpages.com.au" class="font-bold text-[#96432b] underline">hello@wynnpages.com.au</a> so we can configure the DNS and launch your site.
+              </p>
+            </div>
           </div>
 
           <!-- Conditional Input B -->
-          <div id="domain-no-wrap" class="hidden pt-2 space-y-2 animate-reveal">
-            <label for="desired-domain-input" class="block text-sm font-bold text-stone-900">
-              Enter 1–2 desired domains for us to check &amp; register <span class="text-[#96432b]">*</span>
-            </label>
-            <input 
-              type="text" 
-              id="desired-domain-input" 
-              placeholder="e.g. emeraldsalon.com.au" 
-              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
-            >
+          <div id="domain-no-wrap" class="hidden pt-2 space-y-3 animate-reveal">
+            <div class="space-y-1.5">
+              <label for="desired-domain-input" class="block text-sm font-bold text-stone-900">
+                What domain name would you like to use? (e.g., bobplumbing.com.au) <span class="text-[#96432b]">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="desired-domain-input" 
+                placeholder="e.g., bobplumbing.com.au" 
+                class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+              >
+            </div>
+            <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 flex items-start gap-3 text-xs text-[#2f442c] leading-relaxed">
+              <span class="w-6 h-6 rounded-full bg-[#d4e4ce] text-[#2f442c] font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
+              <p>
+                To ensure you have 100% ownership and control over your annual renewals, we recommend registering via <strong>VentraIP</strong> (an Australian provider). After you submit this brief, we will email you a quick 2-minute guide on how to register it yourself using your own card, and how to add us as a Technical Manager.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -464,7 +486,7 @@
           domainChoiceBtns.forEach(b => b.classList.remove('selected'));
           btn.classList.add('selected');
 
-          if (selectedDomainOption === 'Yes, I have one') {
+          if (selectedDomainOption === 'I already own a domain') {
             domainYesWrap.classList.remove('hidden');
             domainNoWrap.classList.add('hidden');
             existingDomainInput.focus();
@@ -494,18 +516,18 @@
         }
 
         if (!selectedDomainOption) {
-          showError('Please select whether you already have a domain name.');
+          showError('Please select a Domain Name Setup option (Option A or B).');
           return;
         }
 
-        if (selectedDomainOption === 'Yes, I have one' && !existingDomainInput.value.trim()) {
-          showError('Please enter your existing domain name.');
+        if (selectedDomainOption === 'I already own a domain' && !existingDomainInput.value.trim()) {
+          showError('Please enter your domain name (e.g., mybusiness.com.au).');
           existingDomainInput.focus();
           return;
         }
 
-        if (selectedDomainOption === 'No, please help me get one' && !desiredDomainInput.value.trim()) {
-          showError('Please enter 1–2 desired domain names for us to check.');
+        if (selectedDomainOption === 'I need to register a new domain' && !desiredDomainInput.value.trim()) {
+          showError('Please enter the domain name you would like to use (e.g., bobplumbing.com.au).');
           desiredDomainInput.focus();
           return;
         }
@@ -536,7 +558,7 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || 'Could not save confirmation details.');
 
-          const domainVal = selectedDomainOption === 'Yes, I have one' ? payload.existingDomain : payload.desiredDomains;
+          const domainVal = selectedDomainOption === 'I already own a domain' ? payload.existingDomain : payload.desiredDomains;
           const updatesVal = uploadedFileObj ? uploadedFileObj.name : (payload.menuLink || 'Keep Demo As-Is ✓');
 
           submittedSummary.innerHTML = [
@@ -568,3 +590,4 @@
   </script>
 </body>
 </html>
+

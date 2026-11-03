@@ -297,6 +297,57 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         url: demoUrl
       }
     });
+  } else if (stage === 'outbound_pitch') {
+    const bizLabel = client.businessName || client.name || 'your business';
+    const previewLink = client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl;
+    const claimLink = client.id ? `${origin}/api/claim?cid=${encodeURIComponent(client.id)}` : `${origin}/api/claim?email=${encodeURIComponent(email)}`;
+    smsText = `G'day ${firstName}! We hand-crafted a custom website demo specifically for ${bizLabel}: ${previewLink} - If you love it, you can claim 100% ownership for a flat $599 AUD (zero monthly fees): ${claimLink}`;
+    emailSubject = `We Built a Custom Website Demo for ${bizLabel}`;
+    emailHtml = buildAtelierEmailHtml({
+      preheader: 'Bespoke Demo Ready to Preview',
+      heading: `We hand-crafted a custom website for ${bizLabel}.`,
+      bodyHtml: `
+        <p>G'day ${firstName},</p>
+        <p>Our Australian web studio admired <strong>${bizLabel}</strong> and proactively hand-crafted a complete, mobile-optimised website demo tailored to your brand:</p>
+        <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
+          <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
+        </p>
+        <p>There are <strong>zero forms to fill out</strong> and <strong>zero monthly retainers</strong>. If you love the design, simply click the button on the demo (or below) to claim full ownership for a flat <strong>$599 AUD</strong> and we will connect it to your domain within 7 days.</p>
+      `,
+      primaryCta: {
+        label: 'Preview Your Live Demo Website',
+        url: previewLink
+      },
+      secondaryCta: {
+        label: 'Claim This Website Directly ($599 AUD)',
+        url: claimLink
+      }
+    });
+  } else if (stage === 'outbound_followup') {
+    const bizLabel = client.businessName || client.name || 'your business';
+    const previewLink = client.id ? `${origin}/preview?cid=${encodeURIComponent(client.id)}` : demoUrl;
+    const claimLink = client.id ? `${origin}/api/claim?cid=${encodeURIComponent(client.id)}` : `${origin}/api/claim?email=${encodeURIComponent(email)}`;
+    smsText = `Hey ${firstName}, quick check-in from WynnPages! Did you get a chance to see the custom website demo we built for ${bizLabel}? Preview it here: ${previewLink}`;
+    emailSubject = `Quick Check-in: Your Custom Website Demo for ${bizLabel}`;
+    emailHtml = buildAtelierEmailHtml({
+      preheader: 'Custom Website Demo Preview',
+      heading: `Did you get a chance to preview your demo, ${firstName}?`,
+      bodyHtml: `
+        <p>Just a friendly follow-up from the WynnPages studio! We're holding the custom website demo we built for <strong>${bizLabel}</strong>:</p>
+        <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
+          <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
+        </p>
+        <p>If you'd like us to make it officially yours and launch it on your domain for a one-off <strong>$599 AUD</strong> (no ongoing fees), you can claim it with one click below:</p>
+      `,
+      primaryCta: {
+        label: 'Open Your Live Website Demo',
+        url: previewLink
+      },
+      secondaryCta: {
+        label: 'Claim This Website ($599 AUD)',
+        url: claimLink
+      }
+    });
   } else if (stage === 'site_launched') {
     const liveUrl = client.existingDomain
       ? (client.existingDomain.startsWith('http') ? client.existingDomain : `https://${client.existingDomain}`)
@@ -355,6 +406,9 @@ function buildAiPromptForClient(c) {
 
 function formatCustomerRecord(cust) {
   const m = cust.metadata || {};
+  const rawStage = m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'paid');
+  const flowType = m.flow_type || (rawStage.startsWith('outbound_') ? 'outbound' : 'inbound');
+  const paymentStatus = m.payment_status || ((flowType === 'outbound' && rawStage !== 'outbound_paid' && rawStage !== 'launched' && !m.checkout_session_id) ? 'unpaid' : 'paid');
   const record = {
     id: cust.id,
     name: cust.name || m.customer_name || m.business_name || '',
@@ -364,7 +418,9 @@ function formatCustomerRecord(cust) {
     displayPhone: m.display_phone || cust.phone || m.customer_phone || '',
     businessAddress: m.business_address || '',
     socialLinks: m.social_links || '',
-    stage: m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'paid'),
+    flowType,
+    paymentStatus,
+    stage: rawStage,
     briefStatus: m.brief_status || 'pending',
     briefType: m.brief_type || 'organic',
     industry: m.industry || '',
@@ -749,14 +805,19 @@ export default {
             cfg
           });
 
+          const isOutboundSession = sessionData.metadata && sessionData.metadata.flow === 'outbound_demo';
           const uParams = new URLSearchParams();
           if (clientObj.email) uParams.append('email', clientObj.email);
           if (clientObj.name) uParams.append('name', clientObj.name);
           if (clientObj.phone) uParams.append('phone', clientObj.phone);
           uParams.append('metadata[studio]', 'WynnPages Australia');
           uParams.append('metadata[welcome_sent]', 'true');
+          uParams.append('metadata[payment_status]', 'paid');
           uParams.append('metadata[checkout_session_id]', sessionId);
-          if (!cust || !cust.metadata || !cust.metadata.brief_status) {
+          if (isOutboundSession) {
+            uParams.append('metadata[flow_type]', 'outbound');
+            uParams.append('metadata[stage]', 'outbound_paid');
+          } else if (!cust || !cust.metadata || !cust.metadata.brief_status) {
             uParams.append('metadata[stage]', 'paid');
           }
 
@@ -880,7 +941,8 @@ export default {
           }
         }
 
-        const domainSummary = hasDomain === 'Yes, I have one' ? existingDomain : desiredDomains;
+        const isExistingDom = hasDomain === 'I already own a domain' || hasDomain === 'Yes, I have one';
+        const domainSummary = isExistingDom ? existingDomain : desiredDomains;
         const metadataEntries = {
           studio: 'WynnPages Australia',
           stage: 'brief_completed',
@@ -1100,12 +1162,16 @@ export default {
           if (body.vibeLinks !== undefined) uParams.append('metadata[vibe_links]', body.vibeLinks);
           if (body.existingDomain !== undefined) uParams.append('metadata[existing_domain]', body.existingDomain);
           if (body.desiredDomains !== undefined) uParams.append('metadata[desired_domains]', body.desiredDomains);
+          if (body.flowType !== undefined) uParams.append('metadata[flow_type]', body.flowType);
+          if (body.paymentStatus !== undefined) uParams.append('metadata[payment_status]', body.paymentStatus);
 
           const stageMap = {
             payment_confirmed: 'paid',
             brief_completed: 'brief_completed',
             demo_ready: 'demo_sent',
             demo_reminder: 'reminder_sent',
+            outbound_pitch: 'outbound_pitched',
+            outbound_followup: 'outbound_followup',
             site_launched: 'launched'
           };
           const mappedStage = stageMap[stage] || stage;
@@ -1113,9 +1179,9 @@ export default {
 
           const nowIso = new Date().toISOString();
           if (action === 'trigger_stage') {
-            if (stage === 'demo_ready') {
+            if (stage === 'demo_ready' || stage === 'outbound_pitch') {
               uParams.append('metadata[demo_sent_at]', nowIso);
-            } else if (stage === 'demo_reminder') {
+            } else if (stage === 'demo_reminder' || stage === 'outbound_followup') {
               const prevCount = Number((cust && cust.metadata && cust.metadata.reminder_count) || 0);
               uParams.append('metadata[reminder_count]', String(prevCount + 1));
             } else if (stage === 'site_launched') {
