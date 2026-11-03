@@ -300,54 +300,50 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'outbound_pitch') {
-    const bizLabel = (client.businessName || client.name || 'your business').slice(0, 28);
+    const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
     const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
-    smsText = `G'day ${firstName}! We crafted a custom website demo for ${bizLabel}. Preview it live here: ${previewLink}`;
-    emailSubject = `We Built a Custom Website Demo for ${bizLabel}`;
+    smsText = `Hi ${firstName}, hope you're having a lovely week! I'm a local web designer at WynnPages Studio. I really admired ${bizLabel} and put together a custom website concept for you to preview whenever you have a moment: ${previewLink} - Warm regards, Wynn`;
+    emailSubject = `A custom website concept we prepared for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Bespoke Demo Ready to Preview',
-      heading: `We hand-crafted a custom website for ${bizLabel}.`,
+      preheader: 'WynnPages Studio • Personal Note',
+      heading: `A bespoke website concept for ${bizLabel}.`,
       bodyHtml: `
-        <p>G'day ${firstName},</p>
-        <p>Our Australian web studio admired <strong>${bizLabel}</strong> and proactively hand-crafted a complete, mobile-optimised website demo tailored to your brand:</p>
+        <p>Hi ${firstName},</p>
+        <p>I hope you are having a lovely week! I am a web designer at <strong>WynnPages Studio</strong> here in Australia.</p>
+        <p>We really admired <strong>${bizLabel}</strong> and took the initiative to hand-craft a complete, mobile-ready website concept tailored specifically to your business so you could see how it might look and feel:</p>
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
-        <p>There are <strong>zero forms to fill out</strong> and <strong>zero monthly retainers</strong>. If you love the design, simply click the button on the demo (or below) to claim full ownership for a flat <strong>$599 AUD</strong> and we will connect it to your domain within 7 days.</p>
+        <p>Please feel free to have a browse whenever you have a spare moment. If you like the direction and would like to make it officially yours, you can claim it directly from the preview page (or simply reply to let us know any thoughts or adjustments).</p>
+        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Lead Designer, WynnPages Studio</p>
       `,
       primaryCta: {
-        label: 'Preview Your Live Demo Website',
+        label: 'View Your Website Concept',
         url: previewLink
-      },
-      secondaryCta: {
-        label: 'Claim This Website Directly ($599 AUD)',
-        url: claimLink
       }
     });
   } else if (stage === 'outbound_followup') {
-    const bizLabel = (client.businessName || client.name || 'your business').slice(0, 26);
+    const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
-    const claimLink = client.id ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(client.id)}` : `https://wynnpages.com.au/api/claim?email=${encodeURIComponent(email)}`;
-    smsText = `Hey ${firstName}, quick check-in from WynnPages! Did you get a chance to see the demo for ${bizLabel}? ${previewLink}`;
-    emailSubject = `Quick Check-in: Your Custom Website Demo for ${bizLabel}`;
+    smsText = `Hi ${firstName}, hope your week is going well! Just a polite follow-up from WynnPages Studio in case you missed the custom website concept we prepared for ${bizLabel}: ${previewLink} - Please let me know if you have any feedback. Warm regards, Wynn`;
+    emailSubject = `Following up on the website concept for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Custom Website Demo Preview',
-      heading: `Did you get a chance to preview your demo, ${firstName}?`,
+      preheader: 'WynnPages Studio • Polite Follow-up',
+      heading: `Hope your week is going well, ${firstName}.`,
       bodyHtml: `
-        <p>Just a friendly follow-up from the WynnPages studio! We're holding the custom website demo we built for <strong>${bizLabel}</strong>:</p>
+        <p>Hi ${firstName},</p>
+        <p>I know how busy things get running <strong>${bizLabel}</strong>, so I just wanted to send a polite follow-up in case our previous note got buried.</p>
+        <p>We are still holding the custom website concept we hand-crafted for your business here:</p>
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
-        <p>If you'd like us to make it officially yours and launch it on your domain for a one-off <strong>$599 AUD</strong> (no ongoing fees), you can claim it with one click below:</p>
+        <p>If you'd like any adjustments to the layout, colours, or services—or if you're ready for us to connect it to your domain—simply let us know or click the button on the preview page.</p>
+        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Lead Designer, WynnPages Studio</p>
       `,
       primaryCta: {
-        label: 'Open Your Live Website Demo',
+        label: 'View Your Website Concept',
         url: previewLink
-      },
-      secondaryCta: {
-        label: 'Claim This Website ($599 AUD)',
-        url: claimLink
       }
     });
   } else if (stage === 'site_launched') {
