@@ -20,7 +20,8 @@ function getConfig(env, overrides = {}) {
     resendFromEmail: overrides.resendFromEmail || env.RESEND_FROM_EMAIL || RESEND_FROM_EMAIL_FALLBACK || 'WynnPages Atelier <hello@wynnpages.com.au>',
     adminKey: env.ADMIN_KEY || ADMIN_KEY_FALLBACK || 'wynn2026',
     adminNotifyEmail: overrides.adminNotifyEmail || env.ADMIN_NOTIFY_EMAIL || ADMIN_NOTIFY_EMAIL_FALLBACK || '',
-    adminNotifyPhone: overrides.adminNotifyPhone || env.ADMIN_NOTIFY_PHONE || ADMIN_NOTIFY_PHONE_FALLBACK || ''
+    adminNotifyPhone: overrides.adminNotifyPhone || env.ADMIN_NOTIFY_PHONE || ADMIN_NOTIFY_PHONE_FALLBACK || '',
+    googleDriveWebhookUrl: overrides.googleDriveWebhookUrl || env.GOOGLE_DRIVE_WEBHOOK_URL || ''
   };
 }
 
@@ -346,9 +347,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       }
     });
   } else if (stage === 'site_launched') {
-    const liveUrl = client.existingDomain
-      ? (client.existingDomain.startsWith('http') ? client.existingDomain : `https://${client.existingDomain}`)
-      : demoUrl;
+    const rawLiveDomain = (client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
+    const liveUrl = rawLiveDomain.startsWith('http') ? rawLiveDomain : `https://${rawLiveDomain}`;
     smsText = `Congratulations ${firstName}! Your bespoke WynnPages website is officially LIVE at ${liveUrl} - If you ever need anything, please email hello@wynnpages.com.au. Thank you for trusting our studio! Warm regards, Wynn`;
     emailSubject = `Congratulations! Your WynnPages Website is Officially Live`;
     emailHtml = buildAtelierEmailHtml({
@@ -441,12 +441,17 @@ function formatCustomerRecord(cust) {
     desiredDomains: m.desired_domains || '',
     logoFileId: m.logo_file_id || '',
     logoFileName: m.logo_file_name || '',
+    logoDriveUrl: m.logo_drive_url || '',
     menuFileId: m.menu_file_id || '',
     menuFileName: m.menu_file_name || '',
+    menuDriveUrl: m.menu_drive_url || '',
     hasPhotos: m.has_photos || '',
     photosFileId: m.photos_file_id || '',
     photosFileName: m.photos_file_name || '',
+    photosDriveUrl: m.photos_drive_url || '',
+    driveFolderUrl: m.drive_folder_url || '',
     demoUrl: m.demo_url || '',
+    liveUrl: m.live_url || '',
     checkoutSessionId: m.checkout_session_id || '',
     welcomeSent: m.welcome_sent || 'false',
     lastSmsLog: m.last_sms_log || '',
@@ -620,6 +625,46 @@ async function uploadStripeFile(fileObj, stripeSecretKey) {
   } catch (e) {
     return null;
   }
+}
+
+async function uploadGoogleDriveFile(fileObj, folderName, webhookUrl) {
+  if (!webhookUrl || !fileObj || !fileObj.dataUrl || typeof fileObj.dataUrl !== 'string') {
+    return null;
+  }
+  try {
+    const matches = fileObj.dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!matches) return null;
+    const mimeType = matches[1] || 'application/octet-stream';
+    const base64Data = matches[2];
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        folderName: folderName || 'WynnPages Client Assets',
+        fileName: fileObj.name || 'upload.bin',
+        mimeType,
+        base64Data
+      })
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    return {
+      fileUrl: data.fileUrl || data.url || '',
+      folderUrl: data.folderUrl || ''
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 async function findStripeCustomerByEmail(email, stripeSecretKey) {
@@ -1023,7 +1068,7 @@ export default {
         let customerName = (body.name || '').trim();
         let customerPhone = (body.phone || '').trim();
         let paymentIntentId = '';
-        let existingCustomerId = '';
+        let existingCustomerId = (body.customerId || '').trim();
 
         const briefType = (body.briefType || 'organic').trim();
         const businessName = (body.businessName || '').trim();
@@ -1044,18 +1089,39 @@ export default {
         if (!customerName && businessName) customerName = businessName;
         if (!customerPhone && displayPhone) customerPhone = displayPhone;
 
-        // Optional file uploads to Stripe Files API
+        // Optional file uploads to Stripe Files API + Google Drive Webhook
         let logoFileId = null;
         let menuFileId = null;
         let photosFileId = null;
+        let logoDriveUrl = '';
+        let menuDriveUrl = '';
+        let photosDriveUrl = '';
+        let driveFolderUrl = '';
+        const driveFolderName = businessName || customerName || email || 'WynnPages Client';
+
         if (body.logoFile && body.logoFile.dataUrl) {
           logoFileId = await uploadStripeFile(body.logoFile, cfg.stripeSecretKey);
+          const dRes = await uploadGoogleDriveFile(body.logoFile, driveFolderName, cfg.googleDriveWebhookUrl);
+          if (dRes) {
+            logoDriveUrl = dRes.fileUrl || '';
+            if (dRes.folderUrl) driveFolderUrl = dRes.folderUrl;
+          }
         }
         if (body.menuFile && body.menuFile.dataUrl) {
           menuFileId = await uploadStripeFile(body.menuFile, cfg.stripeSecretKey);
+          const dRes = await uploadGoogleDriveFile(body.menuFile, driveFolderName, cfg.googleDriveWebhookUrl);
+          if (dRes) {
+            menuDriveUrl = dRes.fileUrl || '';
+            if (dRes.folderUrl) driveFolderUrl = dRes.folderUrl;
+          }
         }
         if (body.photosFile && body.photosFile.dataUrl) {
           photosFileId = await uploadStripeFile(body.photosFile, cfg.stripeSecretKey);
+          const dRes = await uploadGoogleDriveFile(body.photosFile, driveFolderName, cfg.googleDriveWebhookUrl);
+          if (dRes) {
+            photosDriveUrl = dRes.fileUrl || '';
+            if (dRes.folderUrl) driveFolderUrl = dRes.folderUrl;
+          }
         }
 
         // Inspect Checkout Session if session_id is present
@@ -1088,21 +1154,36 @@ export default {
           }
         }
 
-        // Look up existing customer by email if not linked via session
-        if (!existingCustomerId && email) {
+        // Look up existing customer by customerId or email if not linked via session
+        let existingCustObj = null;
+        if (existingCustomerId && existingCustomerId.startsWith('cus_')) {
+          const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(existingCustomerId)}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          });
+          if (cRes.ok) existingCustObj = await cRes.json();
+        }
+        if (!existingCustObj && email) {
           const found = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
           if (found) {
+            existingCustObj = found;
             existingCustomerId = found.id;
-            if (!customerName) customerName = found.name || (found.metadata && found.metadata.customer_name) || '';
-            if (!customerPhone) customerPhone = found.phone || (found.metadata && found.metadata.customer_phone) || '';
           }
         }
+        if (existingCustObj) {
+          if (!customerName) customerName = existingCustObj.name || (existingCustObj.metadata && existingCustObj.metadata.customer_name) || '';
+          if (!customerPhone) customerPhone = existingCustObj.phone || (existingCustObj.metadata && existingCustObj.metadata.customer_phone) || '';
+        }
+
+        const existingStage = (existingCustObj && existingCustObj.metadata && existingCustObj.metadata.stage) || '';
+        const existingFlow = (existingCustObj && existingCustObj.metadata && existingCustObj.metadata.flow_type) || '';
+        const keepOutboundStage = (briefType === 'demo' || existingFlow === 'outbound') && existingStage.startsWith('outbound_');
 
         const isExistingDom = hasDomain === 'I already own a domain' || hasDomain === 'Yes, I have one';
         const domainSummary = isExistingDom ? existingDomain : desiredDomains;
         const metadataEntries = {
           studio: 'WynnPages Australia',
-          stage: 'brief_completed',
+          stage: keepOutboundStage ? existingStage : 'brief_completed',
           brief_status: 'completed',
           brief_type: briefType,
           submitted_at: new Date().toISOString(),
@@ -1121,11 +1202,15 @@ export default {
           desired_domains: desiredDomains.slice(0, 490),
           logo_file_id: logoFileId || '',
           logo_file_name: (body.logoFile && body.logoFile.name ? body.logoFile.name : logoLink).slice(0, 490),
+          logo_drive_url: logoDriveUrl.slice(0, 490),
           menu_file_id: menuFileId || '',
           menu_file_name: (body.menuFile && body.menuFile.name ? body.menuFile.name : menuLink).slice(0, 490),
+          menu_drive_url: menuDriveUrl.slice(0, 490),
           has_photos: hasPhotos.slice(0, 490),
           photos_file_id: photosFileId || '',
-          photos_file_name: (body.photosFile && body.photosFile.name ? body.photosFile.name : photosLink).slice(0, 490)
+          photos_file_name: (body.photosFile && body.photosFile.name ? body.photosFile.name : photosLink).slice(0, 490),
+          photos_drive_url: photosDriveUrl.slice(0, 490),
+          drive_folder_url: driveFolderUrl.slice(0, 490)
         };
 
         const summaryDesc = `WynnPages Brief [${briefType.toUpperCase()}] • ${industry || 'Custom Demo'} • Domain: ${domainSummary || 'TBD'}`;
@@ -1250,12 +1335,43 @@ export default {
             stripe: Boolean(cfg.stripeSecretKey),
             clicksend: Boolean(cfg.clicksendUsername && cfg.clicksendApiKey),
             resend: Boolean(cfg.resendApiKey),
-            resendFromEmail: cfg.resendFromEmail
+            resendFromEmail: cfg.resendFromEmail,
+            googleDrive: Boolean(cfg.googleDriveWebhookUrl)
           },
           clients
         }),
         { status: 200, headers: corsHeaders }
       );
+    }
+
+    // 5b. Direct File Download / Preview Endpoint from Stripe Files API (GET /api/file?id=file_xxx&name=favicon.png&key=...)
+    if (url.pathname === '/api/file' && request.method === 'GET') {
+      const providedKey = url.searchParams.get('key') || request.headers.get('x-admin-key') || '';
+      if (providedKey !== cfg.adminKey) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      const fileId = (url.searchParams.get('id') || '').trim();
+      const fileName = (url.searchParams.get('name') || 'download.bin').trim();
+      const inline = url.searchParams.get('inline') === '1';
+      if (!fileId || !fileId.startsWith('file_') || !cfg.stripeSecretKey) {
+        return new Response('Missing or invalid file ID', { status: 400 });
+      }
+      const fileRes = await fetch(`https://files.stripe.com/v1/files/${encodeURIComponent(fileId)}/contents`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+      });
+      if (!fileRes.ok) {
+        return new Response('File not found on Stripe Files API', { status: 404 });
+      }
+      const contentType = fileRes.headers.get('content-type') || 'application/octet-stream';
+      const safeName = fileName.replace(/["\r\n]/g, '_');
+      return new Response(fileRes.body, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename="${safeName}"`
+        }
+      });
     }
 
     // 6. Admin Command Center Action Endpoint (POST /api/admin/action)
@@ -1281,6 +1397,57 @@ export default {
           return new Response(JSON.stringify({ ok: delRes.ok, deleted: delData }), { status: 200, headers: corsHeaders });
         }
 
+        // Action 0b: Sync Existing Uploaded File to Google Drive
+        if (action === 'sync_file_to_drive' && customerId) {
+          if (!effectiveCfg.googleDriveWebhookUrl) {
+            return new Response(
+              JSON.stringify({ error: 'Chưa cấu hình Google Drive Webhook URL! Hãy bấm nút "⚙️ Cấu hình API / Google Drive" ở góc trên để kết nối.' }),
+              { status: 400, headers: corsHeaders }
+            );
+          }
+          const fileId = (body.fileId || '').trim();
+          const fileName = (body.fileName || 'client-file.bin').trim();
+          const fieldType = (body.fieldType || 'menu').trim(); // 'logo' | 'menu' | 'photos'
+          const folderName = (body.folderName || 'WynnPages Client').trim();
+
+          const fileRes = await fetch(`https://files.stripe.com/v1/files/${encodeURIComponent(fileId)}/contents`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (!fileRes.ok) {
+            return new Response(JSON.stringify({ error: 'Không tải được file gốc từ hệ thống lưu trữ.' }), { status: 404, headers: corsHeaders });
+          }
+          const mimeType = fileRes.headers.get('content-type') || 'application/octet-stream';
+          const arrayBuf = await fileRes.arrayBuffer();
+          const base64Data = arrayBufferToBase64(arrayBuf);
+
+          const driveRes = await uploadGoogleDriveFile(
+            { name: fileName, dataUrl: `data:${mimeType};base64,${base64Data}` },
+            folderName,
+            effectiveCfg.googleDriveWebhookUrl
+          );
+          if (!driveRes || !driveRes.fileUrl) {
+            return new Response(JSON.stringify({ error: 'Không thể lưu lên Google Drive. Hãy kiểm tra lại Google Drive Webhook URL.' }), { status: 500, headers: corsHeaders });
+          }
+
+          const uParams = new URLSearchParams();
+          const metaKey = fieldType === 'logo' ? 'logo_drive_url' : (fieldType === 'photos' ? 'photos_drive_url' : 'menu_drive_url');
+          uParams.append(`metadata[${metaKey}]`, driveRes.fileUrl.slice(0, 490));
+          if (driveRes.folderUrl) {
+            uParams.append('metadata[drive_folder_url]', driveRes.folderUrl.slice(0, 490));
+          }
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+
+          return new Response(JSON.stringify({ ok: true, driveUrl: driveRes.fileUrl, folderUrl: driveRes.folderUrl }), { status: 200, headers: corsHeaders });
+        }
+
         // Action A: Create or Update Client + Optionally Trigger Stage Notification
         if (action === 'trigger_stage' || action === 'save_client') {
           let cust = null;
@@ -1290,6 +1457,24 @@ export default {
               headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
             });
             if (getRes.ok) cust = await getRes.json();
+          }
+
+          if (action === 'trigger_stage' && body.stage === 'site_launched') {
+            const checkFormatted = cust ? formatCustomerRecord(cust) : null;
+            const isClientPaid = body.paymentStatus === 'paid' || (checkFormatted && checkFormatted.paymentStatus === 'paid');
+            const candidateLiveUrl = (body.liveUrl !== undefined ? body.liveUrl : (checkFormatted && checkFormatted.liveUrl) || '').trim();
+            if (!isClientPaid) {
+              return new Response(
+                JSON.stringify({ error: 'Khách hàng chưa thanh toán $599 nên chưa thể báo lên sóng chính thức!' }),
+                { status: 400, headers: corsHeaders }
+              );
+            }
+            if (!candidateLiveUrl || !candidateLiveUrl.includes('.')) {
+              return new Response(
+                JSON.stringify({ error: 'Vui lòng nhập Tên Miền Chính Thức (Mục 2) trước khi báo lên sóng!' }),
+                { status: 400, headers: corsHeaders }
+              );
+            }
           }
 
           const uParams = new URLSearchParams();
@@ -1319,6 +1504,7 @@ export default {
           if (body.vibeLinks !== undefined) uParams.append('metadata[vibe_links]', body.vibeLinks);
           if (body.existingDomain !== undefined) uParams.append('metadata[existing_domain]', body.existingDomain);
           if (body.desiredDomains !== undefined) uParams.append('metadata[desired_domains]', body.desiredDomains);
+          if (body.liveUrl !== undefined) uParams.append('metadata[live_url]', body.liveUrl.trim());
           if (body.flowType !== undefined) uParams.append('metadata[flow_type]', body.flowType);
           if (body.paymentStatus !== undefined) uParams.append('metadata[payment_status]', body.paymentStatus);
 

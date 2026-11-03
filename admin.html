@@ -332,6 +332,21 @@
             <input type="text" id="cfg-resend-from" placeholder="From Email (VD: WynnPages Atelier <hello@wynnpages.com.au>)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
           </div>
         </div>
+
+        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-bold text-stone-900">3. Tự Động Lưu File Lên Google Drive Của Bạn</p>
+            <button type="button" id="btn-copy-gas-script" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] shrink-0">
+              📋 Copy Mã Google Apps Script
+            </button>
+          </div>
+          <p class="text-stone-500 leading-relaxed">
+            Mặc định mọi file khách tải lên đã có nút <strong>⬇️ Tải về máy</strong> trực tiếp ngay trên thẻ khách hàng. Nếu muốn tự động tạo thư mục tên tiệm và lưu vào Google Drive cá nhân: vào <a href="https://script.google.com" target="_blank" class="text-[#96432b] font-bold underline">script.google.com</a> &rarr; Dán mã vừa copy &rarr; Bấm <strong>Deploy &rarr; Web App (Anyone)</strong> &rarr; Dán link Web App vào ô dưới:
+          </p>
+          <div class="space-y-2 pt-1">
+            <input type="url" id="cfg-gdrive-webhook" placeholder="https://script.google.com/macros/s/.../exec" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
@@ -697,6 +712,52 @@
         return trimmed.length >= 6 && (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.includes('.'));
       }
 
+      function renderAssetBadge(c, fieldType, fileName, fileId, driveUrl, emptyLabel = 'Chưa tải lên') {
+        if (!fileName && !fileId && !driveUrl) {
+          return `<span class="text-stone-400 ml-1">${emptyLabel}</span>`;
+        }
+        const safeName = fileName || 'file-khach-tai-len';
+        const downloadHref = fileId
+          ? `/api/file?id=${encodeURIComponent(fileId)}&amp;name=${encodeURIComponent(safeName)}&amp;key=${encodeURIComponent(adminKey)}`
+          : '';
+        const viewHref = fileId
+          ? `/api/file?id=${encodeURIComponent(fileId)}&amp;name=${encodeURIComponent(safeName)}&amp;inline=1&amp;key=${encodeURIComponent(adminKey)}`
+          : '';
+        const folderName = c.businessName || c.name || c.email || 'WynnPages Client';
+
+        return `
+          <span class="inline-flex flex-wrap items-center gap-1.5 ml-1">
+            <span class="text-emerald-800 font-bold">✓ ${escapeHtml(safeName)}</span>
+            ${fileId ? `
+              <a href="${downloadHref}" download="${escapeHtml(safeName)}" class="px-2 py-0.5 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[10px] inline-flex items-center gap-1 shadow-2xs">
+                <span>⬇️ Tải về</span>
+              </a>
+              <a href="${viewHref}" target="_blank" class="px-2 py-0.5 rounded-md bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold text-[10px] inline-flex items-center gap-0.5">
+                <span>👁️ Xem</span>
+              </a>
+            ` : ''}
+            ${driveUrl ? `
+              <a href="${escapeHtml(driveUrl)}" target="_blank" class="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-bold text-[10px] inline-flex items-center gap-1">
+                <span>📂 Google Drive ↗</span>
+              </a>
+            ` : (fileId ? `
+              <button
+                type="button"
+                data-cid="${c.id}"
+                data-file-id="${escapeHtml(fileId)}"
+                data-file-name="${escapeHtml(safeName)}"
+                data-field-type="${escapeHtml(fieldType)}"
+                data-folder="${escapeHtml(folderName)}"
+                class="btn-sync-drive px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-bold text-[10px] inline-flex items-center gap-1 transition-colors"
+                title="Đẩy file này lên thư mục Google Drive của bạn"
+              >
+                <span>☁️ Lưu Google Drive</span>
+              </button>
+            ` : '')}
+          </span>
+        `;
+      }
+
       // ================================================================
       // RENDER TAB 1: OUTBOUND PROSPECT CARDS (Streamlined & Fast)
       // ================================================================
@@ -714,6 +775,8 @@
         clientsContainer.innerHTML = list.map((c) => {
           const hasPhone = Boolean(c.phone && c.phone.trim());
           const hasValidDemo = isValidUrl(c.demoUrl);
+          const resolvedLiveUrl = (c.liveUrl || '').trim();
+          const hasValidLive = isValidUrl(resolvedLiveUrl);
           const isPaid = c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched';
           const isPitched = Boolean(c.demoSentAt) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
           const isLaunched = c.stage === 'launched';
@@ -825,31 +888,34 @@
                     <strong class="text-stone-500">Tên miền khách chọn:</strong>
                     <span class="ml-1">${domainInfo}</span>
                   </span>
-                  <span>
+                  <span class="inline-flex flex-wrap items-center gap-1">
                     <strong class="text-stone-500">File / Ghi chú cập nhật (/demo-success):</strong>
-                    ${c.menuFileName
-                      ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.menuFileName)}</span>`
-                      : `<span class="text-stone-400 ml-1">Giữ nguyên theo Demo</span>`}
+                    ${renderAssetBadge(c, 'menu', c.menuFileName, c.menuFileId, c.menuDriveUrl, 'Giữ nguyên theo Demo')}
                   </span>
+                  ${c.driveFolderUrl ? `
+                    <a href="${escapeHtml(c.driveFolderUrl)}" target="_blank" class="text-blue-700 font-bold hover:underline text-[11px]">
+                      📁 Thư mục Google Drive ↗
+                    </a>
+                  ` : ''}
                 </div>
                 <a href="/demo-success?email=${encodeURIComponent(c.email || '')}&amp;cid=${encodeURIComponent(c.id)}" target="_blank" class="text-[#96432b] font-bold hover:underline text-[11px]">
                   Xem trang /demo-success của khách ↗
                 </a>
               </div>
 
-              <!-- Outbound Demo Link & One-Click Sales Toolkit -->
+              <!-- Outbound Demo Link & Live Domain + One-Click Sales Toolkit -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
-                <!-- Demo URL Input + Quick Copy Links -->
+                <!-- Row 1: Demo URL Input -->
                 <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
-                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5">
-                    <span>🔗 Link Web Demo:</span>
+                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5 w-48">
+                    <span>🔗 1. Link Web Demo:</span>
                   </label>
                   <input 
                     type="url" 
                     id="demo-url-${c.id}" 
                     data-cid="${c.id}"
                     value="${escapeHtml(c.demoUrl || '')}" 
-                    placeholder="https://ten-tiem-demo.pages.dev" 
+                    placeholder="Dùng để chào hàng (VD: https://ten-tiem-demo.pages.dev)" 
                     class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
                   >
                   <button 
@@ -862,6 +928,34 @@
                   ${hasValidDemo ? `
                     <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-bold text-white shrink-0 inline-flex items-center gap-1">
                       <span>Xem Demo + Nút Mua $599 ↗</span>
+                    </a>
+                  ` : ''}
+                </div>
+
+                <!-- Row 2: Official Live Domain Input (Required to unlock Button 3 Launch!) -->
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
+                  <label for="live-url-${c.id}" class="text-xs font-extrabold text-emerald-900 shrink-0 flex items-center gap-1.5 w-48">
+                    <span>🌐 2. Tên Miền Chính Thức:</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="live-url-${c.id}" 
+                    data-cid="${c.id}"
+                    data-paid="${isPaid ? '1' : '0'}"
+                    value="${escapeHtml(resolvedLiveUrl)}" 
+                    placeholder="${isPaid ? 'Nhập tên miền thật sau khi trỏ DNS (VD: https://lushnailsbar.com.au) để mở khoá Nút 3...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
+                    class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+                  >
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
+                  >
+                    Lưu Tên Miền
+                  </button>
+                  ${hasValidLive ? `
+                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
+                      <span>Mở Web Thật ↗</span>
                     </a>
                   ` : ''}
                 </div>
@@ -930,17 +1024,23 @@
                     }</span>
                   </button>
 
-                  <!-- Button 3: Launch Site -->
+                  <!-- Button 3: Launch Site (ONLY enabled when Client has PAID $599 AND Official Live Domain is entered!) -->
                   <button
                     type="button"
+                    id="btn-stage5-${c.id}"
                     data-cid="${c.id}"
+                    data-paid="${isPaid ? '1' : '0'}"
                     data-stage="site_launched"
-                    ${!hasValidDemo ? 'disabled' : ''}
+                    ${(!isPaid || !hasValidLive) ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
                   >
                     <span>🚀 3. Báo Lên Sóng Chính Thức</span>
-                    <span class="text-[10px] font-normal opacity-90">${
-                      isLaunched ? '✅ Đã lên sóng (Bấm gửi lại)' : 'Chúc mừng web chính thức hoạt động'
+                    <span id="btn-stage5-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
+                      !isPaid
+                        ? '🔒 Chờ khách thanh toán $599 trước'
+                        : (!hasValidLive
+                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 2) trước'
+                            : (isLaunched ? '✅ Đã lên sóng (Bấm gửi lại)' : `Gửi link thật: ${escapeHtml(resolvedLiveUrl)}`))
                     }</span>
                   </button>
                 </div>
@@ -1081,7 +1181,10 @@
           const hasValidDemo = isValidUrl(c.demoUrl);
           const hasSentDemo = (c.stage === 'demo_sent' || c.stage === 'reminder_sent' || c.stage === 'launched' || Boolean(c.demoSentAt)) && hasValidDemo;
           const canRemindDemo = hasValidDemo && hasSentDemo;
-          const canLaunch = hasValidDemo && hasSentDemo;
+          const resolvedLiveUrl = (c.liveUrl || '').trim();
+          const hasValidLive = isValidUrl(resolvedLiveUrl);
+          const isPaid = c.paymentStatus !== 'unpaid';
+          const canLaunch = isPaid && hasValidDemo && hasSentDemo && hasValidLive;
 
           const domainDisplay = c.existingDomain
             ? `<span class="text-emerald-800 font-bold">Đã có: ${escapeHtml(c.existingDomain)}</span>`
@@ -1190,37 +1293,36 @@
                 <!-- Demo Uploaded Assets Row -->
                 <div class="sm:col-span-2 lg:col-span-4 pt-2.5 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-4 text-[11px]">
                   <div class="flex flex-wrap items-center gap-5">
-                    <span>
+                    <span class="inline-flex flex-wrap items-center gap-1">
                       <strong class="text-stone-500">Logo:</strong>
-                      ${c.logoFileName
-                        ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.logoFileName)}</span>`
-                        : `<span class="text-stone-400 ml-1">Chưa tải lên</span>`}
+                      ${renderAssetBadge(c, 'logo', c.logoFileName, c.logoFileId, c.logoDriveUrl)}
                     </span>
-                    <span>
+                    <span class="inline-flex flex-wrap items-center gap-1">
                       <strong class="text-stone-500">Menu / Bảng giá:</strong>
-                      ${c.menuFileName
-                        ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.menuFileName)}</span>`
-                        : `<span class="text-stone-400 ml-1">Chưa tải lên</span>`}
+                      ${renderAssetBadge(c, 'menu', c.menuFileName, c.menuFileId, c.menuDriveUrl)}
                     </span>
-                    <span>
+                    <span class="inline-flex flex-wrap items-center gap-1">
                       <strong class="text-stone-500">Hình ảnh (Photos):</strong>
-                      ${c.photosFileName
-                        ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.photosFileName)}</span>`
+                      ${c.photosFileName || c.photosFileId || c.photosDriveUrl
+                        ? renderAssetBadge(c, 'photos', c.photosFileName, c.photosFileId, c.photosDriveUrl)
                         : (c.hasPhotos ? `<span class="text-stone-700 font-semibold ml-1">${escapeHtml(c.hasPhotos)}</span>` : `<span class="text-stone-400 ml-1">Chưa chọn</span>`)}
                     </span>
                   </div>
                   <div class="flex items-center gap-3">
+                    ${c.driveFolderUrl ? `
+                      <a href="${escapeHtml(c.driveFolderUrl)}" target="_blank" class="text-blue-700 font-bold hover:underline">📁 Thư mục Google Drive ↗</a>
+                    ` : ''}
                     <a href="/onboarding?type=organic&amp;email=${encodeURIComponent(c.email || '')}" target="_blank" class="text-[#96432b] font-semibold hover:underline">Mở Form Onboarding ↗</a>
                   </div>
                 </div>
               </div>
 
-              <!-- Demo Link Input & Smart Stage Action Buttons -->
+              <!-- Demo Link Input & Official Live Domain & Smart Stage Action Buttons -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
+                <!-- Row 1: Demo URL -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5">
-                    <span>🔗</span>
-                    <span>Link Demo của khách:</span>
+                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5 w-48">
+                    <span>🔗 1. Link Web Demo:</span>
                   </label>
                   <input 
                     type="url" 
@@ -1240,7 +1342,35 @@
                   </button>
                   ${hasValidDemo ? `
                     <a href="${escapeHtml(c.demoUrl.startsWith('http') ? c.demoUrl : 'https://' + c.demoUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-stone-200/70 hover:bg-stone-300/70 text-xs font-bold text-stone-800 shrink-0 inline-flex items-center gap-1">
-                      <span>Mở xem ↗</span>
+                      <span>Mở xem Demo ↗</span>
+                    </a>
+                  ` : ''}
+                </div>
+
+                <!-- Row 2: Official Live Domain -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <label for="live-url-${c.id}" class="text-xs font-extrabold text-emerald-900 shrink-0 flex items-center gap-1.5 w-48">
+                    <span>🌐 2. Tên Miền Chính Thức:</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="live-url-${c.id}" 
+                    data-cid="${c.id}"
+                    data-paid="${isPaid ? '1' : '0'}"
+                    value="${escapeHtml(resolvedLiveUrl)}" 
+                    placeholder="Nhập tên miền thật sau khi trỏ DNS (VD: https://mybusiness.com.au) để mở khoá Nút 5 Lên Sóng..." 
+                    class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+                  >
+                  <button 
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
+                  >
+                    Lưu Tên Miền
+                  </button>
+                  ${hasValidLive ? `
+                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
+                      <span>Mở Web Thật ↗</span>
                     </a>
                   ` : ''}
                 </div>
@@ -1312,15 +1442,18 @@
                     type="button"
                     id="btn-stage5-${c.id}"
                     data-cid="${c.id}"
+                    data-paid="${isPaid ? '1' : '0'}"
                     data-stage="site_launched"
                     ${!canLaunch ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-3 py-2.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
                   >
                     <span>🚀 5. Báo Lên Sóng</span>
                     <span id="btn-stage5-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
-                      !canLaunch
-                        ? '🔒 Chờ gửi & duyệt Demo'
-                        : (c.stage === 'launched' ? '✅ Đã lên sóng (Gửi lại)' : 'Chúc mừng web hoàn tất')
+                      !isPaid
+                        ? '🔒 Chờ khách thanh toán $599'
+                        : (!hasValidLive
+                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 2)'
+                            : (!hasSentDemo ? '🔒 Chờ gửi & duyệt Demo' : (c.stage === 'launched' ? '✅ Đã lên sóng (Gửi lại)' : `Gửi link: ${escapeHtml(resolvedLiveUrl)}`)))
                     }</span>
                   </button>
                 </div>
@@ -1341,7 +1474,7 @@
 
       // Bind interactive events on rendered cards
       function bindCardEvents() {
-        // Real-time unlocking/locking of Buttons 3, 4, 5 as user types or clears Link Demo
+        // Real-time unlocking/locking of Demo buttons (Buttons 3 & 4) as user types or clears Link Demo
         document.querySelectorAll('.demo-url-input').forEach((input) => {
           input.addEventListener('input', () => {
             const cid = input.getAttribute('data-cid');
@@ -1352,8 +1485,6 @@
             const sub3 = document.getElementById(`btn-stage3-sub-${cid}`);
             const btn4 = document.getElementById(`btn-stage4-${cid}`);
             const sub4 = document.getElementById(`btn-stage4-sub-${cid}`);
-            const btn5 = document.getElementById(`btn-stage5-${cid}`);
-            const sub5 = document.getElementById(`btn-stage5-sub-${cid}`);
 
             if (btn3 && sub3) {
               btn3.disabled = !valid;
@@ -1365,11 +1496,55 @@
               if (!valid) sub4.textContent = '🔒 Cần có Link Demo';
               else if (!alreadySent) sub4.textContent = '🔒 Cần gửi Bước 3 trước';
             }
+          });
+        });
+
+        // Real-time unlocking/locking of Button 3/5 (Báo Lên Sóng Chính Thức) ONLY when Paid AND Official Live Domain is valid!
+        document.querySelectorAll('.live-url-input').forEach((input) => {
+          input.addEventListener('input', () => {
+            const cid = input.getAttribute('data-cid');
+            const isPaid = input.getAttribute('data-paid') === '1';
+            const validLive = isValidUrl(input.value);
+            const btn5 = document.getElementById(`btn-stage5-${cid}`);
+            const sub5 = document.getElementById(`btn-stage5-sub-${cid}`);
             if (btn5 && sub5) {
-              const allow5 = valid && alreadySent;
+              const allow5 = isPaid && validLive;
               btn5.disabled = !allow5;
-              if (!valid) sub5.textContent = '🔒 Cần có Link Demo';
-              else if (!alreadySent) sub5.textContent = '🔒 Chờ gửi & duyệt Demo';
+              if (!isPaid) {
+                sub5.textContent = '🔒 Chờ khách thanh toán $599 trước';
+              } else if (!validLive) {
+                sub5.textContent = '🔒 Nhập Tên Miền Chính Thức (Mục 2) trước';
+              } else {
+                sub5.textContent = `Gửi link thật: ${input.value.trim()}`;
+              }
+            }
+          });
+        });
+
+        // 1-Click Sync Uploaded File to Google Drive
+        document.querySelectorAll('.btn-sync-drive').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const fileId = btn.getAttribute('data-file-id');
+            const fileName = btn.getAttribute('data-file-name');
+            const fieldType = btn.getAttribute('data-field-type');
+            const folderName = btn.getAttribute('data-folder');
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Đang lưu lên Drive...</span>';
+            const res = await runAdminAction({
+              action: 'sync_file_to_drive',
+              customerId: cid,
+              fileId,
+              fileName,
+              fieldType,
+              folderName
+            });
+            if (res && res.ok) {
+              showToast(`Đã lưu "${fileName}" vào thư mục Google Drive "${folderName}"!`);
+            } else {
+              btn.disabled = false;
+              btn.innerHTML = origText;
             }
           });
         });
@@ -1476,15 +1651,17 @@
           });
         });
 
-        // Save Demo URL
+        // Save Demo URL & Official Live Domain
         document.querySelectorAll('.btn-save-demo').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const demoInput = document.getElementById(`demo-url-${cid}`);
+            const liveInput = document.getElementById(`live-url-${cid}`);
             const demoUrl = demoInput ? demoInput.value.trim() : '';
+            const liveUrl = liveInput ? liveInput.value.trim() : '';
             btn.textContent = 'Đang lưu...';
-            await runAdminAction({ action: 'save_client', customerId: cid, demoUrl });
-            showToast(demoUrl ? 'Đã lưu Link Demo!' : 'Đã xoá Link Demo.');
+            await runAdminAction({ action: 'save_client', customerId: cid, demoUrl, liveUrl });
+            showToast('Đã lưu Link Web Demo & Tên Miền Chính Thức!');
           });
         });
 
@@ -1494,12 +1671,27 @@
             const cid = btn.getAttribute('data-cid');
             const stage = btn.getAttribute('data-stage');
             const demoInput = document.getElementById(`demo-url-${cid}`);
+            const liveInput = document.getElementById(`live-url-${cid}`);
             const demoUrl = demoInput ? demoInput.value.trim() : '';
+            const liveUrl = liveInput ? liveInput.value.trim() : '';
+            const isPaid = btn.getAttribute('data-paid') !== '0';
 
             if ((stage === 'demo_ready' || stage === 'demo_reminder' || stage === 'outbound_pitch' || stage === 'outbound_followup') && !isValidUrl(demoUrl)) {
-              showToast('Vui lòng nhập Link Demo hợp lệ trước khi gửi!', true);
+              showToast('Vui lòng nhập Link Demo hợp lệ (Mục 1) trước khi gửi!', true);
               if (demoInput) demoInput.focus();
               return;
+            }
+
+            if (stage === 'site_launched') {
+              if (!isPaid) {
+                showToast('Khách hàng chưa thanh toán $599 nên chưa thể báo lên sóng chính thức!', true);
+                return;
+              }
+              if (!isValidUrl(liveUrl)) {
+                showToast('Vui lòng nhập Tên Miền Chính Thức (Mục 2) trước khi báo lên sóng!', true);
+                if (liveInput) liveInput.focus();
+                return;
+              }
             }
 
             const origHtml = btn.innerHTML;
@@ -1510,7 +1702,8 @@
               action: 'trigger_stage',
               customerId: cid,
               stage,
-              demoUrl
+              demoUrl,
+              liveUrl
             });
 
             if (res && res.notifyRes) {
@@ -1642,12 +1835,14 @@
       });
 
       // Settings Modal
+      const cfgGdriveWebhook = document.getElementById('cfg-gdrive-webhook');
       document.getElementById('btn-open-settings').addEventListener('click', () => {
         cfgClicksendUser.value = localCreds.clicksendUsername || '';
         cfgClicksendKey.value = localCreds.clicksendApiKey || '';
         cfgClicksendFrom.value = localCreds.clicksendFrom || '';
         cfgResendKey.value = localCreds.resendApiKey || '';
         cfgResendFrom.value = localCreds.resendFromEmail || 'WynnPages Atelier <hello@wynnpages.com.au>';
+        if (cfgGdriveWebhook) cfgGdriveWebhook.value = localCreds.googleDriveWebhookUrl || '';
         settingsModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
@@ -1657,13 +1852,37 @@
           clicksendApiKey: cfgClicksendKey.value.trim(),
           clicksendFrom: cfgClicksendFrom.value.trim(),
           resendApiKey: cfgResendKey.value.trim(),
-          resendFromEmail: cfgResendFrom.value.trim()
+          resendFromEmail: cfgResendFrom.value.trim(),
+          googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : ''
         };
         localStorage.setItem('wynn_Messaging_creds', JSON.stringify(localCreds));
         settingsModal.classList.add('hidden');
         loadClients();
-        showToast('Đã lưu cấu hình ClickSend & Resend!');
+        showToast('Đã lưu cấu hình ClickSend, Resend & Google Drive!');
       });
+
+      const btnCopyGas = document.getElementById('btn-copy-gas-script');
+      if (btnCopyGas) {
+        btnCopyGas.addEventListener('click', () => {
+          const gasCode = [
+            "function doPost(e) {",
+            "  var data = JSON.parse(e.postData.contents);",
+            "  var rootName = 'WynnPages Clients';",
+            "  var roots = DriveApp.getFoldersByName(rootName);",
+            "  var rootFolder = roots.hasNext() ? roots.next() : DriveApp.createFolder(rootName);",
+            "  var subName = data.folderName || 'Unknown Client';",
+            "  var subs = rootFolder.getFoldersByName(subName);",
+            "  var clientFolder = subs.hasNext() ? subs.next() : rootFolder.createFolder(subName);",
+            "  var bytes = Utilities.base64Decode(data.base64Data);",
+            "  var blob = Utilities.newBlob(bytes, data.mimeType || 'application/octet-stream', data.fileName || 'upload.bin');",
+            "  var file = clientFolder.createFile(blob);",
+            "  return ContentService.createTextOutput(JSON.stringify({ ok: true, fileUrl: file.getUrl(), folderUrl: clientFolder.getUrl() })).setMimeType(ContentService.MimeType.JSON);",
+            "}"
+          ].join('\n');
+          navigator.clipboard.writeText(gasCode);
+          showToast('Đã copy mã Google Apps Script! Hãy dán vào script.google.com -> Deploy -> Web App.');
+        });
+      }
 
       // Add / Edit Client Modal
       document.getElementById('btn-new-client').addEventListener('click', () => {
