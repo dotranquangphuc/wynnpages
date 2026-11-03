@@ -40,8 +40,20 @@ function normalizeAuPhone(rawPhone) {
   return cleaned;
 }
 
+function toGsmSafeAscii(str) {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, (m) => (m === 'đ' ? 'd' : 'D'))
+    .replace(/[—–]/g, '-')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'");
+}
+
 async function sendClickSendSms(toPhone, bodyText, cfg) {
   const formattedTo = normalizeAuPhone(toPhone);
+  const safeBody = toGsmSafeAscii(bodyText);
   if (!formattedTo) {
     return { sent: false, reason: 'Missing recipient phone number' };
   }
@@ -53,7 +65,7 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
     const auth = btoa(`${cfg.clicksendUsername}:${cfg.clicksendApiKey}`);
     const msgObj = {
       source: 'wynnpages-atelier',
-      body: bodyText,
+      body: safeBody,
       to: formattedTo
     };
     if (fromValue) {
@@ -359,6 +371,11 @@ function formatCustomerRecord(cust) {
     demoUrl: m.demo_url || '',
     checkoutSessionId: m.checkout_session_id || '',
     welcomeSent: m.welcome_sent || 'false',
+    lastSmsLog: m.last_sms_log || '',
+    lastEmailLog: m.last_email_log || '',
+    demoSentAt: m.demo_sent_at || '',
+    reminderCount: Number(m.reminder_count || 0),
+    launchedAt: m.launched_at || '',
     submittedAt: m.submitted_at || new Date((cust.created || 0) * 1000).toISOString(),
     created: cust.created
   };
@@ -889,6 +906,16 @@ export default {
         const action = body.action || '';
         const customerId = (body.customerId || '').trim();
 
+        // Action 0: Delete Client Record
+        if (action === 'delete_client' && customerId) {
+          const delRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          const delData = await delRes.json().catch(() => ({}));
+          return new Response(JSON.stringify({ ok: delRes.ok, deleted: delData }), { status: 200, headers: corsHeaders });
+        }
+
         // Action A: Create or Update Client + Optionally Trigger Stage Notification
         if (action === 'trigger_stage' || action === 'save_client') {
           let cust = null;
@@ -901,9 +928,9 @@ export default {
           }
 
           const uParams = new URLSearchParams();
-          const email = (body.email || (cust && cust.email) || '').trim();
-          const name = (body.name || (cust && cust.name) || '').trim();
-          const phone = (body.phone || (cust && cust.phone) || '').trim();
+          const email = (body.email !== undefined ? body.email : (cust && cust.email) || '').trim();
+          const name = (body.name !== undefined ? body.name : (cust && cust.name) || '').trim();
+          const phone = (body.phone !== undefined ? body.phone : (cust && cust.phone) || '').trim();
           const demoUrl = (body.demoUrl !== undefined ? body.demoUrl : (cust && cust.metadata && cust.metadata.demo_url) || '').trim();
           const stage = body.stage || (cust && cust.metadata && cust.metadata.stage) || 'paid';
 
@@ -914,11 +941,15 @@ export default {
           if (name) uParams.append('metadata[customer_name]', name);
           if (phone) uParams.append('metadata[customer_phone]', phone);
           if (email) uParams.append('metadata[customer_email]', email);
-          if (demoUrl) uParams.append('metadata[demo_url]', demoUrl);
-          if (body.industry !== undefined) uParams.append('metadata[industry]', body.industry);
+          if (body.demoUrl !== undefined) uParams.append('metadata[demo_url]', demoUrl);
+          if (body.industry !== undefined) {
+            uParams.append('metadata[industry]', body.industry);
+            if (body.industry) uParams.append('metadata[brief_status]', 'completed');
+          }
           if (body.brandColors !== undefined) uParams.append('metadata[brand_colors]', body.brandColors);
           if (body.vibeLinks !== undefined) uParams.append('metadata[vibe_links]', body.vibeLinks);
           if (body.existingDomain !== undefined) uParams.append('metadata[existing_domain]', body.existingDomain);
+          if (body.desiredDomains !== undefined) uParams.append('metadata[desired_domains]', body.desiredDomains);
 
           const stageMap = {
             payment_confirmed: 'paid',
@@ -929,6 +960,18 @@ export default {
           };
           const mappedStage = stageMap[stage] || stage;
           uParams.append('metadata[stage]', mappedStage);
+
+          const nowIso = new Date().toISOString();
+          if (action === 'trigger_stage') {
+            if (stage === 'demo_ready') {
+              uParams.append('metadata[demo_sent_at]', nowIso);
+            } else if (stage === 'demo_reminder') {
+              const prevCount = Number((cust && cust.metadata && cust.metadata.reminder_count) || 0);
+              uParams.append('metadata[reminder_count]', String(prevCount + 1));
+            } else if (stage === 'site_launched') {
+              uParams.append('metadata[launched_at]', nowIso);
+            }
+          }
 
           const saveEndpoint = customerId
             ? `https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`
@@ -942,8 +985,8 @@ export default {
             },
             body: uParams.toString()
           });
-          const updatedCust = await saveRes.json();
-          const formatted = formatCustomerRecord(updatedCust);
+          let updatedCust = await saveRes.json();
+          let formatted = formatCustomerRecord(updatedCust);
 
           let notifyRes = null;
           if (action === 'trigger_stage') {
@@ -953,6 +996,30 @@ export default {
               origin: url.origin,
               cfg: effectiveCfg
             });
+
+            // Save delivery logs to Stripe metadata
+            const logParams = new URLSearchParams();
+            const smsSummary = notifyRes.smsResult && notifyRes.smsResult.sent
+              ? `OK (${notifyRes.smsResult.to}) [${stage}] @ ${nowIso}`
+              : `ERR: ${(notifyRes.smsResult && notifyRes.smsResult.reason) || 'Skipped'} [${stage}]`;
+            const emailSummary = notifyRes.emailResult && notifyRes.emailResult.sent
+              ? `OK (${notifyRes.emailResult.to}) [${stage}] @ ${nowIso}`
+              : `ERR: ${(notifyRes.emailResult && notifyRes.emailResult.reason) || 'Skipped'} [${stage}]`;
+            logParams.append('metadata[last_sms_log]', smsSummary.slice(0, 480));
+            logParams.append('metadata[last_email_log]', emailSummary.slice(0, 480));
+
+            const logRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: logParams.toString()
+            });
+            if (logRes.ok) {
+              updatedCust = await logRes.json();
+              formatted = formatCustomerRecord(updatedCust);
+            }
           }
 
           return new Response(
