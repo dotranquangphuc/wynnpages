@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WynnPages — Live Custom Website Demo Preview</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #1c1917;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden">
+
+  <!-- Full-Screen Demo Iframe -->
+  <iframe 
+    id="demo-iframe" 
+    src="about:blank" 
+    class="w-full flex-1 border-0 bg-white"
+    title="Custom Website Demo Preview"
+  ></iframe>
+
+  <!-- Floating Bottom Claim Bar (Phase 2: The Hook) -->
+  <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-2xl bg-[#231f1a]/95 backdrop-blur-xl text-[#fcf9f3] border border-[#e8b948]/35 rounded-2xl p-3 sm:px-5 sm:py-3.5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+      <div class="w-10 h-10 rounded-xl bg-[#96432b] text-white flex items-center justify-center font-editorial font-bold text-xl shrink-0 shadow-sm">
+        W
+      </div>
+      <div class="min-w-0 flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-[#e8b948] font-bold block truncate">
+          WynnPages Bespoke Demo • Zero Monthly Retainers
+        </span>
+        <p id="preview-biz-name" class="text-xs sm:text-sm font-semibold text-[#fcf9f3] truncate">
+          Your Custom Artisan Website Preview
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+      <a 
+        id="claim-btn" 
+        href="/api/claim"
+        class="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-lg shadow-[#96432b]/40 transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap"
+      >
+        <span id="claim-btn-label">Claim This Website — $599 AUD</span>
+        <span>&rarr;</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const cid = (params.get('cid') || '').trim();
+      const demoParam = (params.get('demo') || params.get('url') || '').trim();
+      const emailParam = (params.get('email') || '').trim();
+      const nameParam = (params.get('name') || '').trim();
+
+      const iframe = document.getElementById('demo-iframe');
+      const bizNameEl = document.getElementById('preview-biz-name');
+      const claimBtn = document.getElementById('claim-btn');
+      const claimLabel = document.getElementById('claim-btn-label');
+
+      function applyInfo({ demoUrl, name, email, id }) {
+        if (name) {
+          bizNameEl.textContent = 'Crafted exclusively for ' + name;
+          document.title = `${name} — Custom Website Demo | WynnPages`;
+        }
+        if (demoUrl) {
+          const fullUrl = demoUrl.startsWith('http') ? demoUrl : 'https://' + demoUrl;
+          iframe.src = fullUrl;
+        }
+        const q = new URLSearchParams();
+        if (id || cid) q.set('cid', id || cid);
+        if (email || emailParam) q.set('email', email || emailParam);
+        if (name || nameParam) q.set('name', name || nameParam);
+        if (demoUrl || demoParam) q.set('demo', demoUrl || demoParam);
+        claimBtn.href = `/api/claim?${q.toString()}`;
+      }
+
+      claimBtn.addEventListener('click', () => {
+        claimLabel.textContent = 'Redirecting to Secure Stripe Checkout...';
+      });
+
+      if (demoParam) {
+        applyInfo({ demoUrl: demoParam, name: nameParam, email: emailParam, id: cid });
+      } else if (cid) {
+        fetch(`/api/client-public?cid=${encodeURIComponent(cid)}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.ok) {
+              applyInfo({
+                demoUrl: data.demoUrl || '/',
+                name: data.businessName || data.name,
+                email: data.email,
+                id: data.id
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    })();
+  </script>
+</body>
+</html>

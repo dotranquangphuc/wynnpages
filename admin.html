@@ -779,6 +779,44 @@
                   ` : ''}
                 </div>
 
+                <!-- Row 1.5: Outbound Sales Bar (Pre-configured Stripe Checkout & Demo Overlay) -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#ece4d5] text-[11px]">
+                  <div class="flex items-center gap-1.5 text-stone-600 font-semibold">
+                    <span class="px-2 py-0.5 rounded bg-[#96432b]/10 text-[#96432b] font-extrabold uppercase tracking-wider text-[10px]">Outbound Sales</span>
+                    <span>Gửi Demo kèm nút "Claim This Website - $599" (Không cần điền form trước):</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-name="${escapeHtml(c.businessName || c.name || c.email)}"
+                      class="btn-copy-preview px-2.5 py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#96432b] text-[#f6f1e8] font-bold transition-colors inline-flex items-center gap-1"
+                      title="Mở trang Demo có gắn sẵn thanh nổi Claim This Website - $599 AUD"
+                    >
+                      <span>🖥️ Copy Link Demo + Nút Mua ($599)</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-name="${escapeHtml(c.businessName || c.name || c.email)}"
+                      class="btn-copy-claim px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#fbdeb9]/50 border border-[#d8ccb8] text-[#96432b] font-bold transition-colors inline-flex items-center gap-1"
+                      title="Link thanh toán Stripe $599 điền sẵn email của khách, thanh toán xong chuyển thẳng tới /demo-success"
+                    >
+                      <span>💳 Copy Link Stripe Riêng ($599)</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      data-email="${escapeHtml(c.email || '')}"
+                      data-name="${escapeHtml(c.businessName || c.name || '')}"
+                      class="btn-copy-widget px-2.5 py-1.5 rounded-lg bg-white hover:bg-stone-100 border border-[#dfd5c3] text-stone-700 font-semibold transition-colors inline-flex items-center gap-1"
+                      title="Copy thẻ <script> để nhúng trực tiếp nút Claim $599 vào source code trang Demo"
+                    >
+                      <span>🧩 Copy Mã Nhúng Widget</span>
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Row 2: 5 Smart Stage Trigger Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
                   <!-- Button 1: Nhắc Điền Brief -->
@@ -917,6 +955,40 @@
             if (!client) return;
             navigator.clipboard.writeText(client.aiPrompt);
             showToast(`Đã copy toàn bộ Brief của "${client.businessName || client.name || client.email}"! Bạn chỉ cần dán vào khung chat AI để thiết kế web.`);
+          });
+        });
+
+        // Outbound Sales: Copy Demo Preview Link (with Floating "Claim This Website - $599" Bar)
+        document.querySelectorAll('.btn-copy-preview').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const name = btn.getAttribute('data-name') || 'khách';
+            const previewUrl = `${window.location.origin}/preview?cid=${encodeURIComponent(cid)}`;
+            navigator.clipboard.writeText(previewUrl);
+            showToast(`Đã copy Link Demo kèm nút Mua $599 cho "${name}": ${previewUrl}`);
+          });
+        });
+
+        // Outbound Sales: Copy Pre-configured Stripe Checkout Link ($599 -> redirects to /demo-success)
+        document.querySelectorAll('.btn-copy-claim').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const name = btn.getAttribute('data-name') || 'khách';
+            const claimUrl = `${window.location.origin}/api/claim?cid=${encodeURIComponent(cid)}`;
+            navigator.clipboard.writeText(claimUrl);
+            showToast(`Đã copy Link Thanh Toán Stripe $599 riêng cho "${name}" (Tự điền sẵn Email & chuyển về /demo-success sau khi trả tiền)!`);
+          });
+        });
+
+        // Outbound Sales: Copy Embeddable Floating Bar Script (<script src=".../claim-widget.js">)
+        document.querySelectorAll('.btn-copy-widget').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const email = btn.getAttribute('data-email') || '';
+            const name = btn.getAttribute('data-name') || '';
+            const snippet = `<script src="${window.location.origin}/claim-widget.js" data-cid="${cid}" data-email="${email}" data-name="${name.replace(/"/g, '&quot;')}"><\/script>`;
+            navigator.clipboard.writeText(snippet);
+            showToast(`Đã copy mã nhúng thanh nổi "Claim This Website - $599 AUD"! Dán trước thẻ </body> của trang Demo.`);
           });
         });
 

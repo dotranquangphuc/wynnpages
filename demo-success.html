@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WynnPages — Payment Secured • Finalize Your Website</title>
+  <meta name="description" content="Payment Secured. Your artisan website is officially yours. Confirm your final details before we go live.">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: {
+              50: '#fdfcf9',
+              100: '#fbf8f2',
+              200: '#f6f1e8',
+              300: '#ede4d3',
+              800: '#3a3329',
+              900: '#231f1a',
+            },
+            terracotta: {
+              400: '#e58f55',
+              500: '#96432b',
+              600: '#7d3520',
+            },
+            gold: {
+              400: '#e8b948',
+              500: '#d49b28',
+              600: '#b27b14',
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f6f1e8;
+      color: #2b251e;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .atelier-input {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .atelier-input:hover {
+      border-color: #cbbba0;
+    }
+    .atelier-input:focus {
+      background-color: #ffffff;
+      border-color: #96432b;
+      box-shadow: 0 0 0 4px rgba(150, 67, 43, 0.1);
+      outline: none;
+    }
+    .choice-card {
+      background-color: #fcf9f3;
+      border: 1.5px solid #e2d9c8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .choice-card:hover {
+      border-color: #b89f82;
+      background-color: #faf5eb;
+    }
+    .choice-card.selected {
+      background-color: #fffaf2;
+      border-color: #96432b;
+      box-shadow: 0 0 0 3px rgba(150, 67, 43, 0.12);
+    }
+    .choice-card.selected .choice-badge {
+      background-color: #96432b;
+      color: #ffffff;
+      border-color: #96432b;
+    }
+    .upload-zone {
+      background-color: #fcf9f3;
+      border: 1.5px dashed #d5c7b2;
+      transition: all 0.2s ease;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #96432b;
+      background-color: #fff9f0;
+    }
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-reveal {
+      animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
+
+  <!-- Atelier Header -->
+  <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/85 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <span class="font-editorial text-2xl font-bold tracking-tight text-stone-900 group-hover:text-[#96432b] transition-colors">
+          WynnPages
+        </span>
+        <span class="text-xs uppercase tracking-widest text-[#96432b] font-semibold bg-[#fbdeb9]/50 px-2.5 py-0.5 rounded-full">
+          Atelier Launchpad
+        </span>
+      </a>
+      <a href="/" class="text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors flex items-center gap-1.5">
+        <span>&larr;</span>
+        <span>Back to Site</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-2xl w-full mx-auto px-5 sm:px-6 py-10 lg:py-14">
+    <!-- Hero Confirmation Message -->
+    <div class="text-center max-w-xl mx-auto mb-9">
+      <div class="w-14 h-14 rounded-full bg-[#d4e4ce] text-[#536251] flex items-center justify-center mx-auto mb-4 shadow-sm border border-[#536251]/20">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4e4ce] text-[#586755] font-semibold text-[10px] uppercase tracking-wider mb-3">
+        <span>$599 AUD • Official Ownership Locked</span>
+      </div>
+      <h1 class="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 leading-tight mb-3">
+        Payment Secured. Your artisan website is officially yours.
+      </h1>
+      <p class="text-stone-600 text-sm sm:text-base leading-relaxed">
+        We built this demo using your public info. Want to update anything before we go live?
+      </p>
+      <div id="client-info-pill" class="hidden mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-200/70 text-xs text-stone-700 font-mono">
+        <span class="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse"></span>
+        <span id="client-email-display"></span>
+      </div>
+    </div>
+
+    <!-- Confirmation Form Card -->
+    <div class="bg-white rounded-3xl shadow-xl border border-[#e5dec9] overflow-hidden relative">
+      
+      <!-- Decorative Atelier Studio Header Banner -->
+      <div class="relative h-32 sm:h-36 bg-[#f4ece0] overflow-hidden border-b border-[#e5dec9]">
+        <img 
+          src="/assets/banner-web.jpg" 
+          alt="WynnPages Atelier Desk" 
+          class="w-full h-full object-cover object-[center_45%] opacity-90"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent"></div>
+        <div class="absolute bottom-3 left-6 sm:left-10 right-6 sm:right-10 flex items-end justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] shadow-md flex items-center justify-center font-editorial text-2xl font-bold text-[#96432b]">
+              W
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b] block">Final Launch Checklist</span>
+              <h2 class="font-editorial text-xl sm:text-2xl font-bold text-stone-900 leading-none">Confirm Your Launch Details</h2>
+            </div>
+          </div>
+          <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-[#fcf9f3]/90 px-3 py-1 rounded-full border border-[#e5dec9]">
+            <span>⚡ Takes 60 seconds</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- FORM VIEW -->
+      <form id="demo-confirm-form" class="p-6 sm:p-10 space-y-8" novalidate>
+        
+        <!-- Email Fallback if not in URL -->
+        <div id="email-fallback-wrap" class="hidden space-y-2">
+          <label for="confirm-email" class="block text-sm font-bold text-stone-900">
+            Your Email Address <span class="text-[#96432b]">*</span>
+          </label>
+          <input 
+            type="email" 
+            id="confirm-email" 
+            placeholder="you@yourbusiness.com.au" 
+            class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400"
+          >
+        </div>
+
+        <!-- Question 1: Upload updated Services Menu or new photos (Optional) -->
+        <div class="space-y-3">
+          <div>
+            <label for="updates-file-input" class="block text-base font-bold text-stone-900">
+              1. Upload an updated Services Menu or any new photos <span class="text-stone-400 font-normal text-xs">(Optional)</span>
+            </label>
+            <p class="text-xs text-stone-500 mt-0.5">
+              If everything on your demo looks great as-is, you can leave this blank! Otherwise, drop any updated price lists, logos, or photos below.
+            </p>
+          </div>
+
+          <label for="updates-file-input" id="updates-dropzone" class="upload-zone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+            <input type="file" id="updates-file-input" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.zip" multiple class="hidden">
+            <div class="w-11 h-11 rounded-full bg-[#f3eae0] text-[#96432b] flex items-center justify-center mb-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path>
+              </svg>
+            </div>
+            <p id="updates-file-label" class="text-sm font-bold text-stone-800">Choose files or drag &amp; drop here</p>
+            <p class="text-xs text-stone-400 mt-0.5">Menu PDF, price list, high-res logo, or photos (Max 4 MB)</p>
+          </label>
+
+          <textarea 
+            id="updates-notes" 
+            rows="2" 
+            placeholder="Optional: Paste a Google Drive/Dropbox link or write any quick text/price tweaks you'd like us to make..." 
+            class="atelier-input w-full rounded-xl px-4 py-3 text-xs text-stone-900 placeholder-stone-400 resize-y"
+          ></textarea>
+        </div>
+
+        <hr class="border-[#ece5d8]">
+
+        <!-- Question 2: Do you have a domain name? -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-base font-bold text-stone-900">
+              2. Do you have a domain name? <span class="text-[#96432b]">*</span>
+            </label>
+            <p class="text-xs text-stone-500 mt-0.5">Tell us where we should connect your live website.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Do you have a domain name?">
+            <!-- Option A: Yes -->
+            <button 
+              type="button" 
+              data-domain-choice="Yes, I have one"
+              class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                A
+              </span>
+              <span class="text-sm font-semibold text-stone-800">Yes, I have one</span>
+            </button>
+
+            <!-- Option B: No -->
+            <button 
+              type="button" 
+              data-domain-choice="No, please help me get one"
+              class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                B
+              </span>
+              <span class="text-sm font-semibold text-stone-800">No, please help me get one</span>
+            </button>
+          </div>
+
+          <!-- Conditional Input A -->
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-2 animate-reveal">
+            <label for="existing-domain-input" class="block text-sm font-bold text-stone-900">
+              What is your domain name? <span class="text-[#96432b]">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="existing-domain-input" 
+              placeholder="www.yourbusiness.com.au" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+
+          <!-- Conditional Input B -->
+          <div id="domain-no-wrap" class="hidden pt-2 space-y-2 animate-reveal">
+            <label for="desired-domain-input" class="block text-sm font-bold text-stone-900">
+              Enter 1–2 desired domains for us to check &amp; register <span class="text-[#96432b]">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="desired-domain-input" 
+              placeholder="e.g. emeraldsalon.com.au" 
+              class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
+            >
+          </div>
+        </div>
+
+        <!-- Validation Error Banner -->
+        <div id="form-error" class="hidden rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-700 flex items-center gap-2">
+          <span>⚠️</span>
+          <span id="form-error-text">Please complete the domain section.</span>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button 
+            type="submit" 
+            id="submit-btn"
+            class="w-full py-4 px-6 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all flex items-center justify-center gap-2"
+          >
+            <span id="submit-label">Finalize My Website</span>
+            <span id="submit-icon">&rarr;</span>
+          </button>
+          <p class="text-center text-[11px] text-stone-400 mt-3 flex items-center justify-center gap-1.5">
+            <span>🔒</span>
+            <span>100% Ownership • Zero Monthly Retainers • Live within 7 Days</span>
+          </p>
+        </div>
+      </form>
+
+      <!-- THANK YOU VIEW -->
+      <div id="thank-you-view" class="hidden p-8 sm:p-12 text-center space-y-6 animate-reveal">
+        <div class="w-16 h-16 rounded-full bg-[#d4e4ce] text-[#4c6b47] flex items-center justify-center mx-auto shadow-sm border border-[#4c6b47]/20 text-2xl">
+          ✨
+        </div>
+
+        <div class="space-y-3 max-w-lg mx-auto">
+          <span class="inline-block text-[11px] font-bold uppercase tracking-widest text-[#96432b] bg-[#fbdeb9]/60 px-3 py-1 rounded-full">
+            Launch Sequence Activated
+          </span>
+          <h3 class="font-editorial text-3xl sm:text-4xl font-bold text-stone-900 leading-tight">
+            Thank you! We are firing up the code editor.
+          </h3>
+          <p class="text-stone-600 text-base leading-relaxed">
+            Your pristine website will be live on your domain in <strong>7 days</strong> (often much sooner since your custom demo is already crafted!).
+          </p>
+        </div>
+
+        <div id="submitted-summary" class="max-w-md mx-auto bg-[#fcf9f3] border border-[#e5dec9] rounded-2xl p-5 text-left text-xs space-y-2.5 text-stone-700">
+        </div>
+
+        <div class="pt-4">
+          <a 
+            href="/" 
+            class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors"
+          >
+            <span>&larr;</span>
+            <span>Return to WynnPages Studio</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="border-t border-[#dbc1ba]/30 py-6 text-center text-xs text-stone-400">
+    <p>WynnPages Australia • Hand-crafted bespoke digital craftsmanship • © 2026</p>
+  </footer>
+
+  <script>
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = (urlParams.get('email') || '').trim();
+      const sessionId = (urlParams.get('session_id') || '').trim();
+      const customerId = (urlParams.get('cid') || '').trim();
+
+      const emailPill = document.getElementById('client-info-pill');
+      const emailDisplay = document.getElementById('client-email-display');
+      const emailFallbackWrap = document.getElementById('email-fallback-wrap');
+      const emailInput = document.getElementById('confirm-email');
+
+      const updatesFileInput = document.getElementById('updates-file-input');
+      const updatesFileLabel = document.getElementById('updates-file-label');
+      const updatesDropzone = document.getElementById('updates-dropzone');
+      const updatesNotes = document.getElementById('updates-notes');
+
+      const domainChoiceBtns = document.querySelectorAll('.domain-choice-btn');
+      const domainYesWrap = document.getElementById('domain-yes-wrap');
+      const domainNoWrap = document.getElementById('domain-no-wrap');
+      const existingDomainInput = document.getElementById('existing-domain-input');
+      const desiredDomainInput = document.getElementById('desired-domain-input');
+
+      const form = document.getElementById('demo-confirm-form');
+      const errorBox = document.getElementById('form-error');
+      const errorText = document.getElementById('form-error-text');
+      const submitBtn = document.getElementById('submit-btn');
+      const submitLabel = document.getElementById('submit-label');
+      const submitIcon = document.getElementById('submit-icon');
+      const thankYouView = document.getElementById('thank-you-view');
+      const submittedSummary = document.getElementById('submitted-summary');
+
+      let selectedDomainOption = '';
+      let uploadedFileObj = null;
+
+      if (emailParam) {
+        emailDisplay.textContent = 'Account: ' + emailParam;
+        emailPill.classList.remove('hidden');
+        emailInput.value = emailParam;
+      } else {
+        emailFallbackWrap.classList.remove('hidden');
+      }
+
+      // Verify Stripe Session in background
+      if (sessionId && sessionId.startsWith('cs_')) {
+        fetch('/api/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, flow: 'outbound_demo' })
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.email && !emailInput.value) {
+              emailInput.value = data.email;
+              emailDisplay.textContent = 'Account: ' + data.email;
+              emailPill.classList.remove('hidden');
+              emailFallbackWrap.classList.add('hidden');
+            }
+          })
+          .catch(() => {});
+      }
+
+      // File upload handler
+      function handleFiles(files) {
+        if (!files || !files.length) return;
+        const file = files[0];
+        if (file.size > 4.5 * 1024 * 1024) {
+          showError('File size exceeds 4MB. Please choose a smaller file or paste a Google Drive/Dropbox link in the notes box below.');
+          updatesFileInput.value = '';
+          return;
+        }
+        const extra = files.length > 1 ? ` (+${files.length - 1} more)` : '';
+        updatesFileLabel.textContent = '✓ ' + file.name + extra + ' (' + Math.round(file.size / 1024) + ' KB)';
+        updatesFileLabel.classList.add('text-[#96432b]');
+        const reader = new FileReader();
+        reader.onload = () => {
+          uploadedFileObj = {
+            name: Array.from(files).map(f => f.name).join(', '),
+            type: file.type,
+            size: file.size,
+            dataUrl: reader.result
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+
+      updatesFileInput.addEventListener('change', () => handleFiles(updatesFileInput.files));
+      if (updatesDropzone) {
+        ['dragenter', 'dragover'].forEach(evt => {
+          updatesDropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            updatesDropzone.classList.add('dragover');
+          });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+          updatesDropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            updatesDropzone.classList.remove('dragover');
+          });
+        });
+        updatesDropzone.addEventListener('drop', (e) => {
+          const dt = e.dataTransfer;
+          if (dt && dt.files && dt.files.length) handleFiles(dt.files);
+        });
+      }
+
+      // Domain Choice Buttons
+      domainChoiceBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedDomainOption = btn.getAttribute('data-domain-choice') || '';
+          domainChoiceBtns.forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+
+          if (selectedDomainOption === 'Yes, I have one') {
+            domainYesWrap.classList.remove('hidden');
+            domainNoWrap.classList.add('hidden');
+            existingDomainInput.focus();
+          } else {
+            domainNoWrap.classList.remove('hidden');
+            domainYesWrap.classList.add('hidden');
+            desiredDomainInput.focus();
+          }
+          errorBox.classList.add('hidden');
+        });
+      });
+
+      function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.classList.remove('hidden');
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorBox.classList.add('hidden');
+
+        const resolvedEmail = (emailParam || emailInput.value || '').trim();
+        if (!resolvedEmail || !resolvedEmail.includes('@')) {
+          showError('Please enter your email address.');
+          emailInput.focus();
+          return;
+        }
+
+        if (!selectedDomainOption) {
+          showError('Please select whether you already have a domain name.');
+          return;
+        }
+
+        if (selectedDomainOption === 'Yes, I have one' && !existingDomainInput.value.trim()) {
+          showError('Please enter your existing domain name.');
+          existingDomainInput.focus();
+          return;
+        }
+
+        if (selectedDomainOption === 'No, please help me get one' && !desiredDomainInput.value.trim()) {
+          showError('Please enter 1–2 desired domain names for us to check.');
+          desiredDomainInput.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+        submitLabel.textContent = 'Finalizing your website...';
+        submitIcon.textContent = '⏳';
+
+        const payload = {
+          sessionId,
+          customerId,
+          email: resolvedEmail,
+          briefType: 'demo',
+          hasDomain: selectedDomainOption,
+          existingDomain: existingDomainInput.value.trim(),
+          desiredDomains: desiredDomainInput.value.trim(),
+          menuFile: uploadedFileObj,
+          menuLink: updatesNotes.value.trim()
+        };
+
+        try {
+          const res = await fetch('/api/submit-brief', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || 'Could not save confirmation details.');
+
+          const domainVal = selectedDomainOption === 'Yes, I have one' ? payload.existingDomain : payload.desiredDomains;
+          const updatesVal = uploadedFileObj ? uploadedFileObj.name : (payload.menuLink || 'Keep Demo As-Is ✓');
+
+          submittedSummary.innerHTML = [
+            `<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Account</span><span class="font-semibold text-stone-900">${escapeHtml(resolvedEmail)}</span></div>`,
+            `<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Content Updates</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(updatesVal)}</span></div>`,
+            `<div class="flex justify-between gap-4"><span class="text-stone-400 font-medium">Launch Domain</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(domainVal)}</span></div>`
+          ].join('');
+
+          form.classList.add('hidden');
+          thankYouView.classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+          showError(err.message || 'Something went wrong. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+          submitLabel.textContent = 'Finalize My Website';
+          submitIcon.textContent = '→';
+        }
+      });
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

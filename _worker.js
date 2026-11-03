@@ -469,6 +469,120 @@ export default {
 
     const cfg = getConfig(env);
 
+    // 1b. Public Client Preview Info (GET /api/client-public?cid=cus_...)
+    if (url.pathname === '/api/client-public' && request.method === 'GET') {
+      const cid = (url.searchParams.get('cid') || '').trim();
+      if (!cid || !cfg.stripeSecretKey) {
+        return new Response(JSON.stringify({ ok: false }), { status: 400, headers: corsHeaders });
+      }
+      const res = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cid)}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+      });
+      if (!res.ok) {
+        return new Response(JSON.stringify({ ok: false }), { status: 404, headers: corsHeaders });
+      }
+      const cust = await res.json();
+      const rec = formatCustomerRecord(cust);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          id: rec.id,
+          name: rec.name,
+          businessName: rec.businessName,
+          email: rec.email,
+          demoUrl: rec.demoUrl
+        }),
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
+    // 1c. Outbound Demo 1-Click Claim -> Pre-configured Stripe Checkout -> Redirects to /demo-success
+    if (url.pathname === '/api/claim' && (request.method === 'GET' || request.method === 'POST')) {
+      try {
+        if (!cfg.stripeSecretKey) {
+          return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY' }), { status: 500, headers: corsHeaders });
+        }
+        let cid = (url.searchParams.get('cid') || '').trim();
+        let email = (url.searchParams.get('email') || '').trim();
+        let bizName = (url.searchParams.get('name') || '').trim();
+        let demoUrl = (url.searchParams.get('demo') || '').trim();
+        const wantJson = url.searchParams.get('format') === 'json';
+
+        let cust = null;
+        if (cid && cid.startsWith('cus_')) {
+          const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cid)}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          });
+          if (cRes.ok) {
+            cust = await cRes.json();
+            if (!email) email = cust.email || (cust.metadata && cust.metadata.customer_email) || '';
+            if (!bizName) bizName = (cust.metadata && cust.metadata.business_name) || cust.name || '';
+            if (!demoUrl) demoUrl = (cust.metadata && cust.metadata.demo_url) || '';
+          }
+        } else if (email) {
+          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
+          if (cust) cid = cust.id;
+        }
+
+        const origin = url.origin;
+        const successUrl = `${origin}/demo-success?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&cid=${encodeURIComponent(cid)}`;
+        const cancelUrl = demoUrl && demoUrl.startsWith('http') ? demoUrl : `${origin}/?canceled=true`;
+
+        const params = new URLSearchParams();
+        params.append('mode', 'payment');
+        if (cust && cust.id) {
+          params.append('customer', cust.id);
+        } else if (email) {
+          params.append('customer_email', email);
+        }
+        params.append('success_url', successUrl);
+        params.append('cancel_url', cancelUrl);
+        params.append('allow_promotion_codes', 'true');
+        params.append('billing_address_collection', 'auto');
+
+        if (env.STRIPE_PRICE_ID) {
+          params.append('line_items[0][price]', env.STRIPE_PRICE_ID);
+          params.append('line_items[0][quantity]', '1');
+        } else {
+          params.append('line_items[0][price_data][currency]', 'aud');
+          params.append('line_items[0][price_data][unit_amount]', '59900');
+          params.append('line_items[0][price_data][product_data][name]', bizName ? `WynnPages — Bespoke Website for ${bizName}` : 'WynnPages — Claim Your Custom Artisan Website');
+          params.append('line_items[0][price_data][product_data][description]', 'Full Ownership • Custom Demo Ready • Zero Monthly Retainers • Flat $599 AUD');
+          params.append('line_items[0][quantity]', '1');
+        }
+
+        params.append('metadata[studio]', 'WynnPages Australia');
+        params.append('metadata[flow]', 'outbound_demo');
+        if (cid) params.append('metadata[customer_id]', cid);
+        if (bizName) params.append('metadata[customer_name]', bizName);
+        if (email) params.append('metadata[customer_email]', email);
+        if (demoUrl) params.append('metadata[demo_url]', demoUrl);
+
+        const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: params.toString()
+        });
+        const session = await stripeRes.json();
+        if (!stripeRes.ok || !session.url) {
+          const msg = session.error ? session.error.message : 'Could not create Stripe Checkout session';
+          return new Response(JSON.stringify({ error: msg }), { status: 400, headers: corsHeaders });
+        }
+
+        if (wantJson) {
+          return new Response(JSON.stringify({ ok: true, sessionId: session.id, url: session.url }), { status: 200, headers: corsHeaders });
+        }
+        return Response.redirect(session.url, 303);
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 2. Stripe Checkout Session Endpoint
     if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
       try {
