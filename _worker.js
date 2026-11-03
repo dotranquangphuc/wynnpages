@@ -439,6 +439,8 @@ function formatCustomerRecord(cust) {
     hasDomain: m.has_domain || '',
     existingDomain: m.existing_domain || '',
     desiredDomains: m.desired_domains || '',
+    domainAccessNotes: m.domain_access_notes || '',
+    cfNameservers: m.cf_nameservers || '',
     logoFileId: m.logo_file_id || '',
     logoFileName: m.logo_file_name || '',
     logoDriveUrl: m.logo_drive_url || '',
@@ -828,11 +830,33 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env) {
       }
     }
     const zoneData = await zoneRes.json().catch(() => ({}));
-    const zoneObj = zoneData.result && zoneData.result[0];
+    let zoneObj = zoneData.result && zoneData.result[0];
+
+    // If the client's domain is not in Cloudflare yet, automatically add the Zone to Cloudflare!
+    if (!zoneObj || !zoneObj.id) {
+      const createZoneRes = await fetch('https://api.cloudflare.com/client/v4/zones', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: rootDomain,
+          account: { id: accountId },
+          type: 'full'
+        })
+      });
+      const createZoneData = await createZoneRes.json().catch(() => ({}));
+      if (createZoneData && createZoneData.result && createZoneData.result.id) {
+        zoneObj = createZoneData.result;
+      }
+    }
+
     if (!zoneObj || !zoneObj.id) {
       return { attached: false, reason: 'zone_not_in_cloudflare', rootDomain };
     }
 
+    const nameservers = Array.isArray(zoneObj.name_servers) ? zoneObj.name_servers.join(', ') : '';
     const hostnames = [rootDomain, `www.${rootDomain}`];
     for (const h of hostnames) {
       await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains`, {
@@ -850,7 +874,13 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env) {
       });
     }
     await env.WYNN_KV.put(`livedom_${rootDomain}`, '1');
-    return { attached: true, rootDomain, zoneId: zoneObj.id };
+    return {
+      attached: true,
+      rootDomain,
+      zoneId: zoneObj.id,
+      zoneStatus: zoneObj.status || 'pending',
+      nameservers
+    };
   } catch (e) {
     return { attached: false, reason: e.message };
   }
@@ -1290,6 +1320,7 @@ export default {
         const hasDomain = (body.hasDomain || '').trim();
         const existingDomain = (body.existingDomain || '').trim();
         const desiredDomains = (body.desiredDomains || '').trim();
+        const domainAccessNotes = (body.domainAccessNotes || '').trim();
         const logoLink = (body.logoLink || '').trim();
         const menuLink = (body.menuLink || '').trim();
         const hasPhotos = (body.hasPhotos || '').trim();
@@ -1409,6 +1440,7 @@ export default {
           has_domain: hasDomain.slice(0, 490),
           existing_domain: existingDomain.slice(0, 490),
           desired_domains: desiredDomains.slice(0, 490),
+          domain_access_notes: domainAccessNotes.slice(0, 490),
           logo_file_id: logoFileId || '',
           logo_file_name: (body.logoFile && body.logoFile.name ? body.logoFile.name : logoLink).slice(0, 490),
           logo_drive_url: logoDriveUrl.slice(0, 490),
@@ -1765,6 +1797,22 @@ export default {
           let liveDomainBindResult = null;
           if (formatted.liveUrl) {
             liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env);
+            if (liveDomainBindResult && liveDomainBindResult.nameservers && liveDomainBindResult.nameservers !== formatted.cfNameservers) {
+              const nsParams = new URLSearchParams();
+              nsParams.append('metadata[cf_nameservers]', liveDomainBindResult.nameservers.slice(0, 490));
+              const nsRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: nsParams.toString()
+              });
+              if (nsRes.ok) {
+                updatedCust = await nsRes.json();
+                formatted = formatCustomerRecord(updatedCust);
+              }
+            }
           }
 
           let notifyRes = null;

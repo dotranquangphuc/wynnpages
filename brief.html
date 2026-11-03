@@ -586,7 +586,7 @@
           </div>
 
           <!-- Conditional Input A: I already own a domain -->
-          <div id="domain-yes-wrap" class="hidden pt-2 space-y-3 wizard-step-active">
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-3.5 wizard-step-active">
             <div class="space-y-1.5">
               <label for="brief-existing-domain" class="block text-sm font-bold text-stone-900">
                 What is your domain? (e.g., mybusiness.com.au) <span class="text-[#96432b]">*</span>
@@ -600,16 +600,27 @@
               >
             </div>
             <!-- Informational Alert Box for Option A -->
-            <div class="rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] p-4 flex items-start gap-3 text-xs text-stone-700 leading-relaxed">
-              <span class="w-6 h-6 rounded-full bg-[#fbdeb9] text-[#96432b] font-bold flex items-center justify-center shrink-0 mt-0.5">i</span>
-              <p>
-                Great! After you submit this brief, please email your registrar login details (or delegate manager access) to <a href="mailto:hello@wynnpages.com.au" class="font-bold text-[#96432b] underline">hello@wynnpages.com.au</a> so we can configure the DNS and launch your site.
-              </p>
+            <div class="rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] p-4 space-y-2.5 text-xs text-stone-700 leading-relaxed">
+              <div class="flex items-start gap-2.5">
+                <span class="w-6 h-6 rounded-full bg-[#fbdeb9] text-[#96432b] font-bold flex items-center justify-center shrink-0 mt-0.5">✨</span>
+                <div>
+                  <p class="font-bold text-stone-900">Zero-Tech Concierge (We connect it for you 100% free)</p>
+                  <p class="text-stone-600 mt-0.5">
+                    Don't know how DNS works? Just type your domain provider (e.g. GoDaddy, CrazyDomains, VentraIP) and login details below — <strong>or</strong> invite <a href="mailto:hello@wynnpages.com.au" class="font-bold text-[#96432b] underline">hello@wynnpages.com.au</a> as a Delegate/Manager.
+                  </p>
+                </div>
+              </div>
+              <textarea
+                id="brief-domain-access-notes"
+                rows="2"
+                placeholder="Optional: e.g. 'GoDaddy — username: ... / password: ...' OR 'I invited hello@wynnpages.com.au as Delegate'"
+                class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 bg-white"
+              ></textarea>
             </div>
           </div>
 
           <!-- Conditional Input B: I need to register a new domain -->
-          <div id="domain-no-wrap" class="hidden pt-2 space-y-3 wizard-step-active">
+          <div id="domain-no-wrap" class="hidden pt-2 space-y-3.5 wizard-step-active">
             <div class="space-y-1.5">
               <label for="brief-desired-domains" class="block text-sm font-bold text-stone-900">
                 What domain name would you like to use? (e.g., bobplumbing.com.au) <span class="text-[#96432b]">*</span>
@@ -623,11 +634,22 @@
               >
             </div>
             <!-- Informational Alert Box for Option B -->
-            <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 flex items-start gap-3 text-xs text-[#2f442c] leading-relaxed">
-              <span class="w-6 h-6 rounded-full bg-[#d4e4ce] text-[#2f442c] font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
-              <p>
-                To ensure you have 100% ownership and control over your annual renewals, we recommend registering via <strong>VentraIP</strong> (an Australian provider). After you submit this brief, we will email you a quick 2-minute guide on how to register it yourself using your own card, and how to add us as a Technical Manager.
-              </p>
+            <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 space-y-2.5 text-xs text-[#2f442c] leading-relaxed">
+              <div class="flex items-start gap-2.5">
+                <span class="w-6 h-6 rounded-full bg-[#d4e4ce] text-[#2f442c] font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                <div>
+                  <p class="font-bold">100% Your Name &amp; Ownership — Zero Tech Hassle</p>
+                  <p class="mt-0.5">
+                    If you want a <strong>.com.au</strong> domain, enter your <strong>ABN</strong> (or legal business name) below. We will email you a simple 2-minute step-by-step link (or help you register it directly so you own it 100%).
+                  </p>
+                </div>
+              </div>
+              <input
+                type="text"
+                id="brief-domain-abn-notes"
+                placeholder="Optional: Your ABN for .com.au registration (e.g. ABN 12 345 678 901)"
+                class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 bg-white"
+              >
             </div>
           </div>
         </div>
@@ -1128,6 +1150,12 @@
         submitLabel.textContent = 'Saving your studio brief...';
         submitIcon.textContent = '⏳';
 
+        const briefDomainAccessNotes = document.getElementById('brief-domain-access-notes');
+        const briefDomainAbnNotes = document.getElementById('brief-domain-abn-notes');
+        const extraDomainNotes = selectedDomainOption === 'I already own a domain'
+          ? (briefDomainAccessNotes ? briefDomainAccessNotes.value.trim() : '')
+          : (briefDomainAbnNotes ? briefDomainAbnNotes.value.trim() : '');
+
         const payload = {
           sessionId,
           email: resolvedEmail,
@@ -1144,6 +1172,7 @@
           hasDomain: selectedDomainOption,
           existingDomain: existingDomainInput.value.trim(),
           desiredDomains: desiredDomainsInput.value.trim(),
+          domainAccessNotes: extraDomainNotes,
           logoFile: logoFileObj,
           logoLink: logoLinkInput ? logoLinkInput.value.trim() : '',
           menuFile: menuFileObj,
