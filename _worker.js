@@ -345,6 +345,7 @@ function buildAiPromptForClient(c) {
     `Desired Domains to Check: ${c.desiredDomains || 'N/A'}`,
     `Logo Asset: ${c.logoFileName || 'N/A'} ${c.logoFileId ? `(Stripe File ID: ${c.logoFileId})` : ''}`,
     `Menu / Pricing Asset: ${c.menuFileName || 'N/A'} ${c.menuFileId ? `(Stripe File ID: ${c.menuFileId})` : ''}`,
+    `Professional Photos?: ${c.hasPhotos || 'N/A'} ${c.photosFileName ? `(${c.photosFileName})` : ''} ${c.photosFileId ? `[Stripe File ID: ${c.photosFileId}]` : ''}`,
     `Demo URL: ${c.demoUrl || 'Not assigned yet'}`,
     `Submitted At: ${c.submittedAt || 'N/A'}`,
     `=========================================`,
@@ -376,6 +377,9 @@ function formatCustomerRecord(cust) {
     logoFileName: m.logo_file_name || '',
     menuFileId: m.menu_file_id || '',
     menuFileName: m.menu_file_name || '',
+    hasPhotos: m.has_photos || '',
+    photosFileId: m.photos_file_id || '',
+    photosFileName: m.photos_file_name || '',
     demoUrl: m.demo_url || '',
     checkoutSessionId: m.checkout_session_id || '',
     welcomeSent: m.welcome_sent || 'false',
@@ -702,6 +706,8 @@ export default {
         const desiredDomains = (body.desiredDomains || '').trim();
         const logoLink = (body.logoLink || '').trim();
         const menuLink = (body.menuLink || '').trim();
+        const hasPhotos = (body.hasPhotos || '').trim();
+        const photosLink = (body.photosLink || '').trim();
 
         if (!customerName && businessName) customerName = businessName;
         if (!customerPhone && displayPhone) customerPhone = displayPhone;
@@ -709,11 +715,15 @@ export default {
         // Optional file uploads to Stripe Files API
         let logoFileId = null;
         let menuFileId = null;
+        let photosFileId = null;
         if (body.logoFile && body.logoFile.dataUrl) {
           logoFileId = await uploadStripeFile(body.logoFile, cfg.stripeSecretKey);
         }
         if (body.menuFile && body.menuFile.dataUrl) {
           menuFileId = await uploadStripeFile(body.menuFile, cfg.stripeSecretKey);
+        }
+        if (body.photosFile && body.photosFile.dataUrl) {
+          photosFileId = await uploadStripeFile(body.photosFile, cfg.stripeSecretKey);
         }
 
         // Inspect Checkout Session if session_id is present
@@ -779,7 +789,10 @@ export default {
           logo_file_id: logoFileId || '',
           logo_file_name: (body.logoFile && body.logoFile.name ? body.logoFile.name : logoLink).slice(0, 490),
           menu_file_id: menuFileId || '',
-          menu_file_name: (body.menuFile && body.menuFile.name ? body.menuFile.name : menuLink).slice(0, 490)
+          menu_file_name: (body.menuFile && body.menuFile.name ? body.menuFile.name : menuLink).slice(0, 490),
+          has_photos: hasPhotos.slice(0, 490),
+          photos_file_id: photosFileId || '',
+          photos_file_name: (body.photosFile && body.photosFile.name ? body.photosFile.name : photosLink).slice(0, 490)
         };
 
         const summaryDesc = `WynnPages Brief [${briefType.toUpperCase()}] • ${industry || 'Custom Demo'} • Domain: ${domainSummary || 'TBD'}`;

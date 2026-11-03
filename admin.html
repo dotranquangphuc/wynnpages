@@ -421,9 +421,9 @@
 
       function getBriefStats(c) {
         const fields = [
-          Boolean(c.industry),
-          Boolean(c.brandColors),
-          Boolean(c.vibeLinks),
+          Boolean(c.businessName || c.industry),
+          Boolean(c.displayPhone || c.businessAddress),
+          Boolean(c.brandColors || c.vibeLinks || c.briefType === 'demo'),
           Boolean(c.existingDomain || c.desiredDomains)
         ];
         const filledCount = fields.filter(Boolean).length;
@@ -733,6 +733,12 @@
                       ${c.menuFileName
                         ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.menuFileName)}</span>`
                         : `<span class="text-stone-400 ml-1">Chưa tải lên</span>`}
+                    </span>
+                    <span>
+                      <strong class="text-stone-500">Hình ảnh (Photos):</strong>
+                      ${c.photosFileName
+                        ? `<span class="text-emerald-800 font-bold ml-1">✓ ${escapeHtml(c.photosFileName)}</span>`
+                        : (c.hasPhotos ? `<span class="text-stone-700 font-semibold ml-1">${escapeHtml(c.hasPhotos)}</span>` : `<span class="text-stone-400 ml-1">Chưa chọn</span>`)}
                     </span>
                   </div>
                   <div class="flex items-center gap-3">
