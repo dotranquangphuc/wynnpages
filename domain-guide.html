@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WynnPages — 60-Second Domain Delegation Guide (Zero Tech Required)</title>
+  <meta name="description" content="Step-by-step visual guide on how to safely delegate domain access on GoDaddy, VentraIP, and CrazyDomains so WynnPages can launch your website while you keep 100% ownership and billing control.">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f6f1e8;
+      color: #2b251e;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .provider-tab {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .provider-tab.active {
+      background-color: #96432b;
+      color: #ffffff;
+      border-color: #96432b;
+      box-shadow: 0 8px 20px -6px rgba(150, 67, 43, 0.35);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
+
+  <!-- Header -->
+  <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-5 sm:px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <span class="font-editorial text-2xl font-bold tracking-tight text-stone-900 group-hover:text-[#96432b] transition-colors">
+          WynnPages
+        </span>
+        <span class="text-[11px] uppercase tracking-widest text-[#96432b] font-bold bg-[#fbdeb9]/60 px-2.5 py-0.5 rounded-full">
+          Domain Concierge Guide
+        </span>
+      </a>
+      <a href="mailto:hello@wynnpages.com.au" class="text-xs font-bold text-[#96432b] hover:underline flex items-center gap-1.5">
+        <span>Need help? Email hello@wynnpages.com.au</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-5 sm:px-6 py-10 lg:py-12 space-y-8">
+
+    <!-- Hero Section -->
+    <div class="text-center space-y-3">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#d4e4ce] text-[#2f442c] font-bold text-[11px] uppercase tracking-wider">
+        <span>🔒 100% Client Ownership • Zero Tech Required</span>
+      </div>
+      <h1 class="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 leading-tight">
+        How to Connect Your Domain in 60 Seconds
+      </h1>
+      <p id="personalized-subtitle" class="text-stone-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+        You don't need to touch a single DNS record. Simply invite our studio engineer as a <strong>Delegate / Technical Manager</strong> — we connect your website while your domain ownership and annual auto-renewals stay 100% in your own account.
+      </p>
+    </div>
+
+    <!-- Step 0: Copy Our Engineer Email Box -->
+    <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#96432b]/25 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#96432b] block">Email to Invite / Delegate Access To</span>
+        <div class="flex items-center gap-2 flex-wrap">
+          <code id="delegate-email-text" class="text-base sm:text-lg font-extrabold font-mono text-stone-900 bg-[#fcf9f3] px-3 py-1 rounded-xl border border-[#e5dec9]">hello@wynnpages.com.au</code>
+          <span class="text-xs text-stone-500">(Delegate Name: <strong>WynnPages Studio</strong>)</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        id="btn-copy-email"
+        class="px-5 py-3 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs sm:text-sm font-extrabold shadow-sm transition-all shrink-0 flex items-center justify-center gap-2"
+      >
+        <span>📋 Copy Email Address</span>
+      </button>
+    </div>
+
+    <!-- Why Delegate Reassurance Box -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+      <div class="bg-[#fcf9f3] p-4 rounded-2xl border border-[#e5dec9] space-y-1">
+        <p class="font-extrabold text-stone-900">1. You Keep 100% Ownership</p>
+        <p class="text-stone-600 leading-relaxed">Your domain stays registered in your legal name and inside your own account forever.</p>
+      </div>
+      <div class="bg-[#fcf9f3] p-4 rounded-2xl border border-[#e5dec9] space-y-1">
+        <p class="font-extrabold text-stone-900">2. Direct Annual Renewals</p>
+        <p class="text-stone-600 leading-relaxed">Your domain registrar auto-renews directly on your card (~$20/yr) with zero markups from us.</p>
+      </div>
+      <div class="bg-[#fcf9f3] p-4 rounded-2xl border border-[#e5dec9] space-y-1">
+        <p class="font-extrabold text-stone-900">3. Zero DNS Headaches</p>
+        <p class="text-stone-600 leading-relaxed">We configure the DNS &amp; SSL certificates once so your website goes live smoothly.</p>
+      </div>
+    </div>
+
+    <!-- Provider Selector Tabs -->
+    <div class="space-y-4">
+      <h2 class="text-sm font-extrabold uppercase tracking-wider text-stone-500">
+        Select Where Your Domain Is Registered:
+      </h2>
+
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <button type="button" data-provider="godaddy" class="provider-tab active px-3.5 py-3 rounded-2xl bg-white border border-[#dfd5c3] text-xs font-extrabold text-stone-800 text-center">
+          GoDaddy
+        </button>
+        <button type="button" data-provider="ventraip" class="provider-tab px-3.5 py-3 rounded-2xl bg-white border border-[#dfd5c3] text-xs font-extrabold text-stone-800 text-center">
+          VentraIP
+        </button>
+        <button type="button" data-provider="crazydomains" class="provider-tab px-3.5 py-3 rounded-2xl bg-white border border-[#dfd5c3] text-xs font-extrabold text-stone-800 text-center">
+          CrazyDomains
+        </button>
+        <button type="button" data-provider="newdomain" class="provider-tab px-3.5 py-3 rounded-2xl bg-white border border-[#dfd5c3] text-xs font-extrabold text-stone-800 text-center">
+          🆕 Buy New Domain
+        </button>
+        <button type="button" data-provider="other" class="provider-tab col-span-2 sm:col-span-1 px-3.5 py-3 rounded-2xl bg-white border border-[#dfd5c3] text-xs font-extrabold text-stone-800 text-center">
+          Other / Do It For Me
+        </button>
+      </div>
+
+      <!-- TAB 1: GODADDY -->
+      <div id="panel-godaddy" class="provider-panel bg-white rounded-3xl p-6 sm:p-8 border border-[#e5dec9] shadow-sm space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0eade] pb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#96432b]">Most Popular • Takes 45 Seconds</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">GoDaddy — Delegate Access</h3>
+          </div>
+          <a
+            href="https://account.godaddy.com/access"
+            target="_blank"
+            rel="noopener"
+            class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <span>Open GoDaddy Delegate Page ↗</span>
+          </a>
+        </div>
+
+        <ol class="space-y-4 text-sm text-stone-700">
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <p class="font-bold text-stone-900">Open GoDaddy's Delegate Access page</p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                Click <a href="https://account.godaddy.com/access" target="_blank" class="text-[#96432b] font-bold underline">account.godaddy.com/access ↗</a> and sign in to your GoDaddy account.
+              </p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <p class="font-bold text-stone-900">Under "People who can access my account", click <span class="underline">+ Invite to Access</span></p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                Enter <strong>Name:</strong> <code class="bg-stone-100 px-1.5 py-0.5 rounded font-mono">WynnPages</code> and <strong>Email:</strong> <code class="bg-stone-100 px-1.5 py-0.5 rounded font-mono text-[#96432b] font-bold">hello@wynnpages.com.au</code>
+              </p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <div>
+              <p class="font-bold text-stone-900">Select access level: "Domains" (or "Products &amp; Domains") &rarr; Click <span class="underline">Invite</span></p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                That's it! GoDaddy never shares your password or credit card with us — it only lets us point your domain to your new website.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- TAB 2: VENTRAIP -->
+      <div id="panel-ventraip" class="provider-panel hidden bg-white rounded-3xl p-6 sm:p-8 border border-[#e5dec9] shadow-sm space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0eade] pb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#96432b]">Australian Provider • Takes 60 Seconds</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">VentraIP — Add Technical Contact</h3>
+          </div>
+          <a
+            href="https://vip.ventraip.com.au/"
+            target="_blank"
+            rel="noopener"
+            class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <span>Open VentraIP VIPControl ↗</span>
+          </a>
+        </div>
+
+        <ol class="space-y-4 text-sm text-stone-700">
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <p class="font-bold text-stone-900">Log in to <a href="https://vip.ventraip.com.au/" target="_blank" class="text-[#96432b] underline">VIPControl (vip.ventraip.com.au) ↗</a></p>
+              <p class="text-xs text-stone-500 mt-0.5">Click your name in the top-right corner &rarr; select <strong>Account Settings</strong> &rarr; <strong>Authorized Users / Contacts</strong>.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <p class="font-bold text-stone-900">Invite <code class="bg-stone-100 px-1.5 py-0.5 rounded font-mono text-[#96432b]">hello@wynnpages.com.au</code> with Domain Management permission</p>
+              <p class="text-xs text-stone-500 mt-0.5">Leave Billing unticked so your card &amp; renewals remain private to you, and tick <strong>Domain Name Management</strong>.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- TAB 3: CRAZYDOMAINS -->
+      <div id="panel-crazydomains" class="provider-panel hidden bg-white rounded-3xl p-6 sm:p-8 border border-[#e5dec9] shadow-sm space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0eade] pb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#96432b]">CrazyDomains Australia</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">CrazyDomains — Quick Setup</h3>
+          </div>
+          <a
+            href="https://www.crazydomains.com.au/my-account/"
+            target="_blank"
+            rel="noopener"
+            class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <span>Open CrazyDomains Account ↗</span>
+          </a>
+        </div>
+
+        <ol class="space-y-4 text-sm text-stone-700">
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <p class="font-bold text-stone-900">Option A (Zero Effort): Email us your temporary login</p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                CrazyDomains menus can be tricky to navigate. Simply email your CrazyDomains username &amp; password to <a href="mailto:hello@wynnpages.com.au" class="font-bold text-[#96432b] underline">hello@wynnpages.com.au</a> — we will point your domain in 60 seconds and let you know so you can change your password right after.
+              </p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <p class="font-bold text-stone-900">Option B: Update Nameservers directly in CrazyDomains</p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                Go to <strong>Domains</strong> &rarr; click your domain &rarr; scroll to <strong>Name Servers</strong> &rarr; click <strong>Change</strong> and paste the 2 Cloudflare Nameservers we emailed you.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- TAB 4: BUY A NEW DOMAIN -->
+      <div id="panel-newdomain" class="provider-panel hidden bg-white rounded-3xl p-6 sm:p-8 border border-[#e5dec9] shadow-sm space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0eade] pb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Don't Have a Domain Yet? • 2 Minutes</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">How to Register Your Own Domain</h3>
+          </div>
+          <a
+            href="https://au.godaddy.com/"
+            target="_blank"
+            rel="noopener"
+            class="px-4 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <span>Search Domain on GoDaddy AU ↗</span>
+          </a>
+        </div>
+
+        <ol class="space-y-4 text-sm text-stone-700">
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <p class="font-bold text-stone-900">Buy the domain in your own name &amp; card (~$15–$20/year)</p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                Go to <a href="https://au.godaddy.com/" target="_blank" class="text-[#96432b] font-bold underline">GoDaddy.com.au ↗</a> or <a href="https://ventraip.com.au/domain-names/" target="_blank" class="text-[#96432b] font-bold underline">VentraIP.com.au ↗</a>, search for your business name (note: <code>.com.au</code> requires your ABN, while <code>.com</code> does not require an ABN). Purchase ONLY the domain name (skip any extra hosting/email upsells) and leave <strong>Auto-Renew ON</strong> so your domain renews automatically each year.
+              </p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3.5">
+            <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <p class="font-bold text-stone-900">Delegate technical setup to <code class="bg-stone-100 px-1.5 py-0.5 rounded font-mono text-[#96432b]">hello@wynnpages.com.au</code></p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                Once registered, follow the <strong>GoDaddy</strong> or <strong>VentraIP</strong> tab above to invite <code class="font-mono font-bold">hello@wynnpages.com.au</code> (or email us your login) and our engineers will connect your website for free!
+              </p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- TAB 5: OTHER / DO IT FOR ME -->
+      <div id="panel-other" class="provider-panel hidden bg-white rounded-3xl p-6 sm:p-8 border border-[#e5dec9] shadow-sm space-y-5">
+        <div class="border-b border-[#f0eade] pb-4">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#96432b]">100% Done-For-You Concierge</span>
+          <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Too Busy? Let Us Connect It For You</h3>
+        </div>
+        <p class="text-sm text-stone-700 leading-relaxed">
+          If your domain is with MelbourneIT, Netregistry, Namecheap, Squarespace, Wix, or you simply don't want to deal with menus:
+        </p>
+        <div class="bg-[#fcf9f3] rounded-2xl p-5 border border-[#dfd5c3] space-y-3 text-xs text-stone-700">
+          <p class="font-bold text-stone-900 text-sm">Just email <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] underline">hello@wynnpages.com.au</a> with:</p>
+          <ul class="list-disc list-inside space-y-1.5">
+            <li>Your domain name (e.g. <code>mybusiness.com.au</code>)</li>
+            <li>Where you bought it (e.g. CrazyDomains, MelbourneIT, GoDaddy) and your login details</li>
+          </ul>
+          <p class="text-stone-500 pt-1">
+            Our engineers will log in, point the DNS to your new website in 60 seconds, and reply immediately so you can change your password if you wish. Your annual domain renewal stays 100% in your own account.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional Nameservers Box (Automatically shown if ?ns= is in URL) -->
+    <div id="ns-box" class="hidden bg-emerald-50 border border-emerald-200 rounded-3xl p-6 space-y-2 text-xs text-emerald-950">
+      <p class="font-extrabold uppercase tracking-wider text-[11px] text-emerald-800">⚡ Technical Info (For Your IT Person)</p>
+      <p>If you or your IT person prefer updating Nameservers directly, point your domain to these 2 Cloudflare Nameservers:</p>
+      <code id="ns-value" class="block font-mono font-bold text-sm bg-white px-4 py-2.5 rounded-xl border border-emerald-200"></code>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-[#dbc1ba]/30 py-6 text-center text-xs text-stone-400">
+    <p>WynnPages Australia • Hand-crafted bespoke digital craftsmanship • Questions? Email <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-semibold underline">hello@wynnpages.com.au</a></p>
+  </footer>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const dom = (params.get('domain') || '').trim();
+      const name = (params.get('name') || '').trim();
+      const ns = (params.get('ns') || '').trim();
+      const tabParam = (params.get('tab') || '').trim();
+
+      if (dom || name) {
+        const sub = document.getElementById('personalized-subtitle');
+        sub.innerHTML = `Prepared for <strong>${escapeHtml(name || dom)}</strong>${dom ? ` (<code class="font-mono text-[#96432b] font-bold">${escapeHtml(dom)}</code>)` : ''}. Simply invite <strong class="text-[#96432b]">hello@wynnpages.com.au</strong> as a Delegate — we connect your website while your domain ownership and annual auto-renewals stay 100% in your own account.`;
+      }
+
+      if (ns) {
+        const nsBox = document.getElementById('ns-box');
+        const nsVal = document.getElementById('ns-value');
+        nsVal.textContent = ns;
+        nsBox.classList.remove('hidden');
+      }
+
+      const tabs = document.querySelectorAll('.provider-tab');
+      const panels = document.querySelectorAll('.provider-panel');
+
+      function activateTab(provider) {
+        tabs.forEach(t => {
+          if (t.getAttribute('data-provider') === provider) {
+            t.classList.add('active');
+          } else {
+            t.classList.remove('active');
+          }
+        });
+        panels.forEach(p => {
+          if (p.id === `panel-${provider}`) {
+            p.classList.remove('hidden');
+          } else {
+            p.classList.add('hidden');
+          }
+        });
+      }
+
+      tabs.forEach(t => {
+        t.addEventListener('click', () => activateTab(t.getAttribute('data-provider')));
+      });
+
+      if (tabParam && document.getElementById(`panel-${tabParam}`)) {
+        activateTab(tabParam);
+      }
+
+      const copyBtn = document.getElementById('btn-copy-email');
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText('hello@wynnpages.com.au');
+        copyBtn.innerHTML = '<span>✓ Copied: hello@wynnpages.com.au</span>';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<span>📋 Copy Email Address</span>';
+        }, 2500);
+      });
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

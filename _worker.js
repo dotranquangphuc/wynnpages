@@ -235,13 +235,14 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
-    smsText = `Hi ${firstName}, thank you! We have received your WynnPages brief and started crafting your bespoke website. We will text you once your live demo is ready. For any questions, please email hello@wynnpages.com.au - Warm regards, Wynn`;
-    emailSubject = `Brief Received! We're Crafting Your WynnPages Website`;
+    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}`;
+    smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your domain in 60 seconds (while keeping 100% ownership & renewals in your account), follow our quick guide here: ${origin}/domain-guide - Warm regards, Wynn`;
+    emailSubject = `Brief Received! Next Step: 60-Second Domain Delegation Guide`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Studio Active • 7-Day Build Started',
+      preheader: 'Studio Active • 60-Second Domain Setup Guide Inside',
       heading: `We are firing up the code editor, ${firstName}.`,
       bodyHtml: `
-        <p>Thank you for completing your studio brief! We have logged all your specifications and started crafting your bespoke website.</p>
+        <p>Thank you for completing your studio brief! We have logged all your specifications and started preparing your bespoke website for launch.</p>
         <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
           <div><strong>Type:</strong> ${(client.briefType || 'organic').toUpperCase()}</div>
           ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
@@ -249,9 +250,13 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
           ${client.vibeLinks ? `<div style="margin-top:6px;"><strong>Reference Vibes:</strong> ${client.vibeLinks}</div>` : ''}
           <div style="margin-top:6px;"><strong>Domain:</strong> ${domainInfo}</div>
         </div>
-        <p>We will send you a text message and email with your live interactive demo link as soon as it is ready for your review. If you need anything in the meantime, please email <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
+        <p><strong>How to connect your domain (${domainInfo}) with zero tech hassle:</strong> Click the button below to view our 60-second step-by-step guide on how to invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as a Delegate on GoDaddy, VentraIP, or CrazyDomains (your domain ownership and annual auto-renewals stay 100% in your own account!):</p>
       `,
       primaryCta: {
+        label: 'Open 60-Second Domain Delegation Guide →',
+        url: domainGuideUrl
+      },
+      secondaryCta: {
         label: 'Visit WynnPages Studio',
         url: origin
       }
