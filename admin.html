@@ -1570,12 +1570,17 @@
             const biz = (c && (c.businessName || c.name)) || 'your business';
             const liveInput = document.getElementById(`live-url-${cid}`);
             const dom = (liveInput && liveInput.value.trim()) || (c && (c.liveUrl || c.existingDomain || c.desiredDomains)) || 'your domain';
+            const needsNewDomain = c && !c.existingDomain && Boolean(c.desiredDomains);
             const nsInfo = (c && c.cfNameservers)
-              ? `\n\n(Or if your IT person prefers updating Nameservers directly, point ${dom} to: ${c.cfNameservers})`
+              ? `\n\n(Technical note if needed — Cloudflare Nameservers: ${c.cfNameservers})`
               : '';
-            const msg = `Hi ${biz}! Your new website is ready to go live on ${dom}.\n\nDon't worry about any technical DNS settings — we handle 100% of the setup for you for free! Just choose whichever option is easiest for you:\n\nOption 1 (Easiest): Reply or email hello@wynnpages.com.au with where you bought your domain (e.g. GoDaddy, CrazyDomains, VentraIP) and your login, and our engineers will connect it in 2 minutes.\n\nOption 2 (Delegate Access): In your domain account (GoDaddy / CrazyDomains / VentraIP), click "Delegate Access" or "Invite User" and enter hello@wynnpages.com.au.${nsInfo}\n\n— WynnPages Australia`;
+
+            const msg = needsNewDomain
+              ? `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nSo that you own your domain 100% and manage your own annual renewals directly on your own card (with zero markups from us):\n\nStep 1 (Takes 2 mins): Go to https://ventraip.com.au or https://au.godaddy.com and purchase "${dom}" using your own email & card (turn on Auto-Renew so you never have to worry about it expiring).\n\nStep 2 (We do the tech part for free): Once purchased, simply email hello@wynnpages.com.au with your login (or click "Delegate Access / Invite User" to hello@wynnpages.com.au) and our engineers will connect your website in 2 minutes!${nsInfo}\n\n— WynnPages Australia`
+              : `Hi ${biz}! Your new website is ready to go live on ${dom}.\n\nYour domain ownership and annual billing stay 100% in your own account — we only connect the technical DNS for you once for free! Just pick whichever is easiest:\n\nOption 1 (Easiest): Email hello@wynnpages.com.au with where you bought ${dom} (e.g. GoDaddy, CrazyDomains, VentraIP) and your login, and our engineers will connect it in 2 minutes.\n\nOption 2 (Delegate Access): In your domain account (GoDaddy / CrazyDomains / VentraIP), click "Delegate Access" or "Invite User" and enter hello@wynnpages.com.au.${nsInfo}\n\n— WynnPages Australia`;
+
             navigator.clipboard.writeText(msg);
-            showToast(`Đã copy mẫu tin nhắn hướng dẫn tên miền (0% kỹ thuật) cho "${biz}"!`);
+            showToast(`Đã copy mẫu hướng dẫn tên miền (Khách tự giữ thẻ gia hạn + Bạn chỉ trỏ DNS 1 lần) cho "${biz}"!`);
           });
         });
 
