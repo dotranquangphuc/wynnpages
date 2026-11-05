@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -217,8 +218,8 @@
             <input type="email" id="qo-email" placeholder="Để trống nếu chỉ có SĐT" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div>
-            <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo Bạn Đã Làm *</label>
-            <input type="text" id="qo-demo-url" required placeholder="https://lush-demo.pages.dev" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo <span class="text-stone-400 font-normal">(Hoặc tải file sau)</span></label>
+            <input type="text" id="qo-demo-url" placeholder="Dán link hoặc để trống tải HTML/ZIP" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div class="flex items-end">
             <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
@@ -473,6 +474,89 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Upload Demo Source Code (Single HTML or ZIP bundle) -->
+  <div id="modal-upload-demo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
+        <div>
+          <h3 class="text-xl font-extrabold text-stone-900 flex items-center gap-2">
+            <span>📦 Tải Lên Source Code Web Demo</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#fbdeb9] text-[#96432b]">Cloudflare KV Native</span>
+          </h3>
+          <p class="text-xs text-stone-500 mt-1">
+            Tiệm: <strong class="text-stone-900 text-sm" id="up-biz-name">—</strong>
+            • Subdomain: <code class="font-mono font-bold text-[#96432b]" id="up-slug-display">—</code>
+          </p>
+        </div>
+        <button type="button" id="btn-close-upload-modal" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <!-- Explanatory Guide Box -->
+        <div class="p-3.5 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] text-stone-600 leading-relaxed space-y-1.5">
+          <p class="font-bold text-stone-900 flex items-center gap-1.5">
+            <span>💡 Cơ chế hoạt động Native không cần Repo riêng:</span>
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-[11px] text-stone-600">
+            <li>Bạn có thể tải <strong>1 file .html đơn lẻ</strong> HOẶC <strong>1 file .zip</strong> (chứa <code>index.html</code> và thư mục hình ảnh <code>assets/</code>, <code>images/</code>...).</li>
+            <li>Hệ thống tự động bung nén và lưu toàn bộ ảnh &amp; file tĩnh lên Cloudflare KV. Web tải siêu tốc tại rìa mạng Úc (Sydney/Melbourne).</li>
+            <li>Thanh Claim Mua $599 AUD thương hiệu WynnPages sẽ được tự động gắn vào đáy trang demo.</li>
+            <li>Sau khi khách mua $599 và gắn tên miền riêng, toàn bộ mã này sẽ chạy trực tiếp trên tên miền chính thức của khách (tắt thanh $599)!</li>
+          </ul>
+        </div>
+
+        <!-- Dropzone -->
+        <div id="demo-dropzone" class="border-2 border-dashed border-[#d8ccb8] hover:border-[#96432b] bg-[#faf6ee] hover:bg-[#f6efe1] rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2">
+          <input type="file" id="demo-file-input" accept=".html,.htm,.zip" class="hidden">
+          <div class="w-12 h-12 mx-auto rounded-full bg-white shadow-xs flex items-center justify-center text-2xl text-[#96432b]">
+            📁
+          </div>
+          <p class="font-extrabold text-stone-800 text-sm">
+            Kéo thả file <span class="text-[#96432b]">.zip</span> hoặc <span class="text-[#96432b]">.html</span> vào đây
+          </p>
+          <p class="text-[11px] text-stone-500">hoặc click để chọn file từ máy tính (Tối đa 25MB)</p>
+        </div>
+
+        <!-- Selected File & Extracted Files Info -->
+        <div id="demo-bundle-preview" class="hidden space-y-3">
+          <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-semibold">
+            <div class="flex items-center gap-2 truncate">
+              <span class="text-base" id="demo-file-icon">📄</span>
+              <span class="truncate" id="demo-file-name">filename.zip</span>
+              <span class="text-[11px] text-emerald-700 font-mono" id="demo-file-size">(0 KB)</span>
+            </div>
+            <button type="button" id="btn-remove-bundle" class="text-stone-400 hover:text-red-700 font-bold text-xs shrink-0 ml-2">✕ Xóa file</button>
+          </div>
+
+          <!-- Files breakdown inside zip -->
+          <div id="demo-files-breakdown" class="max-h-48 overflow-y-auto rounded-xl border border-stone-200 bg-white p-2.5 font-mono text-[11px] text-stone-700 space-y-1">
+            <!-- Render list of extracted files here -->
+          </div>
+        </div>
+
+        <!-- Upload Progress & Status -->
+        <div id="upload-progress-box" class="hidden space-y-2">
+          <div class="flex items-center justify-between text-[11px] font-bold text-stone-700">
+            <span id="upload-status-text">Đang tải lên Cloudflare KV...</span>
+            <span id="upload-percent-text">0%</span>
+          </div>
+          <div class="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+            <div id="upload-progress-bar" class="h-full bg-emerald-600 transition-all duration-300 w-0"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#f0eade]">
+        <button type="button" id="btn-cancel-upload" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors">
+          Đóng
+        </button>
+        <button type="button" id="btn-submit-bundle" disabled class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-2">
+          <span>🚀 Lưu &amp; Kích Hoạt Demo Lên Cloudflare</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -946,10 +1030,11 @@
 
               <!-- Outbound Demo Link & Live Domain + Streamlined Actions -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3">
-                <!-- Row 1: Demo URL Input + Compact Branded Demo Actions -->
+                <!-- Row 1: Demo URL Input + Compact Branded Demo Actions + KV Upload -->
                 <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                   <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5 w-48">
                     <span>🔗 1. Link Web Demo:</span>
+                    ${c.demoSourceType === 'kv' ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">KV</span>` : ''}
                   </label>
                   <input 
                     type="text" 
@@ -965,6 +1050,16 @@
                     class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors"
                   >
                     Lưu Link
+                  </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-slug="${escapeHtml(c.demoSlug || '')}"
+                    data-name="${escapeHtml(titleName)}"
+                    class="btn-open-upload-modal px-3 py-2 rounded-xl ${c.demoSourceType === 'kv' ? 'bg-emerald-700 hover:bg-emerald-800 text-white' : 'bg-[#96432b] hover:bg-[#7d3520] text-white'} text-xs font-bold shrink-0 transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                    title="Tải lên gói source code HTML/ZIP để lưu trữ native trên Cloudflare KV"
+                  >
+                    <span>📤 ${c.demoSourceType === 'kv' ? `Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Tải Lên Code (ZIP/HTML)'}</span>
                   </button>
                   ${hasValidDemo ? `
                     <button
@@ -990,6 +1085,15 @@
                     </button>
                   ` : ''}
                 </div>
+                ${c.demoSourceType === 'kv' ? `
+                  <div class="text-[11px] text-emerald-950 bg-emerald-50 border border-emerald-200/90 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                    <span class="flex items-center gap-1.5">
+                      <span>⚡</span>
+                      <span><strong>Web Demo đang chạy Native trên Cloudflare KV Edge:</strong> ${c.demoFilesCount || 1} files (hình ảnh, CSS, JS). Tốc độ tải tức thì tại Úc.</span>
+                    </span>
+                    <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="text-emerald-900 hover:text-[#96432b] font-bold underline">Mở xem trang demo ↗</a>
+                  </div>
+                ` : ''}
 
                 <!-- Row 2: Official Live Domain Input (Required to unlock Button 3 Launch!) -->
                 <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
@@ -1632,6 +1736,17 @@
           });
         });
 
+        // Open Demo Code Upload Modal (HTML / ZIP Native Cloudflare KV)
+        document.querySelectorAll('.btn-open-upload-modal').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            if (client) {
+              openUploadModal(client);
+            }
+          });
+        });
+
         // Copy AI Brief
         document.querySelectorAll('.btn-copy-brief').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -1840,8 +1955,8 @@
         const demoUrl = document.getElementById('qo-demo-url').value.trim();
         const submitBtn = document.getElementById('qo-submit-btn');
 
-        if (!bizName || !demoUrl) {
-          showToast('Vui lòng nhập Tên Tiệm và Link Demo!', true);
+        if (!bizName) {
+          showToast('Vui lòng nhập Tên Tiệm / Thương Hiệu!', true);
           return;
         }
         if (!phone && !email) {
@@ -1874,7 +1989,14 @@
           document.getElementById('qo-demo-url').value = '';
           const previewUrl = res.client.brandedDemoUrl || `https://${encodeURIComponent(res.client.demoSlug || res.client.id)}.wynnpages.com.au`;
           navigator.clipboard.writeText(previewUrl).catch(() => {});
-          showToast(`Đã tạo khách Outbound "${bizName}" và tự động kích hoạt tên miền Demo: ${previewUrl}`);
+          showToast(`Đã tạo khách Outbound "${bizName}" thành công!`);
+
+          // If no external demo URL was provided, automatically open upload modal to upload HTML/ZIP!
+          if (!demoUrl) {
+            setTimeout(() => {
+              openUploadModal(res.client);
+            }, 300);
+          }
         }
       });
 
@@ -2040,6 +2162,310 @@
         clientModal.classList.add('hidden');
         await runAdminAction(payload);
         showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ "${payload.businessName || payload.name}"!`);
+      });
+
+      // ========================================================
+      // DEMO BUNDLE UPLOAD (HTML / ZIP NATIVE CLOUDFLARE KV)
+      // ========================================================
+      const uploadModal = document.getElementById('modal-upload-demo');
+      const upBizName = document.getElementById('up-biz-name');
+      const upSlugDisplay = document.getElementById('up-slug-display');
+      const demoDropzone = document.getElementById('demo-dropzone');
+      const demoFileInput = document.getElementById('demo-file-input');
+      const demoBundlePreview = document.getElementById('demo-bundle-preview');
+      const demoFileName = document.getElementById('demo-file-name');
+      const demoFileSize = document.getElementById('demo-file-size');
+      const demoFileIcon = document.getElementById('demo-file-icon');
+      const demoFilesBreakdown = document.getElementById('demo-files-breakdown');
+      const btnRemoveBundle = document.getElementById('btn-remove-bundle');
+      const uploadProgressBox = document.getElementById('upload-progress-box');
+      const uploadProgressBar = document.getElementById('upload-progress-bar');
+      const uploadStatusText = document.getElementById('upload-status-text');
+      const btnSubmitBundle = document.getElementById('btn-submit-bundle');
+      const btnCloseUploadModal = document.getElementById('btn-close-upload-modal');
+      const btnCancelUpload = document.getElementById('btn-cancel-upload');
+
+      let currentUploadClient = null;
+      let preparedBundleFiles = []; // [{ path: '/index.html', type: '...', text?: '...', base64?: '...' }]
+
+      function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      function getMimeTypeClient(path) {
+        const ext = (path || '').split('.').pop().toLowerCase();
+        const map = {
+          'html': 'text/html; charset=utf-8',
+          'htm': 'text/html; charset=utf-8',
+          'css': 'text/css; charset=utf-8',
+          'js': 'application/javascript; charset=utf-8',
+          'mjs': 'application/javascript; charset=utf-8',
+          'json': 'application/json; charset=utf-8',
+          'svg': 'image/svg+xml',
+          'png': 'image/png',
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'webp': 'image/webp',
+          'gif': 'image/gif',
+          'ico': 'image/x-icon',
+          'woff': 'font/woff',
+          'woff2': 'font/woff2',
+          'ttf': 'font/ttf',
+          'otf': 'font/otf'
+        };
+        return map[ext] || 'application/octet-stream';
+      }
+
+      function isTextExtension(path) {
+        const ext = (path || '').split('.').pop().toLowerCase();
+        return ['html', 'htm', 'css', 'js', 'mjs', 'json', 'svg', 'txt', 'xml'].includes(ext);
+      }
+
+      function resetUploadState() {
+        preparedBundleFiles = [];
+        demoFileInput.value = '';
+        demoBundlePreview.classList.add('hidden');
+        demoDropzone.classList.remove('hidden');
+        uploadProgressBox.classList.add('hidden');
+        uploadProgressBar.style.width = '0%';
+        btnSubmitBundle.disabled = true;
+        btnSubmitBundle.innerHTML = '<span>🚀 Lưu &amp; Kích Hoạt Demo Lên Cloudflare</span>';
+        demoFilesBreakdown.innerHTML = '';
+      }
+
+      function openUploadModal(client) {
+        currentUploadClient = client;
+        resetUploadState();
+        upBizName.textContent = client.businessName || client.name || 'Khách hàng';
+        const slug = client.demoSlug || client.id.toLowerCase();
+        upSlugDisplay.textContent = `https://${slug}.wynnpages.com.au`;
+        uploadModal.classList.remove('hidden');
+      }
+
+      function closeUploadModal() {
+        uploadModal.classList.add('hidden');
+        currentUploadClient = null;
+        resetUploadState();
+      }
+
+      btnCloseUploadModal.addEventListener('click', closeUploadModal);
+      btnCancelUpload.addEventListener('click', closeUploadModal);
+
+      demoDropzone.addEventListener('click', () => demoFileInput.click());
+      demoDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        demoDropzone.classList.add('border-[#96432b]', 'bg-[#fbdeb9]/30');
+      });
+      demoDropzone.addEventListener('dragleave', () => {
+        demoDropzone.classList.remove('border-[#96432b]', 'bg-[#fbdeb9]/30');
+      });
+      demoDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        demoDropzone.classList.remove('border-[#96432b]', 'bg-[#fbdeb9]/30');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleSelectedFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      demoFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleSelectedFile(e.target.files[0]);
+        }
+      });
+
+      btnRemoveBundle.addEventListener('click', resetUploadState);
+
+      async function handleSelectedFile(file) {
+        const nameLower = file.name.toLowerCase();
+        demoFileName.textContent = file.name;
+        demoFileSize.textContent = `(${formatBytes(file.size)})`;
+        demoDropzone.classList.add('hidden');
+        demoBundlePreview.classList.remove('hidden');
+        demoFilesBreakdown.innerHTML = '<div class="text-stone-400 italic p-2">⏳ Đang đọc và kiểm tra các file...</div>';
+
+        if (nameLower.endsWith('.zip')) {
+          demoFileIcon.textContent = '📦';
+          await processZipFile(file);
+        } else if (nameLower.endsWith('.html') || nameLower.endsWith('.htm')) {
+          demoFileIcon.textContent = '📄';
+          await processSingleHtmlFile(file);
+        } else {
+          showToast('Chỉ chấp nhận file .zip hoặc .html!', true);
+          resetUploadState();
+        }
+      }
+
+      async function processSingleHtmlFile(file) {
+        try {
+          const text = await file.text();
+          preparedBundleFiles = [{
+            path: '/index.html',
+            type: 'text/html; charset=utf-8',
+            text
+          }];
+          demoFilesBreakdown.innerHTML = `
+            <div class="flex items-center justify-between py-1 px-2 border-b border-stone-100">
+              <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+                <span>✓</span> <code>/index.html</code> (Trang chính)
+              </span>
+              <span class="text-stone-400 font-mono">${formatBytes(file.size)}</span>
+            </div>
+          `;
+          btnSubmitBundle.disabled = false;
+        } catch (err) {
+          showToast(`Lỗi khi đọc file HTML: ${err.message}`, true);
+          resetUploadState();
+        }
+      }
+
+      async function processZipFile(file) {
+        if (!window.JSZip) {
+          showToast('Thư viện giải nén chưa tải xong, vui lòng thử lại sau 2 giây!', true);
+          resetUploadState();
+          return;
+        }
+        try {
+          const zip = new JSZip();
+          const zipContent = await zip.loadAsync(file);
+          const entries = [];
+
+          zipContent.forEach((relPath, zipEntry) => {
+            if (!zipEntry.dir && !relPath.startsWith('__MACOSX/') && !relPath.includes('/.DS_Store') && !relPath.endsWith('.DS_Store')) {
+              entries.push({ relPath, zipEntry });
+            }
+          });
+
+          if (!entries.length) {
+            showToast('File zip rỗng hoặc không có file hợp lệ!', true);
+            resetUploadState();
+            return;
+          }
+
+          // Check if entries have common root directory (e.g. "dist/" or "project-name/")
+          let commonPrefix = '';
+          const firstPath = entries[0].relPath;
+          if (firstPath.includes('/')) {
+            const possiblePrefix = firstPath.split('/')[0] + '/';
+            if (entries.every(e => e.relPath.startsWith(possiblePrefix))) {
+              commonPrefix = possiblePrefix;
+            }
+          }
+
+          preparedBundleFiles = [];
+          const previewRows = [];
+          let hasIndexHtml = false;
+
+          for (const item of entries) {
+            let cleanPath = item.relPath;
+            if (commonPrefix && cleanPath.startsWith(commonPrefix)) {
+              cleanPath = cleanPath.slice(commonPrefix.length);
+            }
+            if (!cleanPath) continue;
+            if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+
+            if (cleanPath === '/index.html' || cleanPath.endsWith('/index.html')) {
+              hasIndexHtml = true;
+            }
+
+            const isText = isTextExtension(cleanPath);
+            const mimeType = getMimeTypeClient(cleanPath);
+
+            if (isText) {
+              const text = await item.zipEntry.async('text');
+              preparedBundleFiles.push({ path: cleanPath, type: mimeType, text });
+              previewRows.push(`
+                <div class="flex items-center justify-between py-1 px-2 border-b border-stone-100 hover:bg-stone-50">
+                  <span class="truncate flex items-center gap-1.5 ${cleanPath === '/index.html' ? 'font-bold text-emerald-800' : 'text-stone-700'}">
+                    <span>${cleanPath.endsWith('.html') ? '📄' : (cleanPath.endsWith('.css') ? '🎨' : (cleanPath.endsWith('.js') ? '⚡' : '📝'))}</span>
+                    <code>${escapeHtml(cleanPath)}</code>
+                  </span>
+                  <span class="text-stone-400 shrink-0 ml-2 font-mono">${formatBytes(text.length)}</span>
+                </div>
+              `);
+            } else {
+              const base64 = await item.zipEntry.async('base64');
+              preparedBundleFiles.push({ path: cleanPath, type: mimeType, base64 });
+              const byteLen = Math.round((base64.length * 3) / 4);
+              previewRows.push(`
+                <div class="flex items-center justify-between py-1 px-2 border-b border-stone-100 hover:bg-stone-50">
+                  <span class="truncate flex items-center gap-1.5 text-stone-700">
+                    <span>🖼️</span> <code>${escapeHtml(cleanPath)}</code>
+                  </span>
+                  <span class="text-stone-400 shrink-0 ml-2 font-mono">${formatBytes(byteLen)}</span>
+                </div>
+              `);
+            }
+          }
+
+          // If no /index.html at root, check if there is an html file we can map to /index.html
+          if (!hasIndexHtml) {
+            const firstHtml = preparedBundleFiles.find(f => f.path.endsWith('.html'));
+            if (firstHtml) {
+              firstHtml.path = '/index.html';
+              hasIndexHtml = true;
+            }
+          }
+
+          if (!hasIndexHtml) {
+            showToast('Cảnh báo: Không tìm thấy file index.html trong file zip! Web có thể không mở được trang chủ.', true);
+          }
+
+          demoFilesBreakdown.innerHTML = previewRows.join('');
+          btnSubmitBundle.disabled = false;
+        } catch (err) {
+          showToast(`Lỗi khi giải nén ZIP: ${err.message}`, true);
+          resetUploadState();
+        }
+      }
+
+      btnSubmitBundle.addEventListener('click', async () => {
+        if (!currentUploadClient || !preparedBundleFiles.length) return;
+
+        btnSubmitBundle.disabled = true;
+        btnSubmitBundle.innerHTML = '<span>⏳ Đang lưu lên Cloudflare KV...</span>';
+        uploadProgressBox.classList.remove('hidden');
+        uploadProgressBar.style.width = '35%';
+        uploadStatusText.textContent = `Đang đồng bộ ${preparedBundleFiles.length} files lên Cloudflare KV...`;
+
+        try {
+          const res = await fetch('/api/upload-demo-bundle', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': adminKey
+            },
+            body: JSON.stringify({
+              adminKey,
+              customerId: currentUploadClient.id,
+              slug: currentUploadClient.demoSlug,
+              files: preparedBundleFiles,
+              credentials: localCreds
+            })
+          });
+
+          uploadProgressBar.style.width = '80%';
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'Upload thất bại!');
+          }
+
+          uploadProgressBar.style.width = '100%';
+          uploadStatusText.textContent = 'Hoàn tất!';
+
+          showToast(`🎉 Đã tải lên ${data.filesCount} file thành công! Web demo đã chạy tại: ${data.demoUrl}`);
+          closeUploadModal();
+          await loadClients();
+        } catch (err) {
+          showToast(`Lỗi upload: ${err.message}`, true);
+          btnSubmitBundle.disabled = false;
+          btnSubmitBundle.innerHTML = '<span>🚀 Lưu &amp; Kích Hoạt Demo Lên Cloudflare</span>';
+          uploadProgressBox.classList.add('hidden');
+        }
       });
 
       function escapeHtml(str) {

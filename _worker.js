@@ -477,6 +477,9 @@ function formatCustomerRecord(cust) {
     photosDriveUrl: m.photos_drive_url || '',
     driveFolderUrl: m.drive_folder_url || '',
     demoUrl: m.demo_url || '',
+    demoSourceType: m.demo_source_type || 'url',
+    demoFilesCount: Number(m.demo_files_count || 0),
+    demoUploadedAt: m.demo_uploaded_at || '',
     liveUrl: m.live_url || '',
     domainDelegated: m.domain_delegated === 'true',
     domainDelegatedAt: m.domain_delegated_at || '',
@@ -614,28 +617,51 @@ async function serveLiveClientSite(liveClient, request, url) {
   });
 }
 
-function buildBrandedPreviewHtml(client) {
+function getMimeType(filePath) {
+  const ext = (filePath || '').split('.').pop().toLowerCase();
+  const types = {
+    'html': 'text/html; charset=utf-8',
+    'htm': 'text/html; charset=utf-8',
+    'css': 'text/css; charset=utf-8',
+    'js': 'application/javascript; charset=utf-8',
+    'mjs': 'application/javascript; charset=utf-8',
+    'json': 'application/json; charset=utf-8',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'webp': 'image/webp',
+    'gif': 'image/gif',
+    'svg': 'image/svg+xml',
+    'ico': 'image/x-icon',
+    'woff': 'font/woff',
+    'woff2': 'font/woff2',
+    'ttf': 'font/ttf',
+    'otf': 'font/otf',
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'pdf': 'application/pdf'
+  };
+  return types[ext] || 'application/octet-stream';
+}
+
+function base64ToUint8Array(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function buildClaimBarSnippet(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const cid = (client && client.id) || '';
   const email = (client && client.email) || '';
-  let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
-  if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
   const claimHref = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${bizName} — Bespoke Website Demo by WynnPages</title>
-  <link rel="icon" type="image/png" href="https://wynnpages.com.au/assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  return `
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #1c1917; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
-    iframe { width: 100%; height: 100%; border: 0; display: block; background: #f6f1e8; }
     .claim-bar {
       position: fixed;
       left: 50%;
@@ -656,6 +682,8 @@ function buildBrandedPreviewHtml(client) {
       justify-content: space-between;
       gap: 16px;
       color: #f6f1e8;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      box-sizing: border-box;
     }
     .claim-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .claim-badge {
@@ -769,9 +797,6 @@ function buildBrandedPreviewHtml(client) {
       .claim-biz-highlight { font-size: 15px; }
     }
   </style>
-</head>
-<body>
-  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>
   <div class="claim-bar">
     <div class="claim-left">
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-badge" title="Visit WynnPages Studio (wynnpages.com.au)">
@@ -808,7 +833,41 @@ function buildBrandedPreviewHtml(client) {
         <span>&rarr;</span>
       </a>
     </div>
-  </div>
+  </div>`;
+}
+
+function injectClaimBarIntoHtml(rawHtml, client) {
+  const snippet = buildClaimBarSnippet(client);
+  if (rawHtml.includes('</body>')) {
+    return rawHtml.replace('</body>', `${snippet}</body>`);
+  }
+  return rawHtml + snippet;
+}
+
+function buildBrandedPreviewHtml(client) {
+  const bizName = (client && (client.businessName || client.name)) || 'Your Business';
+  let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
+  if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${bizName} — Bespoke Website Demo by WynnPages</title>
+  <link rel="icon" type="image/png" href="https://wynnpages.com.au/assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1c1917; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; background: #f6f1e8; }
+  </style>
+</head>
+<body>
+  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>
+  ${buildClaimBarSnippet(client)}
 </body>
 </html>`;
 }
@@ -1109,28 +1168,99 @@ export default {
     if (isCustomClientDomain && !url.pathname.startsWith('/api/')) {
       const liveClient = await findCustomerByLiveDomain(hostLower, cfg.stripeSecretKey);
       if (liveClient) {
+        // Check Cloudflare KV first so uploaded site assets run natively on live domain without claim bar
+        if (env && env.WYNN_KV && liveClient.demoSlug) {
+          let reqPath = url.pathname === '/' || url.pathname === '' ? '/index.html' : url.pathname;
+          const kvKey = `site_asset:${liveClient.demoSlug}:${reqPath}`;
+          const assetObj = await env.WYNN_KV.getWithMetadata(kvKey, 'arrayBuffer');
+          if (assetObj && assetObj.value) {
+            const mimeType = (assetObj.metadata && assetObj.metadata.mimeType) || getMimeType(reqPath);
+            return new Response(assetObj.value, {
+              status: 200,
+              headers: {
+                'Content-Type': mimeType,
+                'Cache-Control': 'public, max-age=3600'
+              }
+            });
+          }
+        }
         return serveLiveClientSite(liveClient, request, url);
       }
     }
 
-    if ((isSubdomainDemo && (url.pathname === '/' || url.pathname === '')) || isPathDemo) {
-      const targetSlug = isSubdomainDemo
-        ? hostLower.replace(/\.wynnpages\.com\.au$/i, '')
-        : url.pathname.replace(/^\/d\//i, '').split('/')[0];
-      const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
-      if (client) {
-        const forceBar = url.searchParams.get('bar') === '1';
-        if (client.stage === 'launched' && client.liveUrl && !forceBar) {
-          const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
-          return Response.redirect(cleanLive, 302);
+    if (isSubdomainDemo || isPathDemo) {
+      let targetSlug = '';
+      let reqPath = url.pathname;
+      if (isSubdomainDemo) {
+        targetSlug = hostLower.replace(/\.wynnpages\.com\.au$/i, '');
+        if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
+      } else {
+        const sub = url.pathname.replace(/^\/d\//i, '');
+        const firstSlash = sub.indexOf('/');
+        if (firstSlash === -1) {
+          targetSlug = sub;
+          reqPath = '/index.html';
+        } else {
+          targetSlug = sub.slice(0, firstSlash);
+          reqPath = sub.slice(firstSlash);
+          if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
         }
-        const html = (client.stage === 'launched' && !forceBar)
-          ? buildCleanLiveHtml(client)
-          : buildBrandedPreviewHtml(client);
-        return new Response(html, {
-          status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        });
+      }
+
+      const cleanSlug = slugifyName(targetSlug);
+
+      // Check if this slug has code & assets stored in Cloudflare KV
+      if (env && env.WYNN_KV && cleanSlug) {
+        const kvKey = `site_asset:${cleanSlug}:${reqPath}`;
+        if (reqPath === '/index.html' || reqPath.endsWith('.html')) {
+          const rawHtml = await env.WYNN_KV.get(kvKey, 'text');
+          if (rawHtml) {
+            const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
+            const forceBar = url.searchParams.get('bar') === '1';
+            let finalHtml = rawHtml;
+            if (!client || client.stage !== 'launched' || forceBar) {
+              finalHtml = injectClaimBarIntoHtml(rawHtml, client || { businessName: targetSlug, demoSlug: targetSlug });
+            }
+            return new Response(finalHtml, {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+              }
+            });
+          }
+        } else {
+          const assetObj = await env.WYNN_KV.getWithMetadata(kvKey, 'arrayBuffer');
+          if (assetObj && assetObj.value) {
+            const mimeType = (assetObj.metadata && assetObj.metadata.mimeType) || getMimeType(reqPath);
+            return new Response(assetObj.value, {
+              status: 200,
+              headers: {
+                'Content-Type': mimeType,
+                'Cache-Control': 'public, max-age=86400'
+              }
+            });
+          }
+        }
+      }
+
+      // If not in KV, fall back to existing iframe preview for root
+      if (reqPath === '/index.html' || reqPath === '/') {
+        const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
+        if (client) {
+          const forceBar = url.searchParams.get('bar') === '1';
+          if (client.stage === 'launched' && client.liveUrl && !forceBar) {
+            const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
+            return Response.redirect(cleanLive, 302);
+          }
+          const html = (client.stage === 'launched' && !forceBar)
+            ? buildCleanLiveHtml(client)
+            : buildBrandedPreviewHtml(client);
+          return new Response(html, {
+            status: 200,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        }
       }
     }
 
@@ -1837,6 +1967,130 @@ export default {
           delegatedAt: nowIso,
           cleanHost,
           nameservers: bindResult ? bindResult.nameservers : null
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 4c. Upload Demo Bundle to Cloudflare KV Native Hosting (POST /api/upload-demo-bundle)
+    if (url.pathname === '/api/upload-demo-bundle' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Unauthorized. Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        }
+
+        if (!env || !env.WYNN_KV) {
+          return new Response(JSON.stringify({ error: 'Cloudflare KV (WYNN_KV) is not bound or available!' }), { status: 500, headers: corsHeaders });
+        }
+
+        const customerId = (body.customerId || '').trim();
+        const rawSlug = (body.slug || '').trim();
+        const files = Array.isArray(body.files) ? body.files : [];
+
+        if (!files.length) {
+          return new Response(JSON.stringify({ error: 'Không có file nào trong gói tải lên!' }), { status: 400, headers: corsHeaders });
+        }
+
+        let cust = null;
+        let effectiveCfg = getConfig(env, body.credentials || {});
+        if (customerId && effectiveCfg.stripeSecretKey) {
+          const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (cRes.ok) cust = await cRes.json();
+        }
+
+        const formatted = cust ? formatCustomerRecord(cust) : null;
+        const targetSlug = slugifyName(rawSlug || (formatted && (formatted.demoSlug || formatted.businessName || formatted.name)) || 'demo');
+        if (!targetSlug) {
+          return new Response(JSON.stringify({ error: 'Slug không hợp lệ!' }), { status: 400, headers: corsHeaders });
+        }
+
+        const nowIso = new Date().toISOString();
+
+        // 1. Check previous manifest to clean up obsolete deleted files
+        const metaKey = `site_meta:${targetSlug}`;
+        const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+        const newPathsSet = new Set(files.map(f => {
+          let p = (f.path || '').trim();
+          if (!p.startsWith('/')) p = '/' + p;
+          return p;
+        }));
+
+        if (prevMeta && Array.isArray(prevMeta.filesList)) {
+          for (const oldPath of prevMeta.filesList) {
+            if (!newPathsSet.has(oldPath)) {
+              await env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => {});
+            }
+          }
+        }
+
+        // 2. Put each file into KV
+        for (const file of files) {
+          let normPath = (file.path || '').trim();
+          if (!normPath.startsWith('/')) normPath = '/' + normPath;
+          const assetKey = `site_asset:${targetSlug}:${normPath}`;
+          const mimeType = file.type || getMimeType(normPath);
+
+          if (file.base64) {
+            const bytes = base64ToUint8Array(file.base64);
+            await env.WYNN_KV.put(assetKey, bytes.buffer, {
+              metadata: { mimeType, size: bytes.length, updatedAt: nowIso }
+            });
+          } else if (file.text !== undefined) {
+            await env.WYNN_KV.put(assetKey, file.text, {
+              metadata: { mimeType, size: file.text.length, updatedAt: nowIso }
+            });
+          }
+        }
+
+        // 3. Save site metadata
+        await env.WYNN_KV.put(metaKey, JSON.stringify({
+          slug: targetSlug,
+          customerId: customerId || (cust && cust.id) || '',
+          uploadedAt: nowIso,
+          filesCount: files.length,
+          filesList: Array.from(newPathsSet)
+        }));
+
+        // 4. Update customer in Stripe if customerId exists
+        const brandedDemoUrl = `https://${targetSlug}.wynnpages.com.au`;
+        let updatedCustRecord = null;
+        if (customerId && effectiveCfg.stripeSecretKey) {
+          const uParams = new URLSearchParams();
+          uParams.append('metadata[demo_source_type]', 'kv');
+          uParams.append('metadata[demo_files_count]', String(files.length));
+          uParams.append('metadata[demo_uploaded_at]', nowIso);
+          uParams.append('metadata[demo_slug]', targetSlug);
+          uParams.append('metadata[demo_url]', brandedDemoUrl);
+
+          const uRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+          if (uRes.ok) {
+            const uData = await uRes.json();
+            updatedCustRecord = formatCustomerRecord(uData);
+          }
+        }
+
+        // 5. Ensure Cloudflare subdomain route
+        await ensureCloudflareSubdomain(targetSlug, env).catch(() => {});
+
+        return new Response(JSON.stringify({
+          ok: true,
+          slug: targetSlug,
+          demoUrl: brandedDemoUrl,
+          filesCount: files.length,
+          client: updatedCustRecord
         }), { status: 200, headers: corsHeaders });
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
