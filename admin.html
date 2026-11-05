@@ -204,26 +204,26 @@
           <span class="text-[11px] text-stone-500">Không cần điền Brief — Tạo xong có ngay Link Demo gắn nút <strong>"Claim This Website - $599 AUD"</strong>!</span>
         </div>
 
-        <form id="quick-outbound-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div>
+        <form id="quick-outbound-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+          <div class="lg:col-span-3">
             <label class="text-[11px] font-bold text-stone-600 block mb-1">Tên Tiệm / Thương Hiệu *</label>
             <input type="text" id="qo-biz-name" required placeholder="VD: Lush Nails &amp; Spa" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
           </div>
-          <div>
+          <div class="lg:col-span-2">
             <label class="text-[11px] font-bold text-emerald-800 block mb-1">📱 SĐT Nhận SMS (Khuyên dùng)</label>
             <input type="tel" id="qo-phone" placeholder="VD: 0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono font-semibold">
           </div>
-          <div>
+          <div class="lg:col-span-2">
             <label class="text-[11px] font-bold text-stone-600 block mb-1">📧 Email <span class="text-stone-400 font-normal">(Tuỳ chọn)</span></label>
             <input type="email" id="qo-email" placeholder="Để trống nếu chỉ có SĐT" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
-          <div>
+          <div class="lg:col-span-3">
             <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo <span class="text-stone-400 font-normal">(Hoặc tải file sau)</span></label>
-            <input type="text" id="qo-demo-url" placeholder="Dán link hoặc để trống tải HTML/ZIP" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <input type="text" id="qo-demo-url" placeholder="Tùy chọn (hoặc tải ZIP sau)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
-          <div class="flex items-end">
-            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-              <span>＋ Tạo &amp; Lấy Link Mua $599</span>
+          <div class="lg:col-span-2 flex items-end">
+            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer">
+              <span>＋ Tạo &amp; Lấy Link Mua</span>
             </button>
           </div>
         </form>
@@ -1029,121 +1029,143 @@
               </div>
 
               <!-- Outbound Demo Link & Live Domain + Streamlined Actions -->
-              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3">
-                <!-- Row 1: Demo URL Input + Compact Branded Demo Actions + KV Upload -->
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
-                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5 w-48">
-                    <span>🔗 1. Link Web Demo:</span>
-                    ${c.demoSourceType === 'kv' ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">KV</span>` : ''}
-                  </label>
-                  <input 
-                    type="text" 
-                    id="demo-url-${c.id}" 
-                    data-cid="${c.id}"
-                    value="${escapeHtml(c.demoUrl || '')}" 
-                    placeholder="Dùng để chào hàng (VD: https://ten-tiem-demo.pages.dev)" 
-                    class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
-                  >
-                  <button 
-                    type="button"
-                    data-cid="${c.id}"
-                    class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors"
-                  >
-                    Lưu Link
-                  </button>
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-slug="${escapeHtml(c.demoSlug || '')}"
-                    data-name="${escapeHtml(titleName)}"
-                    class="btn-open-upload-modal px-3 py-2 rounded-xl ${c.demoSourceType === 'kv' ? 'bg-emerald-700 hover:bg-emerald-800 text-white' : 'bg-[#96432b] hover:bg-[#7d3520] text-white'} text-xs font-bold shrink-0 transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                    title="Tải lên gói source code HTML/ZIP để lưu trữ native trên Cloudflare KV"
-                  >
-                    <span>📤 ${c.demoSourceType === 'kv' ? `Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Tải Lên Code (ZIP/HTML)'}</span>
-                  </button>
-                  ${hasValidDemo ? `
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-name="${escapeHtml(titleName)}"
-                      class="btn-copy-preview px-3 py-2 rounded-xl bg-[#1c1917] hover:bg-[#96432b] text-xs font-bold text-[#f6f1e8] shrink-0 transition-colors inline-flex items-center gap-1"
-                      title="Copy link Demo thương hiệu: ${escapeHtml(previewOverlayUrl)}"
-                    >
-                      <span>📋 Copy Link Demo (${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au)</span>
-                    </button>
-                    <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-stone-200/80 hover:bg-stone-300 text-xs font-bold text-stone-900 shrink-0 inline-flex items-center gap-1">
-                      <span>Xem Demo ↗</span>
-                    </a>
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      data-name="${escapeHtml(titleName)}"
-                      class="btn-copy-claim px-2.5 py-2 rounded-xl bg-white hover:bg-[#fbdeb9]/50 border border-[#d8ccb8] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
-                      title="Copy link thanh toán Stripe $599 trực tiếp"
-                    >
-                      <span>💳 Link $599</span>
-                    </button>
-                  ` : ''}
-                </div>
-                ${c.demoSourceType === 'kv' ? `
-                  <div class="text-[11px] text-emerald-950 bg-emerald-50 border border-emerald-200/90 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2">
-                    <span class="flex items-center gap-1.5">
-                      <span>⚡</span>
-                      <span><strong>Web Demo đang chạy Native trên Cloudflare KV Edge:</strong> ${c.demoFilesCount || 1} files (hình ảnh, CSS, JS). Tốc độ tải tức thì tại Úc.</span>
-                    </span>
-                    <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="text-emerald-900 hover:text-[#96432b] font-bold underline">Mở xem trang demo ↗</a>
-                  </div>
-                ` : ''}
+              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
+                <!-- Section 1: Web Demo & Source Code -->
+                <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-extrabold text-stone-900">🔗 1. Web Demo &amp; Mã Nguồn:</span>
+                      ${c.demoSourceType === 'kv'
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
+                        : (hasValidDemo ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Demo Đã Sẵn Sàng</span>` : '')
+                      }
+                      <code class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] px-2 py-0.5 rounded border border-[#e2d9c8]">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</code>
+                    </div>
 
-                <!-- Row 2: Official Live Domain Input (Required to unlock Button 3 Launch!) -->
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
-                  <label for="live-url-${c.id}" class="text-xs font-extrabold text-emerald-900 shrink-0 flex items-center gap-1.5 w-48">
-                    <span>🌐 2. Tên Miền Chính Thức:</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    id="live-url-${c.id}" 
-                    data-cid="${c.id}"
-                    data-paid="${isPaid ? '1' : '0'}"
-                    value="${escapeHtml(resolvedLiveUrl)}" 
-                    placeholder="${isPaid ? 'Nhập tên miền thật (VD: lushnailsbar.com.au) — Tự động gắn vào web & tắt thanh $599 khi lên sóng...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
-                    class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
-                  >
-                  <button 
-                    type="button"
-                    data-cid="${c.id}"
-                    class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
-                  >
-                    Lưu &amp; Cài Đặt Tên Miền
-                  </button>
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-name="${escapeHtml(titleName)}"
-                    class="btn-copy-domain-guide px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-900 shrink-0 transition-colors inline-flex items-center gap-1"
-                    title="Copy link & tin nhắn hướng dẫn Delegate tên miền cho khách"
-                  >
-                    <span>🤝 Copy Link HD Delegate</span>
-                  </button>
-                  <a
-                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;tab=${c.existingDomain ? 'existing' : 'new'}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
-                    target="_blank"
-                    class="px-2.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
-                    title="Xem trang hướng dẫn Delegate tên miền của khách này"
-                  >
-                    <span>📖 Xem HD ↗</span>
-                  </a>
-                  ${hasValidLive ? `
-                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
-                      <span>Mở Web Thật ↗</span>
-                    </a>
+                    <!-- Action buttons for Demo -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-slug="${escapeHtml(c.demoSlug || '')}"
+                        data-name="${escapeHtml(titleName)}"
+                        class="btn-open-upload-modal px-3 py-1.5 rounded-xl ${c.demoSourceType === 'kv' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-[#96432b] hover:bg-[#7d3520]'} text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                        title="Tải lên gói source code HTML/ZIP để lưu trữ native trên Cloudflare KV"
+                      >
+                        <span>📤 ${c.demoSourceType === 'kv' ? `Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Tải Lên Code (ZIP/HTML)'}</span>
+                      </button>
+                      ${hasValidDemo ? `
+                        <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1">
+                          <span>👁️ Mở Demo ↗</span>
+                        </a>
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          data-name="${escapeHtml(titleName)}"
+                          class="btn-copy-preview px-2.5 py-1.5 rounded-xl bg-[#1c1917] hover:bg-[#96432b] text-xs font-bold text-[#f6f1e8] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          title="Copy link Demo thương hiệu: ${escapeHtml(previewOverlayUrl)}"
+                        >
+                          <span>📋 Copy Link Demo</span>
+                        </button>
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          data-name="${escapeHtml(titleName)}"
+                          class="btn-copy-claim px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                          title="Copy link thanh toán Stripe $599 trực tiếp"
+                        >
+                          <span>💳 Link Mua $599</span>
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+
+                  <!-- Demo URL input row -->
+                  <div class="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      id="demo-url-${c.id}" 
+                      data-cid="${c.id}"
+                      value="${escapeHtml(c.demoUrl || '')}" 
+                      placeholder="Dán link demo ngoài (hoặc bấm 'Tải Lên Code' ở trên để lưu vào Cloudflare KV)" 
+                      class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+                    >
+                    <button 
+                      type="button"
+                      data-cid="${c.id}"
+                      class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                    >
+                      Lưu Link
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Section 2: Official Live Domain -->
+                <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-extrabold text-emerald-950 flex items-center gap-1.5">
+                        <span>🌐 2. Tên Miền Chính Thức:</span>
+                      </span>
+                      ${c.cfNameservers
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">Cloudflare Ready</span>`
+                        : ''
+                      }
+                    </div>
+
+                    <!-- Action buttons for Domain -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-name="${escapeHtml(titleName)}"
+                        class="btn-copy-domain-guide px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-900 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy link & tin nhắn hướng dẫn Delegate tên miền cho khách"
+                      >
+                        <span>🤝 Copy Link HD Delegate</span>
+                      </button>
+                      <a
+                        href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;tab=${c.existingDomain ? 'existing' : 'new'}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
+                        target="_blank"
+                        class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1"
+                        title="Xem trang hướng dẫn Delegate tên miền của khách này"
+                      >
+                        <span>📖 Xem HD ↗</span>
+                      </a>
+                      ${hasValidLive ? `
+                        <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs">
+                          <span>🚀 Mở Web Thật ↗</span>
+                        </a>
+                      ` : ''}
+                    </div>
+                  </div>
+
+                  <!-- Live Domain input row -->
+                  <div class="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      id="live-url-${c.id}" 
+                      data-cid="${c.id}"
+                      data-paid="${isPaid ? '1' : '0'}"
+                      value="${escapeHtml(resolvedLiveUrl)}" 
+                      placeholder="${isPaid ? 'Nhập tên miền thật (VD: lushnailsbar.com.au) — Tự động gắn vào web & tắt thanh $599 khi lên sóng...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
+                      class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+                    >
+                    <button 
+                      type="button"
+                      data-cid="${c.id}"
+                      class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                    >
+                      Lưu &amp; Cài Đặt Tên Miền
+                    </button>
+                  </div>
+
+                  ${c.cfNameservers ? `
+                    <div class="text-[11px] text-emerald-900 bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
+                      <span>☁️ <strong>Đã tự động tạo cấu hình trên Cloudflare!</strong> Nameservers của khách: <code class="font-mono font-bold">${escapeHtml(c.cfNameservers)}</code></span>
+                    </div>
                   ` : ''}
                 </div>
-                ${c.cfNameservers ? `
-                  <div class="text-[11px] text-emerald-900 bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
-                    <span>☁️ <strong>Đã tự động tạo cấu hình trên Cloudflare!</strong> Nameservers của khách: <code class="font-mono font-bold">${escapeHtml(c.cfNameservers)}</code></span>
-                  </div>
-                ` : ''}
 
                 <!-- 3 Outbound Automated SMS + Email Action Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
