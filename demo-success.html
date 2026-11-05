@@ -289,7 +289,7 @@
                   <p class="text-stone-600 mt-0.5">
                     Bạn không cần biết kỹ thuật DNS. Chỉ cần phân quyền quản trị cho <strong class="text-[#96432b]">hello@wynnpages.com.au</strong> trên <strong>VentraIP</strong> (hoặc điền thông tin đăng nhập tạm) — chúng tôi kết nối web lên sóng ngay, quyền sở hữu &amp; tự động gia hạn vẫn nằm 100% trong tài khoản của bạn.
                   </p>
-                  <a href="/domain-guide?tab=existing" target="_blank" class="inline-flex items-center gap-1 mt-1.5 font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
+                  <a id="link-guide-existing" href="/domain-guide?tab=existing" target="_blank" class="inline-flex items-center gap-1 mt-1.5 font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
                     <span>📖 Xem Hướng Dẫn Phân Quyền Tên Miền VentraIP Từng Bước (60 Giây) ↗</span>
                   </a>
                 </div>
@@ -328,7 +328,7 @@
                     <li>Mua tên miền trên <a href="https://ventraip.com.au/domain-names/" target="_blank" class="underline font-bold text-[#96432b]">VentraIP.com.au ↗</a> (nhà đăng ký số 1 chuẩn Úc) bằng email &amp; thẻ ngân hàng của bạn, bật Auto-Renew ON.</li>
                     <li>Sau khi mua xong, vào mục <em>Authorized Users</em> mời <strong class="underline">hello@wynnpages.com.au</strong> với quyền <em>Domain Management</em> — kỹ sư chúng tôi sẽ kết nối lên sóng miễn phí cho bạn!</li>
                   </ol>
-                  <a href="/domain-guide?tab=new" target="_blank" class="inline-flex items-center gap-1 mt-1.5 font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
+                  <a id="link-guide-new" href="/domain-guide?tab=new" target="_blank" class="inline-flex items-center gap-1 mt-1.5 font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
                     <span>📖 Xem Hướng Dẫn Mua &amp; Phân Quyền VentraIP (Kèm Ảnh Chụp Từng Bước) ↗</span>
                   </a>
                 </div>
@@ -439,6 +439,20 @@
 
       let selectedDomainOption = '';
       let uploadedFileObj = null;
+
+      function updateGuideLinks() {
+        const currentEmail = (emailParam || (emailInput && emailInput.value) || '').trim();
+        const currentDomain = ((existingDomainInput && existingDomainInput.value) || (desiredDomainInput && desiredDomainInput.value) || '').trim();
+        const linkExisting = document.getElementById('link-guide-existing');
+        const linkNew = document.getElementById('link-guide-new');
+        const baseQuery = `?cid=${encodeURIComponent(customerId)}&email=${encodeURIComponent(currentEmail)}&domain=${encodeURIComponent(currentDomain)}`;
+        if (linkExisting) linkExisting.href = `/domain-guide${baseQuery}&tab=existing`;
+        if (linkNew) linkNew.href = `/domain-guide${baseQuery}&tab=new`;
+      }
+      updateGuideLinks();
+      if (existingDomainInput) existingDomainInput.addEventListener('input', updateGuideLinks);
+      if (desiredDomainInput) desiredDomainInput.addEventListener('input', updateGuideLinks);
+      if (emailInput) emailInput.addEventListener('input', updateGuideLinks);
 
       if (emailParam) {
         emailDisplay.textContent = 'Account: ' + emailParam;

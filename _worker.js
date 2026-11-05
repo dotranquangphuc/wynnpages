@@ -236,7 +236,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
     const hasExisting = Boolean(client.existingDomain);
-    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
+    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}&email=${encodeURIComponent(client.email || '')}&cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
     smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your domain in 60 seconds via VentraIP (while keeping 100% ownership & renewals in your account), follow our visual guide: ${domainGuideUrl} - Warm regards, Wynn`;
     emailSubject = `Brief Received! Next Step: 60-Second VentraIP Domain Setup Guide`;
     emailHtml = buildAtelierEmailHtml({
@@ -478,6 +478,9 @@ function formatCustomerRecord(cust) {
     driveFolderUrl: m.drive_folder_url || '',
     demoUrl: m.demo_url || '',
     liveUrl: m.live_url || '',
+    domainDelegated: m.domain_delegated === 'true',
+    domainDelegatedAt: m.domain_delegated_at || '',
+    domainProvider: m.domain_provider || '',
     checkoutSessionId: m.checkout_session_id || '',
     welcomeSent: m.welcome_sent || 'false',
     lastSmsLog: m.last_sms_log || '',
@@ -640,13 +643,13 @@ function buildBrandedPreviewHtml(client) {
       transform: translateX(-50%);
       z-index: 999999;
       width: calc(100% - 28px);
-      max-width: 780px;
+      max-width: 880px;
       background: rgba(28, 25, 23, 0.96);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(229, 222, 201, 0.24);
       border-radius: 22px;
-      padding: 12px 16px 12px 20px;
+      padding: 12px 18px 12px 18px;
       box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.55);
       display: flex;
       align-items: center;
@@ -654,28 +657,32 @@ function buildBrandedPreviewHtml(client) {
       gap: 16px;
       color: #f6f1e8;
     }
-    .claim-left { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .claim-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .claim-badge {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: #96432b; color: #fff;
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 22px; font-weight: 700;
+      width: 44px; height: 44px; border-radius: 13px;
+      background: #96432b;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       text-decoration: none;
-      border: 1px solid rgba(232, 185, 72, 0.35);
+      border: 1px solid rgba(232, 185, 72, 0.4);
       transition: all 0.2s ease;
       cursor: pointer;
+      overflow: hidden;
+      padding: 2px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     }
     .claim-badge:hover {
-      transform: translateY(-1px) scale(1.03);
-      border-color: rgba(232, 185, 72, 0.7);
-      box-shadow: 0 4px 14px rgba(150, 67, 43, 0.45);
+      transform: translateY(-1px) scale(1.05);
+      border-color: rgba(232, 185, 72, 0.85);
+      box-shadow: 0 6px 18px rgba(150, 67, 43, 0.5);
+    }
+    .claim-badge-img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block;
     }
     .claim-meta { min-width: 0; }
     .claim-tag {
       font-size: 10px; font-weight: 800; text-transform: uppercase;
       letter-spacing: 0.08em; color: #fbdeb9; display: flex; align-items: center; gap: 6px;
-      flex-wrap: wrap; margin-bottom: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
     }
     .claim-studio-link {
       color: #e8b948;
@@ -686,6 +693,7 @@ function buildBrandedPreviewHtml(client) {
       padding: 1px 7px;
       border-radius: 6px;
       transition: all 0.18s ease;
+      flex-shrink: 0;
     }
     .claim-studio-link:hover {
       background: rgba(232, 185, 72, 0.22);
@@ -694,11 +702,19 @@ function buildBrandedPreviewHtml(client) {
       transform: translateY(-0.5px);
     }
     .claim-ext-arrow { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
-    .claim-bullet { color: rgba(251, 222, 185, 0.4); font-size: 8px; }
-    .claim-tag-text { color: rgba(251, 222, 185, 0.85); font-weight: 700; letter-spacing: 0.06em; }
+    .claim-bullet { color: rgba(251, 222, 185, 0.4); font-size: 8px; flex-shrink: 0; }
+    .claim-tag-text { color: rgba(251, 222, 185, 0.85); font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
     .claim-title {
-      font-size: 13.5px; font-weight: 700; color: #ffffff;
+      display: flex; align-items: baseline; gap: 6px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .claim-for-text {
+      font-size: 11.5px; font-weight: 600; color: #b8b0a5; letter-spacing: 0.03em; text-transform: uppercase; flex-shrink: 0;
+    }
+    .claim-biz-highlight {
+      font-size: 16.5px; font-weight: 800; color: #ffffff;
+      letter-spacing: -0.01em; text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      overflow: hidden; text-overflow: ellipsis;
     }
     .claim-actions {
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
@@ -749,6 +765,8 @@ function buildBrandedPreviewHtml(client) {
       .claim-btn { justify-content: center; padding: 11px 14px; font-size: 12px; }
       .claim-tag-text { display: none; }
       .claim-bullet { display: none; }
+      .claim-for-text { font-size: 10.5px; }
+      .claim-biz-highlight { font-size: 15px; }
     }
   </style>
 </head>
@@ -757,7 +775,7 @@ function buildBrandedPreviewHtml(client) {
   <div class="claim-bar">
     <div class="claim-left">
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-badge" title="Visit WynnPages Studio (wynnpages.com.au)">
-        <span>W</span>
+        <img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages Atelier" class="claim-badge-img">
       </a>
       <div class="claim-meta">
         <div class="claim-tag">
@@ -770,9 +788,12 @@ function buildBrandedPreviewHtml(client) {
           <span class="claim-bullet">•</span>
           <span class="claim-tag-text">Bespoke Demo</span>
           <span class="claim-bullet">•</span>
-          <span class="claim-tag-text">Zero Monthly Fees</span>
+          <span class="claim-tag-text">No Monthly Fees</span>
         </div>
-        <div class="claim-title">Crafted exclusively for ${bizName}</div>
+        <div class="claim-title">
+          <span class="claim-for-text">Crafted exclusively for</span>
+          <strong class="claim-biz-highlight">${bizName}</strong>
+        </div>
       </div>
     </div>
     <div class="claim-actions">
@@ -1727,6 +1748,98 @@ export default {
           JSON.stringify({ error: err.message || 'Could not save brief.' }),
           { status: 500, headers: corsHeaders }
         );
+      }
+    }
+
+    // 4b. Client Domain Delegation Confirmation (POST /api/domain-delegated)
+    if (url.pathname === '/api/domain-delegated' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const cid = (body.customerId || body.cid || '').trim();
+        const email = (body.email || '').trim().toLowerCase();
+        const rawDomain = (body.domain || '').trim();
+        const bizName = (body.businessName || body.name || '').trim();
+        const accessNotes = (body.accessNotes || body.notes || '').trim();
+        const provider = (body.provider || 'VentraIP Australia').trim();
+        const cleanHost = extractCleanHost(rawDomain);
+
+        let cust = null;
+        if (cid && cfg.stripeSecretKey) {
+          const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cid)}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          });
+          if (cRes.ok) cust = await cRes.json();
+        }
+        if (!cust && email && cfg.stripeSecretKey) {
+          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
+        }
+
+        const nowIso = new Date().toISOString();
+        let bindResult = null;
+        if (cleanHost && cleanHost.includes('.') && !cleanHost.endsWith('wynnpages.com.au') && env && env.WYNN_KV) {
+          bindResult = await ensureCustomLiveDomainOnCloudflare(cleanHost, env);
+        }
+
+        if (cust && cust.id && cfg.stripeSecretKey) {
+          const uParams = new URLSearchParams();
+          uParams.append('metadata[domain_delegated]', 'true');
+          uParams.append('metadata[domain_delegated_at]', nowIso);
+          uParams.append('metadata[domain_provider]', provider.slice(0, 490));
+          if (cleanHost && !cleanHost.endsWith('wynnpages.com.au')) {
+            uParams.append('metadata[live_url]', cleanHost.slice(0, 490));
+          }
+          if (accessNotes) {
+            uParams.append('metadata[domain_access_notes]', accessNotes.slice(0, 490));
+          }
+          if (bindResult && bindResult.nameservers) {
+            uParams.append('metadata[cf_nameservers]', bindResult.nameservers.slice(0, 490));
+          }
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          }).catch(() => {});
+        }
+
+        // Notify studio admin via Resend
+        if (cfg.resendApiKey) {
+          const customerLabel = bizName || (cust && (cust.metadata && cust.metadata.business_name || cust.name)) || 'A client';
+          const domainLabel = cleanHost || (cust && cust.metadata && cust.metadata.live_url) || rawDomain || 'TBD';
+          const emailHtml = `
+            <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#fcf9f3;border:1px solid #e5dec9;border-radius:18px;">
+              <h2 style="color:#96432b;margin-top:0;font-size:20px;">🎉 Client Completed Domain Setup!</h2>
+              <p style="font-size:14px;color:#2b251e;line-height:1.5;"><strong>${customerLabel}</strong> has confirmed domain setup on <strong>${provider}</strong>.</p>
+              <div style="background:#fff;border:1px solid #d5cebf;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;line-height:1.6;">
+                <div><strong>Business:</strong> ${customerLabel}</div>
+                <div><strong>Domain:</strong> <code style="font-weight:bold;color:#96432b;">${domainLabel}</code></div>
+                <div><strong>Provider:</strong> ${provider}</div>
+                <div><strong>Email:</strong> ${email || (cust && cust.email) || 'N/A'}</div>
+                ${accessNotes ? `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ddd;"><strong>Login / Notes:</strong><br><pre style="font-family:monospace;background:#f8f9fa;padding:8px;border-radius:6px;margin-top:4px;white-space:pre-wrap;">${accessNotes}</pre></div>` : ''}
+              </div>
+              <p style="margin-top:20px;"><a href="https://wynnpages.com.au/admin" style="display:inline-block;background:#96432b;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 22px;border-radius:12px;">Open WynnPages Admin to Launch →</a></p>
+            </div>
+          `;
+          await sendResendEmail({
+            apiKey: cfg.resendApiKey,
+            from: cfg.resendFromEmail || 'WynnPages Studio <hello@wynnpages.com.au>',
+            to: 'hello@wynnpages.com.au',
+            subject: `⚡ [DOMAIN READY] ${customerLabel} (${domainLabel}) completed setup!`,
+            html: emailHtml
+          }).catch(() => {});
+        }
+
+        return new Response(JSON.stringify({
+          ok: true,
+          delegatedAt: nowIso,
+          cleanHost,
+          nameservers: bindResult ? bindResult.nameservers : null
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 

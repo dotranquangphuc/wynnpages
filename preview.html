@@ -34,25 +34,26 @@
   <!-- Floating Bottom Claim Bar (Phase 2: The Hook) -->
   <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-3xl bg-[#1c1917]/96 backdrop-blur-xl text-[#fcf9f3] border border-[#e5dec9]/25 rounded-2xl p-3 sm:px-5 sm:py-3.5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
     <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="w-10 h-10 rounded-xl bg-[#96432b] hover:bg-[#b05035] text-white flex items-center justify-center font-editorial font-bold text-xl shrink-0 shadow-sm border border-[#e8b948]/35 transition-all hover:scale-105" title="Visit WynnPages Studio (wynnpages.com.au)">
-        W
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="w-11 h-11 rounded-xl bg-[#96432b] p-0.5 flex items-center justify-center shrink-0 shadow-sm border border-[#e8b948]/35 transition-all hover:scale-105 overflow-hidden" title="Visit WynnPages Studio (wynnpages.com.au)">
+        <img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages Atelier" class="w-full h-full object-cover rounded-lg">
       </a>
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-extrabold text-[#e8b948] bg-[#e8b948]/15 hover:bg-[#e8b948]/25 border border-[#e8b948]/30 px-2 py-0.5 rounded-md transition-all">
+        <div class="flex items-center gap-1.5 flex-nowrap">
+          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-extrabold text-[#e8b948] bg-[#e8b948]/15 hover:bg-[#e8b948]/25 border border-[#e8b948]/30 px-2 py-0.5 rounded-md transition-all shrink-0">
             <span>wynnpages.com.au</span>
             <svg class="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
             </svg>
           </a>
           <span class="hidden sm:inline text-stone-500 text-[9px]">•</span>
-          <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-[#fbdeb9]/80 font-bold">
-            Bespoke Demo • Zero Monthly Fees
+          <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-[#fbdeb9]/80 font-bold truncate">
+            Bespoke Demo • No Monthly Fees
           </span>
         </div>
-        <p id="preview-biz-name" class="text-xs sm:text-sm font-semibold text-[#fcf9f3] truncate mt-0.5">
-          Your Custom Artisan Website Preview
-        </p>
+        <div id="preview-biz-name" class="flex items-baseline gap-1.5 truncate mt-0.5">
+          <span class="text-[11px] font-semibold text-stone-400 uppercase tracking-wider shrink-0">Crafted exclusively for</span>
+          <strong id="preview-biz-highlight" class="text-sm sm:text-base font-extrabold text-white truncate">Your Business</strong>
+        </div>
       </div>
     </div>
 
@@ -95,7 +96,9 @@
 
       function applyInfo({ demoUrl, name, email, id }) {
         if (name) {
-          bizNameEl.textContent = 'Crafted exclusively for ' + name;
+          const highlightEl = document.getElementById('preview-biz-highlight');
+          if (highlightEl) highlightEl.textContent = name;
+          else bizNameEl.textContent = 'Crafted exclusively for ' + name;
           document.title = `${name} — Custom Website Demo | WynnPages`;
         }
         if (demoUrl) {

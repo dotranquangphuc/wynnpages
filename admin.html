@@ -891,6 +891,30 @@
                 `).join('')}
               </div>
 
+              ${c.domainDelegated ? `
+              <!-- Client Domain Delegation Alert -->
+              <div class="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/70 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-xl">🎉</span>
+                  <div>
+                    <p class="font-extrabold text-emerald-900 text-sm flex items-center gap-2">
+                      <span>KHÁCH VỪA BÁO ĐÃ HOÀN TẤT KẾT NỐI TÊN MIỀN!</span>
+                      <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider">Domain Ready</span>
+                    </p>
+                    <p class="text-emerald-800 text-[11px] mt-0.5">
+                      Nhà cung cấp: <strong>${escapeHtml(c.domainProvider || 'VentraIP Australia')}</strong>
+                      ${c.domainDelegatedAt ? ` • Báo lúc: <strong>${new Date(c.domainDelegatedAt).toLocaleString('vi-VN')}</strong>` : ''}
+                      ${c.liveUrl ? ` • Live URL: <code class="font-bold text-stone-900 bg-white px-2 py-0.5 rounded border border-emerald-300 font-mono">${escapeHtml(c.liveUrl)}</code>` : ''}
+                      ${c.domainAccessNotes ? ` • Ghi chú: <em>"${escapeHtml(c.domainAccessNotes)}"</em>` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-xs">
+                  Sẵn sàng bấm Nút 3: Giao Web Live 🚀
+                </span>
+              </div>
+              ` : ''}
+
               <!-- Post-Payment Confirmation Info (Shown prominently once Paid or if domain/files exist) -->
               <div class="bg-[#fcf9f3] rounded-2xl px-4 py-3 border border-[#ece4d5] flex flex-wrap items-center justify-between gap-4 text-xs">
                 <div class="flex flex-wrap items-center gap-5">
@@ -1318,6 +1342,30 @@
                   </div>
                 </div>
               </div>
+
+              ${c.domainDelegated ? `
+              <!-- Client Domain Delegation Alert -->
+              <div class="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/70 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-xl">🎉</span>
+                  <div>
+                    <p class="font-extrabold text-emerald-900 text-sm flex items-center gap-2">
+                      <span>KHÁCH VỪA BÁO ĐÃ HOÀN TẤT KẾT NỐI TÊN MIỀN!</span>
+                      <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider">Domain Ready</span>
+                    </p>
+                    <p class="text-emerald-800 text-[11px] mt-0.5">
+                      Nhà cung cấp: <strong>${escapeHtml(c.domainProvider || 'VentraIP Australia')}</strong>
+                      ${c.domainDelegatedAt ? ` • Báo lúc: <strong>${new Date(c.domainDelegatedAt).toLocaleString('vi-VN')}</strong>` : ''}
+                      ${c.liveUrl ? ` • Live URL: <code class="font-bold text-stone-900 bg-white px-2 py-0.5 rounded border border-emerald-300 font-mono">${escapeHtml(c.liveUrl)}</code>` : ''}
+                      ${c.domainAccessNotes ? ` • Ghi chú: <em>"${escapeHtml(c.domainAccessNotes)}"</em>` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-xs">
+                  Sẵn sàng bấm Nút 3: Giao Web Live 🚀
+                </span>
+              </div>
+              ` : ''}
 
               <!-- Demo Link Input & Official Live Domain & Smart Stage Action Buttons -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
