@@ -972,20 +972,54 @@
           return true;
         }
 
+        function cleanDomainInput(val) {
+          if (!val) return '';
+          return val
+            .trim()
+            .toLowerCase()
+            .replace(/^https?:\/\//i, '')
+            .replace(/\/.*$/, '')
+            .replace(/\?.*$/, '')
+            .replace(/#.*$/, '')
+            .replace(/^www\./i, '')
+            .replace(/:\d+$/, '')
+            .trim();
+        }
+
         if (step === 4) {
           if (!selectedDomainOption) {
             showError('Please select a Domain Name Setup option (Option A or B).');
             return false;
           }
-          if (selectedDomainOption === 'I already own a domain' && !existingDomainInput.value.trim()) {
-            showError('Please enter your domain name (e.g., mybusiness.com.au).');
-            existingDomainInput.focus();
-            return false;
+          if (selectedDomainOption === 'I already own a domain') {
+            const cleaned = cleanDomainInput(existingDomainInput.value);
+            if (!cleaned) {
+              showError('Please enter your domain name (e.g., mybusiness.com.au).');
+              existingDomainInput.focus();
+              return false;
+            }
+            if (cleaned.endsWith('wynnpages.com.au') || cleaned.endsWith('pages.dev')) {
+              showError('Please enter your own custom domain (e.g., mybusiness.com.au), not a WynnPages link.');
+              existingDomainInput.focus();
+              return false;
+            }
+            existingDomainInput.value = cleaned;
+            return true;
           }
-          if (selectedDomainOption === 'I need to register a new domain' && !desiredDomainsInput.value.trim()) {
-            showError('Please enter the domain name you would like to use (e.g., bobplumbing.com.au).');
-            desiredDomainsInput.focus();
-            return false;
+          if (selectedDomainOption === 'I need to register a new domain') {
+            const cleaned = cleanDomainInput(desiredDomainsInput.value);
+            if (!cleaned) {
+              showError('Please enter the domain name you would like to use (e.g., bobplumbing.com.au).');
+              desiredDomainsInput.focus();
+              return false;
+            }
+            if (cleaned.endsWith('wynnpages.com.au') || cleaned.endsWith('pages.dev')) {
+              showError('Please enter your desired custom domain (e.g., bobplumbing.com.au), not a WynnPages link.');
+              desiredDomainsInput.focus();
+              return false;
+            }
+            desiredDomainsInput.value = cleaned;
+            return true;
           }
           return true;
         }

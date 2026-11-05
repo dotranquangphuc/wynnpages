@@ -328,6 +328,24 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         url: previewLink
       }
     });
+  } else if (stage === 'outbound_paid_confirmed') {
+    const bizLabel = client.businessName || client.name || 'your business';
+    const demoSuccessUrl = `${origin}/demo-success?email=${encodeURIComponent(email)}&cid=${encodeURIComponent(client.id || '')}`;
+    smsText = `Hi ${firstName}, congratulations! Your payment of $599 AUD for ${bizLabel} is confirmed. Please finalize your domain details here so we can launch your website: ${demoSuccessUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
+    emailSubject = `Payment Secured! Please Confirm Your Domain to Go Live`;
+    emailHtml = buildAtelierEmailHtml({
+      preheader: 'Payment Secured via Stripe • Final Step to Go Live',
+      heading: `Payment Secured for ${bizLabel}!`,
+      bodyHtml: `
+        <p>Hi ${firstName},</p>
+        <p>Thank you for choosing <strong>WynnPages Studio</strong>! Your payment of $599 AUD is confirmed, and your bespoke website is officially yours.</p>
+        <p>To help us connect your domain and launch your website as quickly as possible, please complete the quick 60-second domain confirmation page below:</p>
+      `,
+      primaryCta: {
+        label: 'Confirm Your Domain & Finalise Launch →',
+        url: demoSuccessUrl
+      }
+    });
   } else if (stage === 'outbound_followup') {
     const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
@@ -505,7 +523,11 @@ function extractCleanHost(rawUrlOrDomain) {
     .toLowerCase()
     .replace(/^https?:\/\//i, '')
     .replace(/\/.*$/, '')
-    .replace(/^www\./i, '');
+    .replace(/\?.*$/, '')
+    .replace(/#.*$/, '')
+    .replace(/^www\./i, '')
+    .replace(/:\d+$/, '')
+    .trim();
 }
 
 async function findCustomerByLiveDomain(hostname, stripeSecretKey) {
@@ -541,13 +563,51 @@ function buildCleanLiveHtml(client) {
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #f6f1e8; }
-    iframe { width: 100%; height: 100%; border: 0; display: block; background: #f6f1e8; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; background: #f6f1e8; -webkit-overflow-scrolling: touch; }
   </style>
 </head>
 <body>
   <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')}" allow="fullscreen"></iframe>
 </body>
 </html>`;
+}
+
+async function serveLiveClientSite(liveClient, request, url) {
+  let rawDemo = (liveClient && liveClient.demoUrl) || 'https://wynnpages.com.au';
+  if (!rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
+
+  try {
+    const targetUrl = new URL(url.pathname + url.search, rawDemo);
+    const proxyHeaders = new Headers(request.headers);
+    proxyHeaders.set('Host', new URL(rawDemo).host);
+    proxyHeaders.delete('cf-connecting-ip');
+    proxyHeaders.delete('x-real-ip');
+
+    const res = await fetch(targetUrl.toString(), {
+      method: request.method,
+      headers: proxyHeaders,
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+      redirect: 'follow'
+    });
+
+    if (res.status < 500) {
+      const responseHeaders = new Headers(res.headers);
+      responseHeaders.delete('x-frame-options');
+      responseHeaders.delete('content-security-policy');
+      return new Response(res.body, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: responseHeaders
+      });
+    }
+  } catch (err) {
+    // Graceful fallback to full-screen clean container
+  }
+
+  return new Response(buildCleanLiveHtml(liveClient), {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
 }
 
 function buildBrandedPreviewHtml(client) {
@@ -944,13 +1004,10 @@ export default {
       hostLower !== 'localhost' &&
       hostLower !== '127.0.0.1';
 
-    if (isCustomClientDomain && (url.pathname === '/' || url.pathname === '')) {
+    if (isCustomClientDomain && !url.pathname.startsWith('/api/')) {
       const liveClient = await findCustomerByLiveDomain(hostLower, cfg.stripeSecretKey);
       if (liveClient) {
-        return new Response(buildCleanLiveHtml(liveClient), {
-          status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        });
+        return serveLiveClientSite(liveClient, request, url);
       }
     }
 
@@ -961,6 +1018,10 @@ export default {
       const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
       if (client) {
         const forceBar = url.searchParams.get('bar') === '1';
+        if (client.stage === 'launched' && client.liveUrl && !forceBar) {
+          const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
+          return Response.redirect(cleanLive, 302);
+        }
         const html = (client.stage === 'launched' && !forceBar)
           ? buildCleanLiveHtml(client)
           : buildBrandedPreviewHtml(client);
@@ -1239,19 +1300,23 @@ export default {
         let notifyRes = null;
 
         if (!alreadyWelcomed && (email || phone)) {
+          const isOutboundSession = (sessionData.metadata && sessionData.metadata.flow === 'outbound_demo') ||
+            (cust && cust.metadata && cust.metadata.flow_type === 'outbound');
           const clientObj = {
+            id: (cust && cust.id) || (typeof sessionData.customer === 'string' ? sessionData.customer : ''),
             name: name || (cust && cust.name) || '',
             email: email || (cust && cust.email) || '',
-            phone: phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || ''
+            phone: phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '',
+            businessName: (cust && cust.metadata && cust.metadata.business_name) || (sessionData.metadata && sessionData.metadata.customer_name) || '',
+            demoUrl: (cust && cust.metadata && cust.metadata.demo_url) || (sessionData.metadata && sessionData.metadata.demo_url) || ''
           };
           notifyRes = await triggerLifecycleNotification({
-            stage: 'payment_confirmed',
+            stage: isOutboundSession ? 'outbound_paid_confirmed' : 'payment_confirmed',
             client: clientObj,
             origin: url.origin,
             cfg
           });
 
-          const isOutboundSession = sessionData.metadata && sessionData.metadata.flow === 'outbound_demo';
           const uParams = new URLSearchParams();
           if (clientObj.email) uParams.append('email', clientObj.email);
           if (clientObj.name) uParams.append('name', clientObj.name);
@@ -1425,7 +1490,29 @@ export default {
         const keepOutboundStage = (briefType === 'demo' || existingFlow === 'outbound') && existingStage.startsWith('outbound_');
 
         const isExistingDom = hasDomain === 'I already own a domain' || hasDomain === 'Yes, I have one';
-        const domainSummary = isExistingDom ? existingDomain : desiredDomains;
+        const rawDomainSummary = isExistingDom ? existingDomain : desiredDomains;
+        const candidateHost = extractCleanHost(rawDomainSummary);
+
+        let autoLiveUrl = (existingCustObj && existingCustObj.metadata && existingCustObj.metadata.live_url) || '';
+        if (
+          !autoLiveUrl &&
+          candidateHost &&
+          candidateHost.includes('.') &&
+          !candidateHost.endsWith('wynnpages.com.au') &&
+          !candidateHost.endsWith('pages.dev') &&
+          !candidateHost.endsWith('workers.dev')
+        ) {
+          autoLiveUrl = candidateHost;
+        }
+
+        const cleanExistingDomain = isExistingDom && candidateHost && !candidateHost.endsWith('wynnpages.com.au') && !candidateHost.endsWith('pages.dev')
+          ? candidateHost
+          : (existingDomain || '').slice(0, 490);
+        const cleanDesiredDomains = !isExistingDom && candidateHost && !candidateHost.endsWith('wynnpages.com.au') && !candidateHost.endsWith('pages.dev')
+          ? candidateHost
+          : (desiredDomains || '').slice(0, 490);
+        const domainSummary = isExistingDom ? cleanExistingDomain : cleanDesiredDomains;
+
         const metadataEntries = {
           studio: 'WynnPages Australia',
           stage: keepOutboundStage ? existingStage : 'brief_completed',
@@ -1443,8 +1530,8 @@ export default {
           brand_colors: brandColors.slice(0, 490),
           vibe_links: vibeLinks.slice(0, 490),
           has_domain: hasDomain.slice(0, 490),
-          existing_domain: existingDomain.slice(0, 490),
-          desired_domains: desiredDomains.slice(0, 490),
+          existing_domain: cleanExistingDomain,
+          desired_domains: cleanDesiredDomains,
           domain_access_notes: domainAccessNotes.slice(0, 490),
           logo_file_id: logoFileId || '',
           logo_file_name: (body.logoFile && body.logoFile.name ? body.logoFile.name : logoLink).slice(0, 490),
@@ -1458,6 +1545,9 @@ export default {
           photos_drive_url: photosDriveUrl.slice(0, 490),
           drive_folder_url: driveFolderUrl.slice(0, 490)
         };
+        if (autoLiveUrl) {
+          metadataEntries.live_url = autoLiveUrl;
+        }
 
         const summaryDesc = `WynnPages Brief [${briefType.toUpperCase()}] • ${industry || 'Custom Demo'} • Domain: ${domainSummary || 'TBD'}`;
 
@@ -1503,6 +1593,22 @@ export default {
         });
 
         const custData = await custRes.json().catch(() => ({}));
+
+        if (autoLiveUrl && env && env.WYNN_KV) {
+          const bindRes = await ensureCustomLiveDomainOnCloudflare(autoLiveUrl, env);
+          if (bindRes && bindRes.nameservers && custData && custData.id) {
+            const nsP = new URLSearchParams();
+            nsP.append('metadata[cf_nameservers]', bindRes.nameservers.slice(0, 490));
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(custData.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: nsP.toString()
+            }).catch(() => {});
+          }
+        }
 
         // Trigger Stage 2 SMS + Email to Client
         const clientRecord = {

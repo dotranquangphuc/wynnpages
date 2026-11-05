@@ -415,9 +415,15 @@
             </select>
           </div>
         </div>
-        <div>
-          <label class="font-bold block mb-1">Link Bản Demo (Demo URL)</label>
-          <input type="text" id="edit-demo-url" placeholder="https://demo.wynnpages.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold block mb-1">Link Bản Demo (Demo URL)</label>
+            <input type="text" id="edit-demo-url" placeholder="https://demo.wynnpages.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+          <div>
+            <label class="font-bold block mb-1">Tên Miền Thật (Official Live Domain)</label>
+            <input type="text" id="edit-live-url" placeholder="VD: lushnailsbar.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
         </div>
         <div>
           <label class="font-bold block mb-1">Địa chỉ kinh doanh / Khu vực phục vụ</label>
@@ -525,6 +531,7 @@
       const editExistingDomain = document.getElementById('edit-existing-domain');
       const editDesiredDomains = document.getElementById('edit-desired-domains');
       const editDemoUrl = document.getElementById('edit-demo-url');
+      const editLiveUrl = document.getElementById('edit-live-url');
 
       function showToast(msg, isError = false) {
         toastMessage.textContent = msg;
@@ -843,6 +850,15 @@
 
                 <!-- Right Utility Buttons -->
                 <div class="flex items-center gap-2 flex-wrap">
+                  <button 
+                    type="button" 
+                    data-cid="${c.id}"
+                    class="btn-copy-brief inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
+                    title="Copy toàn bộ thông tin tiệm để dán vào Claude / Gemini code web demo"
+                  >
+                    <span>🤖</span>
+                    <span>Copy Brief Cho AI</span>
+                  </button>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
@@ -1350,16 +1366,38 @@
                   <button 
                     type="button"
                     data-cid="${c.id}"
-                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
+                    class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
                   >
-                    Lưu Tên Miền
+                    Lưu &amp; Cài Đặt Tên Miền
                   </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-name="${escapeHtml(titleName)}"
+                    class="btn-copy-domain-guide px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-900 shrink-0 transition-colors inline-flex items-center gap-1"
+                    title="Copy link & tin nhắn hướng dẫn Delegate tên miền cho khách"
+                  >
+                    <span>🤝 Copy Link HD Delegate</span>
+                  </button>
+                  <a
+                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
+                    target="_blank"
+                    class="px-2.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
+                    title="Xem trang hướng dẫn Delegate tên miền của khách này"
+                  >
+                    <span>📖 Xem HD ↗</span>
+                  </a>
                   ${hasValidLive ? `
                     <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
                       <span>Mở Web Thật ↗</span>
                     </a>
                   ` : ''}
                 </div>
+                ${c.cfNameservers ? `
+                  <div class="text-[11px] text-emerald-900 bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
+                    <span>☁️ <strong>Đã tự động tạo cấu hình trên Cloudflare!</strong> Nameservers của khách: <code class="font-mono font-bold">${escapeHtml(c.cfNameservers)}</code></span>
+                  </div>
+                ` : ''}
 
                 <!-- 5 Smart Stage Trigger Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
@@ -1617,6 +1655,7 @@
             editExistingDomain.value = c.existingDomain || '';
             editDesiredDomains.value = c.desiredDomains || '';
             editDemoUrl.value = c.demoUrl || '';
+            editLiveUrl.value = c.liveUrl || '';
             clientModal.classList.remove('hidden');
           });
         });
@@ -1641,8 +1680,12 @@
             const demoUrl = demoInput ? demoInput.value.trim() : '';
             const liveUrl = liveInput ? liveInput.value.trim() : '';
             btn.textContent = 'Đang lưu...';
-            await runAdminAction({ action: 'save_client', customerId: cid, demoUrl, liveUrl });
-            showToast('Đã lưu Link Web Demo & Tên Miền Chính Thức!');
+            const res = await runAdminAction({ action: 'save_client', customerId: cid, demoUrl, liveUrl });
+            if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {
+              showToast(`Đã lưu & tạo Cloudflare zone! Nameservers: ${res.liveDomainBindResult.nameservers}`);
+            } else {
+              showToast('Đã lưu Link Web Demo & Tên Miền Chính Thức!');
+            }
           });
         });
 
@@ -1885,6 +1928,7 @@
         editExistingDomain.value = '';
         editDesiredDomains.value = '';
         editDemoUrl.value = '';
+        editLiveUrl.value = '';
         clientModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-client-modal').addEventListener('click', () => clientModal.classList.add('hidden'));
@@ -1911,7 +1955,8 @@
           socialLinks: editSocials.value.trim(),
           existingDomain: editExistingDomain.value.trim(),
           desiredDomains: editDesiredDomains.value.trim(),
-          demoUrl: editDemoUrl.value.trim()
+          demoUrl: editDemoUrl.value.trim(),
+          liveUrl: editLiveUrl.value.trim()
         };
         clientModal.classList.add('hidden');
         await runAdminAction(payload);
