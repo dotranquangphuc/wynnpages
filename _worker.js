@@ -235,11 +235,12 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
-    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}`;
-    smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your domain in 60 seconds (while keeping 100% ownership & renewals in your account), follow our quick guide here: ${origin}/domain-guide - Warm regards, Wynn`;
-    emailSubject = `Brief Received! Next Step: 60-Second Domain Delegation Guide`;
+    const hasExisting = Boolean(client.existingDomain);
+    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
+    smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your domain in 60 seconds via VentraIP (while keeping 100% ownership & renewals in your account), follow our visual guide: ${domainGuideUrl} - Warm regards, Wynn`;
+    emailSubject = `Brief Received! Next Step: 60-Second VentraIP Domain Setup Guide`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Studio Active • 60-Second Domain Setup Guide Inside',
+      preheader: 'Studio Active • 60-Second VentraIP Domain Setup Guide Inside',
       heading: `We are firing up the code editor, ${firstName}.`,
       bodyHtml: `
         <p>Thank you for completing your studio brief! We have logged all your specifications and started preparing your bespoke website for launch.</p>
@@ -250,10 +251,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
           ${client.vibeLinks ? `<div style="margin-top:6px;"><strong>Reference Vibes:</strong> ${client.vibeLinks}</div>` : ''}
           <div style="margin-top:6px;"><strong>Domain:</strong> ${domainInfo}</div>
         </div>
-        <p><strong>How to connect your domain (${domainInfo}) with zero tech hassle:</strong> Click the button below to view our 60-second step-by-step guide on how to invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as a Delegate on GoDaddy, VentraIP, or CrazyDomains (your domain ownership and annual auto-renewals stay 100% in your own account!):</p>
+        <p><strong>How to connect your domain (${domainInfo}) with zero tech hassle:</strong> Click the button below to view our 60-second step-by-step visual guide on how to invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an Authorized User on <strong>VentraIP Australia</strong> (your domain ownership and annual auto-renewals stay 100% in your own account!):</p>
       `,
       primaryCta: {
-        label: 'Open 60-Second Domain Delegation Guide →',
+        label: 'Open VentraIP Domain Setup Guide →',
         url: domainGuideUrl
       },
       secondaryCta: {

@@ -987,7 +987,7 @@
                     <span>🤝 Copy Link HD Delegate</span>
                   </button>
                   <a
-                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
+                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;tab=${c.existingDomain ? 'existing' : 'new'}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
                     target="_blank"
                     class="px-2.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
                     title="Xem trang hướng dẫn Delegate tên miền của khách này"
@@ -1380,7 +1380,7 @@
                     <span>🤝 Copy Link HD Delegate</span>
                   </button>
                   <a
-                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
+                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;tab=${c.existingDomain ? 'existing' : 'new'}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
                     target="_blank"
                     class="px-2.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
                     title="Xem trang hướng dẫn Delegate tên miền của khách này"
@@ -1621,13 +1621,15 @@
             if (dom && dom !== 'your domain') guideParams.set('domain', dom);
             if (biz && biz !== 'your business') guideParams.set('name', biz);
             if (c && c.cfNameservers) guideParams.set('ns', c.cfNameservers);
-            if (needsNewDomain) guideParams.set('tab', 'newdomain');
+            guideParams.set('tab', needsNewDomain ? 'new' : 'existing');
             const guideUrl = `https://wynnpages.com.au/domain-guide${guideParams.toString() ? '?' + guideParams.toString() : ''}`;
 
-            const msg = `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nSo that you keep 100% ownership and your own automatic annual renewals, please follow our 60-second step-by-step guide here to invite hello@wynnpages.com.au as a Delegate (GoDaddy, VentraIP, CrazyDomains):\n👉 ${guideUrl}\n\n(Or simply reply/email hello@wynnpages.com.au with your domain login and our engineers will connect it for you in 2 minutes!)\n\n— WynnPages Australia`;
+            const msg = needsNewDomain
+              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo ensure you retain 100% ownership and automatic annual renewals directly on your card, please register your domain on VentraIP Australia and delegate technical setup to us following our 2-minute visual guide:\n👉 ${guideUrl}\n\n(Simply invite hello@wynnpages.com.au as an Authorized User with Domain Management permission — our engineers connect it for you for free!)\n\n— WynnPages Australia`
+              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain while keeping 100% ownership and billing in your own account, please follow our 60-second VentraIP guide here to invite hello@wynnpages.com.au as an Authorized User:\n👉 ${guideUrl}\n\n(Or simply reply with your domain login and we will point it for you in 60 seconds!)\n\n— WynnPages Australia`;
 
             navigator.clipboard.writeText(msg);
-            showToast(`Đã copy tin nhắn kèm Link Hướng Dẫn Delegate riêng cho "${biz}": ${guideUrl}`);
+            showToast(`Đã copy tin nhắn kèm Link Hướng Dẫn VentraIP riêng cho "${biz}": ${guideUrl}`);
           });
         });
 
