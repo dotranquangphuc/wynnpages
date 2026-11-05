@@ -45,8 +45,8 @@
 
   bar.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:12px;background:#96432b;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;border:1px solid rgba(232,185,72,0.4);overflow:hidden;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,0.35);transition:all 0.2s ease;" title="Visit WynnPages Studio (wynnpages.com.au)">
-        <img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages Atelier" style="width:100%;height:100%;object-fit:cover;border-radius:9px;display:block;">
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:12px;background:#96432b;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;border:1px solid rgba(232,185,72,0.45);overflow:hidden;padding:3.5px;box-shadow:0 4px 14px rgba(0,0,0,0.35);transition:all 0.2s ease;" title="Visit WynnPages Studio (wynnpages.com.au)">
+        <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" style="width:100%;height:100%;object-fit:contain;display:block;">
       </a>
       <div style="min-width:0;">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;margin-bottom:2px;">

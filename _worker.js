@@ -663,12 +663,12 @@ function buildBrandedPreviewHtml(client) {
       background: #96432b;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       text-decoration: none;
-      border: 1px solid rgba(232, 185, 72, 0.4);
+      border: 1px solid rgba(232, 185, 72, 0.45);
       transition: all 0.2s ease;
       cursor: pointer;
       overflow: hidden;
-      padding: 2px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      padding: 4px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     }
     .claim-badge:hover {
       transform: translateY(-1px) scale(1.05);
@@ -676,7 +676,7 @@ function buildBrandedPreviewHtml(client) {
       box-shadow: 0 6px 18px rgba(150, 67, 43, 0.5);
     }
     .claim-badge-img {
-      width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block;
+      width: 100%; height: 100%; object-fit: contain; display: block;
     }
     .claim-meta { min-width: 0; }
     .claim-tag {
@@ -775,7 +775,7 @@ function buildBrandedPreviewHtml(client) {
   <div class="claim-bar">
     <div class="claim-left">
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-badge" title="Visit WynnPages Studio (wynnpages.com.au)">
-        <img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages Atelier" class="claim-badge-img">
+        <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" class="claim-badge-img">
       </a>
       <div class="claim-meta">
         <div class="claim-tag">
