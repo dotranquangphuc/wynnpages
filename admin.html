@@ -56,7 +56,7 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap">
+      <div id="header-actions" class="hidden items-center gap-2 flex-wrap">
         <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs">
           <span>🔑</span>
           <span>Cấu hình API &amp; Google Drive</span>
@@ -65,9 +65,13 @@
           <span>＋</span>
           <span>Thêm Hồ Sơ Inbound</span>
         </button>
-        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
+        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
           <span>↻</span>
           <span>Làm mới</span>
+        </button>
+        <button id="btn-logout" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-700 border border-stone-200 text-xs font-semibold transition-colors cursor-pointer" title="Khoá bảng điều khiển">
+          <span>🔒</span>
+          <span>Đăng xuất</span>
         </button>
       </div>
     </div>
@@ -83,17 +87,18 @@
       </div>
       <div>
         <h1 class="font-editorial text-3xl font-bold text-stone-900">Atelier Command Center</h1>
-        <p class="text-xs text-stone-500 mt-1">Nhập mã khoá quản trị (Mặc định: <code class="bg-stone-100 px-1.5 py-0.5 rounded font-mono text-[#96432b]">wynn2026</code>)</p>
+        <p class="text-xs text-stone-500 mt-1">Vui lòng nhập mã khoá bảo mật để mở bảng điều khiển.</p>
       </div>
       <form id="auth-form" class="space-y-3">
         <input 
           type="password" 
           id="admin-key-input" 
-          placeholder="Nhập mã khoá Admin..." 
-          value="wynn2026"
+          placeholder="Nhập mã khoá bảo mật Admin..." 
+          required
+          autocomplete="current-password"
           class="atelier-input w-full rounded-xl px-4 py-3 text-sm text-center font-mono"
         >
-        <button type="submit" class="w-full py-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-semibold text-sm transition-colors">
+        <button type="submit" class="w-full py-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-semibold text-sm transition-colors cursor-pointer">
           Mở Bảng Điều Khiển
         </button>
       </form>
@@ -473,7 +478,9 @@
 
   <script>
     (function () {
-      let adminKey = localStorage.getItem('wynn_admin_key') || '';
+      // Never auto-login on load; always require entering password!
+      localStorage.removeItem('wynn_admin_key');
+      let adminKey = '';
       let localCreds = JSON.parse(localStorage.getItem('wynn_Messaging_creds') || '{}');
       let clientsCache = [];
 
@@ -652,6 +659,10 @@
           if (res.status === 401) {
             authGate.classList.remove('hidden');
             dashboardContent.classList.add('hidden');
+            document.getElementById('header-actions').classList.add('hidden');
+            showToast('Mã khoá quản trị không chính xác!', true);
+            adminKeyInput.value = '';
+            adminKeyInput.focus();
             return;
           }
           const data = await res.json();
@@ -659,7 +670,7 @@
 
           authGate.classList.add('hidden');
           dashboardContent.classList.remove('hidden');
-          localStorage.setItem('wynn_admin_key', adminKey);
+          document.getElementById('header-actions').classList.remove('hidden');
 
           updateIntegrationPills(data.integrations || {});
           clientsCache = data.clients || [];
@@ -1907,6 +1918,17 @@
       // Refresh
       document.getElementById('btn-refresh').addEventListener('click', () => loadClients());
 
+      document.getElementById('btn-logout').addEventListener('click', () => {
+        adminKey = '';
+        localStorage.removeItem('wynn_admin_key');
+        authGate.classList.remove('hidden');
+        dashboardContent.classList.add('hidden');
+        document.getElementById('header-actions').classList.add('hidden');
+        adminKeyInput.value = '';
+        adminKeyInput.focus();
+        showToast('Đã đăng xuất và khoá bảng điều khiển.');
+      });
+
       // Copy AI API Command
       document.getElementById('btn-copy-ai-command').addEventListener('click', () => {
         const apiUrl = `${window.location.origin}/api/briefs?key=${encodeURIComponent(adminKey)}`;
@@ -2028,10 +2050,10 @@
           .replace(/"/g, '&quot;');
       }
 
-      if (adminKey) {
-        adminKeyInput.value = adminKey;
-        loadClients();
-      }
+      // Do not auto-login on page load. User must submit the password form.
+      authGate.classList.remove('hidden');
+      dashboardContent.classList.add('hidden');
+      document.getElementById('header-actions').classList.add('hidden');
     })();
   </script>
 </body>
