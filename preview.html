@@ -32,22 +32,43 @@
   ></iframe>
 
   <!-- Floating Bottom Claim Bar (Phase 2: The Hook) -->
-  <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-2xl bg-[#231f1a]/95 backdrop-blur-xl text-[#fcf9f3] border border-[#e8b948]/35 rounded-2xl p-3 sm:px-5 sm:py-3.5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+  <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-3xl bg-[#1c1917]/96 backdrop-blur-xl text-[#fcf9f3] border border-[#e5dec9]/25 rounded-2xl p-3 sm:px-5 sm:py-3.5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
     <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-      <div class="w-10 h-10 rounded-xl bg-[#96432b] text-white flex items-center justify-center font-editorial font-bold text-xl shrink-0 shadow-sm">
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="w-10 h-10 rounded-xl bg-[#96432b] hover:bg-[#b05035] text-white flex items-center justify-center font-editorial font-bold text-xl shrink-0 shadow-sm border border-[#e8b948]/35 transition-all hover:scale-105" title="Visit WynnPages Studio (wynnpages.com.au)">
         W
-      </div>
+      </a>
       <div class="min-w-0 flex-1">
-        <span class="text-[10px] uppercase tracking-widest text-[#e8b948] font-bold block truncate">
-          WynnPages Bespoke Demo • Zero Monthly Retainers
-        </span>
-        <p id="preview-biz-name" class="text-xs sm:text-sm font-semibold text-[#fcf9f3] truncate">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-extrabold text-[#e8b948] bg-[#e8b948]/15 hover:bg-[#e8b948]/25 border border-[#e8b948]/30 px-2 py-0.5 rounded-md transition-all">
+            <span>wynnpages.com.au</span>
+            <svg class="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+            </svg>
+          </a>
+          <span class="hidden sm:inline text-stone-500 text-[9px]">•</span>
+          <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-[#fbdeb9]/80 font-bold">
+            Bespoke Demo • Zero Monthly Fees
+          </span>
+        </div>
+        <p id="preview-biz-name" class="text-xs sm:text-sm font-semibold text-[#fcf9f3] truncate mt-0.5">
           Your Custom Artisan Website Preview
         </p>
       </div>
     </div>
 
     <div class="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+      <a 
+        href="https://wynnpages.com.au" 
+        target="_blank" 
+        rel="noopener"
+        class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[#e5dec9]/20 text-[#f6f1e8] text-xs font-semibold transition-all hover:border-[#e8b948]/50"
+        title="Visit WynnPages Studio"
+      >
+        <span>About Studio</span>
+        <svg class="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+        </svg>
+      </a>
       <a 
         id="claim-btn" 
         href="/api/claim"

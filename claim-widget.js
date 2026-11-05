@@ -45,22 +45,37 @@
 
   bar.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-      <div style="width:36px;height:36px;border-radius:11px;background:#96432b;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-weight:bold;font-size:18px;flex-shrink:0;">
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="width:36px;height:36px;border-radius:11px;background:#96432b;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-weight:bold;font-size:18px;flex-shrink:0;text-decoration:none;border:1px solid rgba(232,185,72,0.35);transition:all 0.2s ease;" title="Visit WynnPages Studio (wynnpages.com.au)">
         W
-      </div>
+      </a>
       <div style="min-width:0;">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#e8b948;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          WynnPages Bespoke Demo &bull; Zero Monthly Fees
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px;">
+          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#e8b948;font-weight:800;background:rgba(232,185,72,0.12);border:1px solid rgba(232,185,72,0.3);padding:1px 6px;border-radius:5px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;" title="Visit WynnPages Studio">
+            <span>wynnpages.com.au</span>
+            <svg style="width:9px;height:9px;" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+            </svg>
+          </a>
+          <span style="font-size:8px;color:rgba(251,222,185,0.4);">&bull;</span>
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:rgba(251,222,185,0.85);font-weight:700;">Zero Monthly Fees</span>
         </div>
         <div style="font-size:13px;font-weight:600;color:#fcf9f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          Crafted for ${bizName.replace(/</g, '&lt;')}
+          Crafted exclusively for ${bizName.replace(/</g, '&lt;')}
         </div>
       </div>
     </div>
-    <a id="wynnpages-claim-btn" href="${claimHref}" style="background:#96432b;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:12px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;box-shadow:0 4px 14px rgba(150,67,43,0.45);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;">
-      <span>Claim This Website &mdash; $599 AUD</span>
-      <span>&rarr;</span>
-    </a>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.06);border:1px solid rgba(229,222,201,0.22);color:#f6f1e8;text-decoration:none;font-size:12px;font-weight:600;padding:11px 14px;border-radius:13px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:all 0.2s ease;" title="Visit WynnPages Studio">
+        <span>About Studio</span>
+        <svg style="width:10px;height:10px;" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+        </svg>
+      </a>
+      <a id="wynnpages-claim-btn" href="${claimHref}" style="background:#96432b;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:11px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;box-shadow:0 6px 18px rgba(150,67,43,0.45);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;">
+        <span>Claim This Website &mdash; $599 AUD</span>
+        <span>&rarr;</span>
+      </a>
+    </div>
   `;
 
   function mount() {

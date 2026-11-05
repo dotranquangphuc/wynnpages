@@ -660,15 +660,69 @@ function buildBrandedPreviewHtml(client) {
       font-family: 'Cormorant Garamond', Georgia, serif;
       font-size: 22px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      text-decoration: none;
+      border: 1px solid rgba(232, 185, 72, 0.35);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .claim-badge:hover {
+      transform: translateY(-1px) scale(1.03);
+      border-color: rgba(232, 185, 72, 0.7);
+      box-shadow: 0 4px 14px rgba(150, 67, 43, 0.45);
     }
     .claim-meta { min-width: 0; }
     .claim-tag {
       font-size: 10px; font-weight: 800; text-transform: uppercase;
-      letter-spacing: 0.1em; color: #fbdeb9; display: block;
+      letter-spacing: 0.08em; color: #fbdeb9; display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap; margin-bottom: 2px;
     }
+    .claim-studio-link {
+      color: #e8b948;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 3px;
+      background: rgba(232, 185, 72, 0.12);
+      border: 1px solid rgba(232, 185, 72, 0.3);
+      padding: 1px 7px;
+      border-radius: 6px;
+      transition: all 0.18s ease;
+    }
+    .claim-studio-link:hover {
+      background: rgba(232, 185, 72, 0.22);
+      border-color: rgba(232, 185, 72, 0.6);
+      color: #ffffff;
+      transform: translateY(-0.5px);
+    }
+    .claim-ext-arrow { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
+    .claim-bullet { color: rgba(251, 222, 185, 0.4); font-size: 8px; }
+    .claim-tag-text { color: rgba(251, 222, 185, 0.85); font-weight: 700; letter-spacing: 0.06em; }
     .claim-title {
-      font-size: 14px; font-weight: 700; color: #ffffff;
+      font-size: 13.5px; font-weight: 700; color: #ffffff;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .claim-actions {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .claim-studio-btn {
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(229, 222, 201, 0.22);
+      color: #f6f1e8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 11px 15px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .claim-studio-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(232, 185, 72, 0.5);
+      color: #ffffff;
+      transform: translateY(-1px);
     }
     .claim-btn {
       flex-shrink: 0;
@@ -684,11 +738,16 @@ function buildBrandedPreviewHtml(client) {
       gap: 8px;
       box-shadow: 0 10px 24px rgba(150, 67, 43, 0.4);
       transition: all 0.18s ease;
+      white-space: nowrap;
     }
-    .claim-btn:hover { background: #b05035; transform: translateY(-1px); }
+    .claim-btn:hover { background: #b05035; transform: translateY(-1px); box-shadow: 0 12px 28px rgba(150, 67, 43, 0.55); }
     @media (max-width: 640px) {
-      .claim-bar { flex-direction: column; align-items: stretch; padding: 14px; bottom: 12px; }
-      .claim-btn { justify-content: center; width: 100%; }
+      .claim-bar { flex-direction: column; align-items: stretch; padding: 12px 14px; bottom: 12px; gap: 10px; border-radius: 18px; }
+      .claim-actions { display: grid; grid-template-columns: auto 1fr; gap: 8px; width: 100%; }
+      .claim-studio-btn { justify-content: center; padding: 11px 12px; font-size: 11.5px; }
+      .claim-btn { justify-content: center; padding: 11px 14px; font-size: 12px; }
+      .claim-tag-text { display: none; }
+      .claim-bullet { display: none; }
     }
   </style>
 </head>
@@ -696,16 +755,37 @@ function buildBrandedPreviewHtml(client) {
   <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>
   <div class="claim-bar">
     <div class="claim-left">
-      <div class="claim-badge">W</div>
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-badge" title="Visit WynnPages Studio (wynnpages.com.au)">
+        <span>W</span>
+      </a>
       <div class="claim-meta">
-        <span class="claim-tag">WynnPages Bespoke Demo • Zero Monthly Retainers</span>
+        <div class="claim-tag">
+          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-link" title="Visit WynnPages Studio (wynnpages.com.au)">
+            <span>wynnpages.com.au</span>
+            <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+            </svg>
+          </a>
+          <span class="claim-bullet">•</span>
+          <span class="claim-tag-text">Bespoke Demo</span>
+          <span class="claim-bullet">•</span>
+          <span class="claim-tag-text">Zero Monthly Fees</span>
+        </div>
         <div class="claim-title">Crafted exclusively for ${bizName}</div>
       </div>
     </div>
-    <a href="${claimHref}" class="claim-btn">
-      <span>Claim This Website — $599 AUD</span>
-      <span>&rarr;</span>
-    </a>
+    <div class="claim-actions">
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-btn" title="Explore WynnPages Web Atelier">
+        <span>About Studio</span>
+        <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+        </svg>
+      </a>
+      <a href="${claimHref}" class="claim-btn">
+        <span>Claim This Website — $599 AUD</span>
+        <span>&rarr;</span>
+      </a>
+    </div>
   </div>
 </body>
 </html>`;
