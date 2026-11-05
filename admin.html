@@ -204,19 +204,19 @@
             <input type="text" id="qo-biz-name" required placeholder="VD: Lush Nails &amp; Spa" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
           </div>
           <div>
-            <label class="text-[11px] font-bold text-stone-600 block mb-1">Email Khách Hàng *</label>
-            <input type="email" id="qo-email" required placeholder="owner@lushnails.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <label class="text-[11px] font-bold text-emerald-800 block mb-1">📱 SĐT Nhận SMS (Khuyên dùng)</label>
+            <input type="tel" id="qo-phone" placeholder="VD: 0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono font-semibold">
           </div>
           <div>
-            <label class="text-[11px] font-bold text-stone-600 block mb-1">SĐT Chủ Tiệm (Nhận SMS)</label>
-            <input type="tel" id="qo-phone" placeholder="0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">📧 Email <span class="text-stone-400 font-normal">(Tuỳ chọn)</span></label>
+            <input type="email" id="qo-email" placeholder="Để trống nếu chỉ có SĐT" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div>
             <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo Bạn Đã Làm *</label>
             <input type="text" id="qo-demo-url" required placeholder="https://lush-demo.pages.dev" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div class="flex items-end">
-            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5">
+            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
               <span>＋ Tạo &amp; Lấy Link Mua $599</span>
             </button>
           </div>
@@ -398,8 +398,8 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="font-bold block mb-1">Email khách hàng *</label>
-            <input type="email" id="edit-email" placeholder="you@example.com" required class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <label class="font-bold block mb-1">Email khách hàng (Tuỳ chọn nếu có SĐT)</label>
+            <input type="email" id="edit-email" placeholder="owner@example.com (để trống nếu chưa có)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div>
             <label class="font-bold block mb-1">Giai đoạn hiện tại (Stage)</label>
@@ -839,7 +839,7 @@
                     <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
-                    <span class="font-mono">📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
+                    <span class="font-mono">${c.email ? `📧 ${escapeHtml(c.email)}` : `<span class="text-stone-400 italic">📧 Chưa có email (Khách tự điền khi Claim $599)</span>`}</span>
                     ${hasPhone
                       ? `<span class="font-mono text-emerald-800 font-semibold">📱 SMS: ${escapeHtml(c.phone)}</span>`
                       : `<span class="text-amber-700 font-semibold">📱 Chưa có SĐT (Bấm "✏️ Sửa" để thêm SĐT bắn SMS)</span>`
@@ -1040,11 +1040,11 @@
                     ${!hasValidDemo ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#96432b] hover:bg-[#7d3520] text-white shadow-xs"
                   >
-                    <span>📩 1. Gửi SMS + Email Chào Hàng</span>
+                    <span>${hasPhone && c.email ? '📩 1. Gửi SMS + Email Chào Hàng' : (hasPhone ? '📱 1. Bắn SMS Chào Hàng' : '📧 1. Gửi Email Chào Hàng')}</span>
                     <span class="text-[10px] font-normal opacity-90">${
                       !hasValidDemo
                         ? '🔒 Nhập Link Demo trước'
-                        : (isPitched ? '✓ Đã gửi chào hàng (Bấm gửi lại)' : 'Gửi link Demo + nút Claim $599')
+                        : (isPitched ? '✓ Đã gửi chào hàng (Bấm gửi lại)' : (hasPhone ? `Bắn tin nhắn tới ${escapeHtml(c.phone)}` : 'Gửi link Demo + nút Claim $599'))
                     }</span>
                   </button>
 
@@ -1056,7 +1056,7 @@
                     ${!hasValidDemo ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
                   >
-                    <span>⏰ 2. Nhắc Xem Demo (Follow-up)</span>
+                    <span>${hasPhone && c.email ? '⏰ 2. Nhắc SMS + Email (Follow-up)' : (hasPhone ? '⏰ 2. Bắn SMS Nhắc Xem Demo' : '⏰ 2. Gửi Email Nhắc Xem Demo')}</span>
                     <span class="text-[10px] font-normal opacity-90">${
                       c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần (Bấm nhắc tiếp)` : 'Hỏi thăm chủ tiệm đã xem Demo chưa'
                     }</span>
@@ -1829,7 +1829,14 @@
         const demoUrl = document.getElementById('qo-demo-url').value.trim();
         const submitBtn = document.getElementById('qo-submit-btn');
 
-        if (!bizName || !email || !demoUrl) return;
+        if (!bizName || !demoUrl) {
+          showToast('Vui lòng nhập Tên Tiệm và Link Demo!', true);
+          return;
+        }
+        if (!phone && !email) {
+          showToast('Vui lòng nhập ít nhất SĐT (để bắn SMS chào hàng) hoặc Email!', true);
+          return;
+        }
 
         submitBtn.disabled = true;
         submitBtn.textContent = '⏳ Đang tạo...';
