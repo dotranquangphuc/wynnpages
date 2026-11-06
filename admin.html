@@ -347,6 +347,16 @@
             <input type="url" id="cfg-gdrive-webhook" placeholder="https://script.google.com/macros/s/.../exec" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
+
+        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <p class="font-bold text-stone-900">4. Cloudflare API Token (Tự động 100% Tạo Tên Miền &amp; Lấy DNS)</p>
+          <p class="text-stone-500 leading-relaxed">
+            Nhập Cloudflare API Token (quyền <strong>Zone:Edit</strong> &amp; <strong>Workers:Edit</strong>) để khi gõ tên miền vào Bước 2, hệ thống sẽ tự động tạo Zone và tự lấy 2 Nameservers của khách về hiển thị.
+          </p>
+          <div class="space-y-2 pt-1">
+            <input type="password" id="cfg-cf-token" placeholder="Cloudflare API Token" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
@@ -1821,8 +1831,8 @@
             const guideUrl = `https://wynnpages.com.au/domain-guide${guideParams.toString() ? '?' + guideParams.toString() : ''}`;
 
             const msg = needsNewDomain
-              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo ensure you retain 100% ownership and automatic annual renewals directly on your card, please register your domain on VentraIP Australia and delegate technical setup to us following our 2-minute visual guide:\n👉 ${guideUrl}\n\n(Simply add hello@wynnpages.com.au under Profile Settings → Additional Users — our engineers connect it for you for free!)\n\n— WynnPages Australia`
-              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain while keeping 100% ownership and billing in your own account, please follow our 60-second VentraIP guide here to add hello@wynnpages.com.au as an Additional User:\n👉 ${guideUrl}\n\n(Or simply reply with your domain login and we will point it for you in 60 seconds!)\n\n— WynnPages Australia`;
+              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo retain 100% legal ownership and direct annual renewals on your card, please register your domain on VentraIP Australia and delegate technical setup to us following our visual guide:\n👉 ${guideUrl}\n\n(Simply add hello@wynnpages.com.au under Profile Settings → Additional Users — our engineers connect it for you for free!)\n\n— WynnPages Australia`
+              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain with zero technical hassle, you can simply reply with your domain registrar login (GoDaddy, CrazyDomains, Namecheap, etc.) or follow our 60-second guide below:\n👉 ${guideUrl}\n\n${c && c.cfNameservers ? `(Or point your Nameservers to: ${c.cfNameservers})\n\n` : ''}— WynnPages Australia`;
 
             navigator.clipboard.writeText(msg);
             showToast(`Đã copy tin nhắn kèm Link Hướng Dẫn VentraIP riêng cho "${biz}": ${guideUrl}`);
@@ -2083,6 +2093,7 @@
 
       // Settings Modal
       const cfgGdriveWebhook = document.getElementById('cfg-gdrive-webhook');
+      const cfgCfToken = document.getElementById('cfg-cf-token');
       document.getElementById('btn-open-settings').addEventListener('click', () => {
         cfgClicksendUser.value = localCreds.clicksendUsername || '';
         cfgClicksendKey.value = localCreds.clicksendApiKey || '';
@@ -2090,6 +2101,7 @@
         cfgResendKey.value = localCreds.resendApiKey || '';
         cfgResendFrom.value = localCreds.resendFromEmail || 'WynnPages Atelier <hello@wynnpages.com.au>';
         if (cfgGdriveWebhook) cfgGdriveWebhook.value = localCreds.googleDriveWebhookUrl || '';
+        if (cfgCfToken) cfgCfToken.value = localCreds.cfApiToken || '';
         settingsModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
@@ -2100,9 +2112,13 @@
           clicksendFrom: cfgClicksendFrom.value.trim(),
           resendApiKey: cfgResendKey.value.trim(),
           resendFromEmail: cfgResendFrom.value.trim(),
-          googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : ''
+          googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : '',
+          cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : ''
         };
         localStorage.setItem('wynn_Messaging_creds', JSON.stringify(localCreds));
+        if (localCreds.cfApiToken !== undefined) {
+          runAdminAction({ action: 'save_cf_token', cfToken: localCreds.cfApiToken }).catch(() => {});
+        }
         settingsModal.classList.add('hidden');
         loadClients();
         showToast('Đã lưu cấu hình ClickSend, Resend & Google Drive!');

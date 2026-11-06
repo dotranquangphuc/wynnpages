@@ -148,8 +148,8 @@
             1
           </span>
           <div>
-            <span class="text-sm font-extrabold block">Option 1: Register a New Domain</span>
-            <span class="text-xs opacity-85 block mt-0.5">For businesses registering a fresh domain (Takes 2 mins)</span>
+            <span class="text-sm font-extrabold block">Option 1: Need a New Domain (Register via VentraIP)</span>
+            <span class="text-xs opacity-85 block mt-0.5">Register on VentraIP &amp; delegate technical setup in 2 mins</span>
           </div>
         </button>
 
@@ -164,8 +164,8 @@
             2
           </span>
           <div>
-            <span class="text-sm font-extrabold block">Option 2: Existing VentraIP Domain</span>
-            <span class="text-xs opacity-85 block mt-0.5">Simply add WynnPages as Additional User (60 secs)</span>
+            <span class="text-sm font-extrabold block">Option 2: Already Own a Domain (Any Registrar)</span>
+            <span class="text-xs opacity-85 block mt-0.5">Share login or DNS — we connect it in 60s (GoDaddy, CrazyDomains, etc.)</span>
           </div>
         </button>
       </div>
@@ -326,51 +326,98 @@
             </div>
           </div>
 
-          <!-- Real VentraIP Screenshots for Step 3 -->
+          <!-- UI Mockups for Step 3 -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            <!-- Screen 1: Top-Right Profile Dropdown -->
-            <div class="browser-mockup bg-white">
-              <div class="browser-bar">
-                <div class="flex gap-1.5">
+            <!-- UI Mockup 1: Top-Right Profile Dropdown -->
+            <div class="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-xs">
+              <div class="bg-stone-100 px-3.5 py-2 flex items-center justify-between border-b border-stone-200 text-[11px] font-mono text-stone-600">
+                <div class="flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
                   <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
                   <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
+                  <span class="ml-2 font-sans font-bold text-stone-500">VentraIP VIPControl • Top Navigation</span>
                 </div>
-                <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate flex items-center gap-1.5">
-                  <span>🔒</span>
-                  <span>https://vip.ventraip.com.au/dashboard</span>
+                <span class="text-stone-400">vip.ventraip.com.au</span>
+              </div>
+              <div class="p-4 bg-stone-50/60 space-y-3">
+                <div class="bg-white rounded-xl p-3 border border-stone-200 flex items-center justify-between shadow-2xs">
+                  <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-[#c2185b] tracking-wider text-xs">vipcontrol</span>
+                    <div class="hidden sm:flex items-center gap-1.5 bg-stone-100 px-2.5 py-1 rounded-lg text-[10px] text-stone-400">
+                      <span>🔍</span> <span>Search services...</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-pink-50 border border-pink-300">
+                    <span class="w-6 h-6 rounded-full bg-[#c2185b] text-white text-[10px] font-black flex items-center justify-center">WS</span>
+                    <span class="text-xs font-bold text-stone-800 hidden sm:inline">Your Account</span>
+                    <span class="text-[10px] text-stone-400">▼</span>
+                  </div>
+                </div>
+                <div class="max-w-xs ml-auto bg-white rounded-xl border-2 border-[#c2185b] shadow-xl p-2.5 space-y-1 relative animate-reveal">
+                  <div class="px-2.5 py-1.5 border-b border-stone-100 text-[11px]">
+                    <span class="font-bold text-stone-900 block truncate">Your Business Name</span>
+                    <span class="text-[10px] text-stone-400 font-mono">Primary Account</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-pink-100/90 border border-pink-300 flex items-center justify-between text-xs font-extrabold text-[#c2185b]">
+                    <div class="flex items-center gap-2">
+                      <span>👤</span>
+                      <span>Profile Settings</span>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-md bg-[#c2185b] text-white font-black animate-pulse">
+                      👈 Click Here
+                    </span>
+                  </div>
+                  <div class="px-2.5 py-1.5 text-xs text-stone-500 flex items-center gap-2 opacity-60">
+                    <span>🚪</span> <span>Logout</span>
+                  </div>
                 </div>
               </div>
-              <div class="relative bg-stone-50 border-t border-stone-200">
-                <img src="/assets/guide/ventraip-step1-profile.jpg" alt="VentraIP VIPControl Profile Settings Dropdown" class="w-full h-auto block">
-                <div class="p-3 bg-white border-t border-stone-200 text-xs">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-pink-50 text-[#c2185b] font-extrabold text-[11px] border border-pink-200">
-                    <span>👉 1. Click Profile at Top Right &rarr; Select "Profile Settings"</span>
-                  </span>
-                </div>
+              <div class="p-3 bg-white border-t border-stone-200 text-xs flex items-center gap-2 text-stone-700">
+                <span class="px-2 py-0.5 rounded-md bg-pink-50 text-[#c2185b] font-extrabold text-[11px] border border-pink-200">
+                  👉 Step 1
+                </span>
+                <span>Click Avatar at top-right &rarr; Select <strong class="text-[#c2185b]">Profile Settings</strong></span>
               </div>
             </div>
 
-            <!-- Screen 2: Left Menu Additional Users -->
-            <div class="browser-mockup bg-white">
-              <div class="browser-bar">
-                <div class="flex gap-1.5">
+            <!-- UI Mockup 2: Left Menu Additional Users -->
+            <div class="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-xs">
+              <div class="bg-stone-100 px-3.5 py-2 flex items-center justify-between border-b border-stone-200 text-[11px] font-mono text-stone-600">
+                <div class="flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
                   <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
                   <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
+                  <span class="ml-2 font-sans font-bold text-stone-500">VIPControl Left Sidebar</span>
                 </div>
-                <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate flex items-center gap-1.5">
-                  <span>🔒</span>
-                  <span>https://vip.ventraip.com.au/account/general</span>
+                <span class="text-stone-400">Account / General</span>
+              </div>
+              <div class="p-4 bg-stone-50/60">
+                <div class="max-w-sm mx-auto bg-white rounded-xl border border-stone-200 shadow-2xs p-3 space-y-1 text-xs">
+                  <div class="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 px-2 py-1 flex items-center gap-1.5">
+                    <span>⚙️</span> <span>General</span>
+                  </div>
+                  <div class="px-3 py-1.5 text-stone-500 rounded-lg opacity-70">Overview</div>
+                  <div class="px-3 py-1.5 text-stone-500 rounded-lg opacity-70">Personal Details</div>
+                  <div class="px-3 py-1.5 text-stone-500 rounded-lg opacity-70">Contacts</div>
+                  <div class="p-2.5 rounded-lg bg-pink-100/90 border-2 border-[#c2185b] flex items-center justify-between font-extrabold text-[#c2185b] shadow-xs">
+                    <div class="flex items-center gap-2">
+                      <span>👥</span>
+                      <span>Additional Users</span>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-md bg-[#c2185b] text-white font-black animate-pulse">
+                      👈 Click Here
+                    </span>
+                  </div>
+                  <div class="px-3 py-1.5 text-stone-500 rounded-lg opacity-70">Referrals</div>
+                  <div class="px-3 py-1.5 text-stone-500 rounded-lg opacity-70">Affiliate</div>
+                  <div class="px-3 py-1.5 text-stone-500 rounded-lg opacity-70">Close Account</div>
                 </div>
               </div>
-              <div class="relative bg-stone-50 border-t border-stone-200">
-                <img src="/assets/guide/ventraip-step2-sidebar.jpg" alt="VentraIP VIPControl Left Sidebar Additional Users" class="w-full h-auto block">
-                <div class="p-3 bg-white border-t border-stone-200 text-xs">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-pink-50 text-[#c2185b] font-extrabold text-[11px] border border-pink-200">
-                    <span>👉 2. In Left Sidebar under General &rarr; Click "Additional Users"</span>
-                  </span>
-                </div>
+              <div class="p-3 bg-white border-t border-stone-200 text-xs flex items-center gap-2 text-stone-700">
+                <span class="px-2 py-0.5 rounded-md bg-pink-50 text-[#c2185b] font-extrabold text-[11px] border border-pink-200">
+                  👉 Step 2
+                </span>
+                <span>In left sidebar under General &rarr; Click <strong class="text-[#c2185b]">Additional Users</strong></span>
               </div>
             </div>
           </div>
@@ -385,73 +432,110 @@
               <p class="text-xs text-stone-600 leading-relaxed">
                 On the <strong>Additional Users</strong> page, click the pink <strong>Add New User</strong> button, enter our delegation email, and submit:
               </p>
-              <div class="p-3.5 bg-[#fcf9f3] rounded-2xl border border-[#e5dec9] space-y-2 text-xs">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span class="text-stone-500 font-bold block">Email Address to add:</span>
-                    <code class="text-sm font-extrabold font-mono text-[#96432b] bg-white px-2.5 py-1 rounded-lg border border-[#e5dec9] inline-block mt-0.5">hello@wynnpages.com.au</code>
-                  </div>
-                  <button
-                    type="button"
-                    onclick="navigator.clipboard.writeText('hello@wynnpages.com.au'); alert('Copied hello@wynnpages.com.au to clipboard!');"
-                    class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-stone-300 text-stone-800 font-bold text-xs shrink-0 self-start sm:self-auto cursor-pointer"
-                  >
-                    📋 Copy Email
-                  </button>
-                </div>
-                <div class="text-[11px] text-stone-600 leading-relaxed">
-                  • <strong>Account Access Expiry Date (optional):</strong> Leave this blank for ongoing website and technical management.<br>
-                  • <strong>Permissions:</strong> VentraIP automatically assigns management rights (Manage Services, cPanel, eTickets, Invoices) while safely protecting account custody (additional users <em>cannot</em> close your account or add users).
-                </div>
-              </div>
             </div>
           </div>
 
-          <!-- Real VentraIP Screenshots for Step 4 -->
+          <!-- UI Mockups for Step 4 -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            <!-- Screen 3: Add New User Button -->
-            <div class="browser-mockup bg-white">
-              <div class="browser-bar">
-                <div class="flex gap-1.5">
+            <!-- UI Mockup 3: Add New User Button -->
+            <div class="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-xs">
+              <div class="bg-stone-100 px-3.5 py-2 flex items-center justify-between border-b border-stone-200 text-[11px] font-mono text-stone-600">
+                <div class="flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
                   <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
                   <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
+                  <span class="ml-2 font-sans font-bold text-stone-500">Additional Users Panel</span>
                 </div>
-                <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate flex items-center gap-1.5">
-                  <span>🔒</span>
-                  <span>https://vip.ventraip.com.au/account/general#additional-users</span>
+                <span class="text-stone-400">#additional-users</span>
+              </div>
+              <div class="p-5 bg-stone-50/60">
+                <div class="bg-white rounded-xl border border-stone-200 p-4 sm:p-5 shadow-2xs space-y-4">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 class="font-extrabold text-stone-900 text-sm">Additional Users</h4>
+                      <p class="text-[11px] text-stone-500 mt-0.5 leading-relaxed">
+                        Grant WynnPages engineers access to configure your domain services.
+                      </p>
+                    </div>
+                    <div class="shrink-0 relative">
+                      <div class="px-4 py-2 rounded-xl bg-[#c2185b] text-white text-xs font-black shadow-md flex items-center gap-1.5 ring-4 ring-pink-200 animate-pulse">
+                        <span>＋</span>
+                        <span>Add New User</span>
+                      </div>
+                      <span class="absolute -bottom-2.5 right-0 translate-y-full text-[10px] px-2 py-0.5 rounded bg-stone-900 text-white font-bold whitespace-nowrap shadow-md">
+                        👆 Click this button
+                      </span>
+                    </div>
+                  </div>
+                  <div class="border border-stone-100 rounded-lg p-3 bg-stone-50/50 text-[11px] text-stone-400 text-center">
+                    No additional users yet. Click "Add New User" to invite WynnPages.
+                  </div>
                 </div>
               </div>
-              <div class="relative bg-stone-50 border-t border-stone-200">
-                <img src="/assets/guide/ventraip-step3-add-user-btn.jpg" alt="VentraIP Additional Users Add New User Button" class="w-full h-auto block">
-                <div class="p-3 bg-white border-t border-stone-200 text-xs">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-pink-50 text-[#c2185b] font-extrabold text-[11px] border border-pink-200">
-                    <span>👉 3. Click the pink "Add New User" button</span>
-                  </span>
-                </div>
+              <div class="p-3 bg-white border-t border-stone-200 text-xs flex items-center gap-2 text-stone-700">
+                <span class="px-2 py-0.5 rounded-md bg-pink-50 text-[#c2185b] font-extrabold text-[11px] border border-pink-200">
+                  👉 Step 3
+                </span>
+                <span>Click the pink <strong class="text-[#c2185b]">"Add New User"</strong> button</span>
               </div>
             </div>
 
-            <!-- Screen 4: Add New User Modal -->
-            <div class="browser-mockup bg-white">
-              <div class="browser-bar">
-                <div class="flex gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
+            <!-- UI Mockup 4: Add New User Modal -->
+            <div class="rounded-2xl border-2 border-[#c2185b] bg-white overflow-hidden shadow-xl">
+              <div class="bg-[#c2185b] text-white px-4 py-2.5 flex items-center justify-between text-xs font-bold">
+                <span class="flex items-center gap-1.5">
+                  <span>✨</span>
+                  <span>Add New User Dialog</span>
+                </span>
+                <span class="opacity-70 text-sm">✕</span>
+              </div>
+              <div class="p-5 space-y-4 text-xs">
+                <div>
+                  <label class="block font-bold text-stone-800 mb-1">
+                    Email Address <span class="text-rose-600">*</span>
+                  </label>
+                  <div class="flex items-center justify-between bg-pink-50 border-2 border-[#c2185b] rounded-xl p-2.5">
+                    <code class="font-mono font-black text-sm text-[#c2185b]">hello@wynnpages.com.au</code>
+                    <button type="button" onclick="navigator.clipboard.writeText('hello@wynnpages.com.au'); alert('Copied hello@wynnpages.com.au to clipboard!');" class="px-2.5 py-1 rounded-lg bg-white border border-pink-300 text-[11px] font-extrabold text-[#c2185b] hover:bg-pink-100 transition-colors shadow-2xs cursor-pointer">
+                      📋 Copy Email
+                    </button>
+                  </div>
                 </div>
-                <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate flex items-center gap-1.5">
-                  <span>🔒</span>
-                  <span>Add New User Modal</span>
+
+                <div>
+                  <label class="block font-bold text-stone-600 mb-1">
+                    Account Access Expiry Date (optional)
+                  </label>
+                  <div class="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-stone-400 font-mono text-[11px]">
+                    -- / -- / ---- (Leave blank for uninterrupted website uptime)
+                  </div>
+                </div>
+
+                <div>
+                  <span class="block font-bold text-stone-700 mb-1.5">Permissions (VentraIP Default Checklist):</span>
+                  <div class="grid grid-cols-2 gap-2 bg-stone-50 p-2.5 rounded-xl border border-stone-200 text-[11px]">
+                    <div class="flex items-center gap-1 text-emerald-700 font-bold"><span>✅</span> <span>Manage Services</span></div>
+                    <div class="flex items-center gap-1 text-emerald-700 font-bold"><span>✅</span> <span>Pay Invoices</span></div>
+                    <div class="flex items-center gap-1 text-emerald-700 font-bold"><span>✅</span> <span>Submit eTicket</span></div>
+                    <div class="flex items-center gap-1 text-emerald-700 font-bold"><span>✅</span> <span>Access cPanel</span></div>
+                    <div class="flex items-center gap-1 text-stone-400 line-through"><span>❌</span> <span>Add Users</span></div>
+                    <div class="flex items-center gap-1 text-stone-400 line-through"><span>❌</span> <span>Close Account</span></div>
+                  </div>
+                  <p class="text-[10px] text-stone-400 mt-1 leading-relaxed">
+                    🔒 100% Secure: Additional users <strong>cannot</strong> close your account or take ownership.
+                  </p>
+                </div>
+
+                <div class="pt-2">
+                  <div class="w-full py-3 rounded-xl bg-[#c2185b] text-white font-black text-center shadow-md flex items-center justify-center gap-2 ring-4 ring-pink-100">
+                    <span>Add User</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-white text-[#c2185b] font-extrabold">👈 Click to finish</span>
+                  </div>
                 </div>
               </div>
-              <div class="relative bg-stone-50 border-t border-stone-200">
-                <img src="/assets/guide/ventraip-step4-modal.jpg" alt="VentraIP Add New User Modal" class="w-full h-auto block">
-                <div class="p-3 bg-white border-t border-stone-200 text-xs">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 font-extrabold text-[11px] border border-emerald-300">
-                    <span>👉 4. Enter hello@wynnpages.com.au &rarr; Click "Add User"</span>
-                  </span>
-                </div>
+              <div class="p-3 bg-pink-50 border-t border-pink-200 text-xs flex items-center gap-2 text-emerald-900 font-bold">
+                <span>🎉</span>
+                <span>Enter <code class="font-mono text-[#c2185b]">hello@wynnpages.com.au</code> and click "Add User" &rarr; Done!</span>
               </div>
             </div>
           </div>
@@ -468,182 +552,118 @@
       </div>
 
       <!-- ========================================================= -->
-      <!-- PANEL 2: ALREADY OWN DOMAIN ON VENTRAIP                  -->
+      <!-- PANEL 2: ALREADY OWN A DOMAIN (ANY REGISTRAR)             -->
       <!-- ========================================================= -->
       <div id="panel-existing" class="guide-panel hidden bg-white rounded-3xl p-6 sm:p-9 border border-[#e5dec9] shadow-sm space-y-8 animate-reveal">
         
-        <div class="border-b border-[#f0eade] pb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="border-b border-[#f0eade] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Existing VentraIP Account • Takes 60 Seconds</span>
-            <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900 mt-0.5">Delegate Domain Management to WynnPages</h2>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Any Registrar • GoDaddy, CrazyDomains, Namecheap, VentraIP, etc.</span>
+            <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900 mt-0.5">Concierge Setup for Your Existing Domain</h2>
           </div>
-          <a
-            href="https://vip.ventraip.com.au"
-            target="_blank"
-            rel="noopener"
-            class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-extrabold inline-flex items-center gap-1.5 shadow-sm transition-all"
-          >
-            <span>Log In to VIPControl ↗</span>
-          </a>
+          <span class="px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold w-fit inline-flex items-center gap-1.5 shadow-2xs">
+            <span>⚡ 60-Second Setup by WynnPages</span>
+          </span>
         </div>
 
-        <ol class="space-y-8 text-sm text-stone-700">
-          <li class="space-y-3">
-            <div class="flex items-start gap-3.5">
-              <span class="w-8 h-8 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
-              <div class="space-y-1">
-                <h3 class="font-bold text-stone-900 text-base">Log In to VIPControl</h3>
-                <p class="text-xs text-stone-600 leading-relaxed">
-                  Visit <a href="https://vip.ventraip.com.au" target="_blank" class="text-[#c2185b] font-bold underline">vip.ventraip.com.au ↗</a> and log in with your account credentials.
-                </p>
+        <p class="text-xs sm:text-sm text-stone-600 leading-relaxed">
+          If your domain is already registered on <strong>GoDaddy, CrazyDomains, Namecheap, Google / Squarespace, or VentraIP</strong>, you <strong>do not need to figure out complex DNS records</strong> or nameservers yourself. Choose the setup method that works best for you below:
+        </p>
+
+        <!-- Method A: Concierge (Primary & Strongly Recommended) -->
+        <div class="bg-[#fcf9f3] rounded-3xl p-6 sm:p-7 border-2 border-[#96432b]/35 space-y-4 shadow-sm">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-full bg-[#96432b] text-white font-black text-sm flex items-center justify-center shrink-0">A</span>
+              <div>
+                <h3 class="font-bold text-stone-900 text-base">Method A (Recommended): Share Temporary Login for Free Concierge Connection</h3>
+                <p class="text-xs text-stone-500">Zero technical hassle — our Australian engineers configure everything in 60 seconds.</p>
               </div>
             </div>
-          </li>
+            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-extrabold">
+              ★ Recommended for Busy Business Owners
+            </span>
+          </div>
 
-          <li class="space-y-3.5">
-            <div class="flex items-start gap-3.5">
-              <span class="w-8 h-8 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <div class="space-y-1">
-                <h3 class="font-bold text-stone-900 text-base">Go to "Profile Settings" &rarr; "Additional Users"</h3>
-                <p class="text-xs text-stone-600 leading-relaxed">
-                  Click your <strong>Avatar / Initials</strong> in the top-right corner &rarr; select <strong>Profile Settings</strong>. Then in the left-hand menu under <strong>General</strong>, click <strong>Additional Users</strong>.
-                </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2 text-xs">
+            <div class="bg-white p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
+              <span class="font-extrabold text-[#96432b] block text-xs">1. Locate Your Registrar</span>
+              <p class="text-stone-600 text-[11px] leading-relaxed">
+                Find where your domain was registered (e.g. GoDaddy, CrazyDomains, VentraIP, Namecheap) and your username / customer ID.
+              </p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
+              <span class="font-extrabold text-[#96432b] block text-xs">2. Share Login Details</span>
+              <p class="text-stone-600 text-[11px] leading-relaxed">
+                Provide them via the <strong>Secure Dispatch Form</strong> below, or email directly to <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-bold underline">hello@wynnpages.com.au</a>.
+              </p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
+              <span class="font-extrabold text-[#96432b] block text-xs">3. Live in 60 Seconds</span>
+              <p class="text-stone-600 text-[11px] leading-relaxed">
+                We log in, map the high-speed Cloudflare DNS &amp; SSL certificates, and alert you immediately so you can reset your password.
+              </p>
+            </div>
+          </div>
+
+          <!-- Security Guarantee Badge -->
+          <div class="p-4 rounded-2xl bg-white border border-amber-300 text-xs text-stone-700 flex items-start gap-3">
+            <span class="text-xl">🛡️</span>
+            <div class="space-y-1 text-[11px] leading-relaxed">
+              <strong class="text-stone-900 font-extrabold text-xs block">100% Legal Ownership &amp; Security Guarantee:</strong>
+              <span>Your domain ownership, registrar account, and billing stay 100% in your hands. We only access the DNS zone panel to point your website. You can set a temporary password before sharing, and change it back immediately upon our confirmation.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Method B: Self-Service / For IT Teams -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-[#e5dec9] space-y-4">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-full bg-[#e5dec9] text-stone-700 font-black text-sm flex items-center justify-center shrink-0">B</span>
+            <div>
+              <h3 class="font-bold text-stone-900 text-base">Method B: For In-House IT Teams / Configure Nameservers Yourself</h3>
+              <p class="text-xs text-stone-500">If you or your in-house IT technician prefer to update DNS records directly.</p>
+            </div>
+          </div>
+
+          <div class="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+            <p class="text-xs text-emerald-950 font-bold">
+              Point your domain's Custom Nameservers to Cloudflare:
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="bg-white p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <span class="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">Nameserver 1:</span>
+                  <code id="ns-card-1" class="font-mono font-bold text-xs text-stone-900">olga.ns.cloudflare.com</code>
+                </div>
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-1').textContent.trim()); alert('Copied Nameserver 1!');" class="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-emerald-100 text-[11px] font-bold text-stone-700 cursor-pointer transition-colors">
+                  📋 Copy
+                </button>
+              </div>
+              <div class="bg-white p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <span class="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">Nameserver 2:</span>
+                  <code id="ns-card-2" class="font-mono font-bold text-xs text-stone-900">toby.ns.cloudflare.com</code>
+                </div>
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-2').textContent.trim()); alert('Copied Nameserver 2!');" class="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-emerald-100 text-[11px] font-bold text-stone-700 cursor-pointer transition-colors">
+                  📋 Copy
+                </button>
               </div>
             </div>
-
-            <!-- Screenshots for Steps 1 & 2 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              <div class="browser-mockup bg-white">
-                <div class="browser-bar">
-                  <div class="flex gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-                  </div>
-                  <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate">
-                    https://vip.ventraip.com.au/dashboard
-                  </div>
-                </div>
-                <img src="/assets/guide/ventraip-step1-profile.jpg" alt="Profile Settings Menu" class="w-full h-auto block">
-                <div class="p-2.5 bg-white border-t border-stone-200 text-[11px] text-[#c2185b] font-bold">
-                  👉 Click Top-Right Profile &rarr; Profile Settings
-                </div>
-              </div>
-
-              <div class="browser-mockup bg-white">
-                <div class="browser-bar">
-                  <div class="flex gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-                  </div>
-                  <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate">
-                    https://vip.ventraip.com.au/account/general
-                  </div>
-                </div>
-                <img src="/assets/guide/ventraip-step2-sidebar.jpg" alt="Left Sidebar Additional Users" class="w-full h-auto block">
-                <div class="p-2.5 bg-white border-t border-stone-200 text-[11px] text-[#c2185b] font-bold">
-                  👉 Under General &rarr; Click Additional Users
-                </div>
-              </div>
-            </div>
-          </li>
-
-          <li class="space-y-3.5">
-            <div class="flex items-start gap-3.5">
-              <span class="w-8 h-8 rounded-full bg-[#fbdeb9] text-[#96432b] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
-              <div class="space-y-1.5">
-                <h3 class="font-bold text-stone-900 text-base">Click "Add New User" &amp; Enter WynnPages Email</h3>
-                <p class="text-xs text-stone-600 leading-relaxed">
-                  Click the pink <strong>Add New User</strong> button. In the modal, enter <code class="bg-[#fcf9f3] px-2 py-0.5 rounded font-mono font-bold text-[#96432b]">hello@wynnpages.com.au</code>, leave the expiry date blank, and click <strong>Add User</strong>.
-                </p>
-                <div class="pt-1">
-                  <button
-                    type="button"
-                    onclick="navigator.clipboard.writeText('hello@wynnpages.com.au'); alert('Copied hello@wynnpages.com.au to clipboard!');"
-                    class="px-4 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-[#96432b] text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                  >
-                    <span>📋 Copy: hello@wynnpages.com.au</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Screenshots for Step 3 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              <div class="browser-mockup bg-white">
-                <div class="browser-bar">
-                  <div class="flex gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-                  </div>
-                  <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate">
-                    https://vip.ventraip.com.au/account/general#additional-users
-                  </div>
-                </div>
-                <img src="/assets/guide/ventraip-step3-add-user-btn.jpg" alt="Click Add New User" class="w-full h-auto block">
-                <div class="p-2.5 bg-white border-t border-stone-200 text-[11px] text-[#c2185b] font-bold">
-                  👉 Click "Add New User" button
-                </div>
-              </div>
-
-              <div class="browser-mockup bg-white">
-                <div class="browser-bar">
-                  <div class="flex gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-                  </div>
-                  <div class="bg-white px-3 py-1 rounded-md text-[11px] font-mono text-stone-600 flex-1 truncate">
-                    Add New User Modal
-                  </div>
-                </div>
-                <img src="/assets/guide/ventraip-step4-modal.jpg" alt="Enter email and submit" class="w-full h-auto block">
-                <div class="p-2.5 bg-white border-t border-stone-200 text-[11px] text-emerald-800 font-bold">
-                  👉 Enter hello@wynnpages.com.au &rarr; Add User
-                </div>
-              </div>
-            </div>
-          </li>
-        </ol>
+            <p class="text-[11px] text-stone-500 leading-relaxed">
+              👉 Log in to your registrar (GoDaddy, CrazyDomains, etc.) &rarr; Open <strong>DNS Management / Nameservers</strong> &rarr; Select <strong>Custom Nameservers</strong> &rarr; Paste the 2 addresses above &rarr; Save.
+            </p>
+          </div>
+        </div>
 
         <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-3">
-          <span class="text-xl">⚡</span>
+          <span class="text-xl">👇</span>
           <div>
-            <p class="font-bold">Click Save and notify us below!</p>
-            <p class="text-stone-600 mt-0.5">Once saved, notify our team using the 1-Click alert form below. We will immediately configure DNS and push your website live.</p>
+            <p class="font-bold">Next Step: Submit Your Domain Details Below</p>
+            <p class="text-stone-600 mt-0.5">Please fill out the quick 1-click dispatch form below with your domain details or registrar credentials. Our engineers will take over and get your site live immediately.</p>
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- Exception: Domain Registered with Another Registrar (GoDaddy, CrazyDomains, Namecheap, etc.) -->
-    <div class="bg-[#fcf9f3] rounded-3xl p-6 sm:p-7 border border-[#e5dec9] space-y-4">
-      <div class="flex items-center justify-between cursor-pointer" id="other-toggle">
-        <div class="flex items-center gap-2.5 text-sm font-extrabold text-stone-800">
-          <span class="text-base">🌐</span>
-          <span>Domain already registered with another provider (GoDaddy, CrazyDomains, etc.)?</span>
-        </div>
-        <span class="text-xs text-[#96432b] font-bold" id="other-toggle-text">Show simple instructions ▼</span>
-      </div>
-      <div id="other-content" class="text-xs text-stone-600 space-y-3 pt-3 border-t border-[#e5dec9]/70">
-        <p class="leading-relaxed">
-          Unlike VentraIP, third-party registrars (such as GoDaddy, CrazyDomains, or Namecheap) have complex, confusing delegation settings. <strong>There is no need to navigate them!</strong>
-        </p>
-        <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-2 text-stone-800">
-          <p class="font-bold text-amber-950 flex items-center gap-1.5">
-            <span>💡</span>
-            <span>Concierge Connection: Share Temporary Login</span>
-          </p>
-          <p class="leading-relaxed text-[11px] text-stone-700">
-            Simply provide your domain registrar login (username &amp; temporary password) in the notification form below, or email them directly to <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-bold underline">hello@wynnpages.com.au</a>.
-          </p>
-          <p class="text-[11px] text-stone-600">
-            Our engineers will log in, connect your DNS records in 60 seconds, and alert you immediately so you can change your password.
-          </p>
-        </div>
       </div>
     </div>
 
@@ -725,14 +745,52 @@
           </div>
         </div>
 
+        <!-- Registrar credentials box (Recommended for existing domains) -->
+        <div id="box-registrar-credentials" class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+              <span>🔑</span>
+              <span>Registrar Login Details (For Free Concierge Connection)</span>
+            </span>
+            <span class="text-[10px] text-stone-500">Encrypted via TLS</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="notify-login-user" class="block text-[11px] font-semibold text-stone-600 mb-1">
+                Registrar Username / Customer ID / Email
+              </label>
+              <input
+                type="text"
+                id="notify-login-user"
+                placeholder="e.g. 12345678 or owner@gmail.com"
+                class="w-full rounded-xl border border-stone-300 px-3 py-2 text-xs text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
+              >
+            </div>
+            <div>
+              <label for="notify-login-pass" class="block text-[11px] font-semibold text-stone-600 mb-1">
+                Temporary Password
+              </label>
+              <input
+                type="text"
+                id="notify-login-pass"
+                placeholder="Temporary access password"
+                class="w-full rounded-xl border border-stone-300 px-3 py-2 text-xs text-stone-900 bg-white font-mono focus:border-[#96432b] focus:ring-[#96432b]"
+              >
+            </div>
+          </div>
+          <p class="text-[10px] text-stone-500 leading-relaxed">
+            💡 <em>Tip:</em> You can set a temporary password before submitting, and revert it immediately once we notify you that your website is officially live.
+          </p>
+        </div>
+
         <div>
           <label for="notify-notes" class="block text-xs font-bold text-stone-700 mb-1">
-            Access Credentials or Notes (Optional / Recommended if using external registrar)
+            Additional Notes or Instructions (Optional)
           </label>
           <textarea
             id="notify-notes"
             rows="2"
-            placeholder="e.g. 'Invited hello@wynnpages.com.au in VIPControl' OR 'GoDaddy username: xxx, password: yyy'..."
+            placeholder="e.g. 'Invited hello@wynnpages.com.au on VentraIP' OR any other special DNS instructions..."
             class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 focus:border-[#96432b] focus:ring-[#96432b]"
           ></textarea>
         </div>
@@ -773,30 +831,14 @@
       const ns = (params.get('ns') || '').trim();
       const tabParam = (params.get('tab') || '').trim();
 
-      // Personalize UI if params exist
-      if (dom || name) {
-        const sub = document.getElementById('personalized-subtitle');
-        if (sub) {
-          sub.innerHTML = `Prepared exclusively for <strong>${escapeHtml(name || dom)}</strong>${dom ? ` (<code class="font-mono text-[#96432b] font-bold">${escapeHtml(dom)}</code>)` : ''}. To retain 100% legal ownership and direct annual auto-renewals (~$15–$20 AUD/yr directly via your card), follow our 60-second visual guide below.`;
-        }
-        
-        const mSearch = document.getElementById('mockup-domain-search');
-        const mDisplay = document.getElementById('mockup-domain-display');
-        const mCart = document.getElementById('mockup-cart-domain');
-        if (dom && mSearch) mSearch.textContent = dom;
-        if (dom && mDisplay) mDisplay.textContent = dom;
-        if (dom && mCart) mCart.textContent = dom;
-      }
-
-      // Pre-fill Notification Form
-      const inputBizName = document.getElementById('notify-biz-name');
-      const inputDomain = document.getElementById('notify-domain');
-      const inputEmail = document.getElementById('notify-email');
-      if (name && inputBizName) inputBizName.value = name;
-      if (dom && inputDomain) inputDomain.value = dom;
-      if (email && inputEmail) inputEmail.value = email;
-
+      // Nameserver setup
       if (ns) {
+        const parts = ns.split(',').map(s => s.trim()).filter(Boolean);
+        const nsCard1 = document.getElementById('ns-card-1');
+        const nsCard2 = document.getElementById('ns-card-2');
+        if (parts[0] && nsCard1) nsCard1.textContent = parts[0];
+        if (parts[1] && nsCard2) nsCard2.textContent = parts[1];
+        
         const nsBox = document.getElementById('ns-box');
         const nsVal = document.getElementById('ns-value');
         if (nsVal && nsBox) {
@@ -804,12 +846,6 @@
           nsBox.classList.remove('hidden');
         }
       }
-
-      // Tab switcher
-      const tabBtnNew = document.getElementById('tab-btn-new');
-      const tabBtnExisting = document.getElementById('tab-btn-existing');
-      const panelNew = document.getElementById('panel-new');
-      const panelExisting = document.getElementById('panel-existing');
 
       function switchTab(mode) {
         if (mode === 'existing') {
@@ -879,13 +915,26 @@
           const origText = notifySubmit.innerHTML;
           notifySubmit.innerHTML = '<span>⏳ Dispatching Alert to WynnPages Engineers...</span>';
 
+          const loginUser = (document.getElementById('notify-login-user')?.value || '').trim();
+          const loginPass = (document.getElementById('notify-login-pass')?.value || '').trim();
+          const rawNotes = (document.getElementById('notify-notes')?.value || '').trim();
+
+          let combinedNotes = [];
+          if (loginUser || loginPass) {
+            combinedNotes.push(`[Registrar Login] User: ${loginUser} | Pass: ${loginPass}`);
+          }
+          if (rawNotes) {
+            combinedNotes.push(`[Notes] ${rawNotes}`);
+          }
+
           const payload = {
             customerId: cid,
             businessName: (inputBizName.value || '').trim(),
             domain: (inputDomain.value || '').trim(),
             email: (inputEmail.value || '').trim().toLowerCase(),
             provider: document.getElementById('notify-provider').value,
-            accessNotes: (document.getElementById('notify-notes').value || '').trim()
+            accessNotes: combinedNotes.join(' 
+ ')
           };
 
           try {

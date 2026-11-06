@@ -236,32 +236,65 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
     const hasExisting = Boolean(client.existingDomain);
-    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}&email=${encodeURIComponent(client.email || '')}&cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
-    smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your domain in 60 seconds via VentraIP (while keeping 100% ownership & renewals in your account), follow our visual guide: ${domainGuideUrl} - Warm regards, Wynn`;
-    emailSubject = `Brief Received! Next Step: 60-Second VentraIP Domain Setup Guide`;
-    emailHtml = buildAtelierEmailHtml({
-      preheader: 'Studio Active • 60-Second VentraIP Domain Setup Guide Inside',
-      heading: `We are firing up the code editor, ${firstName}.`,
-      bodyHtml: `
-        <p>Thank you for completing your studio brief! We have logged all your specifications and started preparing your bespoke website for launch.</p>
-        <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
-          <div><strong>Type:</strong> ${(client.briefType || 'organic').toUpperCase()}</div>
-          ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
-          ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
-          ${client.vibeLinks ? `<div style="margin-top:6px;"><strong>Reference Vibes:</strong> ${client.vibeLinks}</div>` : ''}
-          <div style="margin-top:6px;"><strong>Domain:</strong> ${domainInfo}</div>
-        </div>
-        <p><strong>How to connect your domain (${domainInfo}) with zero tech hassle:</strong> Click the button below to view our 60-second step-by-step visual guide on how to add <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an Additional User on <strong>VentraIP Australia</strong> (your domain ownership and annual auto-renewals stay 100% in your own account!):</p>
-      `,
-      primaryCta: {
-        label: 'Open VentraIP Domain Setup Guide →',
-        url: domainGuideUrl
-      },
-      secondaryCta: {
-        label: 'Visit WynnPages Studio',
-        url: origin
-      }
-    });
+    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}&email=${encodeURIComponent(client.email || '')}&cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}&ns=${encodeURIComponent(client.cfNameservers || '')}`;
+    
+    if (hasExisting) {
+      smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your existing domain with zero tech hassle, you can simply reply with your domain registrar login (GoDaddy, CrazyDomains, etc.) or check our guide: ${domainGuideUrl} - Warm regards, Wynn`;
+      emailSubject = `Brief Received! Next Step: Connect Your Domain (${domainInfo})`;
+      emailHtml = buildAtelierEmailHtml({
+        preheader: 'Studio Active • Connecting Your Existing Domain',
+        heading: `We are hand-crafting your website, ${firstName}.`,
+        bodyHtml: `
+          <p>Thank you for completing your studio brief! We have logged your specifications and started building your bespoke website for launch.</p>
+          <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
+            <div><strong>Type:</strong> ${(client.briefType || 'organic').toUpperCase()}</div>
+            ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
+            ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
+            <div style="margin-top:6px;"><strong>Existing Domain:</strong> ${domainInfo}</div>
+          </div>
+          <p><strong>How to connect your domain (${domainInfo}) with zero technical hassle:</strong></p>
+          <p>Since your domain is already registered, you do not need to figure out DNS settings! You have two simple options:</p>
+          <ul>
+            <li><strong>Option A (Fastest &amp; Recommended):</strong> Simply reply to this email with your registrar login (e.g. GoDaddy, CrazyDomains, Namecheap username &amp; temporary password) and our Australian engineers will connect it for you in 60 seconds.</li>
+            <li><strong>Option B (Self-Service):</strong> Click the button below to view our guide and submit credentials securely or point nameservers yourself.</li>
+          </ul>
+        `,
+        primaryCta: {
+          label: 'Open Domain Connection Guide →',
+          url: domainGuideUrl
+        },
+        secondaryCta: {
+          label: 'Visit WynnPages Studio',
+          url: origin
+        }
+      });
+    } else {
+      smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To register your domain in 2 minutes via VentraIP (keeping 100% legal ownership & renewals in your account), follow our visual guide: ${domainGuideUrl} - Warm regards, Wynn`;
+      emailSubject = `Brief Received! Next Step: 2-Minute VentraIP Domain Setup Guide`;
+      emailHtml = buildAtelierEmailHtml({
+        preheader: 'Studio Active • 2-Minute VentraIP Domain Setup Guide Inside',
+        heading: `We are hand-crafting your website, ${firstName}.`,
+        bodyHtml: `
+          <p>Thank you for completing your studio brief! We have logged your specifications and started preparing your bespoke website for launch.</p>
+          <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
+            <div><strong>Type:</strong> ${(client.briefType || 'organic').toUpperCase()}</div>
+            ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
+            ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
+            <div style="margin-top:6px;"><strong>Desired Domain:</strong> ${domainInfo}</div>
+          </div>
+          <p><strong>How to register your domain (${domainInfo}) with zero tech hassle:</strong></p>
+          <p>Click the button below to view our visual guide on how to register your domain on <strong>VentraIP Australia</strong> (retaining 100% legal ownership and annual auto-renewals in your own account) and add <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an Additional User so our engineers can connect it for free:</p>
+        `,
+        primaryCta: {
+          label: 'Open VentraIP Domain Guide →',
+          url: domainGuideUrl
+        },
+        secondaryCta: {
+          label: 'Visit WynnPages Studio',
+          url: origin
+        }
+      });
+    }
   } else if (stage === 'demo_ready') {
     smsText = `Hi ${firstName}, great news from WynnPages Studio! Your custom website demo is ready to preview here: ${shortDemoUrl} - For any questions or adjustments, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Great News! Your Custom WynnPages Website Demo is Ready`;
@@ -993,6 +1026,8 @@ function arrayBufferToBase64(buffer) {
 
 async function getValidCloudflareToken(env, forceRefresh = false) {
   if (!env || !env.WYNN_KV) return null;
+  const directToken = await env.WYNN_KV.get('cf_api_token');
+  if (directToken) return directToken.trim();
   let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
   if (!state || !state.accessToken) return null;
 
@@ -2238,6 +2273,17 @@ export default {
         const customerId = (body.customerId || '').trim();
 
         // Action 0: Delete Client Record
+        if (action === 'save_cf_token') {
+          if (env && env.WYNN_KV) {
+            if (body.cfToken) {
+              await env.WYNN_KV.put('cf_api_token', body.cfToken.trim());
+            } else {
+              await env.WYNN_KV.delete('cf_api_token');
+            }
+            return new Response(JSON.stringify({ ok: true, message: 'Cloudflare API Token updated' }), { status: 200, headers: corsHeaders });
+          }
+        }
+
         if (action === 'delete_client' && customerId) {
           const delRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'DELETE',
