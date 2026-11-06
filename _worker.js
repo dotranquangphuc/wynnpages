@@ -925,6 +925,20 @@ function buildBrandedPreviewHtml(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
   if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
+  const slug = (client && client.demoSlug) || '';
+  const isSelfLoop = slug && rawDemo.toLowerCase().includes(`${slug}.wynnpages.com.au`);
+  const bodyContent = isSelfLoop
+    ? `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f1e8;color:#2b251e;font-family:'Plus Jakarta Sans',sans-serif;padding:24px;text-align:center;">
+        <div style="max-width:500px;background:#fff;padding:36px;border-radius:24px;border:1px solid #e5dec9;box-shadow:0 10px 30px rgba(0,0,0,0.06);">
+          <div style="width:56px;height:56px;border-radius:18px;background:#fcf9f3;border:1px solid #dfd5c3;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;">🎨</div>
+          <h2 style="font-size:20px;font-weight:800;color:#1c1917;margin-bottom:8px;">Bespoke Demo Under Construction</h2>
+          <p style="font-size:13px;color:#78716c;line-height:1.6;margin-bottom:20px;">
+            Our atelier is preparing the website demo for <strong>${bizName}</strong>. Click <strong>Tải Lên Code (ZIP/HTML)</strong> in the Admin panel to upload your design files.
+          </p>
+          <a href="https://wynnpages.com.au" style="display:inline-block;padding:10px 20px;border-radius:12px;background:#96432b;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">Visit WynnPages Atelier →</a>
+        </div>
+      </div>`
+    : `${bodyContent}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
