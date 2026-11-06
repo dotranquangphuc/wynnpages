@@ -19,6 +19,46 @@
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
     }
+    #claim-btn {
+      position: relative;
+      overflow: hidden;
+      animation: claim-glow 3.8s ease-in-out infinite;
+    }
+    #claim-btn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -130%;
+      width: 70%;
+      height: 200%;
+      background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.22) 45%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0.22) 55%, transparent 80%);
+      transform: skewX(-20deg);
+      pointer-events: none;
+      animation: claim-sheen 4.8s ease-in-out infinite;
+    }
+    #claim-btn:hover .claim-arrow {
+      transform: translateX(3px);
+    }
+    .claim-arrow {
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+    @keyframes claim-sheen {
+      0%, 65% { left: -130%; opacity: 0; }
+      70% { opacity: 1; }
+      85% { left: 160%; opacity: 0.9; }
+      90%, 100% { left: 160%; opacity: 0; }
+    }
+    @keyframes claim-glow {
+      0%, 100% {
+        box-shadow: 0 10px 24px rgba(150, 67, 43, 0.45);
+        border-color: rgba(251, 222, 185, 0.28);
+      }
+      50% {
+        box-shadow: 0 12px 28px rgba(150, 67, 43, 0.65), 0 0 18px rgba(232, 185, 72, 0.35);
+        border-color: rgba(232, 185, 72, 0.6);
+      }
+    }
   </style>
 </head>
 <body class="flex flex-col h-screen w-screen overflow-hidden">
@@ -76,7 +116,7 @@
         class="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-lg shadow-[#96432b]/40 transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap"
       >
         <span id="claim-btn-label">Claim This Website — $599 AUD</span>
-        <span>&rarr;</span>
+        <span class="claim-arrow">&rarr;</span>
       </a>
     </div>
   </div>

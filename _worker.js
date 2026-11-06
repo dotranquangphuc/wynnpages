@@ -251,7 +251,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
           ${client.vibeLinks ? `<div style="margin-top:6px;"><strong>Reference Vibes:</strong> ${client.vibeLinks}</div>` : ''}
           <div style="margin-top:6px;"><strong>Domain:</strong> ${domainInfo}</div>
         </div>
-        <p><strong>How to connect your domain (${domainInfo}) with zero tech hassle:</strong> Click the button below to view our 60-second step-by-step visual guide on how to invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an Authorized User on <strong>VentraIP Australia</strong> (your domain ownership and annual auto-renewals stay 100% in your own account!):</p>
+        <p><strong>How to connect your domain (${domainInfo}) with zero tech hassle:</strong> Click the button below to view our 60-second step-by-step visual guide on how to add <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an Additional User on <strong>VentraIP Australia</strong> (your domain ownership and annual auto-renewals stay 100% in your own account!):</p>
       `,
       primaryCta: {
         label: 'Open VentraIP Domain Setup Guide →',
@@ -770,8 +770,10 @@ function buildClaimBarSnippet(client) {
       transform: translateY(-1px);
     }
     .claim-btn {
+      position: relative;
+      overflow: hidden;
       flex-shrink: 0;
-      background: #96432b;
+      background: linear-gradient(135deg, #96432b 0%, #a84b31 100%);
       color: #ffffff;
       text-decoration: none;
       font-size: 13px;
@@ -781,11 +783,53 @@ function buildClaimBarSnippet(client) {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 10px 24px rgba(150, 67, 43, 0.4);
-      transition: all 0.18s ease;
+      border: 1px solid rgba(251, 222, 185, 0.28);
+      box-shadow: 0 10px 24px rgba(150, 67, 43, 0.45);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
+      animation: claim-glow 3.8s ease-in-out infinite;
     }
-    .claim-btn:hover { background: #b05035; transform: translateY(-1px); box-shadow: 0 12px 28px rgba(150, 67, 43, 0.55); }
+    .claim-btn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -130%;
+      width: 70%;
+      height: 200%;
+      background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.22) 45%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0.22) 55%, transparent 80%);
+      transform: skewX(-20deg);
+      pointer-events: none;
+      animation: claim-sheen 4.8s ease-in-out infinite;
+    }
+    .claim-btn:hover {
+      background: linear-gradient(135deg, #a84b31 0%, #bd5538 100%);
+      transform: translateY(-1.5px) scale(1.02);
+      box-shadow: 0 14px 32px rgba(150, 67, 43, 0.6), 0 0 0 1px rgba(251, 222, 185, 0.45);
+      color: #ffffff;
+    }
+    .claim-btn:hover .claim-arrow {
+      transform: translateX(3px);
+    }
+    .claim-arrow {
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+    @keyframes claim-sheen {
+      0%, 65% { left: -130%; opacity: 0; }
+      70% { opacity: 1; }
+      85% { left: 160%; opacity: 0.9; }
+      90%, 100% { left: 160%; opacity: 0; }
+    }
+    @keyframes claim-glow {
+      0%, 100% {
+        box-shadow: 0 10px 24px rgba(150, 67, 43, 0.45);
+        border-color: rgba(251, 222, 185, 0.28);
+      }
+      50% {
+        box-shadow: 0 12px 28px rgba(150, 67, 43, 0.65), 0 0 18px rgba(232, 185, 72, 0.35);
+        border-color: rgba(232, 185, 72, 0.6);
+      }
+    }
     @media (max-width: 640px) {
       .claim-bar { flex-direction: column; align-items: stretch; padding: 12px 14px; bottom: 12px; gap: 10px; border-radius: 18px; }
       .claim-actions { display: grid; grid-template-columns: auto 1fr; gap: 8px; width: 100%; }
@@ -830,7 +874,7 @@ function buildClaimBarSnippet(client) {
       </a>
       <a href="${claimHref}" class="claim-btn">
         <span>Claim This Website — $599 AUD</span>
-        <span>&rarr;</span>
+        <span class="claim-arrow">&rarr;</span>
       </a>
     </div>
   </div>`;

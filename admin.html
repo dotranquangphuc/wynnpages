@@ -1821,8 +1821,8 @@
             const guideUrl = `https://wynnpages.com.au/domain-guide${guideParams.toString() ? '?' + guideParams.toString() : ''}`;
 
             const msg = needsNewDomain
-              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo ensure you retain 100% ownership and automatic annual renewals directly on your card, please register your domain on VentraIP Australia and delegate technical setup to us following our 2-minute visual guide:\n👉 ${guideUrl}\n\n(Simply invite hello@wynnpages.com.au as an Authorized User with Domain Management permission — our engineers connect it for you for free!)\n\n— WynnPages Australia`
-              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain while keeping 100% ownership and billing in your own account, please follow our 60-second VentraIP guide here to invite hello@wynnpages.com.au as an Authorized User:\n👉 ${guideUrl}\n\n(Or simply reply with your domain login and we will point it for you in 60 seconds!)\n\n— WynnPages Australia`;
+              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo ensure you retain 100% ownership and automatic annual renewals directly on your card, please register your domain on VentraIP Australia and delegate technical setup to us following our 2-minute visual guide:\n👉 ${guideUrl}\n\n(Simply add hello@wynnpages.com.au under Profile Settings → Additional Users — our engineers connect it for you for free!)\n\n— WynnPages Australia`
+              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain while keeping 100% ownership and billing in your own account, please follow our 60-second VentraIP guide here to add hello@wynnpages.com.au as an Additional User:\n👉 ${guideUrl}\n\n(Or simply reply with your domain login and we will point it for you in 60 seconds!)\n\n— WynnPages Australia`;
 
             navigator.clipboard.writeText(msg);
             showToast(`Đã copy tin nhắn kèm Link Hướng Dẫn VentraIP riêng cho "${biz}": ${guideUrl}`);
