@@ -205,21 +205,17 @@
         </div>
 
         <form id="quick-outbound-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-          <div class="lg:col-span-3">
+          <div class="lg:col-span-4">
             <label class="text-[11px] font-bold text-stone-600 block mb-1">Tên Tiệm / Thương Hiệu *</label>
             <input type="text" id="qo-biz-name" required placeholder="VD: Lush Nails &amp; Spa" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
           </div>
-          <div class="lg:col-span-2">
+          <div class="lg:col-span-3">
             <label class="text-[11px] font-bold text-emerald-800 block mb-1">📱 SĐT Nhận SMS (Khuyên dùng)</label>
             <input type="tel" id="qo-phone" placeholder="VD: 0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono font-semibold">
           </div>
-          <div class="lg:col-span-2">
+          <div class="lg:col-span-3">
             <label class="text-[11px] font-bold text-stone-600 block mb-1">📧 Email <span class="text-stone-400 font-normal">(Tuỳ chọn)</span></label>
             <input type="email" id="qo-email" placeholder="Để trống nếu chỉ có SĐT" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
-          </div>
-          <div class="lg:col-span-3">
-            <label class="text-[11px] font-bold text-stone-600 block mb-1">Link Demo <span class="text-stone-400 font-normal">(Hoặc tải file sau)</span></label>
-            <input type="text" id="qo-demo-url" placeholder="Tùy chọn (hoặc tải ZIP sau)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
           <div class="lg:col-span-2 flex items-end">
             <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer">
@@ -974,6 +970,7 @@
                   <button 
                     type="button" 
                     data-cid="${c.id}"
+                    data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
                     class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
                   >
@@ -1049,7 +1046,16 @@
                         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
                         : (hasValidDemo ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Demo Đã Sẵn Sàng</span>` : '')
                       }
-                      <code class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] px-2 py-0.5 rounded border border-[#e2d9c8]">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</code>
+                      <code class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] px-2.5 py-1 rounded-xl border border-[#e2d9c8]">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</code>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-slug="${escapeHtml(c.demoSlug || '')}"
+                        class="btn-edit-subdomain px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Đổi Subdomain Cloudflare cho khách này"
+                      >
+                        <span>✏️ Sửa</span>
+                      </button>
                     </div>
 
                     <!-- Action buttons for Demo -->
@@ -1088,25 +1094,6 @@
                         </button>
                       ` : ''}
                     </div>
-                  </div>
-
-                  <!-- Demo URL input row -->
-                  <div class="flex items-center gap-2">
-                    <input 
-                      type="text" 
-                      id="demo-url-${c.id}" 
-                      data-cid="${c.id}"
-                      value="${escapeHtml(c.demoUrl || '')}" 
-                      placeholder="Dán link demo ngoài (hoặc bấm 'Tải Lên Code' ở trên để lưu vào Cloudflare KV)" 
-                      class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
-                    >
-                    <button 
-                      type="button"
-                      data-cid="${c.id}"
-                      class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors shadow-2xs cursor-pointer"
-                    >
-                      Lưu Link
-                    </button>
                   </div>
                 </div>
 
@@ -1428,6 +1415,7 @@
                   <button 
                     type="button" 
                     data-cid="${c.id}"
+                    data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
                     class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
                     title="Xoá khách hàng này"
@@ -1516,32 +1504,42 @@
 
               <!-- Demo Link Input & Official Live Domain & Smart Stage Action Buttons -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
-                <!-- Row 1: Demo URL -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  <label for="demo-url-${c.id}" class="text-xs font-extrabold text-stone-800 shrink-0 flex items-center gap-1.5 w-48">
-                    <span>🔗 1. Link Web Demo:</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    id="demo-url-${c.id}" 
-                    data-cid="${c.id}"
-                    data-sent="${hasSentDemo ? '1' : '0'}"
-                    value="${escapeHtml(c.demoUrl || '')}" 
-                    placeholder="Dán link Demo (VD: https://bakery-demo.wynnpages.com.au) để mở khoá Nút 3..." 
-                    class="demo-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
-                  >
-                  <button 
-                    type="button"
-                    data-cid="${c.id}"
-                    class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-[#96432b] text-xs font-bold text-stone-700 shrink-0 transition-colors"
-                  >
-                    Lưu Link
-                  </button>
-                  ${hasValidDemo ? `
-                    <a href="${escapeHtml(c.demoUrl.startsWith('http') ? c.demoUrl : 'https://' + c.demoUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-stone-200/70 hover:bg-stone-300/70 text-xs font-bold text-stone-800 shrink-0 inline-flex items-center gap-1">
-                      <span>Mở xem Demo ↗</span>
-                    </a>
-                  ` : ''}
+                <!-- Row 1: Web Demo & Mã Nguồn -->
+                <div class="space-y-2.5">
+                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-[#e5dec9]">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-extrabold text-stone-800 shrink-0">🔗 1. Web Demo &amp; Mã Nguồn:</span>
+                      ${c.demoFilesCount
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
+                        : (hasValidDemo ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Demo Đã Sẵn Sàng</span>` : '')
+                      }
+                      <code class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] px-2.5 py-1 rounded-xl border border-[#e2d9c8]">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</code>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-slug="${escapeHtml(c.demoSlug || '')}"
+                        class="btn-edit-subdomain px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Đổi Subdomain Cloudflare cho khách này"
+                      >
+                        <span>✏️ Sửa</span>
+                      </button>
+                    </div>
+
+                    <!-- Action buttons for Demo -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <button 
+                        type="button"
+                        data-cid="${c.id}"
+                        data-slug="${escapeHtml(c.demoSlug || '')}"
+                        class="btn-upload-code px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <span>📥 Tải Lên Code (ZIP/HTML)</span>
+                      </button>
+                      <a href="${escapeHtml(c.demoUrl || c.brandedDemoUrl || ('https://' + (c.demoSlug || c.id) + '.wynnpages.com.au'))}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-200/80 hover:bg-stone-300/80 text-xs font-bold text-stone-800 inline-flex items-center gap-1">
+                        <span>👁️ Mở Demo ↗</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Row 2: Official Live Domain -->
@@ -1873,9 +1871,39 @@
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const name = btn.getAttribute('data-name');
-            if (!confirm(`Bạn có chắc muốn xoá hồ sơ "${name}" khỏi danh sách?`)) return;
-            await runAdminAction({ action: 'delete_client', customerId: cid });
-            showToast(`Đã xoá hồ sơ "${name}".`);
+            const slug = btn.getAttribute('data-slug') || '';
+            if (!confirm(`Bạn có chắc muốn xoá hồ sơ "${name}" khỏi danh sách? Thao tác này sẽ xoá toàn bộ demo subdomain trên Cloudflare Worker và dọn dẹp KV.`)) return;
+            await runAdminAction({ action: 'delete_client', customerId: cid, slug });
+            showToast(`Đã xoá hồ sơ "${name}" và tên miền liên quan.`);
+          });
+        });
+
+        // Edit Subdomain
+        document.querySelectorAll('.btn-edit-subdomain').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const currentSlug = btn.getAttribute('data-slug') || '';
+            const newSlug = prompt(`Nhập subdomain mới cho khách (VD: brisbane-tools):`, currentSlug);
+            if (!newSlug || newSlug.trim() === '' || newSlug.trim().toLowerCase() === currentSlug.toLowerCase()) return;
+            const sanitized = newSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '');
+            if (!sanitized) {
+              showToast('Subdomain không hợp lệ!', true);
+              return;
+            }
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang đổi...';
+            const res = await runAdminAction({
+              action: 'update_subdomain',
+              customerId: cid,
+              oldSlug: currentSlug,
+              newSlug: sanitized
+            });
+            if (res && res.success) {
+              showToast(`Đã đổi subdomain thành "${sanitized}.wynnpages.com.au" và cập nhật Cloudflare!`);
+            } else {
+              btn.disabled = false;
+              btn.innerHTML = '<span>✏️ Sửa</span>';
+            }
           });
         });
 
@@ -1892,7 +1920,7 @@
             if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {
               showToast(`Đã lưu & tạo Cloudflare zone! Nameservers: ${res.liveDomainBindResult.nameservers}`);
             } else {
-              showToast('Đã lưu Link Web Demo & Tên Miền Chính Thức!');
+              showToast('Đã lưu Tên Miền Chính Thức!');
             }
           });
         });
@@ -1904,13 +1932,14 @@
             const stage = btn.getAttribute('data-stage');
             const demoInput = document.getElementById(`demo-url-${cid}`);
             const liveInput = document.getElementById(`live-url-${cid}`);
-            const demoUrl = demoInput ? demoInput.value.trim() : '';
-            const liveUrl = liveInput ? liveInput.value.trim() : '';
+            const client = clientsCache.find(x => x.id === cid);
+            const fallbackDemo = client ? (client.demoUrl || client.brandedDemoUrl || (client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : '')) : '';
+            const demoUrl = (demoInput ? demoInput.value.trim() : '') || fallbackDemo;
+            const liveUrl = (liveInput ? liveInput.value.trim() : '') || (client && client.liveUrl ? client.liveUrl : '');
             const isPaid = btn.getAttribute('data-paid') !== '0';
 
             if ((stage === 'demo_ready' || stage === 'demo_reminder' || stage === 'outbound_pitch' || stage === 'outbound_followup') && !isValidUrl(demoUrl)) {
-              showToast('Vui lòng nhập Link Demo hợp lệ (Mục 1) trước khi gửi!', true);
-              if (demoInput) demoInput.focus();
+              showToast('Chưa có Link Demo hợp lệ cho khách hàng này!', true);
               return;
             }
 
@@ -1984,7 +2013,6 @@
         const bizName = document.getElementById('qo-biz-name').value.trim();
         const email = document.getElementById('qo-email').value.trim();
         const phone = document.getElementById('qo-phone').value.trim();
-        const demoUrl = document.getElementById('qo-demo-url').value.trim();
         const submitBtn = document.getElementById('qo-submit-btn');
 
         if (!bizName) {
@@ -2005,7 +2033,6 @@
           businessName: bizName,
           email,
           phone,
-          demoUrl,
           flowType: 'outbound',
           paymentStatus: 'unpaid',
           stage: 'outbound_pending'
@@ -2018,17 +2045,14 @@
           document.getElementById('qo-biz-name').value = '';
           document.getElementById('qo-email').value = '';
           document.getElementById('qo-phone').value = '';
-          document.getElementById('qo-demo-url').value = '';
           const previewUrl = res.client.brandedDemoUrl || `https://${encodeURIComponent(res.client.demoSlug || res.client.id)}.wynnpages.com.au`;
           navigator.clipboard.writeText(previewUrl).catch(() => {});
-          showToast(`Đã tạo khách Outbound "${bizName}" thành công!`);
+          showToast(`Đã tạo khách Outbound "${bizName}" thành công! Subdomain: ${res.client.demoSlug}.wynnpages.com.au`);
 
-          // If no external demo URL was provided, automatically open upload modal to upload HTML/ZIP!
-          if (!demoUrl) {
-            setTimeout(() => {
-              openUploadModal(res.client);
-            }, 300);
-          }
+          // Automatically open upload modal to upload HTML/ZIP!
+          setTimeout(() => {
+            openUploadModal(res.client);
+          }, 300);
         }
       });
 

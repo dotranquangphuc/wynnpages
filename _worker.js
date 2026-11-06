@@ -21,7 +21,8 @@ function getConfig(env, overrides = {}) {
     adminKey: env.ADMIN_KEY || ADMIN_KEY_FALLBACK || 'wynn2026',
     adminNotifyEmail: overrides.adminNotifyEmail || env.ADMIN_NOTIFY_EMAIL || ADMIN_NOTIFY_EMAIL_FALLBACK || '',
     adminNotifyPhone: overrides.adminNotifyPhone || env.ADMIN_NOTIFY_PHONE || ADMIN_NOTIFY_PHONE_FALLBACK || '',
-    googleDriveWebhookUrl: overrides.googleDriveWebhookUrl || env.GOOGLE_DRIVE_WEBHOOK_URL || ''
+    googleDriveWebhookUrl: overrides.googleDriveWebhookUrl || env.GOOGLE_DRIVE_WEBHOOK_URL || '',
+    cfApiToken: overrides.cfApiToken || overrides.cfToken || env.CLOUDFLARE_API_TOKEN || ''
   };
 }
 
@@ -208,7 +209,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   const firstName = (client.name || 'mate').split(' ')[0];
   const email = client.email || '';
   const phone = client.phone || '';
-  const demoUrl = client.demoUrl || `${origin}`;
+  const demoUrl = client.demoUrl || (client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : `${origin}`);
   const organicBriefUrl = `${origin}/brief?type=organic&email=${encodeURIComponent(email)}`;
   const demoBriefUrl = `${origin}/brief?type=demo&email=${encodeURIComponent(email)}`;
 
@@ -1038,39 +1039,57 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-async function getValidCloudflareToken(env, forceRefresh = false) {
-  if (!env || !env.WYNN_KV) return null;
-  const directToken = await env.WYNN_KV.get('cf_api_token');
-  if (directToken) return directToken.trim();
-  let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
-  if (!state || !state.accessToken) return null;
-
-  if (forceRefresh && state.refreshToken) {
-    const tokenParams = new URLSearchParams();
-    tokenParams.append('grant_type', 'refresh_token');
-    tokenParams.append('refresh_token', state.refreshToken);
-    tokenParams.append('client_id', '54d11594-84e4-41aa-b438-e81b8fa78ee7');
-    const refreshRes = await fetch('https://dash.cloudflare.com/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: tokenParams.toString()
-    });
-    if (refreshRes.ok) {
-      const refreshData = await refreshRes.json().catch(() => ({}));
-      if (refreshData.access_token) {
-        state = {
-          accessToken: refreshData.access_token,
-          refreshToken: refreshData.refresh_token || state.refreshToken,
-          updatedAt: Date.now()
-        };
-        await env.WYNN_KV.put('cf_oauth_state', JSON.stringify(state));
-      }
-    }
+async function getValidCloudflareToken(env, forceRefresh = false, tokenOverride = '') {
+  if (tokenOverride) return tokenOverride.trim();
+  if (env && env.CLOUDFLARE_API_TOKEN) return env.CLOUDFLARE_API_TOKEN.trim();
+  if (env && env.WYNN_KV) {
+    const directToken = await env.WYNN_KV.get('cf_api_token');
+    if (directToken) return directToken.trim();
+    let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
+    if (state && state.accessToken) return state.accessToken.trim();
   }
-  return state.accessToken;
+  return null;
 }
 
-async function ensureCloudflareSubdomain(rawSlug, env) {
+async function removeCloudflareWorkerDomain(rawHostname, env, tokenOverride = '') {
+  const host = rawHostname.includes('.') ? rawHostname : `${slugifyName(rawHostname)}.wynnpages.com.au`;
+  if (!host || host === 'wynnpages.com.au' || host === 'www.wynnpages.com.au') return false;
+  const accountId = '8daebe5da641a8b2fc3185586ba888e2';
+
+  try {
+    let accessToken = await getValidCloudflareToken(env, false, tokenOverride);
+    if (!accessToken) return false;
+
+    async function tryList(token) {
+      return fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    }
+
+    let res = await tryList(accessToken);
+    if (res.status === 401 || res.status === 403) {
+      accessToken = await getValidCloudflareToken(env, true, tokenOverride);
+      if (accessToken) res = await tryList(accessToken);
+    }
+
+    if (!res.ok) return false;
+    const data = await res.json().catch(() => ({}));
+    const domains = data.result || [];
+    const match = domains.find(d => d.hostname === host);
+    if (match && match.id) {
+      const delRes = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains/${match.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      return delRes.ok;
+    }
+  } catch (e) {
+    // Non-blocking
+  }
+  return false;
+}
+
+async function ensureCloudflareSubdomain(rawSlug, env, tokenOverride = '') {
   const slug = slugifyName(rawSlug);
   if (!slug || slug === 'www' || !env || !env.WYNN_KV) return false;
   const hostname = `${slug}.wynnpages.com.au`;
@@ -1081,7 +1100,7 @@ async function ensureCloudflareSubdomain(rawSlug, env) {
     const alreadyDone = await env.WYNN_KV.get(`sub_${slug}`);
     if (alreadyDone === '1') return true;
 
-    let accessToken = await getValidCloudflareToken(env, false);
+    let accessToken = await getValidCloudflareToken(env, false, tokenOverride);
     if (!accessToken) return false;
 
     async function tryAttach(token) {
@@ -1102,7 +1121,7 @@ async function ensureCloudflareSubdomain(rawSlug, env) {
 
     let res = await tryAttach(accessToken);
     if (res.status === 401 || res.status === 403) {
-      accessToken = await getValidCloudflareToken(env, true);
+      accessToken = await getValidCloudflareToken(env, true, tokenOverride);
       if (accessToken) res = await tryAttach(accessToken);
     }
 
@@ -2299,12 +2318,125 @@ export default {
         }
 
         if (action === 'delete_client' && customerId) {
+          let slugToClean = (body.slug || '').trim();
+          let liveUrlToClean = '';
+          try {
+            const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+            });
+            if (cRes.ok) {
+              const cData = await cRes.json();
+              if (!slugToClean) {
+                slugToClean = cData.metadata?.demo_slug || (cData.metadata?.demo_url ? extractCleanHost(cData.metadata.demo_url) : '');
+              }
+              liveUrlToClean = cData.metadata?.live_url || '';
+            }
+          } catch (_) {}
+
+          // 1. Delete from Cloudflare Worker domains
+          if (slugToClean) {
+            await removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken);
+            const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
+            if (env && env.WYNN_KV && cleanSlug) {
+              await env.WYNN_KV.delete(`sub_${cleanSlug}`);
+              await env.WYNN_KV.delete(`demo_code:${cleanSlug}`);
+              await env.WYNN_KV.delete(`code_${cleanSlug}`);
+              await env.WYNN_KV.delete(`demo_zip:${cleanSlug}`);
+
+              const metaKey = `site_meta:${cleanSlug}`;
+              const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+              if (prevMeta && Array.isArray(prevMeta.filesList)) {
+                for (const p of prevMeta.filesList) {
+                  await env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => {});
+                }
+              }
+              await env.WYNN_KV.delete(metaKey).catch(() => {});
+            }
+          }
+          if (liveUrlToClean) {
+            await removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken);
+            await removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken);
+            if (env && env.WYNN_KV) {
+              await env.WYNN_KV.delete(`livedom_${liveUrlToClean}`);
+            }
+          }
+
           const delRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
           });
           const delData = await delRes.json().catch(() => ({}));
           return new Response(JSON.stringify({ ok: delRes.ok, deleted: delData }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Update Subdomain (Cloudflare + KV + Stripe sync)
+        if (action === 'update_subdomain' && customerId) {
+          const oldSlug = slugifyName(body.oldSlug || '');
+          const newSlug = slugifyName(body.newSlug || '');
+          if (!newSlug) {
+            return new Response(JSON.stringify({ error: 'Subdomain mới không hợp lệ.' }), { status: 400, headers: corsHeaders });
+          }
+
+          // 1. If old slug differs, remove from Cloudflare & migrate KV
+          if (oldSlug && oldSlug !== newSlug) {
+            await removeCloudflareWorkerDomain(oldSlug, env, effectiveCfg.cfApiToken);
+            if (env && env.WYNN_KV) {
+              await env.WYNN_KV.delete(`sub_${oldSlug}`);
+              await env.WYNN_KV.put(`sub_${newSlug}`, '1');
+
+              const oldCode = await env.WYNN_KV.get(`demo_code:${oldSlug}`);
+              if (oldCode) {
+                await env.WYNN_KV.put(`demo_code:${newSlug}`, oldCode);
+                await env.WYNN_KV.delete(`demo_code:${oldSlug}`);
+              }
+              const oldZip = await env.WYNN_KV.get(`demo_zip:${oldSlug}`);
+              if (oldZip) {
+                await env.WYNN_KV.put(`demo_zip:${newSlug}`, oldZip);
+                await env.WYNN_KV.delete(`demo_zip:${oldSlug}`);
+              }
+
+              const oldMetaKey = `site_meta:${oldSlug}`;
+              const meta = await env.WYNN_KV.get(oldMetaKey, 'json').catch(() => null);
+              if (meta && Array.isArray(meta.filesList)) {
+                for (const p of meta.filesList) {
+                  const assetKeyOld = `site_asset:${oldSlug}:${p}`;
+                  const assetKeyNew = `site_asset:${newSlug}:${p}`;
+                  const resOld = await env.WYNN_KV.getWithMetadata(assetKeyOld, 'arrayBuffer').catch(() => ({}));
+                  if (resOld && resOld.value) {
+                    await env.WYNN_KV.put(assetKeyNew, resOld.value, { metadata: resOld.metadata });
+                    await env.WYNN_KV.delete(assetKeyOld).catch(() => {});
+                  }
+                }
+                meta.slug = newSlug;
+                await env.WYNN_KV.put(`site_meta:${newSlug}`, JSON.stringify(meta));
+                await env.WYNN_KV.delete(oldMetaKey).catch(() => {});
+              }
+            }
+          }
+
+          // 2. Attach new subdomain to Cloudflare
+          await ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken);
+
+          // 3. Update Stripe Customer
+          const newDemoUrl = `https://${newSlug}.wynnpages.com.au`;
+          const uParams = new URLSearchParams();
+          uParams.append('metadata[demo_slug]', newSlug);
+          uParams.append('metadata[demo_url]', newDemoUrl);
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+          let updatedCust = null;
+          if (patchRes.ok) {
+            const patchData = await patchRes.json();
+            updatedCust = formatCustomerRecord(patchData);
+          }
+
+          return new Response(JSON.stringify({ ok: true, newSlug, newDemoUrl, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
         // Action 0b: Sync Existing Uploaded File to Google Drive

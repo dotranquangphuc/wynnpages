@@ -148,8 +148,8 @@
             1
           </span>
           <div>
-            <span class="text-sm font-extrabold block">Option 1: Need a New Domain (Register via VentraIP)</span>
-            <span class="text-xs opacity-85 block mt-0.5">Register on VentraIP &amp; delegate technical setup in 2 mins</span>
+            <span class="text-sm font-extrabold block">Option 1: Register a New Domain (VentraIP Australia)</span>
+            <span class="text-xs opacity-85 block mt-0.5">Buy on VentraIP &amp; invite WynnPages — No passwords needed</span>
           </div>
         </button>
 
@@ -164,8 +164,8 @@
             2
           </span>
           <div>
-            <span class="text-sm font-extrabold block">Option 2: Already Own a Domain (Any Registrar)</span>
-            <span class="text-xs opacity-85 block mt-0.5">Share login or DNS — we connect it in 60s (GoDaddy, CrazyDomains, etc.)</span>
+            <span class="text-sm font-extrabold block">Option 2: I Already Own a Domain (Any Provider)</span>
+            <span class="text-xs opacity-85 block mt-0.5">Share registrar login details — we connect it for you in 60s (GoDaddy, VentraIP, CrazyDomains...)</span>
           </div>
         </button>
       </div>
@@ -572,13 +572,77 @@
           </div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-3">
-            <span class="text-xl">🎉</span>
-            <div>
-              <p class="font-bold">You're all done with VentraIP delegation!</p>
-              <p class="text-stone-600 mt-0.5">Please let us know by clicking the 1-Click alert button below so our engineers can connect your domain and push your site live immediately.</p>
+        <!-- Step 5: 1-Click Alert to WynnPages -->
+        <div class="bg-gradient-to-br from-emerald-50/80 to-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-400/80 shadow-lg space-y-5">
+          <div class="border-b border-emerald-200/60 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-full bg-emerald-600 text-white font-black text-sm flex items-center justify-center shrink-0">✓</span>
+              <div>
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">Final Step • Takes 5 Seconds</span>
+                <h3 class="font-editorial text-xl sm:text-2xl font-bold text-stone-900 mt-0.5">
+                  Added hello@wynnpages.com.au? Alert Our Engineers
+                </h3>
+              </div>
             </div>
+            <span class="px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold w-fit inline-flex items-center gap-1.5 shadow-2xs">
+              <span>⚡ 1-Click Dispatch • No Passwords Needed</span>
+            </span>
           </div>
+
+          <p class="text-xs text-stone-600 leading-relaxed">
+            Because you invited <strong class="text-stone-900">hello@wynnpages.com.au</strong> as an Additional User in VIPControl, our engineers already have technical access. You retain 100% legal custody and direct billing on your card — <strong class="text-emerald-900">no passwords or DNS configuration needed from you!</strong> Just confirm your business details below so we know which site to connect:
+          </p>
+
+          <form id="notify-form-new" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div>
+                <label for="new-biz-name" class="block text-xs font-bold text-stone-700 mb-1">
+                  Business / Salon Name <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="new-biz-name"
+                  required
+                  placeholder="e.g. Lush Nails Bar"
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 bg-white focus:border-emerald-600 focus:ring-emerald-600 shadow-2xs"
+                >
+              </div>
+              <div>
+                <label for="new-domain" class="block text-xs font-bold text-stone-700 mb-1">
+                  Domain Name Registered <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="new-domain"
+                  required
+                  placeholder="e.g. lushnailsbar.com.au"
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs font-mono text-stone-900 bg-white focus:border-emerald-600 focus:ring-emerald-600 shadow-2xs"
+                >
+              </div>
+              <div>
+                <label for="new-email" class="block text-xs font-bold text-stone-700 mb-1">
+                  Contact Email (For Live Alert) <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="new-email"
+                  required
+                  placeholder="e.g. hello@lushnailsbar.com.au"
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 bg-white focus:border-emerald-600 focus:ring-emerald-600 shadow-2xs"
+                >
+              </div>
+            </div>
+
+            <div id="notify-new-feedback" class="hidden p-4 rounded-2xl text-xs font-semibold"></div>
+
+            <button
+              type="submit"
+              id="btn-notify-new-submit"
+              class="w-full py-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-extrabold text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>🚀 I've Added hello@wynnpages.com.au on VentraIP — Launch My Site!</span>
+            </button>
+          </form>
         </div>
 
       </div>
@@ -590,256 +654,201 @@
         
         <div class="border-b border-[#f0eade] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Any Registrar • GoDaddy, CrazyDomains, Namecheap, VentraIP, etc.</span>
-            <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900 mt-0.5">Concierge Setup for Your Existing Domain</h2>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Any Registrar • GoDaddy, VentraIP, CrazyDomains, Namecheap, Google / Squarespace, etc.</span>
+            <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900 mt-0.5">60-Second Setup for Your Existing Domain</h2>
           </div>
           <span class="px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold w-fit inline-flex items-center gap-1.5 shadow-2xs">
-            <span>⚡ 60-Second Setup by WynnPages</span>
+            <span>⚡ Free Studio Concierge Service</span>
           </span>
         </div>
 
         <p class="text-xs sm:text-sm text-stone-600 leading-relaxed">
-          If your domain is already registered on <strong>GoDaddy, CrazyDomains, Namecheap, Google / Squarespace, or VentraIP</strong>, you <strong>do not need to figure out complex DNS records</strong> or nameservers yourself. Choose the setup method that works best for you below:
+          If your domain is already registered on <strong>GoDaddy, VentraIP, CrazyDomains, Namecheap, Google / Squarespace</strong>, or any other provider, you <strong>do not need to figure out complex DNS records</strong> or nameservers yourself. Simply share your domain management login below — our Australian studio engineers will configure high-speed Cloudflare DNS and SSL security certificates in 60 seconds.
         </p>
 
-        <!-- Method A: Concierge (Primary & Strongly Recommended) -->
-        <div class="bg-[#fcf9f3] rounded-3xl p-6 sm:p-7 border-2 border-[#96432b]/35 space-y-4 shadow-sm">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-full bg-[#96432b] text-white font-black text-sm flex items-center justify-center shrink-0">A</span>
-              <div>
-                <h3 class="font-bold text-stone-900 text-base">Method A (Recommended): Share Temporary Login for Free Concierge Connection</h3>
-                <p class="text-xs text-stone-500">Zero technical hassle — our Australian engineers configure everything in 60 seconds.</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-extrabold">
-              ★ Recommended for Busy Business Owners
-            </span>
+        <!-- 3 Quick Steps Infographic -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <div class="bg-[#fcf9f3] p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
+            <span class="font-extrabold text-[#96432b] block text-xs">1. Fill Out Login Details</span>
+            <p class="text-stone-600 text-[11px] leading-relaxed">
+              Enter your registrar provider, username / customer ID, and temporary access password in the form below.
+            </p>
           </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2 text-xs">
-            <div class="bg-white p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
-              <span class="font-extrabold text-[#96432b] block text-xs">1. Locate Your Registrar</span>
-              <p class="text-stone-600 text-[11px] leading-relaxed">
-                Find where your domain was registered (e.g. GoDaddy, CrazyDomains, VentraIP, Namecheap) and your username / customer ID.
-              </p>
-            </div>
-            <div class="bg-white p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
-              <span class="font-extrabold text-[#96432b] block text-xs">2. Share Login Details</span>
-              <p class="text-stone-600 text-[11px] leading-relaxed">
-                Provide them via the <strong>Secure Dispatch Form</strong> below, or email directly to <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-bold underline">hello@wynnpages.com.au</a>.
-              </p>
-            </div>
-            <div class="bg-white p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
-              <span class="font-extrabold text-[#96432b] block text-xs">3. Live in 60 Seconds</span>
-              <p class="text-stone-600 text-[11px] leading-relaxed">
-                We log in, map the high-speed Cloudflare DNS &amp; SSL certificates, and alert you immediately so you can reset your password.
-              </p>
-            </div>
+          <div class="bg-[#fcf9f3] p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
+            <span class="font-extrabold text-[#96432b] block text-xs">2. We Connect in 60s</span>
+            <p class="text-stone-600 text-[11px] leading-relaxed">
+              Our engineers log in, point the DNS records, preserve any existing business email (Google Workspace/365), and activate SSL.
+            </p>
           </div>
-
-          <!-- Security Guarantee Badge -->
-          <div class="p-4 rounded-2xl bg-white border border-amber-300 text-xs text-stone-700 flex items-start gap-3">
-            <span class="text-xl">🛡️</span>
-            <div class="space-y-1 text-[11px] leading-relaxed">
-              <strong class="text-stone-900 font-extrabold text-xs block">100% Legal Ownership &amp; Security Guarantee:</strong>
-              <span>Your domain ownership, registrar account, and billing stay 100% in your hands. We only access the DNS zone panel to point your website. You can set a temporary password before sharing, and change it back immediately upon our confirmation.</span>
-            </div>
+          <div class="bg-[#fcf9f3] p-4 rounded-2xl border border-[#e5dec9] space-y-1.5 shadow-2xs">
+            <span class="font-extrabold text-[#96432b] block text-xs">3. Reset Password &amp; Go Live</span>
+            <p class="text-stone-600 text-[11px] leading-relaxed">
+              We email you immediately once your site is officially live so you can revert your temporary password right away.
+            </p>
           </div>
         </div>
 
-        <!-- Method B: Self-Service / For IT Teams -->
-        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-[#e5dec9] space-y-4">
-          <div class="flex items-center gap-2.5">
-            <span class="w-8 h-8 rounded-full bg-[#e5dec9] text-stone-700 font-black text-sm flex items-center justify-center shrink-0">B</span>
-            <div>
-              <h3 class="font-bold text-stone-900 text-base">Method B: For In-House IT Teams / Configure Nameservers Yourself</h3>
-              <p class="text-xs text-stone-500">If you or your in-house IT technician prefer to update DNS records directly.</p>
+        <!-- Security Guarantee Box -->
+        <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs text-stone-700 flex items-start gap-3">
+          <span class="text-xl">🛡️</span>
+          <div class="space-y-1 text-[11px] leading-relaxed">
+            <strong class="text-stone-900 font-extrabold text-xs block">100% Legal Ownership &amp; Security Guarantee:</strong>
+            <span>Your domain ownership, registrar account, and billing stay 100% in your hands. We only access the DNS zone panel to point your website. You can set a temporary password before sharing, and change it back immediately upon our confirmation.</span>
+          </div>
+        </div>
+
+        <!-- The Registrar Login Form -->
+        <div class="bg-[#fcf9f3] rounded-3xl p-6 sm:p-7 border-2 border-[#96432b]/35 shadow-sm space-y-5">
+          <div class="border-b border-[#e5dec9] pb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🔑</span>
+              <h3 class="font-bold text-stone-900 text-base">Registrar Login Details Form</h3>
             </div>
+            <span class="text-[11px] text-stone-500 font-medium">Encrypted via TLS</span>
           </div>
 
-          <div class="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
-            <p class="text-xs text-emerald-950 font-bold">
-              Point your domain's Custom Nameservers to Cloudflare:
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="bg-white p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between shadow-2xs">
+          <form id="notify-form-existing" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="existing-biz-name" class="block text-xs font-bold text-stone-700 mb-1">
+                  Business / Salon Name <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="existing-biz-name"
+                  required
+                  placeholder="e.g. Lush Nails Bar"
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
+                >
+              </div>
+              <div>
+                <label for="existing-domain" class="block text-xs font-bold text-stone-700 mb-1">
+                  Domain Name <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="existing-domain"
+                  required
+                  placeholder="e.g. lushnailsbar.com.au"
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs font-mono text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
+                >
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="existing-email" class="block text-xs font-bold text-stone-700 mb-1">
+                  Contact Email (For Live Confirmation) <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="existing-email"
+                  required
+                  placeholder="e.g. hello@lushnailsbar.com.au"
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
+                >
+              </div>
+              <div>
+                <label for="existing-provider" class="block text-xs font-bold text-stone-700 mb-1">
+                  Domain Registrar / Provider <span class="text-[#96432b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="existing-provider"
+                  required
+                  placeholder="e.g. GoDaddy, VentraIP, CrazyDomains, Namecheap, Google..."
+                  class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
+                >
+              </div>
+            </div>
+
+            <!-- Login credentials fields -->
+            <div class="p-4 rounded-2xl bg-white border border-[#dfd5c3] space-y-3">
+              <span class="text-xs font-extrabold text-stone-800 block">
+                🔐 Registrar Portal Access Details:
+              </span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <span class="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">Nameserver 1:</span>
+                  <label for="existing-login-user" class="block text-[11px] font-semibold text-stone-600 mb-1">
+                    Username / Customer ID / Account Email <span class="text-[#96432b]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="existing-login-user"
+                    required
+                    placeholder="e.g. 12345678 or owner@gmail.com"
+                    class="w-full rounded-xl border border-stone-300 px-3 py-2 text-xs text-stone-900 bg-stone-50/50 focus:border-[#96432b] focus:ring-[#96432b]"
+                  >
+                </div>
+                <div>
+                  <label for="existing-login-pass" class="block text-[11px] font-semibold text-stone-600 mb-1">
+                    Temporary Access Password <span class="text-[#96432b]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="existing-login-pass"
+                    required
+                    placeholder="Temporary access password"
+                    class="w-full rounded-xl border border-stone-300 px-3 py-2 text-xs text-stone-900 bg-stone-50/50 font-mono focus:border-[#96432b] focus:ring-[#96432b]"
+                  >
+                </div>
+              </div>
+              <p class="text-[10px] text-stone-500 leading-relaxed">
+                💡 <em>Security Tip:</em> You can set a temporary password right now in your registrar portal before submitting, and revert it immediately once we notify you that your website is officially live.
+              </p>
+            </div>
+
+            <div>
+              <label for="existing-notes" class="block text-xs font-bold text-stone-700 mb-1">
+                Additional Notes or Existing Email Setup (Optional)
+              </label>
+              <textarea
+                id="existing-notes"
+                rows="2"
+                placeholder="e.g. 'We use Google Workspace for info@ourdomain.com, please ensure email remains uninterrupted'..."
+                class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
+              ></textarea>
+            </div>
+
+            <div id="notify-existing-feedback" class="hidden p-4 rounded-2xl text-xs font-semibold"></div>
+
+            <button
+              type="submit"
+              id="btn-notify-existing-submit"
+              class="w-full py-4 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-extrabold text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>🚀 Submit Registrar Login — Connect My Domain in 60s</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Collapsible For Technical / In-House IT Teams -->
+        <details class="rounded-2xl bg-stone-50 border border-stone-200 p-4 text-xs text-stone-600">
+          <summary class="font-bold text-stone-700 cursor-pointer hover:text-stone-900">
+            ⚡ For In-House IT Teams: Prefer to point Cloudflare Nameservers yourself?
+          </summary>
+          <div class="mt-4 pt-3 border-t border-stone-200 space-y-3">
+            <p class="text-[11px] text-stone-600">If your IT technician prefers to change nameservers manually in your registrar portal without sharing credentials, point your domain to:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="bg-white p-3 rounded-xl border border-stone-200 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-stone-400 block uppercase font-bold">Nameserver 1:</span>
                   <code id="ns-card-1" class="font-mono font-bold text-xs text-stone-900">olga.ns.cloudflare.com</code>
                 </div>
-                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-1').textContent.trim()); alert('Copied Nameserver 1!');" class="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-emerald-100 text-[11px] font-bold text-stone-700 cursor-pointer transition-colors">
-                  📋 Copy
-                </button>
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-1').textContent.trim()); alert('Copied Nameserver 1!');" class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700">📋 Copy</button>
               </div>
-              <div class="bg-white p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between shadow-2xs">
+              <div class="bg-white p-3 rounded-xl border border-stone-200 flex items-center justify-between">
                 <div>
-                  <span class="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">Nameserver 2:</span>
+                  <span class="text-[10px] text-stone-400 block uppercase font-bold">Nameserver 2:</span>
                   <code id="ns-card-2" class="font-mono font-bold text-xs text-stone-900">toby.ns.cloudflare.com</code>
                 </div>
-                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-2').textContent.trim()); alert('Copied Nameserver 2!');" class="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-emerald-100 text-[11px] font-bold text-stone-700 cursor-pointer transition-colors">
-                  📋 Copy
-                </button>
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-2').textContent.trim()); alert('Copied Nameserver 2!');" class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700">📋 Copy</button>
               </div>
             </div>
-            <p class="text-[11px] text-stone-500 leading-relaxed">
-              👉 Log in to your registrar (GoDaddy, CrazyDomains, etc.) &rarr; Open <strong>DNS Management / Nameservers</strong> &rarr; Select <strong>Custom Nameservers</strong> &rarr; Paste the 2 addresses above &rarr; Save.
-            </p>
           </div>
-        </div>
-
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-3">
-          <span class="text-xl">👇</span>
-          <div>
-            <p class="font-bold">Next Step: Submit Your Domain Details Below</p>
-            <p class="text-stone-600 mt-0.5">Please fill out the quick 1-click dispatch form below with your domain details or registrar credentials. Our engineers will take over and get your site live immediately.</p>
-          </div>
-        </div>
+        </details>
 
       </div>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- 1-CLICK INSTANT COMPLETION & NOTIFICATION FORM            -->
-    <!-- ========================================================= -->
-    <div id="notification-card" class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#96432b]/35 shadow-xl space-y-6">
-      <div class="border-b border-[#f0eade] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#96432b]">Step 3: Alert WynnPages Engineers</span>
-          <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900 mt-0.5">
-            Completed Domain Setup? Let Us Know Instantly
-          </h2>
-        </div>
-        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold shrink-0 w-fit">
-          <span>⚡ 1-Click Dispatch</span>
-        </span>
-      </div>
-
-      <p class="text-xs text-stone-600 leading-relaxed">
-        Once you've invited <code class="font-bold text-[#96432b]">hello@wynnpages.com.au</code> on VentraIP or entered your credentials, click the button below. Our engineers receive an instant alert and will connect your custom live domain immediately.
-      </p>
-
-      <form id="notify-form" class="space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="notify-biz-name" class="block text-xs font-bold text-stone-700 mb-1">
-              Business / Salon Name <span class="text-[#96432b]">*</span>
-            </label>
-            <input
-              type="text"
-              id="notify-biz-name"
-              required
-              placeholder="e.g. Lush Nails Bar"
-              class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 focus:border-[#96432b] focus:ring-[#96432b]"
-            >
-          </div>
-          <div>
-            <label for="notify-domain" class="block text-xs font-bold text-stone-700 mb-1">
-              Domain Name <span class="text-[#96432b]">*</span>
-            </label>
-            <input
-              type="text"
-              id="notify-domain"
-              required
-              placeholder="e.g. lushnailsbar.com.au"
-              class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs font-mono text-stone-900 focus:border-[#96432b] focus:ring-[#96432b]"
-            >
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="notify-email" class="block text-xs font-bold text-stone-700 mb-1">
-              Contact Email <span class="text-[#96432b]">*</span>
-            </label>
-            <input
-              type="email"
-              id="notify-email"
-              required
-              placeholder="e.g. hello@lushnailsbar.com.au"
-              class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 focus:border-[#96432b] focus:ring-[#96432b]"
-            >
-          </div>
-          <div>
-            <label for="notify-provider" class="block text-xs font-bold text-stone-700 mb-1">
-              Domain Registrar / Provider
-            </label>
-            <input
-              type="text"
-              id="notify-provider"
-              placeholder="e.g. GoDaddy, VentraIP, CrazyDomains, Namecheap..."
-              class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 focus:border-[#96432b] focus:ring-[#96432b]"
-            >
-          </div>
-        </div>
-
-        <!-- Registrar credentials box (Recommended for existing domains) -->
-        <div id="box-registrar-credentials" class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-              <span>🔑</span>
-              <span>Registrar Login Details (For Free Concierge Connection)</span>
-            </span>
-            <span class="text-[10px] text-stone-500">Encrypted via TLS</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label for="notify-login-user" class="block text-[11px] font-semibold text-stone-600 mb-1">
-                Registrar Username / Customer ID / Email
-              </label>
-              <input
-                type="text"
-                id="notify-login-user"
-                placeholder="e.g. 12345678 or owner@gmail.com"
-                class="w-full rounded-xl border border-stone-300 px-3 py-2 text-xs text-stone-900 bg-white focus:border-[#96432b] focus:ring-[#96432b]"
-              >
-            </div>
-            <div>
-              <label for="notify-login-pass" class="block text-[11px] font-semibold text-stone-600 mb-1">
-                Temporary Password
-              </label>
-              <input
-                type="text"
-                id="notify-login-pass"
-                placeholder="Temporary access password"
-                class="w-full rounded-xl border border-stone-300 px-3 py-2 text-xs text-stone-900 bg-white font-mono focus:border-[#96432b] focus:ring-[#96432b]"
-              >
-            </div>
-          </div>
-          <p class="text-[10px] text-stone-500 leading-relaxed">
-            💡 <em>Tip:</em> You can set a temporary password before submitting, and revert it immediately once we notify you that your website is officially live.
-          </p>
-        </div>
-
-        <div>
-          <label for="notify-notes" class="block text-xs font-bold text-stone-700 mb-1">
-            Additional Notes or Instructions (Optional)
-          </label>
-          <textarea
-            id="notify-notes"
-            rows="2"
-            placeholder="e.g. 'Invited hello@wynnpages.com.au on VentraIP' OR any other special DNS instructions..."
-            class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-xs text-stone-900 focus:border-[#96432b] focus:ring-[#96432b]"
-          ></textarea>
-        </div>
-
-        <div id="notify-feedback" class="hidden p-4 rounded-2xl text-xs font-semibold"></div>
-
-        <button
-          type="submit"
-          id="btn-notify-submit"
-          class="w-full py-4 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-extrabold text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <span>🚀 I've Completed Domain Setup — Notify WynnPages Engineers</span>
-        </button>
-      </form>
-    </div>
-
-    <!-- Optional Nameservers Box (For Technical Teams) -->
-    <div id="ns-box" class="hidden bg-emerald-50 border border-emerald-200 rounded-3xl p-6 space-y-2 text-xs text-emerald-950">
-      <p class="font-extrabold uppercase tracking-wider text-[11px] text-emerald-800">⚡ For In-House IT Teams (Cloudflare Nameservers):</p>
-      <p>If you prefer to configure nameservers manually in your registrar portal, point your domain to:</p>
-      <code id="ns-value" class="block font-mono font-bold text-sm bg-white px-4 py-2.5 rounded-xl border border-emerald-200 text-stone-900"></code>
     </div>
 
   </main>
@@ -859,6 +868,40 @@
       const ns = (params.get('ns') || '').trim();
       const tabParam = (params.get('tab') || '').trim();
 
+      const tabBtnNew = document.getElementById('tab-btn-new');
+      const tabBtnExisting = document.getElementById('tab-btn-existing');
+      const panelNew = document.getElementById('panel-new');
+      const panelExisting = document.getElementById('panel-existing');
+
+      // Pre-fill fields across both tabs
+      if (dom) {
+        const s1 = document.getElementById('mockup-domain-search');
+        const s2 = document.getElementById('mockup-domain-display');
+        const s3 = document.getElementById('mockup-cart-domain');
+        if (s1) s1.textContent = dom;
+        if (s2) s2.textContent = dom;
+        if (s3) s3.textContent = dom;
+
+        const newDom = document.getElementById('new-domain');
+        if (newDom) newDom.value = dom;
+        const existDom = document.getElementById('existing-domain');
+        if (existDom) existDom.value = dom;
+      }
+
+      if (name) {
+        const newBiz = document.getElementById('new-biz-name');
+        if (newBiz) newBiz.value = name;
+        const existBiz = document.getElementById('existing-biz-name');
+        if (existBiz) existBiz.value = name;
+      }
+
+      if (email) {
+        const newMail = document.getElementById('new-email');
+        if (newMail) newMail.value = email;
+        const existMail = document.getElementById('existing-email');
+        if (existMail) existMail.value = email;
+      }
+
       // Nameserver setup
       if (ns) {
         const parts = ns.split(',').map(s => s.trim()).filter(Boolean);
@@ -866,26 +909,19 @@
         const nsCard2 = document.getElementById('ns-card-2');
         if (parts[0] && nsCard1) nsCard1.textContent = parts[0];
         if (parts[1] && nsCard2) nsCard2.textContent = parts[1];
-        
-        const nsBox = document.getElementById('ns-box');
-        const nsVal = document.getElementById('ns-value');
-        if (nsVal && nsBox) {
-          nsVal.textContent = ns;
-          nsBox.classList.remove('hidden');
-        }
       }
 
       function switchTab(mode) {
         if (mode === 'existing') {
-          tabBtnExisting.classList.add('active');
-          tabBtnNew.classList.remove('active');
-          panelExisting.classList.remove('hidden');
-          panelNew.classList.add('hidden');
+          if (tabBtnExisting) tabBtnExisting.classList.add('active');
+          if (tabBtnNew) tabBtnNew.classList.remove('active');
+          if (panelExisting) panelExisting.classList.remove('hidden');
+          if (panelNew) panelNew.classList.add('hidden');
         } else {
-          tabBtnNew.classList.add('active');
-          tabBtnExisting.classList.remove('active');
-          panelNew.classList.remove('hidden');
-          panelExisting.classList.add('hidden');
+          if (tabBtnNew) tabBtnNew.classList.add('active');
+          if (tabBtnExisting) tabBtnExisting.classList.remove('active');
+          if (panelNew) panelNew.classList.remove('hidden');
+          if (panelExisting) panelExisting.classList.add('hidden');
         }
       }
 
@@ -900,69 +936,29 @@
         }
       }
 
-      // Copy email helpers
-      function setupCopy(btnId) {
-        const btn = document.getElementById(btnId);
-        if (!btn) return;
-        btn.addEventListener('click', () => {
-          navigator.clipboard.writeText('hello@wynnpages.com.au');
-          const original = btn.innerHTML;
-          btn.innerHTML = '<span>✓ Copied: hello@wynnpages.com.au</span>';
-          setTimeout(() => { btn.innerHTML = original; }, 2500);
-        });
-      }
-      setupCopy('btn-copy-email');
-      setupCopy('btn-copy-email-2');
+      // 1. Handle Form for NEW domain (VentraIP delegation - 1 click, no passwords)
+      const formNew = document.getElementById('notify-form-new');
+      const submitNew = document.getElementById('btn-notify-new-submit');
+      const feedbackNew = document.getElementById('notify-new-feedback');
 
-      // Toggle external registrar section
-      const otherToggle = document.getElementById('other-toggle');
-      const otherContent = document.getElementById('other-content');
-      const otherToggleText = document.getElementById('other-toggle-text');
-      if (otherToggle && otherContent) {
-        otherToggle.addEventListener('click', () => {
-          const isHidden = otherContent.classList.contains('hidden');
-          if (isHidden) {
-            otherContent.classList.remove('hidden');
-            otherToggleText.textContent = 'Hide instructions ▲';
-          } else {
-            otherContent.classList.add('hidden');
-            otherToggleText.textContent = 'Show simple instructions ▼';
-          }
-        });
-      }
-
-      // Handle 1-Click Notification Form
-      const notifyForm = document.getElementById('notify-form');
-      const notifySubmit = document.getElementById('btn-notify-submit');
-      const notifyFeedback = document.getElementById('notify-feedback');
-
-      if (notifyForm) {
-        notifyForm.addEventListener('submit', async (e) => {
+      if (formNew) {
+        formNew.addEventListener('submit', async (e) => {
           e.preventDefault();
-          notifySubmit.disabled = true;
-          const origText = notifySubmit.innerHTML;
-          notifySubmit.innerHTML = '<span>⏳ Dispatching Alert to WynnPages Engineers...</span>';
+          submitNew.disabled = true;
+          const origText = submitNew.innerHTML;
+          submitNew.innerHTML = '<span>⏳ Dispatching Alert to WynnPages Engineers...</span>';
 
-          const loginUser = (document.getElementById('notify-login-user')?.value || '').trim();
-          const loginPass = (document.getElementById('notify-login-pass')?.value || '').trim();
-          const rawNotes = (document.getElementById('notify-notes')?.value || '').trim();
-
-          let combinedNotes = [];
-          if (loginUser || loginPass) {
-            combinedNotes.push(`[Registrar Login] User: ${loginUser} | Pass: ${loginPass}`);
-          }
-          if (rawNotes) {
-            combinedNotes.push(`[Notes] ${rawNotes}`);
-          }
+          const bizVal = (document.getElementById('new-biz-name')?.value || '').trim();
+          const domVal = (document.getElementById('new-domain')?.value || '').trim();
+          const emailVal = (document.getElementById('new-email')?.value || '').trim().toLowerCase();
 
           const payload = {
             customerId: cid,
-            businessName: (inputBizName.value || '').trim(),
-            domain: (inputDomain.value || '').trim(),
-            email: (inputEmail.value || '').trim().toLowerCase(),
-            provider: document.getElementById('notify-provider').value,
-            accessNotes: combinedNotes.join(' 
- ')
+            businessName: bizVal,
+            domain: domVal,
+            email: emailVal,
+            provider: 'VentraIP Australia (Additional User Delegated)',
+            accessNotes: 'Client added hello@wynnpages.com.au as Additional User on VentraIP. No password required.'
           };
 
           try {
@@ -974,40 +970,113 @@
             const data = await res.json().catch(() => ({}));
 
             if (res.ok && data.success) {
-              notifyFeedback.className = 'p-5 rounded-2xl text-xs font-semibold bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-2';
-              notifyFeedback.innerHTML = `
+              feedbackNew.className = 'p-5 rounded-2xl text-xs font-semibold bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-2';
+              feedbackNew.innerHTML = `
                 <div class="flex items-center gap-2">
                   <span class="text-xl">🎉</span>
                   <p class="font-extrabold text-sm text-emerald-900">Engineers Notified Successfully!</p>
                 </div>
                 <p class="leading-relaxed">
-                  Thank you, <strong>${escapeHtml(payload.businessName || 'Client')}</strong>. Our studio engineers have received your domain alert for <code class="font-bold text-[#96432b] bg-white px-2 py-0.5 rounded border border-emerald-300">${escapeHtml(payload.domain)}</code>. We are configuring the live DNS records right now.
+                  Thank you, <strong>${escapeHtml(payload.businessName || 'Client')}</strong>. Our studio engineers have received your VentraIP delegation alert for <code class="font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-300">${escapeHtml(payload.domain)}</code>. We are configuring the live website and SSL right now.
                 </p>
                 <p class="text-stone-500 text-[11px]">
                   You will receive a confirmation email at <strong>${escapeHtml(payload.email)}</strong> as soon as your bespoke site is live.
                 </p>
               `;
-              notifyFeedback.classList.remove('hidden');
-              notifySubmit.classList.add('hidden');
+              feedbackNew.classList.remove('hidden');
+              submitNew.classList.add('hidden');
             } else {
-              throw new Error(data.error || 'Server returned an error.');
+              throw new Error(data.error || 'Server error.');
             }
           } catch (err) {
-            notifyFeedback.className = 'p-4 rounded-2xl text-xs font-semibold bg-red-50 border border-red-300 text-red-900';
-            notifyFeedback.textContent = 'Could not deliver notification: ' + err.message + '. Please email hello@wynnpages.com.au directly!';
-            notifyFeedback.classList.remove('hidden');
-            notifySubmit.disabled = false;
-            notifySubmit.innerHTML = origText;
+            feedbackNew.className = 'p-4 rounded-2xl text-xs font-semibold bg-red-50 border border-red-300 text-red-900';
+            feedbackNew.textContent = 'Could not deliver notification: ' + err.message + '. Please email hello@wynnpages.com.au directly!';
+            feedbackNew.classList.remove('hidden');
+            submitNew.disabled = false;
+            submitNew.innerHTML = origText;
+          }
+        });
+      }
+      // 2. Handle Form for EXISTING domain (Registrar login credentials)
+      const formExisting = document.getElementById("notify-form-existing");
+      const submitExisting = document.getElementById("btn-notify-existing-submit");
+      const feedbackExisting = document.getElementById("notify-existing-feedback");
+
+      if (formExisting) {
+        formExisting.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          submitExisting.disabled = true;
+          const origText = submitExisting.innerHTML;
+          submitExisting.innerHTML = "<span>⏳ Sending Securely to WynnPages Engineers...</span>";
+
+          const bizVal = (document.getElementById("existing-biz-name")?.value || "").trim();
+          const domVal = (document.getElementById("existing-domain")?.value || "").trim();
+          const emailVal = (document.getElementById("existing-email")?.value || "").trim().toLowerCase();
+          const providerVal = (document.getElementById("existing-provider")?.value || "").trim();
+          const loginUser = (document.getElementById("existing-login-user")?.value || "").trim();
+          const loginPass = (document.getElementById("existing-login-pass")?.value || "").trim();
+          const rawNotes = (document.getElementById("existing-notes")?.value || "").trim();
+
+          let combinedNotes = [];
+          if (loginUser || loginPass) {
+            combinedNotes.push(`[Registrar Login] User: ${loginUser} | Pass: ${loginPass}`);
+          }
+          if (rawNotes) {
+            combinedNotes.push(`[Notes] ${rawNotes}`);
+          }
+
+          const payload = {
+            customerId: cid,
+            businessName: bizVal,
+            domain: domVal,
+            email: emailVal,
+            provider: providerVal || "Existing Domain Registrar",
+            accessNotes: combinedNotes.join("\n")
+          };
+
+          try {
+            const res = await fetch("/api/domain-delegated", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok && data.success) {
+              feedbackExisting.className = "p-5 rounded-2xl text-xs font-semibold bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-2";
+              feedbackExisting.innerHTML = `
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🎉</span>
+                  <p class="font-extrabold text-sm text-emerald-900">Registrar Details Received!</p>
+                </div>
+                <p class="leading-relaxed">
+                  Thank you, <strong>${escapeHtml(payload.businessName || "Client")}</strong>. Our engineers have securely received your login details for <code class="font-bold text-[#96432b] bg-white px-2 py-0.5 rounded border border-emerald-300">${escapeHtml(payload.domain)}</code> on <strong>${escapeHtml(payload.provider)}</strong>.
+                </p>
+                <p class="leading-relaxed text-stone-700">
+                  We are connecting your DNS records and SSL security right now. Once completed, we will notify you at <strong>${escapeHtml(payload.email)}</strong> so you can reset your temporary password immediately.
+                </p>
+              `;
+              feedbackExisting.classList.remove("hidden");
+              submitExisting.classList.add("hidden");
+            } else {
+              throw new Error(data.error || "Server error.");
+            }
+          } catch (err) {
+            feedbackExisting.className = "p-4 rounded-2xl text-xs font-semibold bg-red-50 border border-red-300 text-red-900";
+            feedbackExisting.textContent = "Could not deliver details: " + err.message + ". Please email hello@wynnpages.com.au directly!";
+            feedbackExisting.classList.remove("hidden");
+            submitExisting.disabled = false;
+            submitExisting.innerHTML = origText;
           }
         });
       }
 
       function escapeHtml(str) {
-        return String(str || '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
     })();
   </script>
