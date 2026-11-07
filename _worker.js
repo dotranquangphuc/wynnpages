@@ -369,7 +369,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     smsText = `Hi ${firstName}, congratulations! Your payment of $599 AUD for ${bizLabel} is confirmed. Please finalize your domain details here so we can launch your website: ${demoSuccessUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Payment Secured! Please Confirm Your Domain to Go Live`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Payment Secured via Stripe • Final Step to Go Live',
+      preheader: 'Payment Secured • Final Step to Go Live',
       heading: `Payment Secured for ${bizLabel}!`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
@@ -2600,10 +2600,10 @@ export default {
             to: formatted.email,
             subject: `Action Required: Configure DNS Nameservers for ${formatted.liveUrl}`,
             html: buildAtelierEmailHtml({
-              preheader: `Cloudflare DNS Nameservers for ${formatted.liveUrl}`,
+              preheader: `DNS Nameservers for ${formatted.liveUrl}`,
               heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
               bodyHtml: `
-                <p>We have provisioned the Cloudflare high-speed network configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
+                <p>We have provisioned the high-speed Australian network configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
                 <p>To connect your domain to your bespoke website, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
                 <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
                   <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
