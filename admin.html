@@ -1211,9 +1211,24 @@
                       <div class="font-mono font-bold text-stone-900 bg-white p-2.5 rounded-xl border border-emerald-200 text-xs select-all">
                         <code>${escapeHtml(c.cfNameservers)}</code>
                       </div>
-                      <p class="text-[11px] text-emerald-800 leading-relaxed">
-                        ✉️ Đã tự động gửi email hướng dẫn cấu hình DNS tới <strong>${escapeHtml(c.email || 'khách hàng')}</strong>! Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") cũng sẽ thấy đúng cặp DNS này.
-                      </p>
+                      <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+                        <p class="text-[11px] text-emerald-800 leading-relaxed">
+                          💡 Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") sẽ thấy ngay cặp Nameservers này.
+                        </p>
+                        ${c.email ? `
+                          <button
+                            type="button"
+                            data-cid="${c.id}"
+                            data-email="${escapeHtml(c.email)}"
+                            class="btn-send-dns-email px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                            title="Gửi email hướng dẫn cấu hình DNS Cloudflare tới ${escapeHtml(c.email)}"
+                          >
+                            <span>✉️ Bấm Gửi Mail DNS Cho Khách</span>
+                          </button>
+                        ` : `
+                          <span class="text-[10px] text-stone-400 italic">Chưa có email khách để gửi hướng dẫn DNS</span>
+                        `}
+                      </div>
                     </div>
                   ` : (resolvedLiveUrl ? `
                     <div class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
@@ -1676,9 +1691,24 @@
                     <div class="font-mono font-bold text-stone-900 bg-white p-2.5 rounded-xl border border-emerald-200 text-xs select-all">
                       <code>${escapeHtml(c.cfNameservers)}</code>
                     </div>
-                    <p class="text-[11px] text-emerald-800 leading-relaxed">
-                      ✉️ Đã tự động gửi email hướng dẫn cấu hình DNS tới <strong>${escapeHtml(c.email || 'khách hàng')}</strong>! Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") cũng sẽ thấy đúng cặp DNS này.
-                    </p>
+                    <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+                      <p class="text-[11px] text-emerald-800 leading-relaxed">
+                        💡 Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") sẽ thấy ngay cặp Nameservers này.
+                      </p>
+                      ${c.email ? `
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          data-email="${escapeHtml(c.email)}"
+                          class="btn-send-dns-email px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                          title="Gửi email hướng dẫn cấu hình DNS Cloudflare tới ${escapeHtml(c.email)}"
+                        >
+                          <span>✉️ Bấm Gửi Mail DNS Cho Khách</span>
+                        </button>
+                      ` : `
+                        <span class="text-[10px] text-stone-400 italic">Chưa có email khách để gửi hướng dẫn DNS</span>
+                      `}
+                    </div>
                   </div>
                 ` : (resolvedLiveUrl ? `
                   <div class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
@@ -2032,6 +2062,25 @@
             if (ns) {
               navigator.clipboard.writeText(ns);
               showToast(`Đã copy cặp Cloudflare Nameservers: ${ns}`);
+            }
+          });
+        });
+
+        // Send DNS Instructions Email Manually
+        document.querySelectorAll('.btn-send-dns-email').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const targetEmail = btn.getAttribute('data-email');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Đang gửi mail...</span>';
+            const res = await runAdminAction({ action: 'send_dns_email', customerId: cid });
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            if (res && res.ok) {
+              showToast(`🎉 Đã gửi email hướng dẫn cấu hình DNS tới ${targetEmail}!`);
+            } else {
+              showToast(res && res.error ? res.error : 'Không gửi được email. Vui lòng kiểm tra lại Resend API Key!', true);
             }
           });
         });

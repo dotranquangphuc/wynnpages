@@ -939,7 +939,7 @@ function buildBrandedPreviewHtml(client) {
           <a href="https://wynnpages.com.au" style="display:inline-block;padding:10px 20px;border-radius:12px;background:#96432b;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">Visit WynnPages Atelier →</a>
         </div>
       </div>`
-    : `${bodyContent}`;
+    : `<iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -958,7 +958,7 @@ function buildBrandedPreviewHtml(client) {
   </style>
 </head>
 <body>
-  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>
+  ${bodyContent}
   ${buildClaimBarSnippet(client)}
 </body>
 </html>`;
@@ -2577,6 +2577,55 @@ export default {
           return new Response(JSON.stringify({ ok: true, driveUrl: driveRes.fileUrl, folderUrl: driveRes.folderUrl }), { status: 200, headers: corsHeaders });
         }
 
+        // Action: Send DNS Configuration Email Manually
+        if (action === 'send_dns_email' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          if (!formatted || !formatted.email) {
+            return new Response(JSON.stringify({ error: 'Khách hàng này chưa có email để gửi hướng dẫn DNS!' }), { status: 400, headers: corsHeaders });
+          }
+          if (!formatted.liveUrl) {
+            return new Response(JSON.stringify({ error: 'Chưa có Tên Miền Chính Thức nào được lưu cho khách này!' }), { status: 400, headers: corsHeaders });
+          }
+          const nsToSend = formatted.cfNameservers || 'olga.ns.cloudflare.com, toby.ns.cloudflare.com';
+          const guideUrl = `${url.origin}/domain-guide?domain=${encodeURIComponent(formatted.liveUrl)}&name=${encodeURIComponent(formatted.businessName || formatted.name)}&email=${encodeURIComponent(formatted.email)}&cid=${encodeURIComponent(formatted.id)}&tab=existing&ns=${encodeURIComponent(nsToSend)}`;
+          const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
+          const parts = nsToSend.split(',').map(s => s.trim());
+
+          const mailRes = await sendResendEmail({
+            to: formatted.email,
+            subject: `Action Required: Configure DNS Nameservers for ${formatted.liveUrl}`,
+            html: buildAtelierEmailHtml({
+              preheader: `Cloudflare DNS Nameservers for ${formatted.liveUrl}`,
+              heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
+              bodyHtml: `
+                <p>We have provisioned the Cloudflare high-speed network configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
+                <p>To connect your domain to your bespoke website, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
+                <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
+                  <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
+                  ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
+                </div>
+                <p><strong>Prefer zero technical hassle?</strong> You can also delegate access or submit temporary registrar login credentials on our guide page, and our Australian engineers will point it for you in 60 seconds.</p>
+              `,
+              primaryCta: {
+                label: 'Open Domain Connection Guide →',
+                url: guideUrl
+              },
+              secondaryCta: {
+                label: 'Visit WynnPages Studio',
+                url: url.origin
+              }
+            }),
+            cfg: effectiveCfg
+          });
+
+          return new Response(JSON.stringify({ ok: Boolean(mailRes && mailRes.sent), result: mailRes, guideUrl }), { status: 200, headers: corsHeaders });
+        }
+
         // Action A: Create or Update Client + Optionally Trigger Stage Notification
         if (action === 'trigger_stage' || action === 'save_client') {
           let cust = null;
@@ -2701,47 +2750,6 @@ export default {
                   updatedCust = await nsRes.json();
                   formatted = formatCustomerRecord(updatedCust);
                 }
-              }
-
-              // Automatically send DNS configuration instructions email to the client when saving domain or when nameservers change
-              const shouldSendDnsEmail = Boolean(
-                formatted.email &&
-                effectiveCfg.resendApiKey &&
-                (nsChanged || (action === 'save_client' && body.liveUrl !== undefined))
-              );
-              if (shouldSendDnsEmail) {
-                const guideUrl = `${url.origin}/domain-guide?domain=${encodeURIComponent(formatted.liveUrl)}&name=${encodeURIComponent(formatted.businessName || formatted.name)}&email=${encodeURIComponent(formatted.email)}&cid=${encodeURIComponent(formatted.id)}&tab=existing&ns=${encodeURIComponent(liveDomainBindResult.nameservers)}`;
-                const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
-                const parts = liveDomainBindResult.nameservers.split(',').map(s => s.trim());
-
-                const dnsMailRes = await sendResendEmail({
-                  to: formatted.email,
-                  subject: `Action Required: Configure DNS Nameservers for ${formatted.liveUrl}`,
-                  html: buildAtelierEmailHtml({
-                    preheader: `Cloudflare DNS Nameservers for ${formatted.liveUrl}`,
-                    heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
-                    bodyHtml: `
-                      <p>We have provisioned the Cloudflare high-speed network configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
-                      <p>To connect your domain to your bespoke website, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
-                      <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
-                        <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
-                        ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
-                      </div>
-                      <p><strong>Prefer zero technical hassle?</strong> You can also delegate access or submit temporary registrar login credentials on our guide page, and our Australian engineers will point it for you in 60 seconds.</p>
-                    `,
-                    primaryCta: {
-                      label: 'Open Domain Connection Guide →',
-                      url: guideUrl
-                    },
-                    secondaryCta: {
-                      label: 'Visit WynnPages Studio',
-                      url: url.origin
-                    }
-                  }),
-                  cfg: effectiveCfg
-                }).catch((e) => ({ sent: false, reason: e.message }));
-                liveDomainBindResult.dnsEmailSent = Boolean(dnsMailRes && dnsMailRes.sent);
-                liveDomainBindResult.dnsEmailResult = dnsMailRes;
               }
             }
           }
