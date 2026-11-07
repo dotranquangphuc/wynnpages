@@ -900,6 +900,16 @@
       const panelNew = document.getElementById('panel-new');
       const panelExisting = document.getElementById('panel-existing');
 
+      const btnCopyEmail = document.getElementById('btn-copy-email');
+      if (btnCopyEmail) {
+        btnCopyEmail.addEventListener('click', () => {
+          navigator.clipboard.writeText('hello@wynnpages.com.au');
+          const orig = btnCopyEmail.innerHTML;
+          btnCopyEmail.innerHTML = '<span>✓ Copied hello@wynnpages.com.au!</span>';
+          setTimeout(() => { btnCopyEmail.innerHTML = orig; }, 2200);
+        });
+      }
+
       // Pre-fill fields across both tabs
       if (dom) {
         const s1 = document.getElementById('mockup-domain-search');
@@ -1008,7 +1018,7 @@
             });
             const data = await res.json().catch(() => ({}));
 
-            if (res.ok && data.success) {
+            if (res.ok && (data.ok || data.success)) {
               feedbackNew.className = 'p-5 rounded-2xl text-xs font-semibold bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-2';
               feedbackNew.innerHTML = `
                 <div class="flex items-center gap-2">
@@ -1036,18 +1046,26 @@
           }
         });
       }
-      const notifyFeedback = document.getElementById('notify-feedback');
 
-      if (notifyForm) {
-        notifyForm.addEventListener('submit', async (e) => {
+      // 2. Handle Form for EXISTING domain (Any Registrar - login details shared)
+      const formExisting = document.getElementById('notify-form-existing');
+      const submitExisting = document.getElementById('btn-notify-existing-submit');
+      const feedbackExisting = document.getElementById('notify-existing-feedback');
+
+      if (formExisting) {
+        formExisting.addEventListener('submit', async (e) => {
           e.preventDefault();
-          notifySubmit.disabled = true;
-          const origText = notifySubmit.innerHTML;
-          notifySubmit.innerHTML = '<span>⏳ Dispatching Alert to WynnPages Engineers...</span>';
+          submitExisting.disabled = true;
+          const origText = submitExisting.innerHTML;
+          submitExisting.innerHTML = '<span>⏳ Dispatching Alert to WynnPages Engineers...</span>';
 
-          const loginUser = (document.getElementById('notify-login-user')?.value || '').trim();
-          const loginPass = (document.getElementById('notify-login-pass')?.value || '').trim();
-          const rawNotes = (document.getElementById('notify-notes')?.value || '').trim();
+          const bizVal = (document.getElementById('existing-biz-name')?.value || '').trim();
+          const domVal = (document.getElementById('existing-domain')?.value || '').trim();
+          const emailVal = (document.getElementById('existing-email')?.value || '').trim().toLowerCase();
+          const providerVal = (document.getElementById('existing-provider')?.value || 'Existing Registrar').trim();
+          const loginUser = (document.getElementById('existing-login-user')?.value || '').trim();
+          const loginPass = (document.getElementById('existing-login-pass')?.value || '').trim();
+          const rawNotes = (document.getElementById('existing-notes')?.value || '').trim();
 
           let combinedNotes = [];
           if (loginUser || loginPass) {
@@ -1059,12 +1077,11 @@
 
           const payload = {
             customerId: cid,
-            businessName: (inputBizName.value || '').trim(),
-            domain: (inputDomain.value || '').trim(),
-            email: (inputEmail.value || '').trim().toLowerCase(),
-            provider: document.getElementById('notify-provider').value,
-            accessNotes: combinedNotes.join(' 
- ')
+            businessName: bizVal,
+            domain: domVal,
+            email: emailVal,
+            provider: providerVal,
+            accessNotes: combinedNotes.join(' | ')
           };
 
           try {
@@ -1075,31 +1092,31 @@
             });
             const data = await res.json().catch(() => ({}));
 
-            if (res.ok && data.success) {
-              notifyFeedback.className = 'p-5 rounded-2xl text-xs font-semibold bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-2';
-              notifyFeedback.innerHTML = `
+            if (res.ok && (data.ok || data.success)) {
+              feedbackExisting.className = 'p-5 rounded-2xl text-xs font-semibold bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-2';
+              feedbackExisting.innerHTML = `
                 <div class="flex items-center gap-2">
                   <span class="text-xl">🎉</span>
                   <p class="font-extrabold text-sm text-emerald-900">Engineers Notified Successfully!</p>
                 </div>
                 <p class="leading-relaxed">
-                  Thank you, <strong>${escapeHtml(payload.businessName || 'Client')}</strong>. Our studio engineers have received your domain alert for <code class="font-bold text-[#96432b] bg-white px-2 py-0.5 rounded border border-emerald-300">${escapeHtml(payload.domain)}</code>. We are configuring the live DNS records right now.
+                  Thank you, <strong>${escapeHtml(payload.businessName || 'Client')}</strong>. Our studio engineers have received your domain login details for <code class="font-bold text-[#96432b] bg-white px-2 py-0.5 rounded border border-emerald-300">${escapeHtml(payload.domain)}</code> (${escapeHtml(payload.provider)}). We are configuring the live DNS records right now.
                 </p>
                 <p class="text-stone-500 text-[11px]">
-                  You will receive a confirmation email at <strong>${escapeHtml(payload.email)}</strong> as soon as your bespoke site is live.
+                  You will receive a confirmation email at <strong>${escapeHtml(payload.email)}</strong> as soon as your bespoke site is live so you can revert your temporary password.
                 </p>
               `;
-              notifyFeedback.classList.remove('hidden');
-              notifySubmit.classList.add('hidden');
+              feedbackExisting.classList.remove('hidden');
+              submitExisting.classList.add('hidden');
             } else {
               throw new Error(data.error || 'Server returned an error.');
             }
           } catch (err) {
-            notifyFeedback.className = 'p-4 rounded-2xl text-xs font-semibold bg-red-50 border border-red-300 text-red-900';
-            notifyFeedback.textContent = 'Could not deliver notification: ' + err.message + '. Please email hello@wynnpages.com.au directly!';
-            notifyFeedback.classList.remove('hidden');
-            notifySubmit.disabled = false;
-            notifySubmit.innerHTML = origText;
+            feedbackExisting.className = 'p-4 rounded-2xl text-xs font-semibold bg-red-50 border border-red-300 text-red-900';
+            feedbackExisting.textContent = 'Could not deliver notification: ' + err.message + '. Please email hello@wynnpages.com.au directly!';
+            feedbackExisting.classList.remove('hidden');
+            submitExisting.disabled = false;
+            submitExisting.innerHTML = origText;
           }
         });
       }

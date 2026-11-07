@@ -927,7 +927,7 @@
 
         clientsContainer.innerHTML = list.map((c) => {
           const hasPhone = Boolean(c.phone && c.phone.trim());
-          const hasValidDemo = isValidUrl(c.demoUrl);
+          const hasValidDemo = Boolean(isValidUrl(c.demoUrl) || c.demoSlug || c.demoFilesCount);
           const resolvedLiveUrl = (c.liveUrl || '').trim();
           const hasValidLive = isValidUrl(resolvedLiveUrl);
           const isPaid = c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched';
@@ -1089,7 +1089,15 @@
                         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
                         : (hasValidDemo ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Demo Đã Sẵn Sàng</span>` : '')
                       }
-                      <code class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] px-2.5 py-1 rounded-xl border border-[#e2d9c8]">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</code>
+                      <a
+                        href="${escapeHtml(previewOverlayUrl)}"
+                        target="_blank"
+                        class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] hover:bg-[#f5ebd9] px-2.5 py-1 rounded-xl border border-[#e2d9c8] hover:border-[#96432b] transition-colors inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                        title="Click để mở xem trang Demo trên tab mới"
+                      >
+                        <span>${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</span>
+                        <span class="text-[10px]">↗</span>
+                      </a>
                       <button
                         type="button"
                         data-cid="${c.id}"
@@ -1400,7 +1408,7 @@
         clientsContainer.innerHTML = list.map((c) => {
           const hasPhone = Boolean(c.phone && c.phone.trim());
           const bStats = getBriefStats(c);
-          const hasValidDemo = isValidUrl(c.demoUrl);
+          const hasValidDemo = Boolean(isValidUrl(c.demoUrl) || c.demoSlug || c.demoFilesCount);
           const hasSentDemo = (c.stage === 'demo_sent' || c.stage === 'reminder_sent' || c.stage === 'launched' || Boolean(c.demoSentAt)) && hasValidDemo;
           const canRemindDemo = hasValidDemo && hasSentDemo;
           const resolvedLiveUrl = (c.liveUrl || '').trim();
@@ -1409,6 +1417,7 @@
           const isLaunched = c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
           const canOpenLiveWeb = hasValidLive && isLaunched;
           const canLaunch = isPaid && hasValidDemo && hasSentDemo && hasValidLive;
+          const previewOverlayUrl = c.brandedDemoUrl || `https://${encodeURIComponent(c.demoSlug || c.id)}.wynnpages.com.au`;
 
           const domainDisplay = c.existingDomain
             ? `<span class="text-emerald-800 font-bold">Đã có: ${escapeHtml(c.existingDomain)}</span>`
@@ -1565,7 +1574,15 @@
                         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
                         : (hasValidDemo ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Demo Đã Sẵn Sàng</span>` : '')
                       }
-                      <code class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] px-2.5 py-1 rounded-xl border border-[#e2d9c8]">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</code>
+                      <a
+                        href="${escapeHtml(previewOverlayUrl)}"
+                        target="_blank"
+                        class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] hover:bg-[#f5ebd9] px-2.5 py-1 rounded-xl border border-[#e2d9c8] hover:border-[#96432b] transition-colors inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                        title="Click để mở xem trang Demo trên tab mới"
+                      >
+                        <span>${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</span>
+                        <span class="text-[10px]">↗</span>
+                      </a>
                       <button
                         type="button"
                         data-cid="${c.id}"
@@ -1990,12 +2007,14 @@
             const cid = btn.getAttribute('data-cid');
             const demoInput = document.getElementById(`demo-url-${cid}`);
             const liveInput = document.getElementById(`live-url-${cid}`);
-            const demoUrl = demoInput ? demoInput.value.trim() : '';
+            const demoUrl = demoInput ? demoInput.value.trim() : undefined;
             const liveUrl = liveInput ? liveInput.value.trim() : '';
             const origText = btn.innerHTML;
             btn.innerHTML = '<span>⏳ Đang tạo DNS...</span>';
             btn.disabled = true;
-            const res = await runAdminAction({ action: 'save_client', customerId: cid, demoUrl, liveUrl });
+            const actionPayload = { action: 'save_client', customerId: cid, liveUrl };
+            if (demoUrl) actionPayload.demoUrl = demoUrl;
+            const res = await runAdminAction(actionPayload);
             btn.disabled = false;
             btn.innerHTML = origText;
             if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {

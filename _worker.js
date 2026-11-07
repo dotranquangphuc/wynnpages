@@ -510,7 +510,7 @@ function formatCustomerRecord(cust) {
     photosFileName: m.photos_file_name || '',
     photosDriveUrl: m.photos_drive_url || '',
     driveFolderUrl: m.drive_folder_url || '',
-    demoUrl: m.demo_url || '',
+    demoUrl: m.demo_url || brandedDemoUrl,
     demoSourceType: m.demo_source_type || 'url',
     demoFilesCount: Number(m.demo_files_count || 0),
     demoUploadedAt: m.demo_uploaded_at || '',
@@ -1039,16 +1039,47 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
+const DEFAULT_CF_NAMESERVERS = 'olga.ns.cloudflare.com, toby.ns.cloudflare.com';
+
 async function getValidCloudflareToken(env, forceRefresh = false, tokenOverride = '') {
-  if (tokenOverride) return tokenOverride.trim();
-  if (env && env.CLOUDFLARE_API_TOKEN) return env.CLOUDFLARE_API_TOKEN.trim();
-  if (env && env.WYNN_KV) {
-    const directToken = await env.WYNN_KV.get('cf_api_token');
-    if (directToken) return directToken.trim();
-    let state = await env.WYNN_KV.get('cf_oauth_state', 'json');
-    if (state && state.accessToken) return state.accessToken.trim();
+  if (tokenOverride && tokenOverride.trim()) return tokenOverride.trim();
+  if (env && env.CLOUDFLARE_API_TOKEN && env.CLOUDFLARE_API_TOKEN.trim()) {
+    return env.CLOUDFLARE_API_TOKEN.trim();
   }
-  return null;
+  if (!env || !env.WYNN_KV) return null;
+
+  const directToken = await env.WYNN_KV.get('cf_api_token');
+  if (directToken && directToken.trim()) return directToken.trim();
+
+  let state = await env.WYNN_KV.get('cf_oauth_state', 'json').catch(() => null);
+  if (!state || !state.accessToken) return null;
+
+  const isStale = !state.updatedAt || (Date.now() - state.updatedAt > 30 * 60 * 1000);
+  if ((forceRefresh || isStale) && state.refreshToken) {
+    try {
+      const tokenParams = new URLSearchParams();
+      tokenParams.append('grant_type', 'refresh_token');
+      tokenParams.append('refresh_token', state.refreshToken);
+      tokenParams.append('client_id', '54d11594-84e4-41aa-b438-e81b8fa78ee7');
+      const refreshRes = await fetch('https://dash.cloudflare.com/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: tokenParams.toString()
+      });
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json().catch(() => ({}));
+        if (refreshData.access_token) {
+          state = {
+            accessToken: refreshData.access_token,
+            refreshToken: refreshData.refresh_token || state.refreshToken,
+            updatedAt: Date.now()
+          };
+          await env.WYNN_KV.put('cf_oauth_state', JSON.stringify(state));
+        }
+      }
+    } catch (_) {}
+  }
+  return state.accessToken ? state.accessToken.trim() : null;
 }
 
 async function removeCloudflareWorkerDomain(rawHostname, env, tokenOverride = '') {
@@ -1067,7 +1098,7 @@ async function removeCloudflareWorkerDomain(rawHostname, env, tokenOverride = ''
     }
 
     let res = await tryList(accessToken);
-    if (res.status === 401 || res.status === 403) {
+    if (!res.ok) {
       accessToken = await getValidCloudflareToken(env, true, tokenOverride);
       if (accessToken) res = await tryList(accessToken);
     }
@@ -1120,7 +1151,7 @@ async function ensureCloudflareSubdomain(rawSlug, env, tokenOverride = '') {
     }
 
     let res = await tryAttach(accessToken);
-    if (res.status === 401 || res.status === 403) {
+    if (!res.ok) {
       accessToken = await getValidCloudflareToken(env, true, tokenOverride);
       if (accessToken) res = await tryAttach(accessToken);
     }
@@ -1152,13 +1183,20 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env, tokenOverride 
   const accountId = '8daebe5da641a8b2fc3185586ba888e2';
   try {
     let accessToken = await getValidCloudflareToken(env, false, tokenOverride);
-    if (!accessToken) return { attached: false, reason: 'no_token' };
+    if (!accessToken) {
+      return {
+        attached: false,
+        reason: 'no_token',
+        rootDomain,
+        nameservers: DEFAULT_CF_NAMESERVERS
+      };
+    }
 
     let zoneRes = await fetch(
       `https://api.cloudflare.com/client/v4/zones?name=${encodeURIComponent(rootDomain)}`,
       { headers: { 'Authorization': `Bearer ${accessToken}` } }
     );
-    if (zoneRes.status === 401 || zoneRes.status === 403) {
+    if (!zoneRes.ok) {
       accessToken = await getValidCloudflareToken(env, true, tokenOverride);
       if (accessToken) {
         zoneRes = await fetch(
@@ -1172,7 +1210,7 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env, tokenOverride 
 
     // If the client's domain is not in Cloudflare yet, automatically add the Zone to Cloudflare!
     if (!zoneObj || !zoneObj.id) {
-      const createZoneRes = await fetch('https://api.cloudflare.com/client/v4/zones', {
+      let createZoneRes = await fetch('https://api.cloudflare.com/client/v4/zones', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -1184,6 +1222,23 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env, tokenOverride 
           type: 'full'
         })
       });
+      if (!createZoneRes.ok) {
+        accessToken = await getValidCloudflareToken(env, true, tokenOverride);
+        if (accessToken) {
+          createZoneRes = await fetch('https://api.cloudflare.com/client/v4/zones', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: rootDomain,
+              account: { id: accountId },
+              type: 'full'
+            })
+          });
+        }
+      }
       const createZoneData = await createZoneRes.json().catch(() => ({}));
       if (createZoneData && createZoneData.result && createZoneData.result.id) {
         zoneObj = createZoneData.result;
@@ -1191,10 +1246,17 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env, tokenOverride 
     }
 
     if (!zoneObj || !zoneObj.id) {
-      return { attached: false, reason: 'zone_not_in_cloudflare', rootDomain };
+      return {
+        attached: false,
+        reason: 'zone_pending_registration',
+        rootDomain,
+        nameservers: DEFAULT_CF_NAMESERVERS
+      };
     }
 
-    const nameservers = Array.isArray(zoneObj.name_servers) ? zoneObj.name_servers.join(', ') : '';
+    const nameservers = (Array.isArray(zoneObj.name_servers) && zoneObj.name_servers.length)
+      ? zoneObj.name_servers.join(', ')
+      : DEFAULT_CF_NAMESERVERS;
     const hostnames = [rootDomain, `www.${rootDomain}`];
     for (const h of hostnames) {
       await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/domains`, {
@@ -1220,7 +1282,12 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env, tokenOverride 
       nameservers
     };
   } catch (e) {
-    return { attached: false, reason: e.message };
+    return {
+      attached: false,
+      reason: e.message,
+      rootDomain,
+      nameservers: DEFAULT_CF_NAMESERVERS
+    };
   }
 }
 
@@ -1261,7 +1328,14 @@ export default {
       'Content-Type': 'application/json'
     };
 
-    const cfg = getConfig(env);
+    let runtimeCreds = {};
+    if (url.pathname.startsWith('/api/') && env && env.WYNN_KV) {
+      const savedCreds = await env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => null);
+      if (savedCreds && typeof savedCreds === 'object') {
+        runtimeCreds = savedCreds;
+      }
+    }
+    const cfg = getConfig(env, runtimeCreds);
 
     // 1a. Wildcard Subdomain Demo (`https://lushnailbar.wynnpages.com.au`), Clean Path (`/d/lushnailbar`), & Custom Official Client Domains
     const hostLower = url.hostname.toLowerCase();
@@ -2066,11 +2140,10 @@ export default {
             </div>
           `;
           await sendResendEmail({
-            apiKey: cfg.resendApiKey,
-            from: cfg.resendFromEmail || 'WynnPages Studio <hello@wynnpages.com.au>',
             to: 'hello@wynnpages.com.au',
             subject: `⚡ [DOMAIN READY] ${customerLabel} (${domainLabel}) completed setup!`,
-            html: emailHtml
+            html: emailHtml,
+            cfg
           }).catch(() => {});
         }
 
@@ -2301,7 +2374,21 @@ export default {
           return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
         }
 
-        const effectiveCfg = getConfig(env, body.credentials || {});
+        if (body.credentials && typeof body.credentials === 'object' && env && env.WYNN_KV) {
+          const mergedCreds = { ...runtimeCreds };
+          let hasNewCred = false;
+          for (const k of ['clicksendUsername', 'clicksendApiKey', 'resendApiKey', 'resendFromEmail', 'googleDriveWebhookUrl', 'cfApiToken']) {
+            if (body.credentials[k] && String(body.credentials[k]).trim()) {
+              mergedCreds[k] = String(body.credentials[k]).trim();
+              hasNewCred = true;
+            }
+          }
+          if (hasNewCred) {
+            await env.WYNN_KV.put('studio_runtime_creds', JSON.stringify(mergedCreds)).catch(() => {});
+            runtimeCreds = mergedCreds;
+          }
+        }
+        const effectiveCfg = getConfig(env, { ...runtimeCreds, ...(body.credentials || {}) });
         const action = body.action || '';
         const customerId = (body.customerId || '').trim();
 
@@ -2523,7 +2610,9 @@ export default {
           const email = (body.email !== undefined ? body.email : (cust && cust.email) || '').trim();
           const name = (body.name !== undefined ? body.name : (cust && cust.name) || '').trim();
           const phone = (body.phone !== undefined ? body.phone : (cust && cust.phone) || '').trim();
-          const demoUrl = (body.demoUrl !== undefined ? body.demoUrl : (cust && cust.metadata && cust.metadata.demo_url) || '').trim();
+          const candidateBizName = (body.businessName !== undefined ? body.businessName : (cust && cust.metadata && cust.metadata.business_name) || name || 'demo').trim();
+          const autoSlug = (cust && cust.metadata && cust.metadata.demo_slug) || slugifyName(candidateBizName) || 'demo';
+          const demoUrl = ((body.demoUrl && body.demoUrl.trim()) || (cust && cust.metadata && cust.metadata.demo_url) || `https://${autoSlug}.wynnpages.com.au`).trim();
           const stage = body.stage || (cust && cust.metadata && cust.metadata.stage) || 'paid';
 
           if (email) uParams.append('email', email);
@@ -2537,7 +2626,10 @@ export default {
           if (body.displayPhone !== undefined) uParams.append('metadata[display_phone]', body.displayPhone);
           if (body.businessAddress !== undefined) uParams.append('metadata[business_address]', body.businessAddress);
           if (body.socialLinks !== undefined) uParams.append('metadata[social_links]', body.socialLinks);
-          if (body.demoUrl !== undefined) uParams.append('metadata[demo_url]', demoUrl);
+          if (demoUrl) uParams.append('metadata[demo_url]', demoUrl);
+          if (!cust || !cust.metadata || !cust.metadata.demo_slug) {
+            uParams.append('metadata[demo_slug]', autoSlug);
+          }
           if (body.industry !== undefined) {
             uParams.append('metadata[industry]', body.industry);
             if (body.industry) uParams.append('metadata[brief_status]', 'completed');
@@ -2592,29 +2684,37 @@ export default {
           let liveDomainBindResult = null;
           if (formatted.liveUrl) {
             liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
-            if (liveDomainBindResult && liveDomainBindResult.nameservers && liveDomainBindResult.nameservers !== formatted.cfNameservers) {
-              const nsParams = new URLSearchParams();
-              nsParams.append('metadata[cf_nameservers]', liveDomainBindResult.nameservers.slice(0, 490));
-              const nsRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: nsParams.toString()
-              });
-              if (nsRes.ok) {
-                updatedCust = await nsRes.json();
-                formatted = formatCustomerRecord(updatedCust);
+            if (liveDomainBindResult && liveDomainBindResult.nameservers) {
+              const nsChanged = liveDomainBindResult.nameservers !== formatted.cfNameservers;
+              if (nsChanged) {
+                const nsParams = new URLSearchParams();
+                nsParams.append('metadata[cf_nameservers]', liveDomainBindResult.nameservers.slice(0, 490));
+                const nsRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  body: nsParams.toString()
+                });
+                if (nsRes.ok) {
+                  updatedCust = await nsRes.json();
+                  formatted = formatCustomerRecord(updatedCust);
+                }
               }
 
-              // Automatically send DNS configuration instructions email to the client!
-              if (formatted.email && effectiveCfg.resendApiKey && liveDomainBindResult.nameservers) {
+              // Automatically send DNS configuration instructions email to the client when saving domain or when nameservers change
+              const shouldSendDnsEmail = Boolean(
+                formatted.email &&
+                effectiveCfg.resendApiKey &&
+                (nsChanged || (action === 'save_client' && body.liveUrl !== undefined))
+              );
+              if (shouldSendDnsEmail) {
                 const guideUrl = `${url.origin}/domain-guide?domain=${encodeURIComponent(formatted.liveUrl)}&name=${encodeURIComponent(formatted.businessName || formatted.name)}&email=${encodeURIComponent(formatted.email)}&cid=${encodeURIComponent(formatted.id)}&tab=existing&ns=${encodeURIComponent(liveDomainBindResult.nameservers)}`;
                 const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
                 const parts = liveDomainBindResult.nameservers.split(',').map(s => s.trim());
 
-                await sendResendEmail({
+                const dnsMailRes = await sendResendEmail({
                   to: formatted.email,
                   subject: `Action Required: Configure DNS Nameservers for ${formatted.liveUrl}`,
                   html: buildAtelierEmailHtml({
@@ -2627,7 +2727,7 @@ export default {
                         <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
                         ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
                       </div>
-                      <p><strong>Prefer zero technical hassle?</strong> You can also delegate access or reply with temporary registrar login credentials, and our Australian engineers will point it for you in 60 seconds.</p>
+                      <p><strong>Prefer zero technical hassle?</strong> You can also delegate access or submit temporary registrar login credentials on our guide page, and our Australian engineers will point it for you in 60 seconds.</p>
                     `,
                     primaryCta: {
                       label: 'Open Domain Connection Guide →',
@@ -2639,7 +2739,9 @@ export default {
                     }
                   }),
                   cfg: effectiveCfg
-                }).catch(() => {});
+                }).catch((e) => ({ sent: false, reason: e.message }));
+                liveDomainBindResult.dnsEmailSent = Boolean(dnsMailRes && dnsMailRes.sent);
+                liveDomainBindResult.dnsEmailResult = dnsMailRes;
               }
             }
           }
