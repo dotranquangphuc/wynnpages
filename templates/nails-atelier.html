@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en-AU" data-palette="01" class="scroll-smooth">
+<html lang="en-AU" data-palette="01">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title id="page-meta-title">Maison Élan — Bespoke BIAB &amp; Nail Sanctuary | Armadale VIC</title>
   <meta name="description" id="page-meta-desc" content="Bespoke BIAB overlays, artisanal nail artistry, and hospital-grade botanical hand &amp; foot care in Armadale VIC. Reserve your appointment online.">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -74,7 +74,8 @@
     html[data-palette="01"] {
       --bg-canvas: #F6F1E8;
       --bg-canvas-alt: #EFE7D8;
-      --bg-card: rgba(255, 252, 247, 0.86);
+      --bg-card: rgba(255, 252, 247, 0.84);
+      --bg-card-elevated: rgba(255, 253, 249, 0.93);
       --bg-card-solid: #FCF9F3;
       --ink-primary: #2B251E;
       --ink-muted: #6B5E51;
@@ -87,12 +88,16 @@
       --border-pearl: rgba(255, 255, 255, 0.92);
       --grain-dot: #D1C2A8;
       --hero-glow: rgba(212, 155, 40, 0.16);
+      --apple-ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+      --apple-spring: cubic-bezier(0.32, 0.72, 0, 1);
+      --apple-silk: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     html[data-palette="02"] {
       --bg-canvas: #FAF4F0;
       --bg-canvas-alt: #F3E8E2;
-      --bg-card: rgba(255, 251, 249, 0.88);
+      --bg-card: rgba(255, 251, 249, 0.86);
+      --bg-card-elevated: rgba(255, 252, 250, 0.94);
       --bg-card-solid: #FFFDFB;
       --ink-primary: #261E1D;
       --ink-muted: #6E5A58;
@@ -110,7 +115,8 @@
     html[data-palette="03"] {
       --bg-canvas: #F4F5F0;
       --bg-canvas-alt: #E8ECE3;
-      --bg-card: rgba(252, 253, 250, 0.88);
+      --bg-card: rgba(252, 253, 250, 0.86);
+      --bg-card-elevated: rgba(253, 254, 251, 0.94);
       --bg-card-solid: #FAFCF8;
       --ink-primary: #1E2621;
       --ink-muted: #58665D;
@@ -129,7 +135,8 @@
     html[data-palette="04"] {
       --bg-canvas: #F5F0E8;
       --bg-canvas-alt: #EAE2D5;
-      --bg-card: rgba(253, 250, 245, 0.88);
+      --bg-card: rgba(253, 250, 245, 0.86);
+      --bg-card-elevated: rgba(254, 252, 248, 0.94);
       --bg-card-solid: #FCF9F4;
       --ink-primary: #231C17;
       --ink-muted: #66584D;
@@ -148,7 +155,8 @@
     html[data-palette="05"] {
       --bg-canvas: #F3F5F6;
       --bg-canvas-alt: #E6ECEE;
-      --bg-card: rgba(251, 253, 254, 0.88);
+      --bg-card: rgba(251, 253, 254, 0.86);
+      --bg-card-elevated: rgba(252, 254, 255, 0.94);
       --bg-card-solid: #FAFCFD;
       --ink-primary: #1C262E;
       --ink-muted: #566672;
@@ -168,23 +176,41 @@
       color: var(--ink-primary);
     }
 
+    html {
+      -webkit-text-size-adjust: 100%;
+      scroll-padding-top: 96px;
+    }
+
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg-canvas);
       color: var(--ink-primary);
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       overflow-x: clip;
+    }
+
+    section[id] {
+      scroll-margin-top: 96px;
     }
 
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
     }
 
+    .text-balance {
+      text-wrap: balance;
+    }
+
+    .text-pretty {
+      text-wrap: pretty;
+    }
+
     /* Tactile Cotton-Rag Paper Grain */
     .bg-paper-grain {
       background-image: radial-gradient(var(--grain-dot) 0.75px, transparent 0.75px);
       background-size: 16px 16px;
-      opacity: 0.32;
+      opacity: 0.30;
     }
 
     /* Gold-Leaf Wax Monogram Seal */
@@ -193,34 +219,165 @@
       border: 1px solid var(--foil-gold);
       box-shadow:
         0 4px 14px -2px rgba(43, 37, 30, 0.12),
-        0 0 0 3px rgba(255, 255, 255, 0.7) inset;
+        0 0 0 3px rgba(255, 255, 255, 0.72) inset;
     }
 
-    /* Glassmorphic Pearl Atelier Card */
+    /* ==========================================================================
+       APPLE TRANSLUCENT GLASS & SPECULAR SPOTLIGHT CARDS
+       ========================================================================== */
     .atelier-card {
       background: var(--bg-card);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(18px) saturate(165%);
+      -webkit-backdrop-filter: blur(18px) saturate(165%);
       border: 1px solid var(--border-pearl);
       box-shadow:
-        0 22px 45px -16px rgba(43, 37, 30, 0.08),
+        0 22px 48px -18px rgba(43, 37, 30, 0.08),
         0 0 0 1px var(--border-hairline);
-      transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+      transition:
+        transform 0.55s var(--apple-silk),
+        box-shadow 0.55s var(--apple-silk),
+        background-color 0.45s ease;
     }
 
-    .atelier-card-lift:hover {
-      transform: translateY(-4px) scale(1.006);
+    .atelier-card-lift {
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .atelier-card-lift::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(
+          380px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+          var(--hero-glow),
+          transparent 72%
+        );
+        opacity: 0;
+        transition: opacity 0.45s ease;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .atelier-card-lift:hover::before {
+        opacity: 0.85;
+      }
+      .atelier-card-lift:hover {
+        transform: translate3d(0, -5px, 0) scale(1.006);
+        box-shadow:
+          0 30px 58px -16px rgba(43, 37, 30, 0.13),
+          0 0 0 1.25px var(--foil-gold);
+      }
+    }
+
+    .atelier-card-lift > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ==========================================================================
+       APPLE DYNAMIC FLOATING HEADER & SCROLL PROGRESS HAIRLINE
+       ========================================================================== */
+    #atelier-nav-shell {
+      position: relative;
+      overflow: hidden;
+      transition:
+        padding 0.48s var(--apple-spring),
+        background-color 0.48s var(--apple-silk),
+        box-shadow 0.48s var(--apple-silk),
+        transform 0.48s var(--apple-spring);
+    }
+
+    header.is-scrolled #atelier-nav-shell {
+      background: var(--bg-card-elevated);
+      backdrop-filter: blur(24px) saturate(185%);
+      -webkit-backdrop-filter: blur(24px) saturate(185%);
       box-shadow:
-        0 28px 52px -14px rgba(43, 37, 30, 0.13),
-        0 0 0 1.5px var(--foil-gold);
+        0 18px 40px -14px rgba(32, 26, 20, 0.13),
+        0 0 0 1px var(--border-hairline);
     }
 
-    /* Oil Canvas Arch & Gold Foil Inset Frame */
+    #header-scroll-bar {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 0;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent 0%, var(--foil-gold) 35%, var(--accent-primary) 100%);
+      transform-origin: 0 50%;
+      transform: scaleX(var(--scroll-progress, 0));
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    header.is-scrolled #header-scroll-bar {
+      opacity: 0.72;
+    }
+
+    .nav-section-link {
+      position: relative;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      transition: color 0.3s ease, background-color 0.35s var(--apple-spring);
+    }
+    .nav-section-link:hover {
+      color: var(--ink-primary);
+    }
+    .nav-section-link.is-active {
+      color: var(--accent-primary);
+      background-color: var(--pill-bg);
+      font-weight: 600;
+    }
+
+    /* Mobile Navigation Sheet (Apple iOS Translucent Dropdown) */
+    #mobile-nav-sheet {
+      transform-origin: top center;
+      opacity: 0;
+      transform: translate3d(0, -10px, 0) scale(0.975);
+      pointer-events: none;
+      visibility: hidden;
+      transition:
+        opacity 0.36s var(--apple-spring),
+        transform 0.36s var(--apple-spring),
+        visibility 0s linear 0.36s;
+    }
+    #mobile-nav-sheet.is-open {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      pointer-events: auto;
+      visibility: visible;
+      transition:
+        opacity 0.38s var(--apple-spring),
+        transform 0.38s var(--apple-spring),
+        visibility 0s linear 0s;
+    }
+
+    .burger-line {
+      transition: transform 0.32s var(--apple-spring), opacity 0.22s ease;
+      transform-origin: center;
+    }
+    button[aria-expanded="true"] .burger-line-1 {
+      transform: translateY(3.5px) rotate(45deg);
+    }
+    button[aria-expanded="true"] .burger-line-2 {
+      transform: translateY(-3.5px) rotate(-45deg);
+    }
+
+    /* ==========================================================================
+       OIL CANVAS ARCH & GOLD FOIL INSET FRAME
+       ========================================================================== */
     .arch-oil-frame {
       border-radius: 220px 220px 32px 32px;
       box-shadow:
-        0 30px 60px -18px rgba(43, 37, 30, 0.20),
+        0 32px 64px -18px rgba(43, 37, 30, 0.22),
         0 0 0 1px var(--foil-gold);
+    }
+    @media (max-width: 640px) {
+      .arch-oil-frame {
+        border-radius: 170px 170px 28px 28px;
+      }
     }
 
     .gold-foil-frame {
@@ -233,9 +390,12 @@
       border-radius: inherit;
       border: 1px solid rgba(255, 248, 231, 0.58);
       pointer-events: none;
+      z-index: 2;
     }
 
-    /* Primary CTA Button with Gold-Leaf Shimmer & Apple Spring */
+    /* ==========================================================================
+       PRIMARY & SECONDARY BUTTONS WITH APPLE SPRING & GOLD SHIMMER
+       ========================================================================== */
     .btn-atelier-primary {
       position: relative;
       overflow: hidden;
@@ -244,14 +404,19 @@
       color: #FFFFFF;
       border: 1px solid rgba(255, 238, 204, 0.35);
       box-shadow: 0 14px 30px -6px rgba(43, 37, 30, 0.26), 0 0 18px 1px var(--hero-glow);
-      transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.25s ease, filter 0.2s ease;
+      transition:
+        transform 0.28s var(--apple-spring),
+        box-shadow 0.3s ease,
+        filter 0.25s ease;
     }
-    .btn-atelier-primary:hover {
-      transform: translateY(-1.5px);
-      filter: brightness(1.05);
+    @media (hover: hover) {
+      .btn-atelier-primary:hover {
+        transform: translate3d(0, -1.5px, 0);
+        filter: brightness(1.05);
+      }
     }
     .btn-atelier-primary:active {
-      transform: scale(0.965) translateY(1px);
+      transform: scale(0.962) translate3d(0, 1px, 0);
     }
     .btn-atelier-primary::after {
       content: '';
@@ -264,12 +429,12 @@
         115deg,
         transparent 0%,
         rgba(255, 255, 255, 0.08) 38%,
-        rgba(255, 246, 224, 0.38) 50%,
+        rgba(255, 246, 224, 0.36) 50%,
         rgba(255, 255, 255, 0.08) 62%,
         transparent 100%
       );
       transform: rotate(20deg);
-      animation: foil-shimmer 5.6s ease-in-out infinite;
+      animation: foil-shimmer 6.2s ease-in-out infinite;
       pointer-events: none;
     }
 
@@ -283,14 +448,110 @@
       background: var(--bg-card);
       color: var(--ink-primary);
       border: 1px solid var(--border-hairline);
-      transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.2s ease, border-color 0.2s ease;
+      transition:
+        transform 0.26s var(--apple-spring),
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
     }
-    .btn-atelier-secondary:hover {
-      border-color: var(--foil-gold);
-      background: var(--bg-card-solid);
+    @media (hover: hover) {
+      .btn-atelier-secondary:hover {
+        border-color: var(--foil-gold);
+        background: var(--bg-card-solid);
+        transform: translate3d(0, -1px, 0);
+      }
     }
     .btn-atelier-secondary:active {
-      transform: scale(0.97);
+      transform: scale(0.968);
+    }
+
+    /* ==========================================================================
+       APPLE SLOW-LUXURY CHOREOGRAPHY (BIDIRECTIONAL SCROLL DOWN & SCROLL UP)
+       - Scroll down into viewport -> slow, unhurried 1.3s exponential glide in
+       - Scroll back up -> smooth 0.82s Apple-spring retract back down
+       ========================================================================== */
+    .hero-choreo {
+      opacity: 0;
+      transform: translate3d(0, 22px, 0) scale(0.988);
+      animation: hero-soft-rise 1.28s var(--apple-ease-out) forwards;
+      animation-delay: var(--hero-delay, 0ms);
+      will-change: transform, opacity;
+    }
+    @keyframes hero-soft-rise {
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    /* Keep LCP <img> 100% visible immediately while unveiling frame scale smoothly */
+    .hero-frame-unveil {
+      transform: translate3d(0, 16px, 0) scale(0.976);
+      animation: hero-frame-settle 1.48s var(--apple-ease-out) forwards;
+      will-change: transform;
+    }
+    @keyframes hero-frame-settle {
+      to {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    [data-apple-reveal] {
+      opacity: 0;
+      transform: translate3d(0, 34px, 0) scale(0.966);
+      transition:
+        opacity 1.24s var(--apple-ease-out),
+        transform 1.42s var(--apple-ease-out);
+      transition-delay: var(--stagger-ms, 0ms);
+      will-change: transform, opacity;
+    }
+
+    [data-apple-reveal="header"] {
+      transform: translate3d(0, 26px, 0) scale(0.984);
+      transition:
+        opacity 1.12s var(--apple-ease-out),
+        transform 1.28s var(--apple-ease-out);
+      transition-delay: var(--stagger-ms, 0ms);
+    }
+
+    [data-apple-reveal].is-inview {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    /* Smooth Apple-Spring Retract when scrolling back up */
+    [data-apple-reveal].is-retracting {
+      opacity: 0;
+      transform: translate3d(0, 30px, 0) scale(0.968);
+      transition-duration: 0.82s;
+      transition-timing-function: var(--apple-spring);
+      transition-delay: 0ms !important;
+    }
+
+    /* Menu Category Row Cascade on Tab Switch */
+    @keyframes menu-row-glide {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 12px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+    .menu-row-enter {
+      opacity: 0;
+      animation: menu-row-glide 0.62s var(--apple-ease-out) forwards;
+      animation-delay: var(--row-delay, 0ms);
+    }
+
+    /* Subtle Hero Canvas Breathing */
+    @keyframes canvas-breathe {
+      0%, 100% { transform: scale(1.02) translate3d(0, 0, 0); }
+      50% { transform: scale(1.052) translate3d(0, -3px, 0); }
+    }
+    .animate-canvas-breathe {
+      animation: canvas-breathe 16s ease-in-out infinite;
     }
 
     /* Palette-Harmonized Architectural Map Embed */
@@ -301,7 +562,7 @@
     }
     .atelier-map-embed {
       filter: grayscale(0.56) sepia(0.36) hue-rotate(-8deg) saturate(0.86) contrast(0.94) brightness(1.02);
-      transition: filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: filter 0.5s var(--apple-silk);
     }
     html[data-palette="02"] .atelier-map-embed {
       filter: grayscale(0.60) sepia(0.30) hue-rotate(-18deg) saturate(0.82) contrast(0.94) brightness(1.03);
@@ -325,46 +586,85 @@
       opacity: 0.22;
     }
 
-    /* Subtle Hero Canvas Breathing */
-    @keyframes canvas-breathe {
-      0%, 100% { transform: scale(1.01) translateY(0); }
-      50% { transform: scale(1.045) translateY(-3px); }
-    }
-    .animate-canvas-breathe {
-      animation: canvas-breathe 15s ease-in-out infinite;
-      will-change: transform;
-    }
-
-    /* Dotted Gold Menu Leader */
-    .menu-leader {
-      border-bottom: 1px dotted var(--border-hairline);
-    }
-
-    /* Staggered Scroll Blur-to-Focus Reveal */
-    .reveal-section {
+    /* ==========================================================================
+       APPLE FLOATING QUICK-RESERVE CAPSULE (APPEARS ON SCROLL DOWN, RETRACTS UP)
+       ========================================================================== */
+    #atelier-float-dock {
+      position: fixed;
+      right: 20px;
+      bottom: 22px;
+      z-index: 38;
       opacity: 0;
-      transform: translateY(22px);
-      filter: blur(6px);
-      transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1), transform 0.95s cubic-bezier(0.16, 1, 0.3, 1), filter 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translate3d(0, 26px, 0) scale(0.92);
+      pointer-events: none;
+      transition:
+        opacity 0.52s var(--apple-spring),
+        transform 0.52s var(--apple-spring),
+        bottom 0.35s var(--apple-spring);
     }
-    .reveal-section.is-visible {
+    #atelier-float-dock.is-docked {
       opacity: 1;
-      transform: translateY(0);
-      filter: blur(0);
+      transform: translate3d(0, 0, 0) scale(1);
+      pointer-events: auto;
+    }
+    /* Automatically clear the Demo Preview Claim Bar when present */
+    body:has(.claim-bar) #atelier-float-dock {
+      bottom: 108px;
+    }
+    @media (max-width: 640px) {
+      #atelier-float-dock {
+        right: 14px;
+        bottom: 16px;
+      }
+      body:has(.claim-bar) #atelier-float-dock {
+        bottom: 146px;
+      }
     }
 
-    /* Native Dialog Backdrop */
-    dialog#booking-dialog::backdrop {
-      background: rgba(28, 24, 20, 0.52);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+    /* ==========================================================================
+       TOP-LAYER NATIVE <dialog> ENTRY & EXIT ANIMATIONS (@starting-style + overlay)
+       ========================================================================== */
+    dialog.atelier-modal {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0) scale(0.96);
+      transition-property: opacity, transform, display, overlay;
+      transition-duration: 0.36s;
+      transition-timing-function: var(--apple-spring);
+      transition-behavior: allow-discrete;
     }
-    dialog#booking-dialog[open] {
-      animation: dialog-pop 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    dialog.atelier-modal::backdrop {
+      background-color: rgba(24, 20, 16, 0);
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      transition-property: background-color, backdrop-filter, -webkit-backdrop-filter, display, overlay;
+      transition-duration: 0.36s;
+      transition-timing-function: ease-out;
+      transition-behavior: allow-discrete;
     }
-    @keyframes dialog-pop {
-      from { opacity: 0; transform: translateY(14px) scale(0.97); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+
+    dialog.atelier-modal[open]:where(:not([data-closing])) {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    @starting-style {
+      dialog.atelier-modal[open]:where(:not([data-closing])) {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0) scale(0.955);
+      }
+    }
+
+    dialog.atelier-modal[open]:where(:not([data-closing]))::backdrop {
+      background-color: rgba(24, 20, 16, 0.54);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    @starting-style {
+      dialog.atelier-modal[open]:where(:not([data-closing]))::backdrop {
+        background-color: rgba(24, 20, 16, 0);
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+      }
     }
 
     .accent-italic {
@@ -375,6 +675,34 @@
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ==========================================================================
+       ACCESSIBILITY: RESPECT REDUCED MOTION PREFERENCES
+       ========================================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-choreo,
+      .hero-frame-unveil,
+      .animate-canvas-breathe,
+      .btn-atelier-primary::after,
+      .menu-row-enter {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+      }
+      [data-apple-reveal],
+      [data-apple-reveal].is-inview,
+      [data-apple-reveal].is-retracting {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        transition: none !important;
+      }
+      dialog.atelier-modal {
+        transform: none;
+        transition-duration: 0.12s;
+      }
+    }
   </style>
 </head>
 <body class="relative min-h-screen">
@@ -480,7 +808,7 @@
         items: [
           { name: "Apres Soft Gel Extensions (Full Set)", duration: "75 mins", price: "$110", badge: "Signature", desc: "Ultra-thin soft gel extensions with zero monomer odour, shaped to almond, oval, or soft square." },
           { name: "Hard Gel Sculpted Extensions", duration: "90 mins", price: "$125", desc: "Custom paper-form sculpted architecture for enduring strength and refined slender silhouettes." },
-          { name: "Luxe Gel Polish Manicure", duration: "50 mins", price: "$68", desc: " meticulous cuticle work, Japanese soft-gel colour application & hydrating camellia hand massage." },
+          { name: "Luxe Gel Polish Manicure", duration: "50 mins", price: "$68", desc: "Meticulous cuticle work, Japanese soft-gel colour application & hydrating camellia hand massage." },
           { name: "Gentle Soak-Off & Nail Spa Reset", duration: "35 mins", price: "$38", desc: "Safe steam/wrap removal preserving every layer of your natural nail plate, finished with jojoba oil." }
         ]
       },
@@ -511,96 +839,153 @@
   <div class="fixed inset-0 bg-paper-grain pointer-events-none z-0" aria-hidden="true"></div>
 
   <!-- Ambient Golden Sunbeam Glow -->
-  <div class="fixed -top-32 right-0 w-[560px] h-[560px] rounded-full pointer-events-none z-0 blur-3xl" style="background: radial-gradient(circle, var(--hero-glow) 0%, transparent 70%);" aria-hidden="true"></div>
+  <div class="fixed -top-32 right-0 w-[340px] sm:w-[560px] h-[340px] sm:h-[560px] rounded-full pointer-events-none z-0 blur-3xl" style="background: radial-gradient(circle, var(--hero-glow) 0%, transparent 70%);" aria-hidden="true"></div>
 
   <!-- ========================================================================
-       STICKY FLOATING ATELIER HEADER
+       STICKY APPLE DYNAMIC ATELIER HEADER + MOBILE GLASS SHEET
        ======================================================================== -->
-  <header class="sticky top-0 z-40 px-4 sm:px-6 pt-3 pb-2">
-    <nav class="max-w-6xl mx-auto atelier-card rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4" aria-label="Primary Navigation">
-      <!-- Brand Identity + Wax Monogram Seal -->
-      <a href="#top" class="flex items-center gap-3 group min-w-0">
-        <div id="brand-logo-slot" class="w-10 h-10 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
-          <span id="nav-monogram" class="font-editorial italic font-bold text-lg" style="color: var(--accent-primary);">M</span>
-        </div>
-        <div class="min-w-0">
-          <span id="nav-salon-name" class="font-editorial font-semibold text-xl sm:text-2xl tracking-tight block leading-none truncate">Maison Élan</span>
-          <span id="nav-salon-sub" class="text-[10px] uppercase tracking-[0.16em] block mt-0.5 truncate max-w-[175px] sm:max-w-[240px]" style="color: var(--ink-muted);">Armadale, VIC</span>
-        </div>
-      </a>
-
-      <!-- Center Editorial Links -->
-      <div class="hidden md:flex items-center gap-7 text-xs font-medium tracking-wide" style="color: var(--ink-muted);">
-        <a href="#philosophy" class="hover:opacity-100 transition-opacity hover:underline underline-offset-4">The Sanctuary</a>
-        <a href="#menu" class="hover:opacity-100 transition-opacity hover:underline underline-offset-4">Price Menu</a>
-        <a href="#lookbook" class="hover:opacity-100 transition-opacity hover:underline underline-offset-4">Lookbook</a>
-        <a href="#reviews" class="hover:opacity-100 transition-opacity hover:underline underline-offset-4">Client Words</a>
-        <a href="#visit" class="hover:opacity-100 transition-opacity hover:underline underline-offset-4">Hours &amp; Visit</a>
-      </div>
-
-      <!-- Social Icons + Primary CTA -->
-      <div class="flex items-center gap-2.5 shrink-0">
-        <a id="nav-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-9 h-9 rounded-full btn-atelier-secondary flex items-center justify-center">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2.5" y="2.5" width="19" height="19" rx="5"></rect>
-            <circle cx="12" cy="12" r="4.2"></circle>
-            <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"></circle>
-          </svg>
+  <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2">
+    <div class="max-w-6xl mx-auto relative">
+      <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4" aria-label="Primary Navigation">
+        <!-- Brand Identity + Wax Monogram Seal -->
+        <a href="#top" data-smooth-anchor="#top" class="flex items-center gap-2.5 sm:gap-3 group min-w-0 flex-1 lg:flex-initial">
+          <div id="brand-logo-slot" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-105">
+            <span id="nav-monogram" class="font-editorial italic font-bold text-base sm:text-lg" style="color: var(--accent-primary);">M</span>
+          </div>
+          <div class="min-w-0">
+            <span id="nav-salon-name" class="font-editorial font-semibold text-lg sm:text-2xl tracking-tight block leading-none truncate">Maison Élan</span>
+            <span id="nav-salon-sub" class="text-[9.5px] sm:text-[10px] uppercase tracking-[0.15em] block mt-0.5 truncate max-w-[135px] sm:max-w-[240px]" style="color: var(--ink-muted);">Armadale, VIC</span>
+          </div>
         </a>
-        <a id="nav-fb-link" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="hidden sm:flex w-9 h-9 rounded-full btn-atelier-secondary items-center justify-center">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-          </svg>
-        </a>
-        <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-5 py-2.5 text-xs font-semibold tracking-wide inline-flex items-center gap-2 cursor-pointer">
-          <span>Book Visit</span>
-          <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3.5 8h9M8.5 4l4 4-4 4"></path>
-          </svg>
-        </button>
+
+        <!-- Center Editorial Links (Desktop lg+) -->
+        <div class="hidden lg:flex items-center gap-1.5 xl:gap-2 text-xs font-medium tracking-wide whitespace-nowrap" style="color: var(--ink-muted);">
+          <a href="#philosophy" data-smooth-anchor="#philosophy" data-nav-spy="philosophy" class="nav-section-link">The Sanctuary</a>
+          <a href="#menu" data-smooth-anchor="#menu" data-nav-spy="menu" class="nav-section-link">Price Menu</a>
+          <a href="#lookbook" data-smooth-anchor="#lookbook" data-nav-spy="lookbook" class="nav-section-link">Lookbook</a>
+          <a href="#reviews" data-smooth-anchor="#reviews" data-nav-spy="reviews" class="nav-section-link">Client Words</a>
+          <a href="#visit" data-smooth-anchor="#visit" data-nav-spy="visit" class="nav-section-link">Hours &amp; Visit</a>
+        </div>
+
+        <!-- Right Controls: Socials + Primary CTA + Mobile/Tablet Sheet Toggle -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <a id="nav-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="hidden sm:flex w-9 h-9 rounded-full btn-atelier-secondary items-center justify-center">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="2.5" width="19" height="19" rx="5"></rect>
+              <circle cx="12" cy="12" r="4.2"></circle>
+              <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"></circle>
+            </svg>
+          </a>
+          <a id="nav-fb-link" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="hidden xl:flex w-9 h-9 rounded-full btn-atelier-secondary items-center justify-center">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+            </svg>
+          </a>
+          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-[11.5px] sm:text-xs font-semibold tracking-wide inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer">
+            <span>Book Visit</span>
+            <svg class="w-3.5 h-3.5 hidden min-[370px]:inline" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 8h9M8.5 4l4 4-4 4"></path>
+            </svg>
+          </button>
+
+          <!-- Mobile & Tablet Architectural Menu Button -->
+          <button
+            type="button"
+            id="btn-mobile-menu"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="mobile-nav-sheet"
+            class="lg:hidden w-9 h-9 rounded-full btn-atelier-secondary flex flex-col items-center justify-center gap-[5px] cursor-pointer"
+          >
+            <span class="burger-line burger-line-1 w-4 h-[1.5px] rounded-full block" style="background: var(--ink-primary);"></span>
+            <span class="burger-line burger-line-2 w-4 h-[1.5px] rounded-full block" style="background: var(--ink-primary);"></span>
+          </button>
+        </div>
+
+        <!-- Subtle Gold Scroll Progress Hairline -->
+        <div id="header-scroll-bar" aria-hidden="true"></div>
+      </nav>
+
+      <!-- Apple iOS Translucent Mobile/Tablet Dropdown Sheet -->
+      <div
+        id="mobile-nav-sheet"
+        class="lg:hidden absolute left-0 right-0 sm:left-auto sm:w-80 top-[calc(100%+8px)] atelier-card rounded-[28px] p-4 shadow-2xl z-50"
+        style="background: var(--bg-card-elevated);"
+      >
+        <div class="grid grid-cols-1 divide-y text-sm font-medium" style="border-color: var(--border-hairline);">
+          <a href="#philosophy" data-smooth-anchor="#philosophy" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>The Sanctuary</span>
+            <span class="text-xs opacity-45">01</span>
+          </a>
+          <a href="#menu" data-smooth-anchor="#menu" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>Rituals &amp; Price Menu</span>
+            <span class="text-xs opacity-45">02</span>
+          </a>
+          <a href="#lookbook" data-smooth-anchor="#lookbook" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>Seasonal Lookbook</span>
+            <span class="text-xs opacity-45">03</span>
+          </a>
+          <a href="#reviews" data-smooth-anchor="#reviews" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>Client Words</span>
+            <span class="text-xs opacity-45">04</span>
+          </a>
+          <a href="#visit" data-smooth-anchor="#visit" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>Hours, Map &amp; Visit</span>
+            <span class="text-xs opacity-45">05</span>
+          </a>
+        </div>
+        <div class="pt-3 mt-1 border-t flex items-center justify-between gap-2.5" style="border-color: var(--border-hairline);">
+          <a id="mobile-call-link" href="tel:0391234567" class="flex-1 btn-atelier-secondary rounded-full py-2.5 px-4 text-xs font-semibold inline-flex items-center justify-center gap-2">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>Call Reception</span>
+          </a>
+          <a id="mobile-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-10 h-10 rounded-full btn-atelier-secondary inline-flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/></svg>
+          </a>
+        </div>
       </div>
-    </nav>
+    </div>
   </header>
 
-  <main id="top" class="relative z-10 max-w-6xl mx-auto px-5 sm:px-6 pt-6 sm:pt-12 pb-28 space-y-24 sm:space-y-32">
+  <main id="top" class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-24 sm:pb-32 space-y-20 sm:space-y-32">
 
     <!-- ======================================================================
-         SECTION 1: HERO — OIL PAINTING ARCH & EDITORIAL TYPOGRAPHY
+         SECTION 1: HERO — OIL PAINTING ARCH & CHOREOGRAPHED EDITORIAL OPENING
          ====================================================================== -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+    <section id="hero-section" class="grid grid-cols-1 lg:grid-cols-12 gap-9 sm:gap-10 lg:gap-12 items-center">
       <!-- Left Editorial Copy (7 Cols) -->
-      <div class="lg:col-span-7 space-y-6 sm:space-y-7 text-left">
-        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-wider uppercase" style="background-color: var(--pill-bg); color: var(--accent-primary); border: 1px solid var(--border-hairline);">
+      <div id="hero-copy-col" class="lg:col-span-7 space-y-5 sm:space-y-7 text-left will-change-transform">
+        <div style="--hero-delay: 60ms;" class="hero-choreo inline-flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full text-[10.5px] sm:text-[11px] font-semibold tracking-wider uppercase max-w-full" style="background-color: var(--pill-bg); color: var(--accent-primary); border: 1px solid var(--border-hairline);">
           <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"></path>
           </svg>
-          <span id="hero-badge-text">Armadale • BIAB &amp; Non-Toxic Nail Sanctuary</span>
+          <span id="hero-badge-text" class="truncate">Armadale • BIAB &amp; Non-Toxic Nail Sanctuary</span>
         </div>
 
-        <h1 class="font-editorial text-5xl sm:text-6xl lg:text-[68px] font-semibold leading-[1.03] tracking-tight">
+        <h1 style="--hero-delay: 170ms;" class="hero-choreo font-editorial text-[42px] min-[400px]:text-5xl sm:text-6xl lg:text-[68px] font-semibold leading-[1.04] tracking-tight text-balance">
           <span id="hero-headline-prefix">Quiet luxury for</span>
           <span id="hero-headline-italic" class="accent-italic block sm:inline">artful hands.</span>
         </h1>
 
-        <p id="hero-story-text" class="text-sm sm:text-base leading-relaxed max-w-xl" style="color: var(--ink-muted);">
+        <p id="hero-story-text" style="--hero-delay: 290ms; color: var(--ink-muted);" class="hero-choreo text-sm sm:text-base leading-relaxed max-w-xl text-pretty">
           Structured BIAB overlays, fine-art manicure design, and botanical spa rituals—performed unhurriedly with hospital-grade sterilisation.
         </p>
 
         <!-- Primary & Secondary Actions -->
-        <div class="flex flex-wrap items-center gap-3.5 pt-1">
-          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-7 py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center gap-2.5 cursor-pointer">
+        <div style="--hero-delay: 410ms;" class="hero-choreo flex flex-wrap items-center gap-3 sm:gap-3.5 pt-1">
+          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-6 sm:px-7 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2.5 cursor-pointer flex-1 min-[430px]:flex-initial">
             <span>Book Appointment</span>
-            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3.5 8h9M8.5 4l4 4-4 4"></path>
             </svg>
           </button>
-          <a href="#menu" class="btn-atelier-secondary rounded-full px-6 py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center gap-2">
+          <a href="#menu" data-smooth-anchor="#menu" class="btn-atelier-secondary rounded-full px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 flex-1 min-[430px]:flex-initial">
             <span>Explore Price Menu</span>
           </a>
         </div>
 
         <!-- Subtle Australian Social Proof Strip -->
-        <div class="pt-4 flex flex-wrap items-center gap-6 border-t" style="border-color: var(--border-hairline);">
+        <div style="--hero-delay: 530ms; border-color: var(--border-hairline);" class="hero-choreo pt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t">
           <div class="flex items-center gap-2">
             <div class="flex items-center gap-0.5" style="color: var(--foil-gold);" aria-label="5 out of 5 stars">
               <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 1.5l2.59 5.25 5.79.84-4.19 4.08.99 5.77L10 14.72l-5.18 2.72.99-5.77-4.19-4.08 5.79-.84L10 1.5z"/></svg>
@@ -617,8 +1002,8 @@
       </div>
 
       <!-- Right Arched Oil-Painting Frame (5 Cols) -->
-      <div class="lg:col-span-5 relative">
-        <div class="arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
+      <div id="hero-art-col" class="lg:col-span-5 relative max-w-md mx-auto lg:max-w-none w-full will-change-transform">
+        <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
           <img
             id="hero-oil-img"
             src="https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg"
@@ -628,12 +1013,12 @@
             height="1125"
             class="w-full h-full object-cover animate-canvas-breathe"
           >
-          <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
           <!-- Floating Gold Seal Caption -->
-          <div class="absolute bottom-5 left-5 right-5 atelier-card rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
-            <div>
-              <span class="text-[10px] uppercase tracking-[0.16em] font-semibold block" style="color: var(--accent-primary);">Signature Craft</span>
-              <span class="font-editorial italic text-base font-semibold leading-snug block">HEMA-Free BIAB &amp; Botanical Care</span>
+          <div id="hero-floating-seal" class="absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5 atelier-card rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 z-10 will-change-transform">
+            <div class="min-w-0">
+              <span class="text-[9.5px] sm:text-[10px] uppercase tracking-[0.16em] font-semibold block" style="color: var(--accent-primary);">Signature Craft</span>
+              <span class="font-editorial italic text-sm sm:text-base font-semibold leading-snug block truncate">HEMA-Free BIAB &amp; Botanical Care</span>
             </div>
             <span class="w-8 h-8 rounded-full wax-monogram-seal flex items-center justify-center shrink-0" style="color: var(--accent-primary);">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"/></svg>
@@ -644,22 +1029,39 @@
     </section>
 
     <!-- ======================================================================
+         SUBTLE SCROLL-SCRUBBED EDITORIAL CRAFTSMANSHIP FRIEZE
+         ====================================================================== -->
+    <div data-apple-reveal="header" class="py-4 border-y overflow-hidden select-none" style="border-color: var(--border-hairline);">
+      <div id="craft-frieze-track" class="flex flex-wrap sm:flex-nowrap items-center justify-center gap-x-5 sm:gap-x-6 gap-y-2 text-[10.5px] sm:text-[11px] uppercase tracking-[0.2em] font-medium whitespace-nowrap will-change-transform" style="color: var(--ink-muted);">
+        <span>HEMA-Free Builder Gels</span>
+        <svg class="w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
+        <span>Hospital-Grade Autoclave</span>
+        <svg class="w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
+        <span>Zero Harsh Monomer Odour</span>
+        <svg class="hidden md:inline w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
+        <span class="hidden md:inline">Australian Botanical Oils</span>
+        <svg class="hidden lg:inline w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
+        <span class="hidden lg:inline">Unhurried One-on-One Care</span>
+      </div>
+    </div>
+
+    <!-- ======================================================================
          SECTION 2: THREE ATELIER PILLARS (CRAFT, HYGIENE, SANCTUARY)
          ====================================================================== -->
-    <section id="philosophy" class="reveal-section space-y-10">
-      <div class="text-center max-w-2xl mx-auto space-y-3">
+    <section id="philosophy" class="space-y-9 sm:space-y-11">
+      <div data-apple-reveal="header" class="text-center max-w-2xl mx-auto space-y-3">
         <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">The Atelier Standard</span>
-        <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight">
+        <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
           Thoughtful care without <span class="accent-italic">the rush.</span>
         </h2>
-        <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+        <p class="text-xs sm:text-sm leading-relaxed text-pretty" style="color: var(--ink-muted);">
           Every detail of our room is designed to protect your natural nail health while offering a calm pause in your week.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
         <!-- Pillar 1 -->
-        <article class="atelier-card atelier-card-lift rounded-[28px] p-7 space-y-4">
+        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
           <div class="w-11 h-11 rounded-2xl wax-monogram-seal flex items-center justify-center" style="color: var(--accent-primary);">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2.5c3.5 4 6 7.5 6 11a6 6 0 1 1-12 0c0-3.5 2.5-7 6-11z"></path>
@@ -672,7 +1074,7 @@
         </article>
 
         <!-- Pillar 2 -->
-        <article class="atelier-card atelier-card-lift rounded-[28px] p-7 space-y-4">
+        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
           <div class="w-11 h-11 rounded-2xl wax-monogram-seal flex items-center justify-center" style="color: var(--accent-primary);">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 3l7 3v6c0 4.5-3 8.2-7 9.5-4-1.3-7-5-7-9.5V6l7-3z"></path>
@@ -686,7 +1088,7 @@
         </article>
 
         <!-- Pillar 3 -->
-        <article class="atelier-card atelier-card-lift rounded-[28px] p-7 space-y-4">
+        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
           <div class="w-11 h-11 rounded-2xl wax-monogram-seal flex items-center justify-center" style="color: var(--accent-primary);">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
@@ -705,34 +1107,36 @@
     <!-- ======================================================================
          SECTION 3: INTERACTIVE ATELIER PRICE MENU (POWERED BY SALON_MENU_DATA)
          ====================================================================== -->
-    <section id="menu" class="reveal-section space-y-9">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <section id="menu" class="space-y-7 sm:space-y-9">
+      <div data-apple-reveal="header" class="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4">
         <div class="space-y-2">
           <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Service Menu • AUD</span>
-          <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight">
+          <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
             Rituals &amp; <span class="accent-italic">transparent pricing.</span>
           </h2>
         </div>
-        <p class="text-xs sm:text-sm max-w-md" style="color: var(--ink-muted);">
+        <p class="text-xs sm:text-sm max-w-md text-pretty" style="color: var(--ink-muted);">
           Select a category below or tap <strong>Reserve</strong> beside any treatment to book that exact ritual.
         </p>
       </div>
 
-      <!-- Dynamic Category Tabs -->
-      <div id="menu-tabs-bar" class="flex flex-wrap items-center gap-2 sm:gap-2.5" role="tablist" aria-label="Service Categories"></div>
+      <!-- Dynamic Category Tabs (Smooth Horizontal Snap Rail on Mobile, Clean Wrap on Desktop) -->
+      <div data-apple-reveal="header" class="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
+        <div id="menu-tabs-bar" class="flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-max sm:w-auto py-1" role="tablist" aria-label="Service Categories"></div>
+      </div>
 
       <!-- Active Menu Card -->
-      <div class="atelier-card rounded-[32px] p-6 sm:p-10 space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b" style="border-color: var(--border-hairline);">
+      <div data-apple-reveal="card" class="atelier-card rounded-[28px] sm:rounded-[32px] p-5 sm:p-10 space-y-5 sm:space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 pb-4 border-b" style="border-color: var(--border-hairline);">
           <h3 id="menu-active-heading" class="font-editorial text-2xl sm:text-3xl font-semibold"></h3>
-          <p id="menu-active-note" class="text-xs italic" style="color: var(--ink-muted);"></p>
+          <p id="menu-active-note" class="text-xs italic leading-relaxed" style="color: var(--ink-muted);"></p>
         </div>
 
         <div id="menu-items-list" class="divide-y" style="border-color: var(--border-hairline);"></div>
 
         <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t text-xs" style="border-color: var(--border-hairline); color: var(--ink-muted);">
           <span>All prices are inclusive of GST in Australian Dollars (AUD). Sunday &amp; Public Holiday surcharges may apply.</span>
-          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-5 py-2.5 text-xs font-semibold shrink-0 cursor-pointer">
+          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-5 py-3 sm:py-2.5 text-xs font-semibold shrink-0 cursor-pointer w-full sm:w-auto text-center">
             Book Full Appointment →
           </button>
         </div>
@@ -742,10 +1146,10 @@
     <!-- ======================================================================
          SECTION 4: EDITORIAL OIL-PAINTING DUO (SIGNATURE HANDS & SPA PEDICURE)
          ====================================================================== -->
-    <section class="reveal-section grid grid-cols-1 md:grid-cols-2 gap-8">
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
       <!-- Feature Card 1 -->
-      <div class="atelier-card atelier-card-lift rounded-[32px] p-5 sm:p-6 space-y-5">
-        <div class="rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
+      <div data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 space-y-5 group">
+        <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
             src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
@@ -753,12 +1157,12 @@
             loading="lazy"
             width="800"
             height="640"
-            class="w-full h-full object-cover scale-[1.03] transition-transform duration-700 hover:scale-[1.08]"
+            class="w-full h-full object-cover scale-[1.07] will-change-transform transition-transform duration-1000 ease-out group-hover:scale-[1.11]"
           >
         </div>
         <div class="px-1 space-y-2">
           <span class="text-[10px] uppercase tracking-[0.18em] font-semibold" style="color: var(--accent-primary);">01 • Natural Strength</span>
-          <h3 class="font-editorial text-3xl font-semibold">The Architecture of <span class="accent-italic">Sheer BIAB.</span></h3>
+          <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">The Architecture of <span class="accent-italic">Sheer BIAB.</span></h3>
           <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
             Tailored apex balance and ultra-refined cuticle care that grows out seamlessly—giving naturally thin or brittle nails enduring strength and a porcelain glow.
           </p>
@@ -766,8 +1170,8 @@
       </div>
 
       <!-- Feature Card 2 -->
-      <div class="atelier-card atelier-card-lift rounded-[32px] p-5 sm:p-6 space-y-5">
-        <div class="rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
+      <div data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 space-y-5 group">
+        <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-pedi-img"
             src="https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg"
@@ -775,12 +1179,12 @@
             loading="lazy"
             width="800"
             height="640"
-            class="w-full h-full object-cover scale-[1.03] transition-transform duration-700 hover:scale-[1.08]"
+            class="w-full h-full object-cover scale-[1.07] will-change-transform transition-transform duration-1000 ease-out group-hover:scale-[1.11]"
           >
         </div>
         <div class="px-1 space-y-2">
           <span class="text-[10px] uppercase tracking-[0.18em] font-semibold" style="color: var(--accent-primary);">02 • Restorative Spa</span>
-          <h3 class="font-editorial text-3xl font-semibold">Botanical Stone <span class="accent-italic">Foot Rituals.</span></h3>
+          <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Botanical Stone <span class="accent-italic">Foot Rituals.</span></h3>
           <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
             Sink into warm eucalyptus mineral water, volcanic pumice exfoliation, and slow lower-leg tension relief—completely free from noisy whirlpool jets.
           </p>
@@ -789,20 +1193,20 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 5: CURATED LOOKBOOK & INSTAGRAM PORTFOLIO (ZERO SLOW IFRAMES)
+         SECTION 5: CURATED LOOKBOOK & INTERACTIVE LIGHTBOX PORTFOLIO
          ====================================================================== -->
-    <section id="lookbook" class="reveal-section space-y-9">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <section id="lookbook" class="space-y-7 sm:space-y-9">
+      <div data-apple-reveal="header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div class="space-y-2">
           <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Curated Portfolio</span>
-          <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight">
+          <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
             Seasonal <span class="accent-italic">nail lookbook.</span>
           </h2>
         </div>
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <a id="lookbook-ig-pill" href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="btn-atelier-secondary rounded-full px-4 py-2.5 text-xs font-semibold inline-flex items-center gap-2">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/></svg>
-            <span id="lookbook-ig-handle">@maisonelan.atelier</span>
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/></svg>
+            <span id="lookbook-ig-handle" class="truncate max-w-[180px]">@maisonelan.atelier</span>
             <span aria-hidden="true">↗</span>
           </a>
           <a id="lookbook-fb-pill" href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="btn-atelier-secondary rounded-full px-4 py-2.5 text-xs font-semibold inline-flex items-center gap-1.5">
@@ -812,42 +1216,42 @@
         </div>
       </div>
 
-      <div id="lookbook-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"></div>
+      <div id="lookbook-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5"></div>
     </section>
 
     <!-- ======================================================================
          SECTION 6: CLIENT WORDS & LOCAL GOOGLE REVIEWS
          ====================================================================== -->
-    <section id="reviews" class="reveal-section space-y-9">
-      <div class="text-center max-w-xl mx-auto space-y-2">
+    <section id="reviews" class="space-y-7 sm:space-y-9">
+      <div data-apple-reveal="header" class="text-center max-w-xl mx-auto space-y-2">
         <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Word of Mouth</span>
-        <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight">
+        <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
           Loved by <span class="accent-italic">local regulars.</span>
         </h2>
       </div>
 
-      <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+      <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6"></div>
     </section>
 
     <!-- ======================================================================
          SECTION 7: VISIT THE SANCTUARY, HOURS, PARKING & BOOKING CONCIERGE
          ====================================================================== -->
-    <section id="visit" class="reveal-section grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+    <section id="visit" class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
       <!-- Left: Hours, Address, Australian Parking Guide & Atelier Map (7 Cols) -->
-      <div class="lg:col-span-7 atelier-card rounded-[32px] p-7 sm:p-10 flex flex-col justify-between space-y-7">
-        <div class="space-y-3">
+      <div data-apple-reveal="card" class="lg:col-span-7 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 sm:space-y-7">
+        <div class="space-y-2.5 sm:space-y-3">
           <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Find Our Sanctuary</span>
-          <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight">
+          <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
             Plan your <span class="accent-italic">quiet visit.</span>
           </h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
           <!-- Address & Parking -->
-          <div class="space-y-4 text-xs sm:text-sm">
+          <div class="space-y-4 text-xs sm:text-sm min-w-0">
             <div>
               <span class="text-[11px] uppercase tracking-wider font-semibold block mb-1" style="color: var(--accent-primary);">Boutique Address</span>
-              <p id="visit-address" class="font-semibold text-base">1048 High Street, Armadale VIC 3143</p>
+              <p id="visit-address" class="font-semibold text-base break-words">1048 High Street, Armadale VIC 3143</p>
               <a id="visit-maps-link" href="https://maps.google.com/?q=1048+High+Street+Armadale+VIC+3143" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-semibold mt-1.5 underline underline-offset-4" style="color: var(--accent-primary);">
                 <span>Open in Google Maps</span>
                 <span aria-hidden="true">↗</span>
@@ -863,7 +1267,7 @@
 
             <div>
               <span class="text-[11px] uppercase tracking-wider font-semibold block mb-1" style="color: var(--accent-primary);">Direct Reception</span>
-              <a id="visit-phone-link" href="tel:0391234567" class="font-semibold text-sm hover:underline">(03) 9123 4567</a>
+              <a id="visit-phone-link" href="tel:0391234567" class="font-semibold text-sm hover:underline inline-block py-0.5">(03) 9123 4567</a>
             </div>
           </div>
 
@@ -875,7 +1279,7 @@
         </div>
 
         <!-- Palette-Harmonized Interactive Sanctuary Map -->
-        <div class="atelier-map-shell gold-foil-frame rounded-[24px] overflow-hidden relative h-56 sm:h-64 border" style="border-color: var(--border-hairline); background: var(--bg-canvas-alt);">
+        <div class="atelier-map-shell gold-foil-frame rounded-[22px] sm:rounded-[24px] overflow-hidden relative h-52 sm:h-64 border" style="border-color: var(--border-hairline); background: var(--bg-canvas-alt);">
           <iframe
             id="visit-map-iframe"
             title="Boutique Location on Google Maps"
@@ -891,7 +1295,7 @@
             href="https://maps.google.com/?q=1048+High+Street+Armadale+VIC+3143"
             target="_blank"
             rel="noopener noreferrer"
-            class="atelier-card rounded-full px-3.5 py-1.5 text-[11px] font-semibold inline-flex items-center gap-1.5 absolute bottom-3.5 right-3.5 z-10 hover:scale-[1.03] transition-transform"
+            class="atelier-card rounded-full px-3.5 py-1.5 text-[11px] font-semibold inline-flex items-center gap-1.5 absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 z-10 hover:scale-[1.03] transition-transform"
           >
             <svg class="w-3.5 h-3.5 shrink-0" style="color: var(--accent-primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
             <span>Get Directions</span>
@@ -901,12 +1305,12 @@
       </div>
 
       <!-- Right: Dedicated Reserve Card (5 Cols) -->
-      <div class="lg:col-span-5 atelier-card rounded-[32px] p-7 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
+      <div data-apple-reveal="card" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
           <div class="w-12 h-12 rounded-full wax-monogram-seal flex items-center justify-center">
             <span id="footer-monogram" class="font-editorial italic font-bold text-xl" style="color: var(--accent-primary);">M</span>
           </div>
-          <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight">
+          <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight text-balance">
             Reserve your <span class="accent-italic">table today.</span>
           </h3>
           <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
@@ -914,16 +1318,16 @@
           </p>
 
           <ul class="pt-2 space-y-2.5 text-xs border-t" style="border-color: var(--border-hairline); color: var(--ink-muted);">
-            <li class="flex items-center gap-2.5">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: var(--accent-primary);"></span>
+            <li class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background: var(--accent-primary);"></span>
               <span>Complimentary organic herbal tea &amp; espresso on arrival</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: var(--accent-primary);"></span>
+            <li class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background: var(--accent-primary);"></span>
               <span>Hospital-grade autoclave sterilisation &amp; HEMA-free BIAB</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: var(--accent-primary);"></span>
+            <li class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background: var(--accent-primary);"></span>
               <span>Walk-ins warmly welcomed subject to table availability</span>
             </li>
           </ul>
@@ -950,34 +1354,98 @@
   <!-- ========================================================================
        MINIMALIST ATELIER FOOTER
        ======================================================================== -->
-  <footer class="relative z-10 border-t py-10 px-5 sm:px-6 text-xs" style="border-color: var(--border-hairline); color: var(--ink-muted);">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2.5">
+  <footer class="relative z-10 border-t py-10 px-4 sm:px-6 text-xs" style="border-color: var(--border-hairline); color: var(--ink-muted);">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+      <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
         <span id="copyright-salon" class="font-editorial font-semibold text-base" style="color: var(--ink-primary);">Maison Élan</span>
         <span>•</span>
         <span id="copyright-suburb">Armadale VIC</span>
       </div>
-      <div class="flex items-center gap-5">
+      <div class="flex flex-wrap items-center justify-center gap-5">
         <a id="footer-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Instagram</a>
         <a id="footer-fb-link" href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Facebook</a>
-        <a href="#menu" class="hover:underline">Price Menu</a>
+        <a href="#menu" data-smooth-anchor="#menu" class="hover:underline">Price Menu</a>
         <button type="button" data-open-booking="" class="font-semibold underline cursor-pointer" style="color: var(--accent-primary);">Book Visit</button>
       </div>
     </div>
   </footer>
 
   <!-- ========================================================================
+       APPLE FLOATING CONCIERGE CAPSULE
+       (Glides up when scrolling down past Hero; tucks away on scroll-up to top or at #visit)
+       ======================================================================== -->
+  <div id="atelier-float-dock" aria-label="Quick salon actions">
+    <div class="atelier-card rounded-full p-1.5 flex items-center gap-1.5 shadow-2xl" style="background: var(--bg-card-elevated);">
+      <a
+        id="dock-call-link"
+        href="tel:0391234567"
+        aria-label="Call salon reception"
+        title="Call salon reception"
+        class="w-10 h-10 rounded-full btn-atelier-secondary flex items-center justify-center"
+      >
+        <svg class="w-4 h-4" style="color: var(--accent-primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </a>
+      <button
+        type="button"
+        data-open-booking=""
+        class="btn-atelier-primary rounded-full px-4 sm:px-5 h-10 text-xs font-semibold tracking-wide inline-flex items-center gap-1.5 cursor-pointer"
+      >
+        <span>Reserve</span>
+        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8h9M8.5 4l4 4-4 4"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       APPLE PHOTOS-STYLE LOOKBOOK LIGHTBOX (<dialog closedby="any">)
+       ======================================================================== -->
+  <dialog id="lookbook-lightbox" closedby="any" aria-labelledby="lightbox-title" class="atelier-modal w-[calc(100%-1.75rem)] max-w-md rounded-[30px] p-0 border-0 bg-transparent m-auto shadow-2xl">
+    <div class="atelier-card rounded-[30px] p-4 sm:p-5 space-y-4" style="background: var(--bg-card-solid);">
+      <div class="relative rounded-[22px] gold-foil-frame overflow-hidden aspect-square" style="background: var(--bg-canvas-alt);">
+        <img id="lightbox-img" src="" alt="" class="w-full h-full object-cover">
+        <button
+          type="button"
+          id="btn-close-lightbox"
+          aria-label="Close lookbook preview"
+          class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full atelier-card flex items-center justify-center cursor-pointer"
+          style="background: var(--bg-card-elevated);"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="px-1 flex items-start justify-between gap-3">
+        <div>
+          <span id="lightbox-tag" class="text-[10px] uppercase tracking-[0.18em] font-semibold block" style="color: var(--accent-primary);"></span>
+          <h3 id="lightbox-title" class="font-editorial italic text-2xl sm:text-3xl font-semibold leading-tight mt-0.5"></h3>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
+        <button type="button" id="btn-lightbox-reserve" class="flex-1 btn-atelier-primary rounded-full py-3.5 px-5 text-xs font-semibold tracking-wide inline-flex items-center justify-center gap-2 cursor-pointer">
+          <span>Request This Style</span>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 8h9M8.5 4l4 4-4 4"/></svg>
+        </button>
+        <a id="btn-lightbox-ig" href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="btn-atelier-secondary rounded-full py-3.5 px-4 text-xs font-semibold inline-flex items-center justify-center gap-1.5">
+          <span>Instagram</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ========================================================================
        NATIVE CONCIERGE BOOKING MODAL (<dialog closedby="any">)
        Used automatically when salon hasn't linked an external Fresha/Square URL
        ======================================================================== -->
-  <dialog id="booking-dialog" closedby="any" aria-labelledby="booking-dialog-title" class="w-[calc(100%-2rem)] max-w-lg rounded-[32px] p-0 border-0 bg-transparent m-auto shadow-2xl">
-    <div class="atelier-card rounded-[32px] p-6 sm:p-8 space-y-5" style="background: var(--bg-card-solid);">
+  <dialog id="booking-dialog" closedby="any" aria-labelledby="booking-dialog-title" class="atelier-modal w-[calc(100%-1.75rem)] max-w-lg rounded-[30px] sm:rounded-[32px] p-0 border-0 bg-transparent m-auto shadow-2xl">
+    <div class="atelier-card rounded-[30px] sm:rounded-[32px] p-5 sm:p-8 space-y-5 max-h-[90dvh] overflow-y-auto" style="background: var(--bg-card-solid);">
       <div class="flex items-start justify-between gap-4 border-b pb-4" style="border-color: var(--border-hairline);">
         <div>
           <span class="text-[10px] uppercase tracking-[0.18em] font-semibold block" style="color: var(--accent-primary);">Instant Appointment Request</span>
           <h3 id="booking-dialog-title" class="font-editorial text-3xl font-semibold mt-0.5">Reserve Your <span class="accent-italic">Ritual.</span></h3>
         </div>
-        <button type="button" id="btn-close-dialog" aria-label="Close booking dialog" class="w-9 h-9 rounded-full btn-atelier-secondary flex items-center justify-center cursor-pointer">
+        <button type="button" id="btn-close-dialog" aria-label="Close booking dialog" class="w-9 h-9 rounded-full btn-atelier-secondary flex items-center justify-center shrink-0 cursor-pointer">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -1024,12 +1492,13 @@
   </dialog>
 
   <!-- ========================================================================
-       CLIENT-SIDE HYDRATION & INTERACTIVITY ENGINE
+       CLIENT-SIDE HYDRATION & APPLE FLUID MOTION ENGINE
        ======================================================================== -->
   <script>
     (function () {
       const cfg = window.ATELIER_CONFIG || {};
       const menu = Array.isArray(window.SALON_MENU_DATA) ? window.SALON_MENU_DATA : [];
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // 1. Apply Haute Couture Palette (supports ?palette=01|02|03|04|05 live preview override)
       const VALID_PALETTES = ['01', '02', '03', '04', '05'];
@@ -1209,7 +1678,9 @@
 
       if (resolvedImages) {
         const heroImg = document.getElementById('hero-oil-img');
-        if (heroImg && resolvedImages.hero) heroImg.src = resolvedImages.hero;
+        if (heroImg && resolvedImages.hero && heroImg.getAttribute('src') !== resolvedImages.hero) {
+          heroImg.src = resolvedImages.hero;
+        }
         const biabImg = document.getElementById('feature-biab-img');
         if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;
         const pediImg = document.getElementById('feature-pedicure-img') || document.getElementById('feature-pedi-img');
@@ -1217,7 +1688,7 @@
       }
 
       // Social Links
-      const igLinks = ['nav-ig-link', 'lookbook-ig-pill', 'footer-ig-link'];
+      const igLinks = ['nav-ig-link', 'mobile-ig-link', 'lookbook-ig-pill', 'footer-ig-link', 'btn-lightbox-ig'];
       igLinks.forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -1305,10 +1776,14 @@
       }
 
       const cleanTel = String(cfg.displayPhone || cfg.smsPhone || '').replace(/[^+\d]/g, '');
-      ['visit-phone-link', 'card-call-link'].forEach((id) => {
+      ['visit-phone-link', 'card-call-link', 'mobile-call-link', 'dock-call-link'].forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
-        if (cleanTel) el.href = `tel:${cleanTel}`;
+        if (cleanTel) {
+          el.href = `tel:${cleanTel}`;
+        } else if (id === 'dock-call-link' || id === 'mobile-call-link') {
+          el.style.display = 'none';
+        }
         if (id === 'visit-phone-link' && cfg.displayPhone) el.textContent = cfg.displayPhone;
       });
 
@@ -1317,20 +1792,83 @@
         hoursContainer.innerHTML = cfg.hours.map((h) => `
           <div class="flex items-center justify-between gap-3 pb-2 border-b" style="border-color: var(--border-hairline);">
             <span style="color: var(--ink-muted);">${h.days}</span>
-            <span class="font-semibold">${h.time}</span>
+            <span class="font-semibold text-right">${h.time}</span>
           </div>
         `).join('');
       }
 
-      // 3. Render Interactive Price Menu
+      // ======================================================================
+      // TOP-LAYER DIALOG EXIT HELPER (modern-web-guidance compliant)
+      // ======================================================================
+      let supportsDisplayTransition;
+      function canTransitionDisplay() {
+        if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+        if (!window.CSS || !CSS.supports || !CSS.supports('transition-behavior', 'allow-discrete') || !document.body) {
+          supportsDisplayTransition = false;
+          return false;
+        }
+        const probe = document.createElement('div');
+        probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+        document.body.appendChild(probe);
+        getComputedStyle(probe).display;
+        probe.style.display = 'none';
+        supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+        probe.remove();
+        return supportsDisplayTransition;
+      }
+
+      function supportsTopLayerExit() {
+        return Boolean(window.CSS && CSS.supports && CSS.supports('overlay', 'auto') && canTransitionDisplay());
+      }
+
+      async function closeTopLayer(modalEl) {
+        if (!modalEl || !modalEl.open) return;
+        if (!prefersReducedMotion && !supportsTopLayerExit()) {
+          modalEl.setAttribute('data-closing', '');
+          const animations = modalEl.getAnimations ? modalEl.getAnimations({ subtree: true }) : [];
+          if (animations.length > 0) {
+            await Promise.race([
+              Promise.allSettled(animations.map((a) => a.finished)),
+              new Promise((r) => setTimeout(r, 420))
+            ]);
+          }
+          if (!modalEl.hasAttribute('data-closing')) return;
+          modalEl.removeAttribute('data-closing');
+        }
+        modalEl.close();
+      }
+
+      function wireTopLayerDialog(modalEl, closeBtnEl) {
+        if (!modalEl) return;
+        if (closeBtnEl) {
+          closeBtnEl.addEventListener('click', () => closeTopLayer(modalEl));
+        }
+        modalEl.addEventListener('cancel', (ev) => {
+          ev.preventDefault();
+          closeTopLayer(modalEl);
+        });
+        if (!('closedBy' in HTMLDialogElement.prototype)) {
+          modalEl.addEventListener('click', (event) => {
+            if (event.target !== modalEl) return;
+            const rect = modalEl.getBoundingClientRect();
+            const inside =
+              rect.top <= event.clientY &&
+              event.clientY <= rect.top + rect.height &&
+              rect.left <= event.clientX &&
+              event.clientX <= rect.left + rect.width;
+            if (!inside) closeTopLayer(modalEl);
+          });
+        }
+      }
+
+      // 3. Render Interactive Price Menu with Apple Staggered Row Cascade
       const tabsBar = document.getElementById('menu-tabs-bar');
       const activeHeading = document.getElementById('menu-active-heading');
       const activeNote = document.getElementById('menu-active-note');
       const itemsList = document.getElementById('menu-items-list');
-      let currentCatIndex = 0;
+      let hasRenderedInitialMenu = false;
 
       function renderMenuCategory(idx) {
-        currentCatIndex = idx;
         const cat = menu[idx];
         if (!cat) return;
 
@@ -1340,60 +1878,107 @@
             return `<button type="button" role="tab" aria-selected="${active}" data-cat-idx="${i}" class="${active ? 'btn-atelier-primary' : 'btn-atelier-secondary'} shrink-0 rounded-full px-4 sm:px-5 py-2.5 text-xs font-semibold whitespace-nowrap cursor-pointer">${c.category}</button>`;
           }).join('');
           tabsBar.querySelectorAll('[data-cat-idx]').forEach((btn) => {
-            btn.addEventListener('click', () => renderMenuCategory(Number(btn.getAttribute('data-cat-idx'))));
+            btn.addEventListener('click', () => {
+              const nextIdx = Number(btn.getAttribute('data-cat-idx'));
+              renderMenuCategory(nextIdx);
+              const activeTabBtn = tabsBar.querySelector(`[data-cat-idx="${nextIdx}"]`);
+              if (activeTabBtn && activeTabBtn.scrollIntoView) {
+                activeTabBtn.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
+              }
+            });
           });
         }
 
-        if (activeHeading) activeHeading.textContent = cat.category;
-        if (activeNote) activeNote.textContent = cat.note || '';
+        const updateContent = () => {
+          if (activeHeading) activeHeading.textContent = cat.category;
+          if (activeNote) activeNote.textContent = cat.note || '';
 
-        if (itemsList && Array.isArray(cat.items)) {
-          itemsList.innerHTML = cat.items.map((item) => `
-            <div class="py-5 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="space-y-1 max-w-2xl">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h4 class="font-editorial text-xl sm:text-2xl font-semibold">${item.name}</h4>
-                  ${item.badge ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider" style="background: var(--pill-bg); color: var(--accent-primary);">${item.badge}</span>` : ''}
-                  ${item.duration ? `<span class="text-[11px] font-medium opacity-65">• ${item.duration}</span>` : ''}
+          if (itemsList && Array.isArray(cat.items)) {
+            const rowAnimClass = hasRenderedInitialMenu && !prefersReducedMotion ? 'menu-row-enter' : '';
+            itemsList.innerHTML = cat.items.map((item, rIdx) => `
+              <div style="--row-delay: ${rIdx * 60}ms;" class="${rowAnimClass} py-4 sm:py-5 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="space-y-1 max-w-2xl min-w-0">
+                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <h4 class="font-editorial text-xl sm:text-2xl font-semibold leading-snug">${item.name}</h4>
+                    ${item.badge ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider shrink-0" style="background: var(--pill-bg); color: var(--accent-primary);">${item.badge}</span>` : ''}
+                    ${item.duration ? `<span class="text-[11px] font-medium opacity-65 shrink-0">• ${item.duration}</span>` : ''}
+                  </div>
+                  ${item.desc ? `<p class="text-xs leading-relaxed" style="color: var(--ink-muted);">${item.desc}</p>` : ''}
                 </div>
-                ${item.desc ? `<p class="text-xs leading-relaxed" style="color: var(--ink-muted);">${item.desc}</p>` : ''}
+                <div class="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-1 sm:pt-0">
+                  <span class="font-editorial text-2xl sm:text-3xl font-bold" style="color: var(--accent-primary);">${item.price}</span>
+                  <button type="button" data-open-booking="${item.name} (${item.price})" class="btn-atelier-secondary rounded-full px-4 py-2 text-[11px] font-semibold cursor-pointer">
+                    Reserve
+                  </button>
+                </div>
               </div>
-              <div class="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                <span class="font-editorial text-2xl sm:text-3xl font-bold" style="color: var(--accent-primary);">${item.price}</span>
-                <button type="button" data-open-booking="${item.name} (${item.price})" class="btn-atelier-secondary rounded-full px-4 py-2 text-[11px] font-semibold cursor-pointer">
-                  Reserve
-                </button>
-              </div>
-            </div>
-          `).join('');
+            `).join('');
 
-          itemsList.querySelectorAll('[data-open-booking]').forEach((btn) => {
-            btn.addEventListener('click', () => openBookingFlow(btn.getAttribute('data-open-booking')));
-          });
-        }
+            itemsList.querySelectorAll('[data-open-booking]').forEach((btn) => {
+              btn.addEventListener('click', () => openBookingFlow(btn.getAttribute('data-open-booking')));
+            });
+          }
+        };
+
+        updateContent();
+        hasRenderedInitialMenu = true;
       }
 
       if (menu.length) renderMenuCategory(0);
 
-      // 4. Render Lookbook Grid
+      // 4. Render Lookbook Grid + Interactive Apple Lightbox
       const lookbookGrid = document.getElementById('lookbook-grid');
+      const lightbox = document.getElementById('lookbook-lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      const lightboxTitle = document.getElementById('lightbox-title');
+      const lightboxTag = document.getElementById('lightbox-tag');
+      const lightboxReserveBtn = document.getElementById('btn-lightbox-reserve');
+      wireTopLayerDialog(lightbox, document.getElementById('btn-close-lightbox'));
+
+      let activeLightboxStyle = '';
+      if (lightboxReserveBtn) {
+        lightboxReserveBtn.addEventListener('click', async () => {
+          await closeTopLayer(lightbox);
+          openBookingFlow(activeLightboxStyle);
+        });
+      }
+
       if (lookbookGrid && resolvedImages && Array.isArray(resolvedImages.lookbook)) {
-        const targetHref = cfg.instagramUrl || '#visit';
         const zoomCls = activePalette === '01'
           ? 'scale-[1.12] group-hover:scale-[1.18]'
-          : 'scale-[1.02] group-hover:scale-[1.08]';
-        lookbookGrid.innerHTML = resolvedImages.lookbook.map((tile) => `
-          <a href="${targetHref}" ${cfg.instagramUrl ? 'target="_blank" rel="noopener noreferrer"' : ''} class="group atelier-card atelier-card-lift rounded-[26px] p-2.5 block">
-            <div class="rounded-[20px] gold-foil-frame overflow-hidden aspect-square relative" style="background-color: var(--bg-canvas-alt);">
-              <img src="${tile.src}" alt="${tile.title}" loading="lazy" width="520" height="520" class="w-full h-full object-cover ${zoomCls} transition-transform duration-700">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-90"></div>
-              <div class="absolute bottom-3 left-3 right-3 text-white">
-                <span class="text-[9px] uppercase tracking-[0.16em] opacity-85 block">${tile.tag || ''}</span>
-                <span class="font-editorial italic text-lg leading-tight block">${tile.title || ''}</span>
+          : 'scale-[1.03] group-hover:scale-[1.09]';
+        lookbookGrid.innerHTML = resolvedImages.lookbook.map((tile, idx) => `
+          <button
+            type="button"
+            data-apple-reveal="card"
+            data-lookbook-idx="${idx}"
+            class="group atelier-card atelier-card-lift rounded-[22px] sm:rounded-[26px] p-2 sm:p-2.5 block text-left w-full cursor-pointer"
+          >
+            <div class="rounded-[17px] sm:rounded-[20px] gold-foil-frame overflow-hidden aspect-square relative" style="background-color: var(--bg-canvas-alt);">
+              <img src="${tile.src}" alt="${tile.title}" loading="lazy" width="520" height="520" class="w-full h-full object-cover ${zoomCls} transition-transform duration-1000 ease-out">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-90"></div>
+              <div class="absolute bottom-2.5 sm:bottom-3 left-2.5 sm:left-3 right-2.5 sm:right-3 text-white">
+                <span class="text-[8.5px] sm:text-[9px] uppercase tracking-[0.15em] opacity-85 block truncate">${tile.tag || ''}</span>
+                <span class="font-editorial italic text-base sm:text-lg leading-tight block truncate">${tile.title || ''}</span>
               </div>
             </div>
-          </a>
+          </button>
         `).join('');
+
+        lookbookGrid.querySelectorAll('[data-lookbook-idx]').forEach((cardBtn) => {
+          cardBtn.addEventListener('click', () => {
+            const item = resolvedImages.lookbook[Number(cardBtn.getAttribute('data-lookbook-idx'))];
+            if (!item || !lightbox) return;
+            if (lightboxImg) {
+              lightboxImg.src = item.src;
+              lightboxImg.alt = item.title || 'Atelier Nail Look';
+            }
+            if (lightboxTitle) lightboxTitle.textContent = item.title || '';
+            if (lightboxTag) lightboxTag.textContent = item.tag || 'Signature Artistry';
+            activeLightboxStyle = item.title || '';
+            lightbox.showModal();
+          });
+        });
       }
 
       // 5. Render Client Reviews
@@ -1401,27 +1986,27 @@
       if (reviewsGrid && Array.isArray(cfg.reviews)) {
         const starSvg = '<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M10 1.5l2.59 5.25 5.79.84-4.19 4.08.99 5.77L10 14.72l-5.18 2.72.99-5.77-4.19-4.08 5.79-.84L10 1.5z"/></svg>';
         reviewsGrid.innerHTML = cfg.reviews.map((r) => `
-          <article class="atelier-card atelier-card-lift rounded-[28px] p-7 flex flex-col justify-between space-y-5">
+          <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-5">
             <div class="space-y-3">
               <div class="flex items-center gap-0.5" style="color: var(--foil-gold);" aria-hidden="true">
                 ${starSvg.repeat(5)}
               </div>
               <p class="font-editorial italic text-xl leading-relaxed">"${r.quote}"</p>
             </div>
-            <div class="pt-3 border-t flex items-center justify-between text-xs" style="border-color: var(--border-hairline);">
+            <div class="pt-3 border-t flex items-center justify-between gap-2 text-xs" style="border-color: var(--border-hairline);">
               <span class="font-semibold uppercase tracking-wider">${r.author}</span>
-              <span style="color: var(--ink-muted);">${r.detail || 'Verified Client'}</span>
+              <span class="text-right" style="color: var(--ink-muted);">${r.detail || 'Verified Client'}</span>
             </div>
           </article>
         `).join('');
       }
 
-      // 6. Booking Flow & Native <dialog closedby="any"> + Safari Light-Dismiss Fallback
+      // 6. Booking Flow & Native <dialog closedby="any">
       const dialog = document.getElementById('booking-dialog');
       const serviceSelect = document.getElementById('bk-service');
-      const closeBtn = document.getElementById('btn-close-dialog');
       const bookingForm = document.getElementById('concierge-booking-form');
       const bkConfirm = document.getElementById('bk-confirmation');
+      wireTopLayerDialog(dialog, document.getElementById('btn-close-dialog'));
 
       if (serviceSelect && menu.length) {
         const allOptions = [];
@@ -1440,6 +2025,13 @@
         }
         if (!dialog) return;
         if (preselectedService && serviceSelect) {
+          const exists = Array.from(serviceSelect.options).some((o) => o.value === preselectedService);
+          if (!exists) {
+            const customOpt = document.createElement('option');
+            customOpt.value = preselectedService;
+            customOpt.textContent = `Lookbook Request: ${preselectedService}`;
+            serviceSelect.prepend(customOpt);
+          }
           serviceSelect.value = preselectedService;
         }
         if (bkConfirm) bkConfirm.classList.add('hidden');
@@ -1449,24 +2041,6 @@
       document.querySelectorAll('[data-open-booking]').forEach((btn) => {
         btn.addEventListener('click', () => openBookingFlow(btn.getAttribute('data-open-booking')));
       });
-
-      if (closeBtn && dialog) {
-        closeBtn.addEventListener('click', () => dialog.close());
-      }
-
-      // Safari fallback for <dialog closedby="any">
-      if (dialog && !('closedBy' in HTMLDialogElement.prototype)) {
-        dialog.addEventListener('click', (event) => {
-          if (event.target !== dialog) return;
-          const rect = dialog.getBoundingClientRect();
-          const inside =
-            rect.top <= event.clientY &&
-            event.clientY <= rect.top + rect.height &&
-            rect.left <= event.clientX &&
-            event.clientX <= rect.left + rect.width;
-          if (!inside) dialog.close();
-        });
-      }
 
       if (bookingForm) {
         bookingForm.addEventListener('submit', (e) => {
@@ -1491,17 +2065,276 @@
         });
       }
 
-      // 7. Scroll Reveal Observer
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
+      // ======================================================================
+      // 7. MOBILE NAVIGATION SHEET & QUINTIC APPLE SMOOTH ANCHOR GLIDE
+      // ======================================================================
+      const mobileMenuBtn = document.getElementById('btn-mobile-menu');
+      const mobileSheet = document.getElementById('mobile-nav-sheet');
+
+      function setMobileMenuOpen(open) {
+        if (!mobileMenuBtn || !mobileSheet) return;
+        mobileMenuBtn.setAttribute('aria-expanded', String(open));
+        mobileSheet.classList.toggle('is-open', open);
+      }
+
+      if (mobileMenuBtn && mobileSheet) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+          setMobileMenuOpen(!isOpen);
+        });
+        document.addEventListener('click', (e) => {
+          if (mobileSheet.classList.contains('is-open') && !mobileSheet.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+            setMobileMenuOpen(false);
           }
         });
-      }, { threshold: 0.1 });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') setMobileMenuOpen(false);
+        });
+      }
 
-      document.querySelectorAll('.reveal-section').forEach((sec) => observer.observe(sec));
+      // Bespoke Apple Quintic Ease-Out Anchor Scroller (1040ms silky glide)
+      let activeGlideRaf = 0;
+      const cancelAnchorGlide = () => {
+        if (activeGlideRaf) {
+          cancelAnimationFrame(activeGlideRaf);
+          activeGlideRaf = 0;
+        }
+      };
+      window.addEventListener('wheel', cancelAnchorGlide, { passive: true });
+      window.addEventListener('touchstart', cancelAnchorGlide, { passive: true });
+
+      function glideToAnchor(hash) {
+        if (!hash || !hash.startsWith('#')) return;
+        const target = hash === '#top' ? document.body : document.querySelector(hash);
+        if (!target) return;
+        setMobileMenuOpen(false);
+
+        const headerOffset = hash === '#top' ? 0 : 88;
+        const startY = window.scrollY;
+        const destY = hash === '#top'
+          ? 0
+          : Math.max(0, target.getBoundingClientRect().top + window.scrollY - headerOffset);
+        const distance = destY - startY;
+
+        if (prefersReducedMotion || Math.abs(distance) < 6) {
+          window.scrollTo(0, destY);
+          return;
+        }
+
+        cancelAnchorGlide();
+        const duration = Math.min(1180, Math.max(680, Math.abs(distance) * 0.48));
+        const startTime = performance.now();
+
+        function step(now) {
+          const t = Math.min(1, (now - startTime) / duration);
+          // Quintic ease-out: fast responsive launch, feather-light landing
+          const eased = 1 - Math.pow(1 - t, 5);
+          window.scrollTo(0, startY + distance * eased);
+          if (t < 1) {
+            activeGlideRaf = requestAnimationFrame(step);
+          } else {
+            activeGlideRaf = 0;
+          }
+        }
+        activeGlideRaf = requestAnimationFrame(step);
+      }
+
+      document.querySelectorAll('[data-smooth-anchor]').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          const hash = link.getAttribute('data-smooth-anchor') || link.getAttribute('href');
+          if (hash && hash.startsWith('#')) {
+            e.preventDefault();
+            glideToAnchor(hash);
+          }
+        });
+      });
+
+      // ======================================================================
+      // 8. DESKTOP SPECULAR CARD SPOTLIGHT
+      // ======================================================================
+      if (!prefersReducedMotion && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        document.querySelectorAll('.atelier-card-lift').forEach((card) => {
+          card.addEventListener('pointermove', (ev) => {
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--spot-x', `${(ev.clientX - r.left).toFixed(1)}px`);
+            card.style.setProperty('--spot-y', `${(ev.clientY - r.top).toFixed(1)}px`);
+          }, { passive: true });
+        });
+      }
+
+      // ======================================================================
+      // 9. APPLE BIDIRECTIONAL SCROLL REVEAL / RETRACT + DAMPED PARALLAX ENGINE
+      //    - Scroll down: slow, poised 1.32s staggered bloom (never rushed)
+      //    - Scroll up: smooth 0.82s Apple-spring retract back down
+      //    - Damped rAF lerp (0.11): silky inertial optical depth & progress
+      // ======================================================================
+      const headerEl = document.getElementById('atelier-header');
+      const heroCopyCol = document.getElementById('hero-copy-col');
+      const heroArtCol = document.getElementById('hero-art-col');
+      const heroSeal = document.getElementById('hero-floating-seal');
+      const friezeTrack = document.getElementById('craft-frieze-track');
+      const floatDock = document.getElementById('atelier-float-dock');
+      const visitSection = document.getElementById('visit');
+      const parallaxFrames = Array.from(document.querySelectorAll('[data-parallax-frame]'));
+      const revealNodes = Array.from(document.querySelectorAll('[data-apple-reveal]'));
+      const navSpyLinks = Array.from(document.querySelectorAll('[data-nav-spy]'));
+      const spySections = navSpyLinks
+        .map((a) => ({ id: a.getAttribute('data-nav-spy'), el: document.getElementById(a.getAttribute('data-nav-spy')), link: a }))
+        .filter((s) => s.el);
+
+      function evaluateBidirectionalReveals() {
+        if (prefersReducedMotion) {
+          revealNodes.forEach((n) => n.classList.add('is-inview'));
+          return;
+        }
+        const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+        const enterLine = vh * 0.865;
+        const retractLine = vh * 0.915;
+        const newlyEntering = [];
+
+        for (let i = 0; i < revealNodes.length; i++) {
+          const el = revealNodes[i];
+          const rect = el.getBoundingClientRect();
+          const isVisible = el.classList.contains('is-inview');
+
+          if (!isVisible && rect.top <= enterLine) {
+            if (rect.bottom <= 0) {
+              // Already scrolled completely past above viewport -> reveal instantly without consuming stagger slots
+              el.style.setProperty('--stagger-ms', '0ms');
+              el.classList.remove('is-retracting');
+              el.classList.add('is-inview');
+            } else {
+              newlyEntering.push({ el, top: rect.top, left: rect.left });
+            }
+          } else if (isVisible && rect.top >= retractLine) {
+            // Element moved back below the lower viewport threshold while scrolling UP -> smoothly retract!
+            el.style.setProperty('--stagger-ms', '0ms');
+            el.classList.remove('is-inview');
+            el.classList.add('is-retracting');
+          }
+        }
+
+        if (newlyEntering.length > 0) {
+          // Sort top-to-bottom, left-to-right and stagger gently (155ms per item, capped at 465ms)
+          newlyEntering.sort((a, b) => (Math.abs(a.top - b.top) > 24 ? a.top - b.top : a.left - b.left));
+          newlyEntering.forEach((item, idx) => {
+            const delayMs = Math.min(idx * 155, 465);
+            item.el.style.setProperty('--stagger-ms', `${delayMs}ms`);
+            item.el.classList.remove('is-retracting');
+            item.el.classList.add('is-inview');
+          });
+        }
+      }
+
+      let targetScrollY = window.scrollY || 0;
+      let smoothScrollY = targetScrollY;
+      let scrollRafId = 0;
+
+      function updateContinuousScrollEffects() {
+        const diff = targetScrollY - smoothScrollY;
+        if (Math.abs(diff) > 0.12 && !prefersReducedMotion) {
+          smoothScrollY += diff * 0.115;
+          scrollRafId = requestAnimationFrame(updateContinuousScrollEffects);
+        } else {
+          smoothScrollY = targetScrollY;
+          scrollRafId = 0;
+        }
+
+        const vh = window.innerHeight || 800;
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+        const progress = Math.min(1, Math.max(0, smoothScrollY / maxScroll));
+
+        if (headerEl) {
+          headerEl.classList.toggle('is-scrolled', targetScrollY > 24);
+          headerEl.style.setProperty('--scroll-progress', progress.toFixed(4));
+        }
+
+        // Floating Quick-Reserve Capsule: appears when scrolling down past Hero, retracts near top or #visit
+        if (floatDock) {
+          const pastHero = targetScrollY > Math.min(460, vh * 0.58);
+          let nearVisit = false;
+          if (visitSection) {
+            const vRect = visitSection.getBoundingClientRect();
+            nearVisit = vRect.top < vh * 0.72;
+          }
+          floatDock.classList.toggle('is-docked', pastHero && !nearVisit);
+        }
+
+        // Active Section Highlight in Header
+        if (spySections.length) {
+          let activeId = '';
+          const probeLine = vh * 0.36;
+          for (let i = 0; i < spySections.length; i++) {
+            const r = spySections[i].el.getBoundingClientRect();
+            if (r.top <= probeLine && r.bottom >= 120) {
+              activeId = spySections[i].id;
+            }
+          }
+          for (let i = 0; i < spySections.length; i++) {
+            spySections[i].link.classList.toggle('is-active', spySections[i].id === activeId);
+          }
+        }
+
+        if (prefersReducedMotion) return;
+
+        // Subtle Apple Hero Recede & Layered Arch Counter-Parallax (0 -> 620px)
+        if (smoothScrollY < vh * 1.25) {
+          const heroT = Math.min(1, Math.max(0, smoothScrollY / 620));
+          if (heroCopyCol) {
+            const copyY = -(heroT * 18);
+            const copyOpacity = 1 - heroT * 0.58;
+            heroCopyCol.style.transform = `translate3d(0, ${copyY.toFixed(2)}px, 0)`;
+            heroCopyCol.style.opacity = copyOpacity.toFixed(3);
+          }
+          if (heroArtCol) {
+            const artY = heroT * 22;
+            heroArtCol.style.transform = `translate3d(0, ${artY.toFixed(2)}px, 0)`;
+          }
+          if (heroSeal) {
+            const sealY = -(heroT * 10);
+            heroSeal.style.transform = `translate3d(0, ${sealY.toFixed(2)}px, 0)`;
+          }
+        }
+
+        // Subtle Horizontal Glide on the Craftsmanship Frieze
+        if (friezeTrack && window.innerWidth >= 640) {
+          const fRect = friezeTrack.getBoundingClientRect();
+          if (fRect.bottom > -80 && fRect.top < vh + 80) {
+            const centerNorm = ((vh * 0.5 - (fRect.top + fRect.height * 0.5)) / vh);
+            const shiftX = Math.max(-26, Math.min(26, centerNorm * 34));
+            friezeTrack.style.transform = `translate3d(${shiftX.toFixed(2)}px, 0, 0)`;
+          }
+        }
+
+        // Optical Window Parallax inside Editorial Oil-Painting Frames
+        for (let i = 0; i < parallaxFrames.length; i++) {
+          const frame = parallaxFrames[i];
+          const r = frame.getBoundingClientRect();
+          if (r.bottom < -60 || r.top > vh + 60) continue;
+          const img = frame.querySelector('img');
+          if (!img) continue;
+          const norm = ((vh * 0.5 - (r.top + r.height * 0.5)) / (vh * 0.75));
+          const clamped = Math.max(-1, Math.min(1, norm));
+          const panY = clamped * 15;
+          img.style.translate = `0px ${panY.toFixed(2)}px`;
+        }
+      }
+
+      function onScrollOrResize() {
+        targetScrollY = window.scrollY || 0;
+        evaluateBidirectionalReveals();
+        if (!scrollRafId) {
+          scrollRafId = requestAnimationFrame(updateContinuousScrollEffects);
+        }
+      }
+
+      window.addEventListener('scroll', onScrollOrResize, { passive: true });
+      window.addEventListener('resize', onScrollOrResize, { passive: true });
+
+      // Initial evaluation on load
+      evaluateBidirectionalReveals();
+      updateContinuousScrollEffects();
     })();
   </script>
 </body>
