@@ -8,7 +8,7 @@
 - **Display Phone:** (03) 9123 4567
 - **Client Mobile (SMS Booking):** 0412 345 678
 - **Email:** hello@maisonelan.com.au
-- **Palette:** `01` — Warm Terracotta & Champagne Gold (`01` | `02` | `03`)
+- **Palette:** `01` — Warm Terracotta & Champagne Gold (`01` | `02` | `03` | `04` | `05`)
 - **Logo Mode:** `monogram` (`monogram` embossed gold wax seal `M` | `image` custom logo URL)
 - **Booking Mode:** `modal` (Set `bookingUrl` in `window.ATELIER_CONFIG` to Fresha/Timely/Square URL when client has one, or leave empty to use the built-in Atelier Concierge SMS/Email Booking Dialog)
 - **Instagram:** `@maisonelan.nails` (`https://instagram.com`)
@@ -20,3 +20,4 @@
 2. Edit `window.ATELIER_CONFIG` and `window.SALON_MENU_DATA` inside `clients/<slug>/index.html`.
 3. If bespoke artwork is needed, invoke `image-generator` following `clients/GEMINI.md` and save to `clients/<slug>/assets/`.
 4. Publish live to `<slug>.wynnpages.com.au` via `node scripts/atelier-sync.mjs push <slug>`.
+

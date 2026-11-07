@@ -3,9 +3,10 @@
  * WynnPages Digital Atelier — Local <-> Live KV Sync & Initializer CLI
  *
  * Commands:
- *   node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03] [--name "Salon Name"]
+ *   node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03|04|05] [--name "Salon Name"]
  *   node scripts/atelier-sync.mjs pull <slug>
  *   node scripts/atelier-sync.mjs push <slug>
+ *   node scripts/atelier-sync.mjs sync-template
  */
 
 import fs from 'node:fs';
@@ -144,7 +145,9 @@ function buildClientFaviconSvg(bizName, palette = '01') {
   const themes = {
     '01': { bg1: '#FCF9F3', bg2: '#F3DFB2', ring: '#D49B28', accent: '#96432B' },
     '02': { bg1: '#FFFDFB', bg2: '#F5DFD4', ring: '#C89378', accent: '#9E5850' },
-    '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052' }
+    '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052' },
+    '04': { bg1: '#FCF9F4', bg2: '#E8DBC8', ring: '#C69C47', accent: '#5C4033' },
+    '05': { bg1: '#FAFCFD', bg2: '#D8E3EB', ring: '#C4A267', accent: '#3D5A6C' }
   };
   const t = themes[palette] || themes['01'];
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
@@ -163,7 +166,8 @@ function buildClientFaviconSvg(bizName, palette = '01') {
 function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   const bizName = (client && (client.businessName || client.name)) || 'Maison Élan';
   const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'A';
-  const palette = paletteOverride || '01';
+  const validPal = ['01', '02', '03', '04', '05'].includes(paletteOverride) ? paletteOverride : '01';
+  const palette = validPal;
   const address = (client && client.businessAddress) || 'Melbourne, VIC';
   const parsedAddr = parseAuAddress(address);
   const displayPhone = (client && (client.displayPhone || client.phone)) || '';
@@ -171,7 +175,7 @@ function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   const email = (client && client.email) || '';
   const parsedLinks = parseSocialAndBookingLinks(client && client.socialLinks);
 
-  let html = templateHtml.replace(/data-palette="0[123]"/, `data-palette="${palette}"`);
+  let html = templateHtml.replace(/data-palette="0[1-5]"/, `data-palette="${palette}"`);
 
   const patchStringField = (fieldName, newValue) => {
     if (newValue === undefined || newValue === null) return;
@@ -183,6 +187,20 @@ function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   patchStringField('palette', palette);
   patchStringField('salonName', bizName);
   patchStringField('monogram', monogram);
+
+  const vaultBase = `${STUDIO_ORIGIN}/assets/atelier/nails`;
+  const vaultMap = {
+    '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, biab: `${vaultBase}/biab-artistry.jpg`, pedi: `${vaultBase}/botanical-pedicure.jpg` },
+    '02': { hero: `${vaultBase}/p02/hero.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg` },
+    '03': { hero: `${vaultBase}/p03/hero.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg` },
+    '04': { hero: `${vaultBase}/p04/hero.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg` },
+    '05': { hero: `${vaultBase}/p05/hero.jpg`, biab: `${vaultBase}/p05/biab.jpg`, pedi: `${vaultBase}/p05/pedicure.jpg` }
+  };
+  const pv = vaultMap[palette] || vaultMap['01'];
+  patchStringField('hero', pv.hero);
+  patchStringField('biabFeature', pv.biab);
+  patchStringField('pedicureFeature', pv.pedi);
+  html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
 
   const resolvedSuburb = parsedAddr.suburb || parsedAddr.street || 'Australia';
   const resolvedState = parsedAddr.state || '';
@@ -289,7 +307,7 @@ function buildManifestMarkdown(slug, client, palette = '01', uploadedFiles = [])
     `- **Live Demo URL:** https://${slug}.wynnpages.com.au`,
     `- **Official Domain:** ${c.liveUrl || c.existingDomain || c.desiredDomains || 'Pending'}`,
     `- **Stripe Customer ID:** \`${c.id || 'Local Draft'}\``,
-    `- **Selected Haute Couture Palette:** \`${palette}\` (\`01\` Terracotta & Gold | \`02\` Rose Silk & Espresso | \`03\` Botanical Sage)`,
+    `- **Selected Haute Couture Palette:** \`${palette}\` (\`01\` Terracotta & Gold | \`02\` Rose Silk & Rose-Gold | \`03\` Botanical Sage | \`04\` Espresso Cashmere & Brushed Gold | \`05\` Coastal Pearl & Mineral Slate)`,
     `- **Business Name:** ${bizName}`,
     `- **Display Phone:** ${c.displayPhone || c.phone || 'TBD'}`,
     `- **SMS Phone:** ${c.phone || 'TBD'}`,
@@ -379,7 +397,7 @@ async function main() {
   }
 
   if (!cmd || !rawTarget || !['init', 'pull', 'push'].includes(cmd)) {
-    console.error('Usage:\n  node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03] [--name "Salon Name"]\n  node scripts/atelier-sync.mjs pull <slug>\n  node scripts/atelier-sync.mjs push <slug>');
+    console.error('Usage:\n  node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03|04|05] [--name "Salon Name"]\n  node scripts/atelier-sync.mjs pull <slug>\n  node scripts/atelier-sync.mjs push <slug>\n  node scripts/atelier-sync.mjs sync-template');
     process.exit(1);
   }
 

@@ -223,7 +223,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     smsText = `Hi ${firstName}, thank you for choosing WynnPages Studio! Your 7-day build slot is locked in. Please complete your quick 2-min studio brief here: ${origin}/onboarding - Any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
     emailSubject = `Your 7-Day Build Slot is Locked — Complete Your 2-Min Brief`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Payment Secured via Stripe',
+      preheader: 'Payment Confirmed • WynnPages Digital Atelier',
       heading: `Your 7-Day Build Slot is Locked, ${firstName}.`,
       bodyHtml: `
         <p>Welcome to <strong>WynnPages</strong>! Your $599 AUD studio build slot is officially reserved.</p>
@@ -237,28 +237,47 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
     const hasExisting = Boolean(client.existingDomain);
-    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.name || '')}&email=${encodeURIComponent(client.email || '')}&cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}&ns=${encodeURIComponent(client.cfNameservers || '')}`;
-    
-    if (hasExisting) {
-      smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your existing domain with zero tech hassle, you can simply reply with your domain registrar login (GoDaddy, CrazyDomains, etc.) or check our guide: ${domainGuideUrl} - Warm regards, Wynn`;
-      emailSubject = `Brief Received! Next Step: Connect Your Domain (${domainInfo})`;
+    const isSelfNs = hasExisting && client.dnsMode === 'self_ns' && Boolean(client.cfNameservers);
+    const isAlreadyDelegated = Boolean(client.domainDelegated);
+    const nsParam = isSelfNs ? `&ns=${encodeURIComponent(client.cfNameservers || '')}` : '';
+    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.businessName || client.name || '')}&email=${encodeURIComponent(client.email || '')}&cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}${nsParam}`;
+
+    if (isAlreadyDelegated) {
+      smsText = `Hi ${firstName}, thank you! We received your WynnPages details and domain access for ${domainInfo}. Our Australian engineers are connecting SSL & high-speed DNS for you - we will notify you as soon as ${domainInfo} is officially live! Warm regards, Wynn`;
+      emailSubject = `All Set! Our Engineers Are Connecting ${domainInfo}`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Studio Active • Connecting Your Existing Domain',
-        heading: `We are hand-crafting your website, ${firstName}.`,
+        preheader: 'Studio Active • Hands-Free Domain Setup Underway',
+        heading: `Thank you, ${firstName} — we are preparing your launch!`,
         bodyHtml: `
-          <p>Thank you for completing your studio brief! We have logged your specifications and started building your bespoke website for launch.</p>
+          <p>We have received your final specifications and domain access details for <strong>${domainInfo}</strong>.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
-            <div><strong>Type:</strong> ${(client.briefType || 'organic').toUpperCase()}</div>
+            <div><strong>Launch Domain:</strong> ${domainInfo}</div>
+            <div style="margin-top:6px;"><strong>Domain Setup:</strong> Free Studio Concierge (Access Received ✓)</div>
             ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
-            ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
-            <div style="margin-top:6px;"><strong>Existing Domain:</strong> ${domainInfo}</div>
           </div>
-          <p><strong>How to connect your domain (${domainInfo}) with zero technical hassle:</strong></p>
-          <p>Since your domain is already registered, you do not need to figure out DNS settings! You have two simple options:</p>
-          <ul>
-            <li><strong>Option A (Fastest &amp; Recommended):</strong> Simply reply to this email with your registrar login (e.g. GoDaddy, CrazyDomains, Namecheap username &amp; temporary password) and our Australian engineers will connect it for you in 60 seconds.</li>
-            <li><strong>Option B (Self-Service):</strong> Click the button below to view our guide and submit credentials securely or point nameservers yourself.</li>
-          </ul>
+          <p><strong>No further technical action is required from you.</strong> Our Australian studio engineers are configuring your SSL certificate and high-speed network routing while preserving 100% of your legal ownership and any existing business emails.</p>
+          <p>We will send you an SMS and email the moment <strong>${domainInfo}</strong> is officially live!</p>
+        `,
+        primaryCta: {
+          label: 'Visit WynnPages Studio',
+          url: origin
+        }
+      });
+    } else if (isSelfNs) {
+      const nsParts = String(client.cfNameservers || '').split(',').map((s) => s.trim()).filter(Boolean);
+      smsText = `Hi ${firstName}, thank you! Your WynnPages Australian High-Speed Network nameservers for ${domainInfo} are: ${nsParts.join(', ')}. Full setup details have also been emailed to you: ${domainGuideUrl} - Warm regards, Wynn`;
+      emailSubject = `Brief Received! Your Network Nameservers for ${domainInfo}`;
+      emailHtml = buildAtelierEmailHtml({
+        preheader: `Nameservers Ready for ${domainInfo}`,
+        heading: `Your network nameservers are ready, ${firstName}.`,
+        bodyHtml: `
+          <p>Thank you for completing your studio confirmation! We have provisioned <strong>${domainInfo}</strong> on the <strong>WynnPages Studio Australian High-Speed Network</strong>.</p>
+          <p>Please ask your IT technician (or log into your domain registrar) to replace the current <strong>Nameservers</strong> for <strong>${domainInfo}</strong> with:</p>
+          <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px 18px;margin:18px 0;font-family:monospace;font-size:13px;line-height:1.8;">
+            <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${nsParts[0] || ''}</span></div>
+            ${nsParts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${nsParts[1]}</span></div>` : ''}
+          </div>
+          <p>Prefer our Australian engineers to connect it for you instead? Simply open the guide below to invite <strong>hello@wynnpages.com.au</strong> or share temporary registrar access.</p>
         `,
         primaryCta: {
           label: 'Open Domain Connection Guide →',
@@ -269,25 +288,55 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
           url: origin
         }
       });
-    } else {
-      smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To register your domain in 2 minutes via VentraIP (keeping 100% legal ownership & renewals in your account), follow our visual guide: ${domainGuideUrl} - Warm regards, Wynn`;
-      emailSubject = `Brief Received! Next Step: 2-Minute VentraIP Domain Setup Guide`;
+    } else if (hasExisting) {
+      smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To connect your domain with zero tech hassle, invite hello@wynnpages.com.au or submit access via your personalised guide: ${domainGuideUrl} - Warm regards, Wynn`;
+      emailSubject = `Brief Received! Next Step: Connect Your Domain (${domainInfo})`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Studio Active • 2-Minute VentraIP Domain Setup Guide Inside',
+        preheader: 'Studio Active • Free Concierge Domain Connection',
         heading: `We are hand-crafting your website, ${firstName}.`,
         bodyHtml: `
-          <p>Thank you for completing your studio brief! We have logged your specifications and started preparing your bespoke website for launch.</p>
+          <p>Thank you for completing your studio confirmation! We have logged your specifications and started preparing your bespoke website for launch.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
-            <div><strong>Type:</strong> ${(client.briefType || 'organic').toUpperCase()}</div>
+            <div><strong>Existing Domain:</strong> ${domainInfo}</div>
             ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
             ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
-            <div style="margin-top:6px;"><strong>Desired Domain:</strong> ${domainInfo}</div>
           </div>
-          <p><strong>How to register your domain (${domainInfo}) with zero tech hassle:</strong></p>
-          <p>Click the button below to view our visual guide on how to register your domain on <strong>VentraIP Australia</strong> (retaining 100% legal ownership and annual auto-renewals in your own account) and add <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an Additional User so our engineers can connect it for free:</p>
+          <p><strong>Connect ${domainInfo} with zero technical hassle:</strong></p>
+          <ul>
+            <li><strong>VentraIP / GoDaddy Delegation (Recommended):</strong> Invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as a delegated user, OR</li>
+            <li><strong>60-Second Studio Concierge:</strong> Submit your registrar access securely via your personalised link below so our Australian engineers can configure SSL &amp; high-speed DNS for you.</li>
+          </ul>
         `,
         primaryCta: {
-          label: 'Open VentraIP Domain Guide →',
+          label: 'Open Personalised Domain Guide →',
+          url: domainGuideUrl
+        },
+        secondaryCta: {
+          label: 'Visit WynnPages Studio',
+          url: origin
+        }
+      });
+    } else {
+      smsText = `Hi ${firstName}, thank you! We received your WynnPages details for ${domainInfo}. To register your domain in 2 minutes on VentraIP (keeping 100% legal ownership in your account) & invite hello@wynnpages.com.au, open your guide: ${domainGuideUrl} - Warm regards, Wynn`;
+      emailSubject = `Brief Received! Next Step: 2-Minute VentraIP Domain Setup (${domainInfo})`;
+      emailHtml = buildAtelierEmailHtml({
+        preheader: 'Studio Active • 2-Minute VentraIP Domain Setup Guide Inside',
+        heading: `We are preparing your launch, ${firstName}.`,
+        bodyHtml: `
+          <p>Thank you for completing your studio confirmation! We have logged your details and prepared your bespoke website for <strong>${domainInfo}</strong>.</p>
+          <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
+            <div><strong>Desired Domain:</strong> ${domainInfo}</div>
+            ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
+            ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
+          </div>
+          <p><strong>Final 2-minute step so you own ${domainInfo} 100% in your name:</strong></p>
+          <ol>
+            <li>Register <strong>${domainInfo}</strong> directly on <strong>VentraIP Australia</strong> under your own ABN &amp; card with <strong>Auto-Renew ON</strong>.</li>
+            <li>Under <em>Profile Settings &rarr; Additional Users</em>, invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> and click confirm inside our visual guide — our engineers will handle all DNS &amp; SSL setup for free!</li>
+          </ol>
+        `,
+        primaryCta: {
+          label: 'Open Step-by-Step VentraIP Guide →',
           url: domainGuideUrl
         },
         secondaryCta: {
@@ -447,7 +496,7 @@ function buildAiPromptForClient(c) {
     `Social Media & Booking Links: ${c.socialLinks || 'N/A'}`,
     `Brief Type: ${c.briefType || 'organic'} | Stage: ${c.stage || 'brief_completed'}`,
     `Industry / Niche: ${c.industry || 'Nail Salon / Beauty Atelier'}`,
-    `Client Color Notes: ${c.brandColors || 'Select best match from Haute Couture Palettes 01, 02, or 03'}`,
+    `Client Color Notes: ${c.brandColors || 'Select best match from Haute Couture Palettes 01–05'}`,
     `Reference Websites / Vibe Links: ${c.vibeLinks || 'N/A'}`,
     `Domain Info: Existing=${c.existingDomain || 'N/A'} | Desired=${c.desiredDomains || 'N/A'} | Official=${c.liveUrl || 'N/A'}`,
     `Uploaded Logo: ${c.logoFileName || 'None (Use Tier A Embossed Gold Wax Monogram Seal)'}`,
@@ -456,7 +505,7 @@ function buildAiPromptForClient(c) {
     `=====================================================`,
     `ANTIGRAVITY EXECUTION WORKFLOW:`,
     `1. Pull or initialize the local client workspace: \`node scripts/atelier-sync.mjs pull ${slug}\` (this also downloads any uploaded menu/logo into \`clients/${slug}/_client_uploads/\`).`,
-    `2. Read \`clients/GEMINI.md\` and \`clients/${slug}/ATELIER_MANIFEST.md\`. Strictly enforce the WynnPages Bespoke Oil-Painting & Gold-Leaf aesthetic, 3 fixed Haute Couture Palettes (01 Terracotta & Gold, 02 Rose Silk & Espresso, 03 Botanical Sage), editorial Cormorant Garamond italic heading accents, and ZERO emojis.`,
+    `2. Read \`clients/GEMINI.md\` and \`clients/${slug}/ATELIER_MANIFEST.md\`. Strictly enforce the WynnPages Bespoke Oil-Painting & Gold-Leaf aesthetic, 5 fixed Haute Couture Palettes (01 Terracotta & Gold, 02 Rose Silk, 03 Botanical Sage, 04 Espresso Cashmere, 05 Coastal Pearl), editorial Cormorant Garamond italic heading accents, and ZERO emojis.`,
     `3. Customize \`clients/${slug}/index.html\` (\`window.ATELIER_CONFIG\` & \`window.SALON_MENU_DATA\`, or transcribe real menu prices from \`_client_uploads/\` if present).`,
     `4. Push live immediately when done: \`node scripts/atelier-sync.mjs push ${slug}\` and verify \`https://${slug}.wynnpages.com.au\`.`
   ].join('\n');
@@ -501,7 +550,9 @@ function formatCustomerRecord(cust) {
     existingDomain: m.existing_domain || '',
     desiredDomains: m.desired_domains || '',
     domainAccessNotes: m.domain_access_notes || '',
+    dnsMode: m.dns_mode || '',
     cfNameservers: m.cf_nameservers || '',
+    cfZoneStatus: m.cf_zone_status || '',
     logoFileId: m.logo_file_id || '',
     logoFileName: m.logo_file_name || '',
     logoDriveUrl: m.logo_drive_url || '',
@@ -997,7 +1048,9 @@ function buildClientMonogramFaviconSvg(bizName, palette = '01') {
   const themes = {
     '01': { bg1: '#FCF9F3', bg2: '#F3DFB2', ring: '#D49B28', accent: '#96432B' },
     '02': { bg1: '#FFFDFB', bg2: '#F5DFD4', ring: '#C89378', accent: '#9E5850' },
-    '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052' }
+    '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052' },
+    '04': { bg1: '#FCF9F4', bg2: '#EFE0BE', ring: '#C69C47', accent: '#5C4033' },
+    '05': { bg1: '#FAFCFD', bg2: '#DDE6EC', ring: '#C4A267', accent: '#3D5A6C' }
   };
   const t = themes[palette] || themes['01'];
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
@@ -1074,7 +1127,7 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
 
   if (/<meta[^>]+property=["']og:image["'][^>]*>/i.test(html)) {
     html = html.replace(
-      /<meta([^>]+)property=["']og:image["']([^>]*)content=["'](?:\.\/|\/og-share\.jpg|https:\/\/wynnpages\.com\.au\/assets\/atelier\/nails\/hero-sanctuary\.jpg)["']([^>]*)>/i,
+      /<meta([^>]+)property=["']og:image["']([^>]*)content=["'](?:\.\/|\/og-share\.jpg|https:\/\/wynnpages\.com\.au\/assets\/atelier\/nails\/(?:hero-sanctuary|p0[2-5]\/hero)\.jpg)["']([^>]*)>/i,
       `<meta property="og:image" id="og-image" content="${ogShareUrl}">`
     );
   } else if (html.includes('</head>')) {
@@ -1086,7 +1139,7 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
 
   if (/<meta[^>]+name=["']twitter:image["'][^>]*>/i.test(html)) {
     html = html.replace(
-      /<meta([^>]+)name=["']twitter:image["']([^>]*)content=["'](?:\.\/|\/og-share\.jpg|https:\/\/wynnpages\.com\.au\/assets\/atelier\/nails\/hero-sanctuary\.jpg)["']([^>]*)>/i,
+      /<meta([^>]+)name=["']twitter:image["']([^>]*)content=["'](?:\.\/|\/og-share\.jpg|https:\/\/wynnpages\.com\.au\/assets\/atelier\/nails\/(?:hero-sanctuary|p0[2-5]\/hero)\.jpg)["']([^>]*)>/i,
       `<meta name="twitter:image" id="tw-image" content="${ogShareUrl}">`
     );
   } else if (html.includes('</head>')) {
@@ -1211,6 +1264,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, s
 
   // 5. Per-Client Social Share Image (/og-share.jpg -> 1200x630 JPEG)
   if (reqPath === '/og-share.jpg') {
+    let meta = null;
     if (env && env.WYNN_KV && cleanSlug) {
       const ogObj = await env.WYNN_KV.getWithMetadata(`site_asset:${cleanSlug}:/og-share.jpg`, 'arrayBuffer');
       if (ogObj && ogObj.value) {
@@ -1219,9 +1273,12 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, s
           headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=3600' }
         });
       }
+      meta = await env.WYNN_KV.get(`site_meta:${cleanSlug}`, 'json').catch(() => null);
     }
-    // Guaranteed oil-painting JPEG fallback so social shares never 404
-    const fallbackUrl = new URL('/assets/atelier/nails/hero-sanctuary.jpg', 'https://wynnpages.com.au');
+    // Palette-matched oil-painting JPEG fallback so social shares never 404
+    const pal = (meta && ['02', '03', '04', '05'].includes(meta.palette)) ? meta.palette : '01';
+    const fallbackAssetPath = pal === '01' ? '/assets/atelier/nails/hero-sanctuary.jpg' : `/assets/atelier/nails/p${pal}/hero.jpg`;
+    const fallbackUrl = new URL(fallbackAssetPath, 'https://wynnpages.com.au');
     if (env && env.ASSETS) {
       const assetRes = await env.ASSETS.fetch(new Request(fallbackUrl.toString()));
       if (assetRes.ok) {
@@ -1231,7 +1288,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, s
         });
       }
     }
-    return Response.redirect('https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg', 302);
+    return Response.redirect(`https://wynnpages.com.au${fallbackAssetPath}`, 302);
   }
 
   // 6. Standard KV static assets
@@ -1362,7 +1419,7 @@ async function getValidCloudflareToken(env, forceRefresh = false, tokenOverride 
           await env.WYNN_KV.put('cf_oauth_state', JSON.stringify(state));
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   }
   return state.accessToken ? state.accessToken.trim() : null;
 }
@@ -2191,12 +2248,16 @@ export default {
           : (desiredDomains || '').slice(0, 490);
         const domainSummary = isExistingDom ? cleanExistingDomain : cleanDesiredDomains;
 
+        const dnsMode = (body.dnsMode || '').trim();
+        const domainDelegated = Boolean(body.domainDelegated);
+        const nowIso = new Date().toISOString();
+
         const metadataEntries = {
           studio: 'WynnPages Australia',
           stage: keepOutboundStage ? existingStage : 'brief_completed',
           brief_status: 'completed',
           brief_type: briefType,
-          submitted_at: new Date().toISOString(),
+          submitted_at: nowIso,
           customer_email: email.slice(0, 490),
           customer_name: customerName.slice(0, 490),
           customer_phone: customerPhone.slice(0, 490),
@@ -2208,6 +2269,7 @@ export default {
           brand_colors: brandColors.slice(0, 490),
           vibe_links: vibeLinks.slice(0, 490),
           has_domain: hasDomain.slice(0, 490),
+          dns_mode: dnsMode.slice(0, 120),
           existing_domain: cleanExistingDomain,
           desired_domains: cleanDesiredDomains,
           domain_access_notes: domainAccessNotes.slice(0, 490),
@@ -2223,6 +2285,10 @@ export default {
           photos_drive_url: photosDriveUrl.slice(0, 490),
           drive_folder_url: driveFolderUrl.slice(0, 490)
         };
+        if (domainDelegated) {
+          metadataEntries.domain_delegated = 'true';
+          metadataEntries.domain_delegated_at = nowIso;
+        }
         if (autoLiveUrl) {
           metadataEntries.live_url = autoLiveUrl;
         }
@@ -2272,11 +2338,16 @@ export default {
 
         const custData = await custRes.json().catch(() => ({}));
 
-        if (autoLiveUrl && env && env.WYNN_KV) {
-          const bindRes = await ensureCustomLiveDomainOnCloudflare(autoLiveUrl, env);
+        // Only auto-provision a network Zone during brief submit if domain already exists (or client already registered & delegated it)
+        let bindRes = null;
+        if (autoLiveUrl && (isExistingDom || domainDelegated) && env && env.WYNN_KV) {
+          bindRes = await ensureCustomLiveDomainOnCloudflare(autoLiveUrl, env, cfg.cfApiToken);
           if (bindRes && bindRes.nameservers && custData && custData.id) {
             const nsP = new URLSearchParams();
             nsP.append('metadata[cf_nameservers]', bindRes.nameservers.slice(0, 490));
+            if (bindRes.zoneStatus) {
+              nsP.append('metadata[cf_zone_status]', String(bindRes.zoneStatus));
+            }
             await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(custData.id)}`, {
               method: 'POST',
               headers: {
@@ -2284,21 +2355,52 @@ export default {
                 'Content-Type': 'application/x-www-form-urlencoded'
               },
               body: nsP.toString()
-            }).catch(() => {});
+            }).catch(() => { });
           }
         }
 
+        // Notify studio admin immediately if client already provided registrar access / delegation inside /demo-success
+        if (domainDelegated && cfg.resendApiKey) {
+          const customerLabel = businessName || customerName || 'Client';
+          const domainLabel = autoLiveUrl || domainSummary || 'TBD';
+          const adminHtml = `
+            <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#fcf9f3;border:1px solid #e5dec9;border-radius:18px;">
+              <h2 style="color:#96432b;margin-top:0;font-size:20px;">🎉 Client Submitted Brief + Domain Access!</h2>
+              <p style="font-size:14px;color:#2b251e;line-height:1.5;"><strong>${customerLabel}</strong> completed confirmation and provided domain access right away.</p>
+              <div style="background:#fff;border:1px solid #d5cebf;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;line-height:1.6;">
+                <div><strong>Business:</strong> ${customerLabel}</div>
+                <div><strong>Domain:</strong> <code style="font-weight:bold;color:#96432b;">${domainLabel}</code></div>
+                <div><strong>Email:</strong> ${email || 'N/A'}</div>
+                ${domainAccessNotes ? `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ddd;"><strong>Access / Notes:</strong><br><pre style="font-family:monospace;background:#f8f9fa;padding:8px;border-radius:6px;margin-top:4px;white-space:pre-wrap;">${domainAccessNotes}</pre></div>` : ''}
+              </div>
+              <p style="margin-top:20px;"><a href="https://wynnpages.com.au/admin" style="display:inline-block;background:#96432b;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 22px;border-radius:12px;">Open WynnPages Admin →</a></p>
+            </div>`;
+          await sendResendEmail({
+            to: 'hello@wynnpages.com.au',
+            subject: `⚡ [DOMAIN READY] ${customerLabel} (${domainLabel}) submitted access!`,
+            html: adminHtml,
+            cfg
+          }).catch(() => { });
+        }
+
         // Trigger Stage 2 SMS + Email to Client
+        const resolvedNsStr = (bindRes && bindRes.attached && bindRes.nameservers) ? bindRes.nameservers : '';
         const clientRecord = {
+          id: (custData && custData.id) || existingCustomerId || '',
           name: customerName,
+          businessName,
           email,
           phone: customerPhone,
           briefType,
           industry,
           brandColors,
           vibeLinks,
-          existingDomain,
-          desiredDomains
+          existingDomain: cleanExistingDomain,
+          desiredDomains: cleanDesiredDomains,
+          dnsMode,
+          domainDelegated,
+          domainAccessNotes,
+          cfNameservers: resolvedNsStr
         };
 
         const notification = await triggerLifecycleNotification({
@@ -2308,13 +2410,16 @@ export default {
           cfg
         });
 
+        const nsList = resolvedNsStr ? resolvedNsStr.split(',').map((s) => s.trim()).filter(Boolean) : [];
         return new Response(
           JSON.stringify({
             ok: true,
-            customerId: custData.id || null,
+            customerId: custData.id || existingCustomerId || null,
             paymentIntentId: paymentIntentId || null,
             logoFileId,
             menuFileId,
+            nameservers: nsList,
+            zoneStatus: (bindRes && bindRes.zoneStatus) || null,
             notification
           }),
           { status: 200, headers: corsHeaders }
@@ -2378,7 +2483,7 @@ export default {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: uParams.toString()
-          }).catch(() => {});
+          }).catch(() => { });
         }
 
         // Notify studio admin via Resend
@@ -2404,7 +2509,7 @@ export default {
             subject: `⚡ [DOMAIN READY] ${customerLabel} (${domainLabel}) completed setup!`,
             html: emailHtml,
             cfg
-          }).catch(() => {});
+          }).catch(() => { });
         }
 
         return new Response(JSON.stringify({
@@ -2469,7 +2574,7 @@ export default {
         if (prevMeta && Array.isArray(prevMeta.filesList)) {
           const obsoleteDeletes = prevMeta.filesList
             .filter(oldPath => !newPathsSet.has(oldPath))
-            .map(oldPath => env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => {}));
+            .map(oldPath => env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => { }));
           if (obsoleteDeletes.length) {
             if (ctx && typeof ctx.waitUntil === 'function') {
               ctx.waitUntil(Promise.all(obsoleteDeletes));
@@ -2504,7 +2609,7 @@ export default {
         const idxFile = files.find(f => f && (f.path === '/index.html' || f.path === 'index.html') && f.text);
         if (idxFile && idxFile.text) {
           if (!detectedPalette) {
-            const palMatch = idxFile.text.match(/data-palette=["'](0[123])["']/);
+            const palMatch = idxFile.text.match(/data-palette=["'](0[1-5])["']/);
             if (palMatch) detectedPalette = palMatch[1];
           }
           if (!detectedBizName) {
@@ -2554,9 +2659,9 @@ export default {
 
         // 5. Ensure subdomain route in background
         if (ctx && typeof ctx.waitUntil === 'function') {
-          ctx.waitUntil(ensureCloudflareSubdomain(targetSlug, env).catch(() => {}));
+          ctx.waitUntil(ensureCloudflareSubdomain(targetSlug, env).catch(() => { }));
         } else {
-          await ensureCloudflareSubdomain(targetSlug, env).catch(() => {});
+          await ensureCloudflareSubdomain(targetSlug, env).catch(() => { });
         }
 
         return new Response(JSON.stringify({
@@ -2734,7 +2839,7 @@ export default {
             }
           }
           if (hasNewCred) {
-            await env.WYNN_KV.put('studio_runtime_creds', JSON.stringify(mergedCreds)).catch(() => {});
+            await env.WYNN_KV.put('studio_runtime_creds', JSON.stringify(mergedCreds)).catch(() => { });
             runtimeCreds = mergedCreds;
           }
         }
@@ -2767,7 +2872,7 @@ export default {
                 slugToClean = cData.metadata?.demo_slug || (cData.metadata?.demo_url ? extractCleanHost(cData.metadata.demo_url) : '');
                 liveUrlToClean = cData.metadata?.live_url || '';
               }
-            } catch (_) {}
+            } catch (_) { }
           }
 
           // Delete primary customer record immediately (~400ms), then clean up Worker Domains & KV in background!
@@ -2780,32 +2885,32 @@ export default {
           const cleanupJob = (async () => {
             const tasks = [];
             if (slugToClean) {
-              tasks.push(removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken).catch(() => {}));
+              tasks.push(removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken).catch(() => { }));
               const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
               if (env && env.WYNN_KV && cleanSlug) {
                 const metaKey = `site_meta:${cleanSlug}`;
                 const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
                 tasks.push(
-                  env.WYNN_KV.delete(`sub_${cleanSlug}`).catch(() => {}),
-                  env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => {}),
-                  env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => {}),
-                  env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => {}),
-                  env.WYNN_KV.delete(metaKey).catch(() => {})
+                  env.WYNN_KV.delete(`sub_${cleanSlug}`).catch(() => { }),
+                  env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => { }),
+                  env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => { }),
+                  env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => { }),
+                  env.WYNN_KV.delete(metaKey).catch(() => { })
                 );
                 if (prevMeta && Array.isArray(prevMeta.filesList)) {
                   for (const p of prevMeta.filesList) {
-                    tasks.push(env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => {}));
+                    tasks.push(env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => { }));
                   }
                 }
               }
             }
             if (liveUrlToClean) {
               tasks.push(
-                removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken).catch(() => {}),
-                removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken).catch(() => {})
+                removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken).catch(() => { }),
+                removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken).catch(() => { })
               );
               if (env && env.WYNN_KV) {
-                tasks.push(env.WYNN_KV.delete(`livedom_${liveUrlToClean}`).catch(() => {}));
+                tasks.push(env.WYNN_KV.delete(`livedom_${liveUrlToClean}`).catch(() => { }));
               }
             }
             await Promise.all(tasks);
@@ -2855,19 +2960,19 @@ export default {
                   const resOld = await env.WYNN_KV.getWithMetadata(assetKeyOld, 'arrayBuffer').catch(() => ({}));
                   if (resOld && resOld.value) {
                     await env.WYNN_KV.put(assetKeyNew, resOld.value, { metadata: resOld.metadata });
-                    await env.WYNN_KV.delete(assetKeyOld).catch(() => {});
+                    await env.WYNN_KV.delete(assetKeyOld).catch(() => { });
                   }
                 }
                 meta.slug = newSlug;
                 await env.WYNN_KV.put(`site_meta:${newSlug}`, JSON.stringify(meta));
-                await env.WYNN_KV.delete(oldMetaKey).catch(() => {});
+                await env.WYNN_KV.delete(oldMetaKey).catch(() => { });
               }
             }
           }
 
           // 2. Attach new subdomain in background
           if (ctx && typeof ctx.waitUntil === 'function') {
-            ctx.waitUntil(ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken).catch(() => {}));
+            ctx.waitUntil(ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken).catch(() => { }));
           } else {
             await ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken);
           }
@@ -2945,7 +3050,96 @@ export default {
           return new Response(JSON.stringify({ ok: true, driveUrl: driveRes.fileUrl, folderUrl: driveRes.folderUrl }), { status: 200, headers: corsHeaders });
         }
 
-        // Action: Send DNS Configuration Email Manually
+        // Action: Check Live DNS & Zone Activation Status (1-Click Smart Check in Admin)
+        if (action === 'check_domain_status' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          const rawDomain = (body.liveUrl || (formatted && (formatted.liveUrl || formatted.existingDomain || formatted.desiredDomains)) || '').trim();
+          const rootDomain = extractCleanHost(rawDomain);
+          if (!rootDomain || !rootDomain.includes('.')) {
+            return new Response(JSON.stringify({ error: 'Vui lòng nhập Tên Miền Chính Thức trước khi kiểm tra DNS!' }), { status: 400, headers: corsHeaders });
+          }
+
+          const bindRes = await ensureCustomLiveDomainOnCloudflare(rootDomain, env, effectiveCfg.cfApiToken);
+          let zoneStatus = (bindRes && bindRes.zoneStatus) || (bindRes && bindRes.reason) || 'pending';
+          let assignedNs = (bindRes && bindRes.attached && bindRes.nameservers) ? bindRes.nameservers : ((formatted && formatted.cfNameservers) || '');
+
+          // Trigger immediate activation re-check if zone exists & is still pending
+          if (bindRes && bindRes.zoneId && zoneStatus !== 'active') {
+            const accessToken = await getValidCloudflareToken(env, false, effectiveCfg.cfApiToken);
+            if (accessToken) {
+              await fetch(`https://api.cloudflare.com/client/v4/zones/${bindRes.zoneId}/activation_check`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+              }).catch(() => { });
+              const reRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${bindRes.zoneId}`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+              }).catch(() => null);
+              if (reRes && reRes.ok) {
+                const reData = await reRes.json().catch(() => ({}));
+                if (reData && reData.result && reData.result.status) {
+                  zoneStatus = reData.result.status;
+                }
+              }
+            }
+          }
+
+          // Live DNS-over-HTTPS NS lookup to see what nameservers the domain currently points to globally
+          let liveNs = [];
+          try {
+            const dohRes = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(rootDomain)}&type=NS`, {
+              headers: { 'Accept': 'application/dns-json' }
+            });
+            if (dohRes.ok) {
+              const dohData = await dohRes.json().catch(() => ({}));
+              if (Array.isArray(dohData.Answer)) {
+                liveNs = dohData.Answer
+                  .filter((a) => a && a.type === 2 && a.data)
+                  .map((a) => String(a.data).toLowerCase().replace(/\.$/, ''));
+              }
+            }
+          } catch (_) { }
+
+          const expectedList = assignedNs.split(',').map((s) => s.trim().toLowerCase().replace(/\.$/, '')).filter(Boolean);
+          const nsMatched = expectedList.length > 0 && expectedList.every((nsItem) => liveNs.includes(nsItem));
+          const isActive = zoneStatus === 'active' || nsMatched;
+          const savedStatus = isActive ? 'active' : (bindRes && bindRes.reason === 'zone_pending_registration' ? 'unregistered' : 'pending');
+
+          let updatedCustRecord = formatted;
+          if (effectiveCfg.stripeSecretKey) {
+            const uP = new URLSearchParams();
+            uP.append('metadata[live_url]', rootDomain);
+            uP.append('metadata[cf_zone_status]', savedStatus);
+            if (assignedNs) uP.append('metadata[cf_nameservers]', assignedNs.slice(0, 490));
+            const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uP.toString()
+            });
+            if (patchRes.ok) {
+              updatedCustRecord = formatCustomerRecord(await patchRes.json());
+            }
+          }
+
+          return new Response(JSON.stringify({
+            ok: true,
+            rootDomain,
+            isActive,
+            zoneStatus: savedStatus,
+            nameservers: assignedNs,
+            liveNs,
+            client: updatedCustRecord
+          }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Send DNS Configuration Email Manually (Optional for In-House IT Teams)
         if (action === 'send_dns_email' && customerId) {
           let cust = null;
           const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
@@ -2959,25 +3153,34 @@ export default {
           if (!formatted.liveUrl) {
             return new Response(JSON.stringify({ error: 'Chưa có Tên Miền Chính Thức nào được lưu cho khách này!' }), { status: 400, headers: corsHeaders });
           }
-          const nsToSend = formatted.cfNameservers || 'olga.ns.cloudflare.com, toby.ns.cloudflare.com';
+          let nsToSend = formatted.cfNameservers || '';
+          if (!nsToSend) {
+            const bindRes = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
+            if (bindRes && bindRes.attached && bindRes.nameservers) {
+              nsToSend = bindRes.nameservers;
+            }
+          }
+          if (!nsToSend) {
+            return new Response(JSON.stringify({ error: 'Tên miền này chưa được đăng ký trên hệ thống tên miền quốc tế (WHOIS) nên chưa sinh được cặp Nameservers. Hãy đợi khách mua tên miền trên VentraIP trước!' }), { status: 400, headers: corsHeaders });
+          }
           const guideUrl = `${url.origin}/domain-guide?domain=${encodeURIComponent(formatted.liveUrl)}&name=${encodeURIComponent(formatted.businessName || formatted.name)}&email=${encodeURIComponent(formatted.email)}&cid=${encodeURIComponent(formatted.id)}&tab=existing&ns=${encodeURIComponent(nsToSend)}`;
           const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
           const parts = nsToSend.split(',').map(s => s.trim());
 
           const mailRes = await sendResendEmail({
             to: formatted.email,
-            subject: `Action Required: Configure DNS Nameservers for ${formatted.liveUrl}`,
+            subject: `Network Nameservers for ${formatted.liveUrl} — WynnPages Studio`,
             html: buildAtelierEmailHtml({
-              preheader: `DNS Nameservers for ${formatted.liveUrl}`,
+              preheader: `Network Nameservers for ${formatted.liveUrl}`,
               heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
               bodyHtml: `
-                <p>We have provisioned the high-speed Australian network configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
-                <p>To connect your domain to your bespoke website, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
+                <p>We have provisioned the <strong>WynnPages Studio Australian High-Speed Network</strong> configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
+                <p>If your IT team prefers to point DNS manually, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
                 <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
                   <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
                   ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
                 </div>
-                <p><strong>Prefer zero technical hassle?</strong> You can also delegate access or submit temporary registrar login credentials on our guide page, and our Australian engineers will point it for you in 60 seconds.</p>
+                <p><strong>Prefer zero technical hassle?</strong> Simply invite <strong>hello@wynnpages.com.au</strong> or submit registrar access via our guide page, and our Australian engineers will connect it for you for free.</p>
               `,
               primaryCta: {
                 label: 'Open Domain Connection Guide →',
@@ -3113,11 +3316,16 @@ export default {
           let liveDomainBindResult = null;
           if (shouldProvisionLiveDomain) {
             liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
-            if (liveDomainBindResult && liveDomainBindResult.nameservers) {
-              const nsChanged = liveDomainBindResult.nameservers !== formatted.cfNameservers;
+            if (liveDomainBindResult) {
+              const newStatus = liveDomainBindResult.attached
+                ? (liveDomainBindResult.zoneStatus || 'pending')
+                : (liveDomainBindResult.reason === 'zone_pending_registration' ? 'unregistered' : 'pending');
+              const newNs = liveDomainBindResult.attached ? (liveDomainBindResult.nameservers || '') : '';
+              const nsChanged = newNs !== formatted.cfNameservers || newStatus !== formatted.cfZoneStatus;
               if (nsChanged) {
                 const nsParams = new URLSearchParams();
-                nsParams.append('metadata[cf_nameservers]', liveDomainBindResult.nameservers.slice(0, 490));
+                nsParams.append('metadata[cf_nameservers]', newNs.slice(0, 490));
+                nsParams.append('metadata[cf_zone_status]', newStatus);
                 const nsRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
                   method: 'POST',
                   headers: {

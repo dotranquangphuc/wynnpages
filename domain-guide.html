@@ -849,27 +849,27 @@
           </form>
         </div>
 
-        <!-- Collapsible For Technical / In-House IT Teams -->
-        <details class="rounded-2xl bg-stone-50 border border-stone-200 p-4 text-xs text-stone-600">
+        <!-- Collapsible For Technical / In-House IT Teams (Shown only when dedicated NS are provisioned) -->
+        <details id="it-ns-details" class="hidden rounded-2xl bg-stone-50 border border-stone-200 p-4 text-xs text-stone-600">
           <summary class="font-bold text-stone-700 cursor-pointer hover:text-stone-900">
-            ⚡ For In-House IT Teams: Prefer to point Nameservers yourself?
+            ⚡ For In-House IT Teams: Prefer to point WynnPages Australian High-Speed Network Nameservers yourself?
           </summary>
           <div class="mt-4 pt-3 border-t border-stone-200 space-y-3">
-            <p class="text-[11px] text-stone-600">If your IT technician prefers to change nameservers manually in your registrar portal without sharing credentials, point your domain to:</p>
+            <p class="text-[11px] text-stone-600">If your IT technician prefers to update nameservers manually inside your registrar portal without sharing credentials, point your domain to:</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="bg-white p-3 rounded-xl border border-stone-200 flex items-center justify-between">
                 <div>
                   <span class="text-[10px] text-stone-400 block uppercase font-bold">Nameserver 1:</span>
-                  <code id="ns-card-1" class="font-mono font-bold text-xs text-stone-900">olga.ns.cloudflare.com</code>
+                  <code id="ns-card-1" class="font-mono font-bold text-xs text-stone-900"></code>
                 </div>
-                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-1').textContent.trim()); alert('Copied Nameserver 1!');" class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700">📋 Copy</button>
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-1').textContent.trim()); this.textContent='✓ Copied';" class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 cursor-pointer">📋 Copy</button>
               </div>
               <div class="bg-white p-3 rounded-xl border border-stone-200 flex items-center justify-between">
                 <div>
                   <span class="text-[10px] text-stone-400 block uppercase font-bold">Nameserver 2:</span>
-                  <code id="ns-card-2" class="font-mono font-bold text-xs text-stone-900">toby.ns.cloudflare.com</code>
+                  <code id="ns-card-2" class="font-mono font-bold text-xs text-stone-900"></code>
                 </div>
-                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-2').textContent.trim()); alert('Copied Nameserver 2!');" class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700">📋 Copy</button>
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ns-card-2').textContent.trim()); this.textContent='✓ Copied';" class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 cursor-pointer">📋 Copy</button>
               </div>
             </div>
           </div>
@@ -944,8 +944,10 @@
         const parts = ns.split(',').map(s => s.trim()).filter(Boolean);
         const nsCard1 = document.getElementById('ns-card-1');
         const nsCard2 = document.getElementById('ns-card-2');
+        const itNsDetails = document.getElementById('it-ns-details');
         if (parts[0] && nsCard1) nsCard1.textContent = parts[0];
         if (parts[1] && nsCard2) nsCard2.textContent = parts[1];
+        if (parts[0] && itNsDetails) itNsDetails.classList.remove('hidden');
 
         // Top banner in Tab 2
         const topBanner = document.getElementById('ns-top-banner');

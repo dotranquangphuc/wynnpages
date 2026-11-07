@@ -268,8 +268,8 @@
             </button>
           </div>
 
-          <!-- Conditional Input A -->
-          <div id="domain-yes-wrap" class="hidden pt-2 space-y-3.5 animate-reveal">
+          <!-- Conditional Input A: Existing Domain (Smart 1-Pass Concierge vs IT Self-Service) -->
+          <div id="domain-yes-wrap" class="hidden pt-2 space-y-4 animate-reveal">
             <div class="space-y-1.5">
               <label for="existing-domain-input" class="block text-sm font-bold text-stone-900">
                 What is your domain? (e.g., mybusiness.com.au) <span class="text-[#96432b]">*</span>
@@ -281,62 +281,138 @@
                 class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
               >
             </div>
-            <div class="rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] p-4 space-y-2.5 text-xs text-stone-700 leading-relaxed">
+
+            <!-- Sub-toggle: Concierge (Recommended) vs Self-Service IT -->
+            <div class="space-y-2">
+              <span class="block text-xs font-bold uppercase tracking-wider text-stone-500">How would you like to connect it?</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  data-dns-mode="concierge"
+                  class="dns-mode-btn choice-card selected rounded-xl p-3 text-left text-xs transition-all cursor-pointer"
+                >
+                  <span class="font-bold text-stone-900 block">✨ Free Studio Concierge (Recommended)</span>
+                  <span class="text-[11px] text-stone-500 block mt-0.5">Zero tech needed — our engineers connect DNS &amp; SSL for you</span>
+                </button>
+                <button
+                  type="button"
+                  data-dns-mode="self_ns"
+                  class="dns-mode-btn choice-card rounded-xl p-3 text-left text-xs transition-all cursor-pointer"
+                >
+                  <span class="font-bold text-stone-900 block">⚡ Self-Service / My IT Team</span>
+                  <span class="text-[11px] text-stone-500 block mt-0.5">Generate Nameservers so I or my IT can point DNS manually</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sub-panel A1: Free Studio Concierge -->
+            <div id="dns-concierge-box" class="rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] p-4 space-y-3 text-xs text-stone-700 leading-relaxed">
               <div class="flex items-start gap-2.5">
-                <span class="w-6 h-6 rounded-full bg-[#fbdeb9] text-[#96432b] font-bold flex items-center justify-center shrink-0 mt-0.5">✨</span>
-                <div>
-                  <p class="font-bold text-stone-900">Zero-Tech Concierge (Kỹ sư kết nối tên miền miễn phí)</p>
-                  <p class="text-stone-600 mt-0.5">
-                    Bạn không cần biết kỹ thuật DNS. Chỉ cần phân quyền quản trị cho <strong class="text-[#96432b]">hello@wynnpages.com.au</strong> trên <strong>VentraIP</strong> (hoặc điền thông tin đăng nhập tạm) — chúng tôi kết nối web lên sóng ngay, quyền sở hữu &amp; tự động gia hạn vẫn nằm 100% trong tài khoản của bạn.
+                <span class="w-6 h-6 rounded-full bg-[#fbdeb9] text-[#96432b] font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                <div class="space-y-1.5 flex-1">
+                  <p class="font-bold text-stone-900">Hands-Free Australian Engineer Setup (100% Ownership Stays Yours)</p>
+                  <p class="text-stone-600">
+                    If you use <strong>VentraIP</strong> or <strong>GoDaddy</strong>, simply invite <strong class="text-[#96432b]">hello@wynnpages.com.au</strong> as a delegated user — OR enter your registrar login below so our team can configure high-speed DNS while keeping any existing business emails safe.
                   </p>
-                  <a id="link-guide-existing" href="/domain-guide?tab=existing" target="_blank" class="inline-flex items-center gap-1 mt-1.5 font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
-                    <span>📖 Xem Hướng Dẫn Phân Quyền Tên Miền VentraIP Từng Bước (60 Giây) ↗</span>
-                  </a>
+                  <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                    <button type="button" id="btn-copy-studio-email-a" class="px-2.5 py-1 rounded-lg bg-white border border-[#d8ccb8] hover:border-[#96432b] text-[11px] font-bold text-[#96432b] cursor-pointer">
+                      📋 Copy hello@wynnpages.com.au
+                    </button>
+                    <a id="link-guide-existing" href="/domain-guide?tab=existing" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-stone-600 underline hover:text-[#96432b]">
+                      <span>View 60-Second Visual Guide ↗</span>
+                    </a>
+                  </div>
                 </div>
               </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <div>
+                  <label for="concierge-registrar" class="block text-[11px] font-semibold text-stone-600 mb-1">Domain Provider</label>
+                  <select id="concierge-registrar" class="atelier-input w-full rounded-xl px-3 py-2 text-xs text-stone-900 bg-white">
+                    <option value="">Select provider (optional)...</option>
+                    <option value="VentraIP (Delegated hello@wynnpages.com.au)">VentraIP (Invited hello@wynnpages.com.au)</option>
+                    <option value="VentraIP">VentraIP (Login below)</option>
+                    <option value="GoDaddy (Delegated hello@wynnpages.com.au)">GoDaddy (Invited hello@wynnpages.com.au)</option>
+                    <option value="GoDaddy">GoDaddy (Login below)</option>
+                    <option value="CrazyDomains">CrazyDomains</option>
+                    <option value="Squarespace / Google">Squarespace / Google Domains</option>
+                    <option value="Namecheap">Namecheap</option>
+                    <option value="MelbourneIT / Netregistry">MelbourneIT / Netregistry</option>
+                    <option value="Other Registrar">Other Provider</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="concierge-login-user" class="block text-[11px] font-semibold text-stone-600 mb-1">Username / Email (if not delegated)</label>
+                  <input id="concierge-login-user" type="text" placeholder="Optional if invited above" class="atelier-input w-full rounded-xl px-3 py-2 text-xs text-stone-900 placeholder-stone-400 bg-white">
+                </div>
+                <div>
+                  <label for="concierge-login-pass" class="block text-[11px] font-semibold text-stone-600 mb-1">Temp Password (if not delegated)</label>
+                  <input id="concierge-login-pass" type="password" placeholder="Optional if invited above" class="atelier-input w-full rounded-xl px-3 py-2 text-xs text-stone-900 placeholder-stone-400 bg-white">
+                </div>
+              </div>
+
               <textarea
                 id="domain-access-notes"
                 rows="2"
-                placeholder="Ghi chú: VD 'Đã mời hello@wynnpages.com.au trên VentraIP' HOẶC gửi thông tin đăng nhập tạm để kỹ sư hỗ trợ..."
+                placeholder="Optional note: e.g. 'Already invited hello@wynnpages.com.au on VentraIP' or 'Please keep our Google Workspace email active'..."
                 class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 bg-white"
               ></textarea>
             </div>
+
+            <!-- Sub-panel A2: Self-Service / IT Team Nameservers -->
+            <div id="dns-self-box" class="hidden rounded-2xl bg-[#f4f6f8] border border-stone-200 p-4 text-xs text-stone-700 leading-relaxed">
+              <p class="font-bold text-stone-900">⚡ Instant Nameserver Provisioning</p>
+              <p class="text-stone-600 mt-1">
+                When you click <strong>Finalize My Website</strong> below, our Australian High-Speed Network will provision your domain immediately and display your <strong>2 dedicated Nameservers</strong> on the next screen (and email a copy to you / your IT team).
+              </p>
+            </div>
           </div>
 
-          <!-- Conditional Input B -->
+          <!-- Conditional Input B: Register a New Domain -->
           <div id="domain-no-wrap" class="hidden pt-2 space-y-3.5 animate-reveal">
             <div class="space-y-1.5">
               <label for="desired-domain-input" class="block text-sm font-bold text-stone-900">
-                What domain name would you like to use? (e.g., bobplumbing.com.au) <span class="text-[#96432b]">*</span>
+                What domain name would you like to use? (e.g., lushnails.com.au) <span class="text-[#96432b]">*</span>
               </label>
               <input 
                 type="text" 
                 id="desired-domain-input" 
-                placeholder="e.g., bobplumbing.com.au" 
+                placeholder="e.g., lushnails.com.au" 
                 class="atelier-input w-full rounded-xl px-4 py-3.5 text-sm text-stone-900 placeholder-stone-400"
               >
             </div>
-            <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 space-y-2.5 text-xs text-[#2f442c] leading-relaxed">
+            <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-4 space-y-3 text-xs text-[#2f442c] leading-relaxed">
               <div class="flex items-start gap-2.5">
                 <span class="w-6 h-6 rounded-full bg-[#d4e4ce] text-[#2f442c] font-bold flex items-center justify-center shrink-0 mt-0.5">✓</span>
-                <div>
-                  <p class="font-bold">Bạn Sở Hữu 100% &amp; Tự Động Gia Hạn Bằng Thẻ Cá Nhân</p>
-                  <p class="mt-0.5">
-                    Để bạn sở hữu tên miền trọn đời và tự động gia hạn hàng năm (~$15-$20 AUD) trực tiếp mà không bị giam lỏng tên miền:
+                <div class="space-y-1.5 flex-1">
+                  <p class="font-bold text-sm">100% Legal Ownership &amp; Direct Annual Auto-Renew</p>
+                  <p>
+                    So you own your domain 100% in your own name (~$15–$20 AUD/yr directly, zero agency lock-in):
                   </p>
-                  <ol class="list-decimal list-inside mt-1.5 space-y-1 font-medium">
-                    <li>Mua tên miền trên <a href="https://ventraip.com.au/domain-names/" target="_blank" class="underline font-bold text-[#96432b]">VentraIP.com.au ↗</a> (nhà đăng ký số 1 chuẩn Úc) bằng email &amp; thẻ ngân hàng của bạn, bật Auto-Renew ON.</li>
-                    <li>Sau khi mua xong, vào mục <em>Authorized Users</em> mời <strong class="underline">hello@wynnpages.com.au</strong> với quyền <em>Domain Management</em> — kỹ sư chúng tôi sẽ kết nối lên sóng miễn phí cho bạn!</li>
+                  <ol class="list-decimal list-inside space-y-1 font-medium">
+                    <li>Register your domain on <a href="https://ventraip.com.au/domain-names/" target="_blank" rel="noopener noreferrer" class="underline font-bold text-[#96432b]">VentraIP.com.au ↗</a> (Australia's #1 accredited registrar) under your ABN &amp; card with <strong>Auto-Renew ON</strong>.</li>
+                    <li>In VIPControl &rarr; <em>Profile Settings &rarr; Additional Users</em>, invite <strong class="underline">hello@wynnpages.com.au</strong> — our engineers will connect SSL &amp; launch your site for free!</li>
                   </ol>
-                  <a id="link-guide-new" href="/domain-guide?tab=new" target="_blank" class="inline-flex items-center gap-1 mt-1.5 font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
-                    <span>📖 Xem Hướng Dẫn Mua &amp; Phân Quyền VentraIP (Kèm Ảnh Chụp Từng Bước) ↗</span>
-                  </a>
+                  <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <button type="button" id="btn-copy-studio-email-b" class="px-2.5 py-1 rounded-lg bg-white border border-[#b7d1b1] hover:border-[#2f442c] text-[11px] font-bold text-[#2f442c] cursor-pointer">
+                      📋 Copy hello@wynnpages.com.au
+                    </button>
+                    <a id="link-guide-new" href="/domain-guide?tab=new" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#96432b] underline hover:text-[#7d3520]">
+                      <span>📖 View Visual Step-by-Step Guide (with Screenshots) ↗</span>
+                    </a>
+                  </div>
                 </div>
               </div>
+
+              <label class="flex items-center gap-2.5 bg-white/90 border border-[#c5dbc0] rounded-xl px-3.5 py-2.5 cursor-pointer">
+                <input id="new-domain-already-delegated" type="checkbox" class="rounded text-[#96432b] focus:ring-[#96432b]">
+                <span class="font-semibold text-stone-800">I have already purchased this domain &amp; invited <code>hello@wynnpages.com.au</code> on VentraIP</span>
+              </label>
+
               <input
                 type="text"
                 id="domain-abn-notes"
-                placeholder="Ghi chú: VD 'Đã mua trên VentraIP & mời hello@wynnpages.com.au'..."
+                placeholder="Optional note (e.g. alternative .com.au name if your first choice is taken)..."
                 class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 bg-white"
               >
             </div>
@@ -386,6 +462,8 @@
 
         <div id="submitted-summary" class="max-w-md mx-auto bg-[#fcf9f3] border border-[#e5dec9] rounded-2xl p-5 text-left text-xs space-y-2.5 text-stone-700">
         </div>
+
+        <div id="thank-you-next-step" class="max-w-md mx-auto"></div>
 
         <div class="pt-4">
           <a 
@@ -438,7 +516,37 @@
       const submittedSummary = document.getElementById('submitted-summary');
 
       let selectedDomainOption = '';
+      let selectedDnsMode = 'concierge';
       let uploadedFileObj = null;
+
+      ['btn-copy-studio-email-a', 'btn-copy-studio-email-b'].forEach((id) => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        b.addEventListener('click', () => {
+          navigator.clipboard.writeText('hello@wynnpages.com.au');
+          const orig = b.textContent;
+          b.textContent = '✓ Copied hello@wynnpages.com.au!';
+          setTimeout(() => { b.textContent = orig; }, 2200);
+        });
+      });
+
+      const dnsModeBtns = document.querySelectorAll('.dns-mode-btn');
+      const dnsConciergeBox = document.getElementById('dns-concierge-box');
+      const dnsSelfBox = document.getElementById('dns-self-box');
+      dnsModeBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedDnsMode = btn.getAttribute('data-dns-mode') || 'concierge';
+          dnsModeBtns.forEach((x) => x.classList.remove('selected'));
+          btn.classList.add('selected');
+          if (selectedDnsMode === 'self_ns') {
+            if (dnsConciergeBox) dnsConciergeBox.classList.add('hidden');
+            if (dnsSelfBox) dnsSelfBox.classList.remove('hidden');
+          } else {
+            if (dnsConciergeBox) dnsConciergeBox.classList.remove('hidden');
+            if (dnsSelfBox) dnsSelfBox.classList.add('hidden');
+          }
+        });
+      });
 
       function updateGuideLinks() {
         const currentEmail = (emailParam || (emailInput && emailInput.value) || '').trim();
@@ -617,9 +725,41 @@
 
         const domainAccessNotes = document.getElementById('domain-access-notes');
         const domainAbnNotes = document.getElementById('domain-abn-notes');
-        const extraDomainNotes = selectedDomainOption === 'I already own a domain'
-          ? (domainAccessNotes ? domainAccessNotes.value.trim() : '')
-          : (domainAbnNotes ? domainAbnNotes.value.trim() : '');
+        const conciergeRegistrar = document.getElementById('concierge-registrar');
+        const conciergeLoginUser = document.getElementById('concierge-login-user');
+        const conciergeLoginPass = document.getElementById('concierge-login-pass');
+        const newDomDelegatedEl = document.getElementById('new-domain-already-delegated');
+
+        let extraDomainNotes = '';
+        let domainDelegatedNow = false;
+
+        if (selectedDomainOption === 'I already own a domain') {
+          if (selectedDnsMode === 'self_ns') {
+            extraDomainNotes = '[Self-Service IT Mode: Client / IT team will point Nameservers manually]';
+          } else {
+            const reg = conciergeRegistrar ? conciergeRegistrar.value.trim() : '';
+            const usr = conciergeLoginUser ? conciergeLoginUser.value.trim() : '';
+            const pwd = conciergeLoginPass ? conciergeLoginPass.value.trim() : '';
+            const rawNote = domainAccessNotes ? domainAccessNotes.value.trim() : '';
+            const parts = [];
+            if (reg) parts.push(`Registrar: ${reg}`);
+            if (usr) parts.push(`Login: ${usr}`);
+            if (pwd) parts.push(`Temp Password: ${pwd}`);
+            if (rawNote) parts.push(`Note: ${rawNote}`);
+            extraDomainNotes = parts.join(' | ');
+            if ((reg && reg.includes('Delegated')) || (usr && pwd) || /hello@wynnpages\.com\.au|invited|delegat/i.test(rawNote)) {
+              domainDelegatedNow = true;
+            }
+          }
+        } else {
+          const rawAbnNote = domainAbnNotes ? domainAbnNotes.value.trim() : '';
+          const alreadyDel = Boolean(newDomDelegatedEl && newDomDelegatedEl.checked);
+          domainDelegatedNow = alreadyDel;
+          extraDomainNotes = [
+            alreadyDel ? '[VentraIP Purchased & Delegated hello@wynnpages.com.au]' : '',
+            rawAbnNote
+          ].filter(Boolean).join(' | ');
+        }
 
         const payload = {
           sessionId,
@@ -627,6 +767,8 @@
           email: resolvedEmail,
           briefType: 'demo',
           hasDomain: selectedDomainOption,
+          dnsMode: selectedDomainOption === 'I already own a domain' ? selectedDnsMode : 'ventraip_new',
+          domainDelegated: domainDelegatedNow,
           existingDomain: existingDomainInput.value.trim(),
           desiredDomains: desiredDomainInput.value.trim(),
           domainAccessNotes: extraDomainNotes,
@@ -645,12 +787,55 @@
 
           const domainVal = selectedDomainOption === 'I already own a domain' ? payload.existingDomain : payload.desiredDomains;
           const updatesVal = uploadedFileObj ? uploadedFileObj.name : (payload.menuLink || 'Keep Demo As-Is ✓');
+          const returnedNs = Array.isArray(data.nameservers) ? data.nameservers.filter(Boolean) : [];
+          const resolvedCid = data.customerId || customerId || '';
 
           submittedSummary.innerHTML = [
             `<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Account</span><span class="font-semibold text-stone-900">${escapeHtml(resolvedEmail)}</span></div>`,
             `<div class="flex justify-between gap-4 border-b border-[#e5dec9]/70 pb-2"><span class="text-stone-400 font-medium">Content Updates</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(updatesVal)}</span></div>`,
             `<div class="flex justify-between gap-4"><span class="text-stone-400 font-medium">Launch Domain</span><span class="font-semibold text-stone-900 text-right">${escapeHtml(domainVal)}</span></div>`
           ].join('');
+
+          const nextStepBox = document.getElementById('thank-you-next-step');
+          if (nextStepBox) {
+            if (selectedDomainOption === 'I already own a domain' && selectedDnsMode === 'self_ns' && returnedNs.length >= 2) {
+              nextStepBox.innerHTML = `
+                <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-5 text-left text-xs space-y-3 text-emerald-950">
+                  <p class="font-bold text-sm">⚡ Your WynnPages Australian High-Speed Network Nameservers</p>
+                  <p class="text-emerald-800 leading-relaxed">Ask your IT team (or log into your domain registrar) to replace the current nameservers for <strong>${escapeHtml(domainVal)}</strong> with:</p>
+                  <div class="space-y-2 font-mono font-bold">
+                    <div class="bg-white rounded-xl border border-emerald-200 px-3.5 py-2.5 flex items-center justify-between gap-2">
+                      <span>1. ${escapeHtml(returnedNs[0])}</span>
+                      <button type="button" onclick="navigator.clipboard.writeText('${escapeHtml(returnedNs[0])}'); this.textContent='✓ Copied';" class="font-sans text-[11px] px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 cursor-pointer">Copy</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-emerald-200 px-3.5 py-2.5 flex items-center justify-between gap-2">
+                      <span>2. ${escapeHtml(returnedNs[1])}</span>
+                      <button type="button" onclick="navigator.clipboard.writeText('${escapeHtml(returnedNs[1])}'); this.textContent='✓ Copied';" class="font-sans text-[11px] px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 cursor-pointer">Copy</button>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-emerald-700">We have also emailed a copy of these nameservers to <strong>${escapeHtml(resolvedEmail)}</strong>.</p>
+                </div>`;
+            } else if (domainDelegatedNow) {
+              nextStepBox.innerHTML = `
+                <div class="rounded-2xl bg-[#eef5eb] border border-[#c5dbc0] p-5 text-left text-xs space-y-1.5 text-[#2f442c]">
+                  <p class="font-bold text-sm">✓ Zero-Tech Domain Setup Received</p>
+                  <p class="leading-relaxed">Our Australian engineers have received your domain access details for <strong>${escapeHtml(domainVal)}</strong> and will configure SSL &amp; high-speed DNS for you. We will SMS &amp; email you the moment your website is officially live!</p>
+                </div>`;
+            } else {
+              const tabTarget = selectedDomainOption === 'I already own a domain' ? 'existing' : 'new';
+              const guideHref = `/domain-guide?cid=${encodeURIComponent(resolvedCid)}&email=${encodeURIComponent(resolvedEmail)}&domain=${encodeURIComponent(domainVal)}&tab=${tabTarget}`;
+              nextStepBox.innerHTML = `
+                <div class="rounded-2xl bg-[#fffdf9] border-2 border-[#96432b]/30 p-5 text-left text-xs space-y-3 text-stone-700">
+                  <p class="font-bold text-sm text-stone-900">📌 Final 2-Minute Step to Go Live on ${escapeHtml(domainVal)}</p>
+                  <p class="leading-relaxed">${tabTarget === 'new'
+                    ? `Whenever you're ready, register <strong>${escapeHtml(domainVal)}</strong> on VentraIP and invite <strong>hello@wynnpages.com.au</strong>, then click confirm inside our visual guide:`
+                    : `Whenever you're ready, invite <strong>hello@wynnpages.com.au</strong> or submit your registrar access via your personalised domain link:`}</p>
+                  <a href="${guideHref}" class="w-full py-3 px-4 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                    <span>Open Personalised Domain Setup Guide &rarr;</span>
+                  </a>
+                </div>`;
+            }
+          }
 
           form.classList.add('hidden');
           thankYouView.classList.remove('hidden');

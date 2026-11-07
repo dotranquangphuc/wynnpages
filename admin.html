@@ -269,6 +269,8 @@
               <option value="nails-01">Nails • 01 Terracotta Gold (Tự dựng ngay)</option>
               <option value="nails-02">Nails • 02 Rose Silk (Tự dựng ngay)</option>
               <option value="nails-03">Nails • 03 Botanical Sage (Tự dựng ngay)</option>
+              <option value="nails-04">Nails • 04 Espresso Cashmere (Tự dựng ngay)</option>
+              <option value="nails-05">Nails • 05 Coastal Pearl (Tự dựng ngay)</option>
               <option value="manual">Chưa dựng (Tự tải file ZIP/HTML sau)</option>
             </select>
           </div>
@@ -284,22 +286,26 @@
       <!-- SUB-FILTER METRICS BAR (Dynamic per Tab)                 -->
       <!-- ======================================================== -->
       <!-- Outbound Sub-Filters -->
-      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <button type="button" data-ob-filter="all" class="ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all">
+      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <button type="button" data-ob-filter="all" class="ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all cursor-pointer">
           <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả Outbound</span>
           <span id="stat-ob-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="pending" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">1. Mới tạo Demo (Chờ gửi)</span>
+        <button type="button" data-ob-filter="pending" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">1. Mới tạo Demo</span>
           <span id="stat-ob-pending" class="text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="pitched" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
+        <button type="button" data-ob-filter="pitched" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
           <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block">2. Đã gửi chào hàng</span>
           <span id="stat-ob-pitched" class="text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="paid" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">3. Đã Chốt Đơn ($599 Paid)</span>
-          <span id="stat-ob-paid" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
+        <button type="button" data-ob-filter="paid" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-teal-700 block">3. Đã Mua $599 (Chờ Lên Sóng)</span>
+          <span id="stat-ob-paid" class="text-2xl font-extrabold text-teal-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ob-filter="launched" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">4. Đã Lên Sóng (Live)</span>
+          <span id="stat-ob-launched" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
         </button>
       </div>
 
@@ -588,14 +594,14 @@
             </div>
           </div>
 
-          <!-- 3 Fixed Haute Couture Palettes -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <!-- 5 Fixed Haute Couture Palettes (with Matched Oil-Painting Vaults) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             <label class="atelier-palette-card cursor-pointer rounded-xl border-2 border-[#96432b] bg-white p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="01">
               <input type="radio" name="atelier-palette" value="01" checked class="accent-[#96432b]">
               <span class="flex -space-x-1.5 shrink-0">
                 <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#F6F1E8"></span>
                 <span class="w-4 h-4 rounded-full border border-white" style="background:#96432B"></span>
-                <span class="w-4 h-4 rounded-full border border-white" style="background:#C5A059"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#D49B28"></span>
               </span>
               <span class="leading-tight">
                 <strong class="block text-[11px] text-stone-900">01 • Terracotta Gold</strong>
@@ -604,28 +610,54 @@
             </label>
 
             <label class="atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="02">
-              <input type="radio" name="atelier-palette" value="02" class="accent-[#8C4A52]">
+              <input type="radio" name="atelier-palette" value="02" class="accent-[#9E5850]">
               <span class="flex -space-x-1.5 shrink-0">
-                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#FBF7F6"></span>
-                <span class="w-4 h-4 rounded-full border border-white" style="background:#8C4A52"></span>
-                <span class="w-4 h-4 rounded-full border border-white" style="background:#D4AF7A"></span>
+                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#FAF4F0"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#9E5850"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#C89378"></span>
               </span>
               <span class="leading-tight">
                 <strong class="block text-[11px] text-stone-900">02 • Rose Silk</strong>
-                <span class="text-[10px] text-stone-500">Hồng khô &amp; Espresso</span>
+                <span class="text-[10px] text-stone-500">Hồng trà &amp; Vàng hồng</span>
               </span>
             </label>
 
             <label class="atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="03">
-              <input type="radio" name="atelier-palette" value="03" class="accent-[#3B5243]">
+              <input type="radio" name="atelier-palette" value="03" class="accent-[#466052]">
               <span class="flex -space-x-1.5 shrink-0">
                 <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#F4F5F0"></span>
-                <span class="w-4 h-4 rounded-full border border-white" style="background:#3B5243"></span>
-                <span class="w-4 h-4 rounded-full border border-white" style="background:#C29F61"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#466052"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#B59461"></span>
               </span>
               <span class="leading-tight">
                 <strong class="block text-[11px] text-stone-900">03 • Botanical Sage</strong>
-                <span class="text-[10px] text-stone-500">Thảo mộc Úc &amp; Đá cẩm</span>
+                <span class="text-[10px] text-stone-500">Thảo mộc Úc &amp; Đồng cổ</span>
+              </span>
+            </label>
+
+            <label class="atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="04">
+              <input type="radio" name="atelier-palette" value="04" class="accent-[#5C4033]">
+              <span class="flex -space-x-1.5 shrink-0">
+                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#F5F0E8"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#5C4033"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#C69C47"></span>
+              </span>
+              <span class="leading-tight">
+                <strong class="block text-[11px] text-stone-900">04 • Espresso Cashmere</strong>
+                <span class="text-[10px] text-stone-500">Nâu óc chó &amp; Vàng 24K</span>
+              </span>
+            </label>
+
+            <label class="atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="05">
+              <input type="radio" name="atelier-palette" value="05" class="accent-[#3D5A6C]">
+              <span class="flex -space-x-1.5 shrink-0">
+                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#F3F5F6"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#3D5A6C"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#C4A267"></span>
+              </span>
+              <span class="leading-tight">
+                <strong class="block text-[11px] text-stone-900">05 • Coastal Pearl</strong>
+                <span class="text-[10px] text-stone-500">Ngọc trai biển &amp; Đá phiến</span>
               </span>
             </label>
           </div>
@@ -865,15 +897,19 @@
         document.getElementById('badge-count-outbound').textContent = obList.length;
         document.getElementById('badge-count-inbound').textContent = ibList.length;
 
-        // Outbound stats
-        const obPending = obList.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending').length;
-        const obPitched = obList.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup')).length;
-        const obPaid = obList.filter(c => c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched').length;
+        // Outbound stats (4 clear stages: Pending -> Pitched -> Paid awaiting launch -> Officially Launched)
+        const isObLaunched = (c) => c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
+        const obPending = obList.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending' && !isObLaunched(c)).length;
+        const obPitched = obList.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup') && !isObLaunched(c)).length;
+        const obPaidWaiting = obList.filter(c => (c.paymentStatus === 'paid' || c.stage === 'outbound_paid') && !isObLaunched(c)).length;
+        const obLaunched = obList.filter(isObLaunched).length;
 
         document.getElementById('stat-ob-all').textContent = obList.length;
         document.getElementById('stat-ob-pending').textContent = obPending;
         document.getElementById('stat-ob-pitched').textContent = obPitched;
-        document.getElementById('stat-ob-paid').textContent = obPaid;
+        document.getElementById('stat-ob-paid').textContent = obPaidWaiting;
+        const statObLaunchedEl = document.getElementById('stat-ob-launched');
+        if (statObLaunchedEl) statObLaunchedEl.textContent = obLaunched;
 
         // Inbound stats
         const ibPaid = ibList.filter(c => c.stage === 'paid' || c.stage === 'checkout_started').length;
@@ -1021,12 +1057,15 @@
         );
 
         if (activeMainTab === 'outbound') {
+          const isObLaunched = (c) => c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
           if (currentObFilter === 'pending') {
-            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending');
+            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending' && !isObLaunched(c));
           } else if (currentObFilter === 'pitched') {
-            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup'));
+            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup') && !isObLaunched(c));
           } else if (currentObFilter === 'paid') {
-            filtered = filtered.filter(c => c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched');
+            filtered = filtered.filter(c => (c.paymentStatus === 'paid' || c.stage === 'outbound_paid') && !isObLaunched(c));
+          } else if (currentObFilter === 'launched') {
+            filtered = filtered.filter(isObLaunched);
           }
         } else {
           if (currentIbFilter === 'paid') {
@@ -1113,6 +1152,133 @@
         `;
       }
 
+      function renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName }) {
+        const isDnsActive = c.cfZoneStatus === 'active' || isLaunched;
+        const isUnregistered = c.cfZoneStatus === 'unregistered';
+        const needsVentraIpPurchase = !c.existingDomain && Boolean(c.desiredDomains) && !c.domainDelegated && !isDnsActive;
+
+        let statusBadge = '';
+        if (isDnsActive) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">🟢 DNS Đã Thông (Active)</span>`;
+        } else if (c.domainDelegated) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white">🎉 Khách đã cấp quyền — Admin gắn NS</span>`;
+        } else if (c.dnsMode === 'self_ns') {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-900 border border-sky-200">⚡ Khách/IT tự trỏ NS — Chờ DNS</span>`;
+        } else if (needsVentraIpPurchase) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">⏳ Chờ khách mua trên VentraIP &amp; mời hello@wynnpages.com.au</span>`;
+        } else if (resolvedLiveUrl) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">⏳ Chờ khách cấp quyền / trỏ DNS</span>`;
+        }
+
+        const guideTab = c.existingDomain ? 'existing' : 'new';
+        const guideNsParam = (c.dnsMode === 'self_ns' && c.cfNameservers) ? `&amp;ns=${encodeURIComponent(c.cfNameservers)}` : '';
+        const guideHref = `/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;email=${encodeURIComponent(c.email || '')}&amp;cid=${encodeURIComponent(c.id)}&amp;tab=${guideTab}${guideNsParam}`;
+
+        return `
+          <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-extrabold text-emerald-950">🌐 2. Tên Miền Chính Thức:</span>
+                ${statusBadge}
+              </div>
+
+              <div class="flex items-center gap-1.5 flex-wrap">
+                ${resolvedLiveUrl ? `
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-check-dns px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-[11px] font-extrabold text-emerald-900 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                    title="Kiểm tra xem tên miền của khách đã mua &amp; trỏ DNS thông về hệ thống chưa"
+                  >
+                    <span>🔄 Kiểm Tra DNS</span>
+                  </button>
+                ` : ''}
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-name="${escapeHtml(titleName)}"
+                  class="btn-copy-domain-guide px-2.5 py-1.5 rounded-xl bg-stone-50 hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-stone-700 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                  title="Copy tin nhắn nhắc khách mua/phân quyền tên miền (khi cần nhắc thêm)"
+                >
+                  <span>🤝 Copy Nhắc Cấp Quyền</span>
+                </button>
+                <a
+                  href="${guideHref}"
+                  target="_blank"
+                  class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1"
+                  title="Xem trang hướng dẫn tên miền cá nhân hoá của khách này"
+                >
+                  <span>📖 Xem HD ↗</span>
+                </a>
+                ${canOpenLiveWeb ? `
+                  <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs">
+                    <span>🚀 Mở Web Thật ↗</span>
+                  </a>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                id="live-url-${c.id}" 
+                data-cid="${c.id}"
+                data-paid="${isPaid ? '1' : '0'}"
+                value="${escapeHtml(resolvedLiveUrl)}" 
+                placeholder="${isPaid ? 'Nhập tên miền chính thức (VD: lushnailsbar.com.au) rồi bấm Lưu & Kết Nối...' : 'Sau khi khách thanh toán $599 & chọn tên miền, tên miền sẽ tự điền vào đây...'}" 
+                class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+              >
+              <button 
+                type="button"
+                data-cid="${c.id}"
+                class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
+              >
+                Lưu &amp; Kết Nối
+              </button>
+            </div>
+
+            ${c.cfNameservers ? `
+              <div class="px-3 py-2 rounded-xl bg-[#f7faf8] border border-emerald-200/90 text-[11px] flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-2 min-w-0">
+                  <span class="font-bold text-stone-600">🔧 NS kỹ thuật (Admin dán vào VentraIP/GoDaddy của khách):</span>
+                  <code class="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-200 select-all">${escapeHtml(c.cfNameservers)}</code>
+                  <button 
+                    type="button" 
+                    data-ns="${escapeHtml(c.cfNameservers)}"
+                    class="btn-copy-ns font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    📋 Copy NS
+                  </button>
+                </div>
+                ${c.email ? `
+                  <details class="text-[11px]">
+                    <summary class="cursor-pointer text-stone-500 hover:text-stone-800 font-semibold select-none">Khách có IT riêng tự trỏ? ▾</summary>
+                    <div class="mt-1.5 flex items-center justify-end">
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-email="${escapeHtml(c.email)}"
+                        class="btn-send-dns-email px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-900 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>✉️ Gửi Mail NS Cho IT Khách</span>
+                      </button>
+                    </div>
+                  </details>
+                ` : ''}
+              </div>
+            ` : (resolvedLiveUrl && isUnregistered ? `
+              <div class="text-[11px] text-amber-900 bg-amber-50/80 border border-amber-200 rounded-xl px-3 py-2">
+                ℹ️ Tên miền <strong>${escapeHtml(resolvedLiveUrl)}</strong> hiện chưa được mua trên hệ thống quốc tế. Sau khi khách đăng ký trên VentraIP &amp; mời <code>hello@wynnpages.com.au</code>, bấm <strong>"🔄 Kiểm Tra DNS"</strong> để sinh cặp NS và gắn lên sóng!
+              </div>
+            ` : (resolvedLiveUrl ? `
+              <div class="text-[11px] text-stone-600 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2">
+                💡 Khi khách đã mua/cấp quyền tên miền <strong>${escapeHtml(resolvedLiveUrl)}</strong>, bấm <strong>"🔄 Kiểm Tra DNS"</strong> (hoặc <strong>"Lưu &amp; Kết Nối"</strong>) để lấy cặp NS gắn cho khách.
+              </div>
+            ` : ''))}
+          </div>
+        `;
+      }
+
       // ================================================================
       // RENDER TAB 1: OUTBOUND PROSPECT CARDS (Streamlined & Fast)
       // ================================================================
@@ -1144,7 +1310,7 @@
           const paymentBadge = isLaunched
             ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">🚀 ĐÃ LÊN SÓNG (LIVE)</span>`
             : (isPaid
-                ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-600 text-white shadow-xs">🟢 ĐÃ CHỐT ĐƠN ($599 PAID)</span>`
+                ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-teal-600 text-white shadow-xs">🟢 ĐÃ MUA $599 (CHỜ LÊN SÓNG)</span>`
                 : `<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">🟡 Đang chào hàng (Chưa trả $599)</span>`);
 
           const domainInfo = c.existingDomain
@@ -1155,22 +1321,35 @@
 
           const previewOverlayUrl = c.brandedDemoUrl || `https://${encodeURIComponent(c.demoSlug || c.id)}.wynnpages.com.au`;
 
-          // 3-step Outbound Stepper
+          // 4-Step Accurate Outbound Stepper (Separating $599 Payment from Official Live Launch!)
           const obSteps = [
             {
               label: '1. Tạo Web Demo Mẫu',
-              sub: hasValidDemo ? 'Đã gắn link Demo' : 'Chưa dán link Demo',
-              done: hasValidDemo
+              sub: hasValidDemo ? 'Đã gắn link Demo' : 'Chưa dựng Demo',
+              done: hasValidDemo,
+              waiting: false
             },
             {
               label: '2. Gửi Chào Hàng (Pitch)',
               sub: isPitched ? (c.reminderCount > 0 ? `Đã gửi & nhắc ${c.reminderCount} lần` : 'Đã gửi cho chủ tiệm') : 'Chờ gửi SMS / Email',
-              done: isPitched
+              done: isPitched,
+              waiting: false
             },
             {
-              label: '3. Khách Mua $599 & Lên Sóng',
-              sub: isLaunched ? 'Đã bàn giao Live' : (isPaid ? 'Khách đã trả $599!' : 'Chờ khách bấm Claim $599'),
-              done: isPaid || isLaunched
+              label: '3. Khách Mua $599',
+              sub: isPaid ? 'Đã thanh toán $599 ✓' : 'Chờ khách bấm Claim $599',
+              done: isPaid,
+              waiting: false
+            },
+            {
+              label: '4. Lên Sóng Chính Thức',
+              sub: isLaunched
+                ? `Đã lên sóng: ${resolvedLiveUrl || 'Live'}`
+                : (isPaid
+                    ? (c.cfZoneStatus === 'active' ? 'DNS đã thông — Bấm Báo Lên Sóng!' : '⏳ Chờ kết nối DNS & Lên sóng')
+                    : 'Sau khi khách mua & gắn tên miền'),
+              done: isLaunched,
+              waiting: isPaid && !isLaunched
             }
           ];
 
@@ -1215,16 +1394,16 @@
                 </div>
               </div>
 
-              <!-- 3-Step Outbound Progress Bar -->
-              <div class="grid grid-cols-3 gap-3">
+              <!-- 4-Step Outbound Progress Bar -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 ${obSteps.map(s => `
                   <div class="space-y-1">
-                    <div class="h-1.5 w-full rounded-full ${s.done ? 'bg-emerald-600' : 'bg-stone-200'}"></div>
-                    <div class="flex items-center justify-between text-xs font-bold ${s.done ? 'text-emerald-800' : 'text-stone-400'}">
+                    <div class="h-1.5 w-full rounded-full ${s.done ? 'bg-emerald-600' : (s.waiting ? 'bg-amber-400' : 'bg-stone-200')}"></div>
+                    <div class="flex items-center justify-between text-xs font-bold ${s.done ? 'text-emerald-800' : (s.waiting ? 'text-amber-800' : 'text-stone-400')}">
                       <span>${s.label}</span>
-                      ${s.done ? '<span>✓</span>' : ''}
+                      ${s.done ? '<span>✓</span>' : (s.waiting ? '<span>⏳</span>' : '')}
                     </div>
-                    <span class="block text-[11px] text-stone-500 truncate">${s.sub}</span>
+                    <span class="block text-[11px] ${s.waiting ? 'text-amber-700 font-semibold' : 'text-stone-500'} truncate">${escapeHtml(s.sub)}</span>
                   </div>
                 `).join('')}
               </div>
@@ -1332,112 +1511,8 @@
                   </div>
                 </div>
 
-                <!-- Section 2: Official Live Domain -->
-                <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <span class="text-xs font-extrabold text-emerald-950 flex items-center gap-1.5">
-                        <span>🌐 2. Tên Miền Chính Thức:</span>
-                      </span>
-                      ${c.cfNameservers
-                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">Cloudflare Ready</span>`
-                        : ''
-                      }
-                    </div>
-
-                    <!-- Action buttons for Domain -->
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        data-cid="${c.id}"
-                        data-name="${escapeHtml(titleName)}"
-                        class="btn-copy-domain-guide px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-900 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                        title="Copy link & tin nhắn hướng dẫn Delegate tên miền cho khách"
-                      >
-                        <span>🤝 Copy Link HD Delegate</span>
-                      </button>
-                      <a
-                        href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;tab=${c.existingDomain ? 'existing' : 'new'}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
-                        target="_blank"
-                        class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1"
-                        title="Xem trang hướng dẫn Delegate tên miền của khách này"
-                      >
-                        <span>📖 Xem HD ↗</span>
-                      </a>
-                      ${canOpenLiveWeb ? `
-                        <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs">
-                          <span>🚀 Mở Web Thật ↗</span>
-                        </a>
-                      ` : (resolvedLiveUrl ? `
-                        <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-[10px] font-bold inline-flex items-center gap-1" title="Tên miền chưa trỏ DNS hoặc chưa lên sóng">
-                          <span>⏳ Chờ trỏ DNS / Chưa lên sóng</span>
-                        </span>
-                      ` : '')}
-                    </div>
-                  </div>
-
-                  <!-- Live Domain input row -->
-                  <div class="flex items-center gap-2">
-                    <input 
-                      type="text" 
-                      id="live-url-${c.id}" 
-                      data-cid="${c.id}"
-                      data-paid="${isPaid ? '1' : '0'}"
-                      value="${escapeHtml(resolvedLiveUrl)}" 
-                      placeholder="${isPaid ? 'Nhập tên miền thật (VD: lushnailsbar.com.au) — Tự động cấu hình Cloudflare DNS & gửi mail cho khách...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
-                      class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
-                    >
-                    <button 
-                      type="button"
-                      data-cid="${c.id}"
-                      class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
-                    >
-                      Lưu &amp; Cài Đặt Tên Miền
-                    </button>
-                  </div>
-
-                  ${c.cfNameservers ? `
-                    <div class="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-xs space-y-2">
-                      <div class="flex items-center justify-between flex-wrap gap-2">
-                        <span class="font-extrabold text-emerald-950 flex items-center gap-1.5 text-xs">
-                          <span>☁️ Cặp Nameservers Cloudflare cần trỏ cho tên miền này:</span>
-                        </span>
-                        <button 
-                          type="button" 
-                          data-ns="${escapeHtml(c.cfNameservers)}"
-                          class="btn-copy-ns text-[11px] font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-2xs inline-flex items-center gap-1"
-                        >
-                          <span>📋 Copy Cặp Nameservers</span>
-                        </button>
-                      </div>
-                      <div class="font-mono font-bold text-stone-900 bg-white p-2.5 rounded-xl border border-emerald-200 text-xs select-all">
-                        <code>${escapeHtml(c.cfNameservers)}</code>
-                      </div>
-                      <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
-                        <p class="text-[11px] text-emerald-800 leading-relaxed">
-                          💡 Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") sẽ thấy ngay cặp Nameservers này.
-                        </p>
-                        ${c.email ? `
-                          <button
-                            type="button"
-                            data-cid="${c.id}"
-                            data-email="${escapeHtml(c.email)}"
-                            class="btn-send-dns-email px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                            title="Gửi email hướng dẫn cấu hình DNS Cloudflare tới ${escapeHtml(c.email)}"
-                          >
-                            <span>✉️ Bấm Gửi Mail DNS Cho Khách</span>
-                          </button>
-                        ` : `
-                          <span class="text-[10px] text-stone-400 italic">Chưa có email khách để gửi hướng dẫn DNS</span>
-                        `}
-                      </div>
-                    </div>
-                  ` : (resolvedLiveUrl ? `
-                    <div class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
-                      <span>⚠️ Bấm <strong>"Lưu &amp; Cài Đặt Tên Miền"</strong> để hệ thống tự động tạo Zone trên Cloudflare, lấy cặp Nameservers và gửi mail cho khách!</span>
-                    </div>
-                  ` : '')}
-                </div>
+                <!-- Section 2: Official Live Domain (Unified Smart Concierge Flow) -->
+                ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
 
                 <!-- 3 Outbound Automated SMS + Email Action Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
@@ -1481,7 +1556,7 @@
                     ${(!isPaid || !hasValidLive) ? 'disabled' : ''}
                     class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
                   >
-                    <span>🚀 3. Báo Lên Sóng Chính Thức</span>
+                    <span>🚀 4. Báo Lên Sóng Chính Thức</span>
                     <span id="btn-stage5-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
                       !isPaid
                         ? '🔒 Chờ khách thanh toán $599 trước'
@@ -1829,95 +1904,8 @@
                   </div>
                 </div>
 
-                <!-- Row 2: Official Live Domain -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  <label for="live-url-${c.id}" class="text-xs font-extrabold text-emerald-900 shrink-0 flex items-center gap-1.5 w-48">
-                    <span>🌐 2. Tên Miền Chính Thức:</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    id="live-url-${c.id}" 
-                    data-cid="${c.id}"
-                    data-paid="${isPaid ? '1' : '0'}"
-                    value="${escapeHtml(resolvedLiveUrl)}" 
-                    placeholder="Nhập tên miền thật sau khi trỏ DNS (VD: https://mybusiness.com.au) để mở khoá Nút 5 Lên Sóng..." 
-                    class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
-                  >
-                  <button 
-                    type="button"
-                    data-cid="${c.id}"
-                    class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors"
-                  >
-                    Lưu &amp; Cài Đặt Tên Miền
-                  </button>
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-name="${escapeHtml(titleName)}"
-                    class="btn-copy-domain-guide px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-900 shrink-0 transition-colors inline-flex items-center gap-1"
-                    title="Copy link & tin nhắn hướng dẫn Delegate tên miền cho khách"
-                  >
-                    <span>🤝 Copy Link HD Delegate</span>
-                  </button>
-                  <a
-                    href="/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;tab=${c.existingDomain ? 'existing' : 'new'}&amp;ns=${encodeURIComponent(c.cfNameservers || '')}"
-                    target="_blank"
-                    class="px-2.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 border border-[#dfd5c3] text-[11px] font-bold text-[#96432b] shrink-0 transition-colors inline-flex items-center gap-1"
-                    title="Xem trang hướng dẫn Delegate tên miền của khách này"
-                  >
-                    <span>📖 Xem HD ↗</span>
-                  </a>
-                  ${canOpenLiveWeb ? `
-                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1 shadow-2xs">
-                      <span>Mở Web Thật ↗</span>
-                    </a>
-                  ` : (resolvedLiveUrl ? `
-                    <span class="px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold shrink-0">
-                      <span>⏳ Chờ trỏ DNS / Chưa lên sóng</span>
-                    </span>
-                  ` : '')}
-                </div>
-                ${c.cfNameservers ? `
-                  <div class="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-xs space-y-2">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                      <span class="font-extrabold text-emerald-950 flex items-center gap-1.5 text-xs">
-                        <span>☁️ Cặp Nameservers Cloudflare cần trỏ cho tên miền này:</span>
-                      </span>
-                      <button 
-                        type="button" 
-                        data-ns="${escapeHtml(c.cfNameservers)}"
-                        class="btn-copy-ns text-[11px] font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-2xs inline-flex items-center gap-1"
-                      >
-                        <span>📋 Copy Cặp Nameservers</span>
-                      </button>
-                    </div>
-                    <div class="font-mono font-bold text-stone-900 bg-white p-2.5 rounded-xl border border-emerald-200 text-xs select-all">
-                      <code>${escapeHtml(c.cfNameservers)}</code>
-                    </div>
-                    <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
-                      <p class="text-[11px] text-emerald-800 leading-relaxed">
-                        💡 Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") sẽ thấy ngay cặp Nameservers này.
-                      </p>
-                      ${c.email ? `
-                        <button
-                          type="button"
-                          data-cid="${c.id}"
-                          data-email="${escapeHtml(c.email)}"
-                          class="btn-send-dns-email px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                          title="Gửi email hướng dẫn cấu hình DNS Cloudflare tới ${escapeHtml(c.email)}"
-                        >
-                          <span>✉️ Bấm Gửi Mail DNS Cho Khách</span>
-                        </button>
-                      ` : `
-                        <span class="text-[10px] text-stone-400 italic">Chưa có email khách để gửi hướng dẫn DNS</span>
-                      `}
-                    </div>
-                  </div>
-                ` : (resolvedLiveUrl ? `
-                  <div class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
-                    <span>⚠️ Bấm <strong>"Lưu &amp; Cài Đặt Tên Miền"</strong> để hệ thống tự động tạo Zone trên Cloudflare, lấy cặp Nameservers và gửi mail cho khách!</span>
-                  </div>
-                ` : '')}
+                <!-- Row 2: Official Live Domain (Unified Smart Concierge Flow) -->
+                ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
 
                 <!-- 5 Smart Stage Trigger Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
@@ -2151,18 +2139,20 @@
             const dom = (liveInput && liveInput.value.trim()) || (c && (c.liveUrl || c.existingDomain || c.desiredDomains)) || 'your domain';
             const needsNewDomain = c && !c.existingDomain && Boolean(c.desiredDomains);
             const guideParams = new URLSearchParams();
+            if (cid) guideParams.set('cid', cid);
+            if (c && c.email) guideParams.set('email', c.email);
             if (dom && dom !== 'your domain') guideParams.set('domain', dom);
             if (biz && biz !== 'your business') guideParams.set('name', biz);
-            if (c && c.cfNameservers) guideParams.set('ns', c.cfNameservers);
+            if (c && c.dnsMode === 'self_ns' && c.cfNameservers) guideParams.set('ns', c.cfNameservers);
             guideParams.set('tab', needsNewDomain ? 'new' : 'existing');
             const guideUrl = `https://wynnpages.com.au/domain-guide${guideParams.toString() ? '?' + guideParams.toString() : ''}`;
 
             const msg = needsNewDomain
-              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo retain 100% legal ownership and direct annual renewals on your card, please register your domain on VentraIP Australia and delegate technical setup to us following our visual guide:\n👉 ${guideUrl}\n\n(Simply add hello@wynnpages.com.au under Profile Settings → Additional Users — our engineers connect it for you for free!)\n\n— WynnPages Australia`
-              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain with zero technical hassle, you can simply reply with your domain registrar login (GoDaddy, CrazyDomains, Namecheap, etc.) or follow our 60-second guide below:\n👉 ${guideUrl}\n\n${c && c.cfNameservers ? `(Or point your Nameservers to: ${c.cfNameservers})\n\n` : ''}— WynnPages Australia`;
+              ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo retain 100% legal ownership and direct annual renewals in your own name, please register ${dom} on VentraIP Australia and invite hello@wynnpages.com.au following our 2-minute visual guide:\n👉 ${guideUrl}\n\n(Our Australian engineers will handle all SSL & DNS setup for free!)\n\n— WynnPages Australia`
+              : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain with zero technical hassle, simply invite hello@wynnpages.com.au (VentraIP/GoDaddy) or submit your registrar access via your personalised 60-second guide:\n👉 ${guideUrl}\n\n— WynnPages Australia`;
 
             navigator.clipboard.writeText(msg);
-            showToast(`Đã copy tin nhắn kèm Link Hướng Dẫn VentraIP riêng cho "${biz}": ${guideUrl}`);
+            showToast(`Đã copy tin nhắn nhắc cấp quyền tên miền riêng cho "${biz}"!`);
           });
         });
 
@@ -2270,18 +2260,47 @@
             const demoUrl = demoInput ? demoInput.value.trim() : undefined;
             const liveUrl = liveInput ? liveInput.value.trim() : '';
             const origText = btn.innerHTML;
-            btn.innerHTML = '<span class="wynn-spin-dark"></span><span class="ml-1.5">Đang lưu &amp; tạo DNS...</span>';
+            btn.innerHTML = '<span class="wynn-spin-dark"></span><span class="ml-1.5">Đang lưu...</span>';
             btn.disabled = true;
             const actionPayload = { action: 'save_client', customerId: cid, liveUrl };
             if (demoUrl) actionPayload.demoUrl = demoUrl;
-            const res = await runAdminAction(actionPayload, { busyText: 'Đang lưu tên miền & cấu hình DNS...', skipReload: true });
+            const res = await runAdminAction(actionPayload, { busyText: 'Đang lưu & kết nối tên miền...', skipReload: true });
             btn.disabled = false;
             btn.innerHTML = origText;
             if (res && res.client) upsertClientInCache(res.client);
-            if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {
-              showToast(`🎉 Đã lưu tên miền & tạo DNS Zone thành công! Nameservers: ${res.liveDomainBindResult.nameservers} (Bấm nút "Gửi Mail DNS" nếu muốn gửi hướng dẫn cho khách).`);
+            if (res && res.liveDomainBindResult && res.liveDomainBindResult.attached && res.liveDomainBindResult.nameservers) {
+              showToast(`🎉 Đã kết nối tên miền thành công! NS kỹ thuật cho Admin: ${res.liveDomainBindResult.nameservers}`);
             } else if (res && res.ok) {
               showToast('Đã lưu Tên Miền Chính Thức!');
+            }
+          });
+        });
+
+        // 1-Click Live DNS & Zone Activation Check
+        document.querySelectorAll('.btn-check-dns').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const liveInput = document.getElementById(`live-url-${cid}`);
+            const liveUrl = liveInput ? liveInput.value.trim() : '';
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="wynn-spin-dark"></span><span>Đang check...</span>';
+            const res = await runAdminAction(
+              { action: 'check_domain_status', customerId: cid, liveUrl },
+              { busyText: `Đang kiểm tra trạng thái DNS trực tiếp cho ${liveUrl || 'tên miền'}...`, skipReload: true }
+            );
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            if (res && res.client) upsertClientInCache(res.client);
+            if (res && res.ok) {
+              if (res.isActive) {
+                showToast(`🟢 Tuyệt vời! DNS cho "${res.rootDomain}" ĐÃ THÔNG HOÀN TẤT — bạn có thể bấm nút "🚀 Báo Lên Sóng Chính Thức" ngay!`);
+              } else if (res.zoneStatus === 'unregistered') {
+                showToast(`⏳ Tên miền "${res.rootDomain}" hiện chưa được khách mua trên hệ thống quốc tế (WHOIS). Hãy chờ khách đăng ký trên VentraIP trước!`, true);
+              } else {
+                const curNs = Array.isArray(res.liveNs) && res.liveNs.length ? res.liveNs.join(', ') : 'chưa trỏ';
+                showToast(`⏳ Tên miền "${res.rootDomain}" đã tạo Zone (NS cần gắn: ${res.nameservers || 'N/A'}), hiện tại WHOIS đang trỏ: ${curNs}.`);
+              }
             }
           });
         });
@@ -2929,7 +2948,8 @@
         const rawSocials = customSocials !== undefined ? customSocials : (client && client.socialLinks);
         const parsedLinks = parseSocialAndBookingBrowser(rawSocials);
 
-        let html = templateHtml.replace(/data-palette="0[123]"/, `data-palette="${palette}"`);
+        const validPal = ['01', '02', '03', '04', '05'].includes(palette) ? palette : '01';
+        let html = templateHtml.replace(/data-palette="0[1-5]"/, `data-palette="${validPal}"`);
 
         const patchStringField = (fieldName, newValue) => {
           if (newValue === undefined || newValue === null) return;
@@ -2938,9 +2958,44 @@
           html = html.replace(re, `$1${escaped}`);
         };
 
-        patchStringField('palette', palette);
+        patchStringField('palette', validPal);
         patchStringField('salonName', bizName);
         patchStringField('monogram', monogram);
+
+        // Bake palette-matched oil-painting vault URLs directly into ATELIER_CONFIG.images
+        const vaultBase = 'https://wynnpages.com.au/assets/atelier/nails';
+        const vaultMap = {
+          '01': {
+            hero: `${vaultBase}/hero-sanctuary.jpg`,
+            biab: `${vaultBase}/biab-artistry.jpg`,
+            pedi: `${vaultBase}/botanical-pedicure.jpg`
+          },
+          '02': {
+            hero: `${vaultBase}/p02/hero.jpg`,
+            biab: `${vaultBase}/p02/biab.jpg`,
+            pedi: `${vaultBase}/p02/pedicure.jpg`
+          },
+          '03': {
+            hero: `${vaultBase}/p03/hero.jpg`,
+            biab: `${vaultBase}/p03/biab.jpg`,
+            pedi: `${vaultBase}/p03/pedicure.jpg`
+          },
+          '04': {
+            hero: `${vaultBase}/p04/hero.jpg`,
+            biab: `${vaultBase}/p04/biab.jpg`,
+            pedi: `${vaultBase}/p04/pedicure.jpg`
+          },
+          '05': {
+            hero: `${vaultBase}/p05/hero.jpg`,
+            biab: `${vaultBase}/p05/biab.jpg`,
+            pedi: `${vaultBase}/p05/pedicure.jpg`
+          }
+        };
+        const pv = vaultMap[validPal] || vaultMap['01'];
+        patchStringField('hero', pv.hero);
+        patchStringField('biabFeature', pv.biab);
+        patchStringField('pedicureFeature', pv.pedi);
+        html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
 
         const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
         const resolvedState = address ? parsedAddr.state : '';
@@ -3048,10 +3103,12 @@
       }
 
       // Browser Canvas Generator: Bespoke Wax Monogram Favicon (SVG + 192x192 PNG) & 1200x630 Oil-Painting SEO Share Card (JPEG)
-      let cachedAtelierHeroImg = null;
-      function loadAtelierHeroImageForCanvas() {
-        if (cachedAtelierHeroImg && cachedAtelierHeroImg.complete && cachedAtelierHeroImg.naturalWidth > 0) {
-          return Promise.resolve(cachedAtelierHeroImg);
+      const cachedAtelierHeroByPalette = {};
+      function loadAtelierHeroImageForCanvas(palette = '01') {
+        const pal = ['02', '03', '04', '05'].includes(palette) ? palette : '01';
+        const cached = cachedAtelierHeroByPalette[pal];
+        if (cached && cached.complete && cached.naturalWidth > 0) {
+          return Promise.resolve(cached);
         }
         return new Promise((resolve) => {
           const img = new Image();
@@ -3059,14 +3116,14 @@
           const timer = setTimeout(() => resolve(null), 2600);
           img.onload = () => {
             clearTimeout(timer);
-            cachedAtelierHeroImg = img;
+            cachedAtelierHeroByPalette[pal] = img;
             resolve(img);
           };
           img.onerror = () => {
             clearTimeout(timer);
             resolve(null);
           };
-          img.src = '/assets/atelier/nails/hero-sanctuary.jpg';
+          img.src = pal === '01' ? '/assets/atelier/nails/hero-sanctuary.jpg' : `/assets/atelier/nails/p${pal}/hero.jpg`;
         });
       }
 
@@ -3080,7 +3137,9 @@
         const themes = {
           '01': { bg1: '#FCF9F3', bg2: '#F3DFB2', ring: '#D49B28', accent: '#96432B', dark: '#241B15' },
           '02': { bg1: '#FFFDFB', bg2: '#F5DFD4', ring: '#C89378', accent: '#9E5850', dark: '#231918' },
-          '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052', dark: '#19221D' }
+          '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052', dark: '#19221D' },
+          '04': { bg1: '#FCF9F4', bg2: '#EFE0BE', ring: '#C69C47', accent: '#5C4033', dark: '#1E1712' },
+          '05': { bg1: '#FAFCFD', bg2: '#DDE6EC', ring: '#C4A267', accent: '#3D5A6C', dark: '#162028' }
         };
         const t = themes[palette] || themes['01'];
 
@@ -3138,7 +3197,7 @@
             ctx.fillStyle = t.dark;
             ctx.fillRect(0, 0, 1200, 630);
 
-            const heroImg = await loadAtelierHeroImageForCanvas();
+            const heroImg = await loadAtelierHeroImageForCanvas(palette);
             if (heroImg) {
               const scale = Math.max(1200 / heroImg.naturalWidth, 630 / heroImg.naturalHeight);
               const dw = heroImg.naturalWidth * scale;

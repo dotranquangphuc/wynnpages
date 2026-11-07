@@ -68,7 +68,7 @@
   </script>
   <style>
     /* ==========================================================================
-       WYNNPAGES HAUTE COUTURE PALETTE TOKENS (01 / 02 / 03)
+       WYNNPAGES HAUTE COUTURE PALETTE TOKENS (01 – 05)
        ========================================================================== */
     :root,
     html[data-palette="01"] {
@@ -123,6 +123,49 @@
       --border-pearl: rgba(255, 255, 255, 0.92);
       --grain-dot: #C2CBBF;
       --hero-glow: rgba(181, 148, 97, 0.15);
+    }
+
+    /* 04 — Espresso Cashmere & Brushed Gold */
+    html[data-palette="04"] {
+      --bg-canvas: #F5F0E8;
+      --bg-canvas-alt: #EAE2D5;
+      --bg-card: rgba(253, 250, 245, 0.88);
+      --bg-card-solid: #FCF9F4;
+      --ink-primary: #231C17;
+      --ink-muted: #66584D;
+      --accent-primary: #5C4033;
+      --accent-deep: #422C22;
+      --foil-gold: #C69C47;
+      --foil-light: #EFE0BE;
+      --pill-bg: #EAE0D2;
+      --border-hairline: rgba(198, 156, 71, 0.28);
+      --border-pearl: rgba(255, 255, 255, 0.92);
+      --grain-dot: #CBBBA5;
+      --hero-glow: rgba(198, 156, 71, 0.16);
+    }
+
+    /* 05 — Coastal Pearl & Mineral Slate */
+    html[data-palette="05"] {
+      --bg-canvas: #F3F5F6;
+      --bg-canvas-alt: #E6ECEE;
+      --bg-card: rgba(251, 253, 254, 0.88);
+      --bg-card-solid: #FAFCFD;
+      --ink-primary: #1C262E;
+      --ink-muted: #566672;
+      --accent-primary: #3D5A6C;
+      --accent-deep: #2B4251;
+      --foil-gold: #C4A267;
+      --foil-light: #EFE3CA;
+      --pill-bg: #DDE6EC;
+      --border-hairline: rgba(196, 162, 103, 0.28);
+      --border-pearl: rgba(255, 255, 255, 0.94);
+      --grain-dot: #BCC8D0;
+      --hero-glow: rgba(61, 90, 108, 0.14);
+    }
+
+    ::selection {
+      background-color: var(--pill-bg);
+      color: var(--ink-primary);
     }
 
     body {
@@ -266,6 +309,12 @@
     html[data-palette="03"] .atelier-map-embed {
       filter: grayscale(0.52) sepia(0.22) hue-rotate(46deg) saturate(0.80) contrast(0.95) brightness(1.02);
     }
+    html[data-palette="04"] .atelier-map-embed {
+      filter: grayscale(0.58) sepia(0.38) hue-rotate(-4deg) saturate(0.76) contrast(0.95) brightness(1.01);
+    }
+    html[data-palette="05"] .atelier-map-embed {
+      filter: grayscale(0.54) sepia(0.24) hue-rotate(155deg) saturate(0.82) contrast(0.95) brightness(1.02);
+    }
     .atelier-map-shell:hover .atelier-map-embed,
     .atelier-map-shell:focus-within .atelier-map-embed {
       filter: grayscale(0.22) sepia(0.18) saturate(0.95) contrast(0.98) brightness(1.01);
@@ -328,7 +377,7 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="relative min-h-screen selection:bg-[#fbdeb9] selection:text-[#2b251e]">
+<body class="relative min-h-screen">
 
   <!-- ========================================================================
        1. STRUCTURED SALON & MENU DATA (EDITABLE SINGLE SOURCE OF TRUTH)
@@ -337,7 +386,7 @@
        ======================================================================== -->
   <script id="atelier-salon-data">
     window.ATELIER_CONFIG = {
-      palette: "01", // "01" (Terracotta & Champagne Gold) | "02" (Rose Silk & Espresso) | "03" (Botanical Sage & Alabaster)
+      palette: "01", // "01" (Terracotta Gold) | "02" (Rose Silk) | "03" (Botanical Sage) | "04" (Espresso Cashmere) | "05" (Coastal Pearl)
       salonName: "Maison Élan",
       salonSubtitle: "Nail & Hand Sanctuary",
       monogram: "M",
@@ -569,7 +618,7 @@
 
       <!-- Right Arched Oil-Painting Frame (5 Cols) -->
       <div class="lg:col-span-5 relative">
-        <div class="arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative bg-[#ebe2d3]">
+        <div class="arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
           <img
             id="hero-oil-img"
             src="https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg"
@@ -696,7 +745,7 @@
     <section class="reveal-section grid grid-cols-1 md:grid-cols-2 gap-8">
       <!-- Feature Card 1 -->
       <div class="atelier-card atelier-card-lift rounded-[32px] p-5 sm:p-6 space-y-5">
-        <div class="rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4] bg-[#ebe2d3]">
+        <div class="rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
             src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
@@ -704,7 +753,7 @@
             loading="lazy"
             width="800"
             height="640"
-            class="w-full h-full object-cover scale-[1.06] transition-transform duration-700 hover:scale-[1.11]"
+            class="w-full h-full object-cover scale-[1.03] transition-transform duration-700 hover:scale-[1.08]"
           >
         </div>
         <div class="px-1 space-y-2">
@@ -718,7 +767,7 @@
 
       <!-- Feature Card 2 -->
       <div class="atelier-card atelier-card-lift rounded-[32px] p-5 sm:p-6 space-y-5">
-        <div class="rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4] bg-[#ebe2d3]">
+        <div class="rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-pedi-img"
             src="https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg"
@@ -726,7 +775,7 @@
             loading="lazy"
             width="800"
             height="640"
-            class="w-full h-full object-cover scale-[1.06] transition-transform duration-700 hover:scale-[1.11]"
+            class="w-full h-full object-cover scale-[1.03] transition-transform duration-700 hover:scale-[1.08]"
           >
         </div>
         <div class="px-1 space-y-2">
@@ -982,12 +1031,91 @@
       const cfg = window.ATELIER_CONFIG || {};
       const menu = Array.isArray(window.SALON_MENU_DATA) ? window.SALON_MENU_DATA : [];
 
-      // 1. Apply Haute Couture Palette (supports ?palette=01|02|03 live preview override)
+      // 1. Apply Haute Couture Palette (supports ?palette=01|02|03|04|05 live preview override)
+      const VALID_PALETTES = ['01', '02', '03', '04', '05'];
       const urlPalette = new URLSearchParams(window.location.search).get('palette');
-      const activePalette = ['01', '02', '03'].includes(urlPalette) ? urlPalette : cfg.palette;
-      if (activePalette) {
-        document.documentElement.setAttribute('data-palette', activePalette);
-      }
+      const activePalette = VALID_PALETTES.includes(urlPalette)
+        ? urlPalette
+        : (VALID_PALETTES.includes(cfg.palette) ? cfg.palette : '01');
+      document.documentElement.setAttribute('data-palette', activePalette);
+
+      // Curated Palette-Matched Oil-Painting & Kintsugi Gold-Leaf Vault (01 – 05)
+      const VAULT_BASE = 'https://wynnpages.com.au/assets/atelier/nails';
+      const PALETTE_ART_VAULT = {
+        '01': {
+          hero: `${VAULT_BASE}/hero-sanctuary.jpg`,
+          biabFeature: `${VAULT_BASE}/biab-artistry.jpg`,
+          pedicureFeature: `${VAULT_BASE}/botanical-pedicure.jpg`,
+          lookbook: [
+            { src: `${VAULT_BASE}/lookbook-gilded-french.jpg`, title: 'Champagne Micro-French', tag: 'BIAB Structured Overlay' },
+            { src: `${VAULT_BASE}/lookbook-pearl-glaze.jpg`, title: 'Akoya Pearl Glaze', tag: 'Sheer Botanical Gel' },
+            { src: `${VAULT_BASE}/lookbook-velvet-rose.jpg`, title: 'Rose Silk Velvet', tag: 'Signature Almond Finish' },
+            { src: `${VAULT_BASE}/biab-artistry.jpg`, title: 'Bare Cashmere Structure', tag: 'Natural Nail Restoration' }
+          ]
+        },
+        '02': {
+          hero: `${VAULT_BASE}/p02/hero.jpg`,
+          biabFeature: `${VAULT_BASE}/p02/biab.jpg`,
+          pedicureFeature: `${VAULT_BASE}/p02/pedicure.jpg`,
+          lookbook: [
+            { src: `${VAULT_BASE}/p02/lookbook-1.jpg`, title: 'Camellia Rose Velvet', tag: 'Signature Almond Finish' },
+            { src: `${VAULT_BASE}/p02/lookbook-2.jpg`, title: 'Blush Akoya Glaze', tag: 'Sheer Rose-Gold Gel' },
+            { src: `${VAULT_BASE}/p02/biab.jpg`, title: 'Rose-Silk BIAB Overlay', tag: 'HEMA-Free Builder' },
+            { src: `${VAULT_BASE}/p02/pedicure.jpg`, title: 'Rosewater Stone Soak', tag: 'Botanical Foot Ritual' }
+          ]
+        },
+        '03': {
+          hero: `${VAULT_BASE}/p03/hero.jpg`,
+          biabFeature: `${VAULT_BASE}/p03/biab.jpg`,
+          pedicureFeature: `${VAULT_BASE}/p03/pedicure.jpg`,
+          lookbook: [
+            { src: `${VAULT_BASE}/p03/biab.jpg`, title: 'Botanical Gold-Leaf BIAB', tag: 'Organic Nail Sanctuary' },
+            { src: `${VAULT_BASE}/p03/lookbook-1.jpg`, title: 'Antique Brass Micro-French', tag: 'Structured Overlay' },
+            { src: `${VAULT_BASE}/p03/lookbook-2.jpg`, title: 'Eucalyptus Pearl Glaze', tag: 'Non-Toxic Soft Gel' },
+            { src: `${VAULT_BASE}/p03/pedicure.jpg`, title: 'Herbal Travertine Soak', tag: 'Restorative Pedicure' }
+          ]
+        },
+        '04': {
+          hero: `${VAULT_BASE}/p04/hero.jpg`,
+          biabFeature: `${VAULT_BASE}/p04/biab.jpg`,
+          pedicureFeature: `${VAULT_BASE}/p04/pedicure.jpg`,
+          lookbook: [
+            { src: `${VAULT_BASE}/p04/lookbook-1.jpg`, title: '24k Brushed Gold French', tag: 'Couture BIAB Structure' },
+            { src: `${VAULT_BASE}/p04/biab.jpg`, title: 'Warm Cashmere Almond', tag: 'Natural Nail Architecture' },
+            { src: `${VAULT_BASE}/p04/lookbook-2.jpg`, title: 'Smoked Pearl Lustre', tag: 'Japanese Soft Gel' },
+            { src: `${VAULT_BASE}/p04/pedicure.jpg`, title: 'Warm Cedar & Mineral Soak', tag: 'Private Spa Pedicure' }
+          ]
+        },
+        '05': {
+          hero: `${VAULT_BASE}/p05/hero.jpg`,
+          biabFeature: `${VAULT_BASE}/p05/biab.jpg`,
+          pedicureFeature: `${VAULT_BASE}/p05/pedicure.jpg`,
+          lookbook: [
+            { src: `${VAULT_BASE}/p05/lookbook-1.jpg`, title: 'Oyster Akoya Chrome', tag: 'Coastal Pearl Glaze' },
+            { src: `${VAULT_BASE}/p05/biab.jpg`, title: 'Gilded Mineral BIAB', tag: 'Structured Natural Nail' },
+            { src: `${VAULT_BASE}/p05/lookbook-2.jpg`, title: 'Champagne Limestone Tip', tag: 'Refined Micro-French' },
+            { src: `${VAULT_BASE}/p05/pedicure.jpg`, title: 'Marine Botanical Soak', tag: 'Coastal Stone Pedicure' }
+          ]
+        }
+      };
+
+      const isAtelierVaultAsset = (u) => !u || String(u).includes('/assets/atelier/nails/');
+      const activeVault = PALETTE_ART_VAULT[activePalette] || PALETTE_ART_VAULT['01'];
+      const forceVault = VALID_PALETTES.includes(urlPalette);
+      const resolvedImages = {
+        hero: (!forceVault && cfg.images && cfg.images.hero && !isAtelierVaultAsset(cfg.images.hero))
+          ? cfg.images.hero
+          : activeVault.hero,
+        biabFeature: (!forceVault && cfg.images && cfg.images.biabFeature && !isAtelierVaultAsset(cfg.images.biabFeature))
+          ? cfg.images.biabFeature
+          : activeVault.biabFeature,
+        pedicureFeature: (!forceVault && cfg.images && cfg.images.pedicureFeature && !isAtelierVaultAsset(cfg.images.pedicureFeature))
+          ? cfg.images.pedicureFeature
+          : activeVault.pedicureFeature,
+        lookbook: (!forceVault && cfg.images && Array.isArray(cfg.images.lookbook) && cfg.images.lookbook.some((t) => t && !isAtelierVaultAsset(t.src)))
+          ? cfg.images.lookbook
+          : activeVault.lookbook
+      };
 
       const setText = (id, val) => {
         const el = document.getElementById(id);
@@ -1079,13 +1207,13 @@
       setText('hero-rating', cfg.googleRating);
       setText('hero-review-count', cfg.reviewCount);
 
-      if (cfg.images) {
+      if (resolvedImages) {
         const heroImg = document.getElementById('hero-oil-img');
-        if (heroImg && cfg.images.hero) heroImg.src = cfg.images.hero;
+        if (heroImg && resolvedImages.hero) heroImg.src = resolvedImages.hero;
         const biabImg = document.getElementById('feature-biab-img');
-        if (biabImg && cfg.images.biabFeature) biabImg.src = cfg.images.biabFeature;
+        if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;
         const pediImg = document.getElementById('feature-pedicure-img') || document.getElementById('feature-pedi-img');
-        if (pediImg && cfg.images.pedicureFeature) pediImg.src = cfg.images.pedicureFeature;
+        if (pediImg && resolvedImages.pedicureFeature) pediImg.src = resolvedImages.pedicureFeature;
       }
 
       // Social Links
@@ -1249,12 +1377,15 @@
 
       // 4. Render Lookbook Grid
       const lookbookGrid = document.getElementById('lookbook-grid');
-      if (lookbookGrid && cfg.images && Array.isArray(cfg.images.lookbook)) {
+      if (lookbookGrid && resolvedImages && Array.isArray(resolvedImages.lookbook)) {
         const targetHref = cfg.instagramUrl || '#visit';
-        lookbookGrid.innerHTML = cfg.images.lookbook.map((tile) => `
+        const zoomCls = activePalette === '01'
+          ? 'scale-[1.12] group-hover:scale-[1.18]'
+          : 'scale-[1.02] group-hover:scale-[1.08]';
+        lookbookGrid.innerHTML = resolvedImages.lookbook.map((tile) => `
           <a href="${targetHref}" ${cfg.instagramUrl ? 'target="_blank" rel="noopener noreferrer"' : ''} class="group atelier-card atelier-card-lift rounded-[26px] p-2.5 block">
-            <div class="rounded-[20px] gold-foil-frame overflow-hidden aspect-square relative bg-[#ebe2d3]">
-              <img src="${tile.src}" alt="${tile.title}" loading="lazy" width="520" height="520" class="w-full h-full object-cover scale-[1.12] transition-transform duration-700 group-hover:scale-[1.18]">
+            <div class="rounded-[20px] gold-foil-frame overflow-hidden aspect-square relative" style="background-color: var(--bg-canvas-alt);">
+              <img src="${tile.src}" alt="${tile.title}" loading="lazy" width="520" height="520" class="w-full h-full object-cover ${zoomCls} transition-transform duration-700">
               <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-90"></div>
               <div class="absolute bottom-3 left-3 right-3 text-white">
                 <span class="text-[9px] uppercase tracking-[0.16em] opacity-85 block">${tile.tag || ''}</span>
