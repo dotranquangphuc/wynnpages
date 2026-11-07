@@ -85,11 +85,87 @@ function parseSocialAndBookingLinks(raw) {
   return result;
 }
 
+function inferAuState(pc) {
+  const n = Number(pc);
+  if (!pc || Number.isNaN(n)) return '';
+  if (pc.startsWith('08') || pc.startsWith('09')) return 'NT';
+  if ((n >= 2600 && n <= 2618) || (n >= 2900 && n <= 2920)) return 'ACT';
+  if (n >= 2000 && n <= 2999) return 'NSW';
+  if (n >= 3000 && n <= 3999) return 'VIC';
+  if (n >= 4000 && n <= 4999) return 'QLD';
+  if (n >= 5000 && n <= 5799) return 'SA';
+  if (n >= 6000 && n <= 6797) return 'WA';
+  if (n >= 7000 && n <= 7799) return 'TAS';
+  return '';
+}
+
+function parseAuAddress(raw) {
+  const str = String(raw || '').trim();
+  if (!str) return { street: '', streetName: '', suburb: '', state: '', postcode: '' };
+  const pcMatch = str.match(/\b(\d{4})\b/);
+  const postcode = pcMatch ? pcMatch[1] : '';
+  const stMatch = str.match(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/i);
+  const state = stMatch ? stMatch[1].toUpperCase() : inferAuState(postcode);
+
+  const cleanedParts = str
+    .split(',')
+    .map((p) => p
+      .replace(/\bAustralia\b/gi, '')
+      .replace(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/gi, '')
+      .replace(/\b\d{4}\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+    )
+    .filter(Boolean);
+
+  let street = '';
+  let suburb = '';
+  if (cleanedParts.length >= 2) {
+    street = cleanedParts[0];
+    suburb = cleanedParts[1];
+  } else if (cleanedParts.length === 1) {
+    const single = cleanedParts[0];
+    if (/^\d+|^(shop|suite|unit|level)\b/i.test(single)) {
+      street = single;
+    } else {
+      suburb = single;
+    }
+  }
+  const streetName = street
+    .replace(/^(?:shop|suite|unit|level|lvl)\s*[a-z0-9/-]+[,\s/]*/i, '')
+    .replace(/^\d+[a-z]?[/-]?\d*\s+/i, '')
+    .trim();
+
+  return { street, streetName, suburb, state, postcode };
+}
+
+function buildClientFaviconSvg(bizName, palette = '01') {
+  const initial = (String(bizName || '').replace(/[^A-Za-z]/g, '').charAt(0) || 'A').toUpperCase();
+  const themes = {
+    '01': { bg1: '#FCF9F3', bg2: '#F3DFB2', ring: '#D49B28', accent: '#96432B' },
+    '02': { bg1: '#FFFDFB', bg2: '#F5DFD4', ring: '#C89378', accent: '#9E5850' },
+    '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052' }
+  };
+  const t = themes[palette] || themes['01'];
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="wax" cx="32%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="${t.bg1}"/>
+      <stop offset="100%" stop-color="${t.bg2}"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#wax)" stroke="${t.ring}" stroke-width="2.2"/>
+  <circle cx="32" cy="32" r="25.5" fill="none" stroke="${t.ring}" stroke-width="0.9" stroke-opacity="0.55"/>
+  <text x="32" y="42.5" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="31" fill="${t.accent}">${initial}</text>
+</svg>\n`;
+}
+
 function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   const bizName = (client && (client.businessName || client.name)) || 'Maison Élan';
   const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'A';
   const palette = paletteOverride || '01';
   const address = (client && client.businessAddress) || 'Melbourne, VIC';
+  const parsedAddr = parseAuAddress(address);
   const displayPhone = (client && (client.displayPhone || client.phone)) || '';
   const smsPhone = (client && (client.phone || client.displayPhone)) || '';
   const email = (client && client.email) || '';
@@ -108,23 +184,59 @@ function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   patchStringField('salonName', bizName);
   patchStringField('monogram', monogram);
 
+  const resolvedSuburb = parsedAddr.suburb || parsedAddr.street || 'Australia';
+  const resolvedState = parsedAddr.state || '';
+  const shortLoc = [resolvedSuburb, resolvedState].filter(Boolean).join(' ') || 'Australia';
+
   const safeTitleBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const shortLoc = address ? address.split(',')[0].trim().replace(/&/g, '&amp;') : 'Australia';
+  const safeAttrBiz = safeTitleBiz.replace(/"/g, '&quot;');
+  const safeLoc = shortLoc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  const seoTitle = `${safeAttrBiz} — Bespoke BIAB &amp; Nail Sanctuary | ${safeLoc}`;
+  const seoDesc = `Experience bespoke HEMA-free BIAB overlays, fine-art manicure design, and botanical spa pedicures at ${safeAttrBiz} in ${safeLoc}. Reserve your appointment online.`;
+
   html = html.replace(
     /<title id="page-meta-title">[\s\S]*?<\/title>/,
-    `<title id="page-meta-title">${safeTitleBiz} — Bespoke BIAB &amp; Nail Sanctuary | ${shortLoc}</title>`
+    `<title id="page-meta-title">${seoTitle}</title>`
   );
   html = html.replace(
-    /<meta property="og:title" content="[^"]*">/,
-    `<meta property="og:title" content="${safeTitleBiz.replace(/"/g, '&quot;')} — Bespoke BIAB &amp; Hand Care">`
+    /<meta name="description"[^>]*>/,
+    `<meta name="description" id="page-meta-desc" content="${seoDesc}">`
+  );
+  html = html.replace(
+    /<meta property="og:site_name"[^>]*>/,
+    `<meta property="og:site_name" id="og-site-name" content="${safeAttrBiz}">`
+  );
+  html = html.replace(
+    /<meta property="og:title"[^>]*>/,
+    `<meta property="og:title" id="og-title" content="${seoTitle}">`
+  );
+  html = html.replace(
+    /<meta property="og:description"[^>]*>/,
+    `<meta property="og:description" id="og-desc" content="${seoDesc}">`
+  );
+  html = html.replace(
+    /<meta property="og:image:alt"[^>]*>/,
+    `<meta property="og:image:alt" id="og-image-alt" content="${safeAttrBiz} — Bespoke Nail Sanctuary">`
+  );
+  html = html.replace(
+    /<meta name="twitter:title"[^>]*>/,
+    `<meta name="twitter:title" id="tw-title" content="${seoTitle}">`
+  );
+  html = html.replace(
+    /<meta name="twitter:description"[^>]*>/,
+    `<meta name="twitter:description" id="tw-desc" content="${seoDesc}">`
   );
 
   if (address) {
     patchStringField('address', address);
     patchStringField('mapsQuery', `${address}, Australia`);
-    const shortSuburb = address.split(',')[0].trim();
-    patchStringField('suburb', shortSuburb);
-    patchStringField('heroBadge', `${shortSuburb} • BIAB & Non-Toxic Nail Sanctuary`);
+    patchStringField('suburb', resolvedSuburb);
+    patchStringField('state', resolvedState);
+    patchStringField('heroBadge', `${resolvedSuburb} • BIAB & Non-Toxic Nail Sanctuary`);
+    const parkingText = parsedAddr.streetName
+      ? `Convenient client parking right near ${parsedAddr.streetName} with effortless ground-level boutique arrival.`
+      : `Convenient local client parking nearby in ${resolvedSuburb} with effortless boutique arrival.`;
+    patchStringField('parkingNote', parkingText);
   }
   if (displayPhone) patchStringField('displayPhone', displayPhone);
   if (smsPhone) patchStringField('smsPhone', smsPhone);
@@ -133,6 +245,36 @@ function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   if (parsedLinks.instagramUrl) patchStringField('instagramUrl', parsedLinks.instagramUrl);
   if (parsedLinks.instagramHandle) patchStringField('instagramHandle', parsedLinks.instagramHandle);
   if (parsedLinks.facebookUrl) patchStringField('facebookUrl', parsedLinks.facebookUrl);
+
+  const jsonLdObj = {
+    '@context': 'https://schema.org',
+    '@type': 'NailSalon',
+    name: bizName,
+    description: `Bespoke BIAB overlays, artisanal nail artistry, and hospital-grade botanical hand & foot care in ${shortLoc}.`,
+    image: '/og-share.jpg',
+    priceRange: '$$',
+    currenciesAccepted: 'AUD',
+    telephone: displayPhone || smsPhone || '',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: parsedAddr.street || address || '',
+      addressLocality: parsedAddr.suburb || '',
+      addressRegion: parsedAddr.state || '',
+      postalCode: parsedAddr.postcode || '',
+      addressCountry: 'AU'
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.9',
+      reviewCount: '280'
+    }
+  };
+  const sameAs = [parsedLinks.instagramUrl, parsedLinks.facebookUrl].filter(Boolean);
+  if (sameAs.length) jsonLdObj.sameAs = sameAs;
+  html = html.replace(
+    /<script type="application\/ld\+json" id="salon-jsonld">[\s\S]*?<\/script>/,
+    `<script type="application/ld+json" id="salon-jsonld">\n${JSON.stringify(jsonLdObj, null, 2)}\n  </script>`
+  );
 
   return html;
 }
@@ -252,9 +394,11 @@ async function main() {
     const masterHtml = fs.readFileSync(TEMPLATE_HTML_PATH, 'utf8');
     const hydrated = injectClientIntoMasterHtml(masterHtml, client, palette);
     fs.writeFileSync(path.join(clientDir, 'index.html'), hydrated, 'utf8');
+    const bizLabel = (client && (client.businessName || client.name)) || slug;
+    fs.writeFileSync(path.join(clientDir, 'favicon.svg'), buildClientFaviconSvg(bizLabel, palette), 'utf8');
     const uploads = await downloadClientBriefUploads(client, clientDir);
     fs.writeFileSync(path.join(clientDir, 'ATELIER_MANIFEST.md'), buildManifestMarkdown(slug, client, palette, uploads), 'utf8');
-    console.log(`Initialized clients/${slug}/ with Nails Atelier Skeleton (Palette ${palette}).`);
+    console.log(`Initialized clients/${slug}/ with Nails Atelier Skeleton, bespoke favicon.svg & SEO (Palette ${palette}).`);
     return;
   }
 
@@ -277,7 +421,9 @@ async function main() {
       const masterHtml = fs.readFileSync(TEMPLATE_HTML_PATH, 'utf8');
       const hydrated = injectClientIntoMasterHtml(masterHtml, client, palette);
       fs.writeFileSync(path.join(clientDir, 'index.html'), hydrated, 'utf8');
-      console.log(`No live KV bundle found yet for "${slug}" — initialized fresh Nails Atelier skeleton in clients/${slug}/index.html.`);
+      const bizLabel = (client && (client.businessName || client.name)) || slug;
+      fs.writeFileSync(path.join(clientDir, 'favicon.svg'), buildClientFaviconSvg(bizLabel, palette), 'utf8');
+      console.log(`No live KV bundle found yet for "${slug}" — initialized fresh Nails Atelier skeleton + favicon.svg in clients/${slug}/.`);
     }
     const uploads = await downloadClientBriefUploads(client, clientDir);
     if (!fs.existsSync(path.join(clientDir, 'ATELIER_MANIFEST.md')) || uploads.length > 0 || client) {

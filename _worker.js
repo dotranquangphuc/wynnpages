@@ -593,17 +593,31 @@ async function findCustomerByLiveDomain(hostname, stripeSecretKey) {
   }) || null;
 }
 
-function buildCleanLiveHtml(client) {
+function buildCleanLiveHtml(client, origin = '') {
   const bizName = (client && (client.businessName || client.name)) || 'Official Website';
+  const safeBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
   if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
+  const ogImg = origin ? `${origin}/og-share.jpg` : '/og-share.jpg';
+  const canon = origin ? `${origin}/` : '/';
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${bizName}</title>
-  <link rel="icon" type="image/png" href="https://wynnpages.com.au/assets/favicon.png">
+  <title>${safeBiz}</title>
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="${canon}">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${safeBiz}">
+  <meta property="og:url" content="${canon}">
+  <meta property="og:image" content="${ogImg}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${safeBiz}">
+  <meta name="twitter:image" content="${ogImg}">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #f6f1e8; }
@@ -611,7 +625,7 @@ function buildCleanLiveHtml(client) {
   </style>
 </head>
 <body>
-  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')}" allow="fullscreen"></iframe>
+  <iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${safeBiz}" allow="fullscreen"></iframe>
 </body>
 </html>`;
 }
@@ -918,7 +932,8 @@ function buildClaimBarSnippet(client) {
 }
 
 function injectClaimBarIntoHtml(rawHtml, client) {
-  const snippet = buildClaimBarSnippet(client);
+  const spacer = `<style>.wynn-claim-clearance{height:108px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:142px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
+  const snippet = spacer + buildClaimBarSnippet(client);
   if (rawHtml.includes('</body>')) {
     return rawHtml.replace('</body>', `${snippet}</body>`);
   }
@@ -927,30 +942,39 @@ function injectClaimBarIntoHtml(rawHtml, client) {
 
 function buildBrandedPreviewHtml(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
+  const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'W';
   let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
   if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
   const slug = (client && client.demoSlug) || '';
   const isSelfLoop = slug && rawDemo.toLowerCase().includes(`${slug}.wynnpages.com.au`);
   const bodyContent = isSelfLoop
-    ? `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f1e8;color:#2b251e;font-family:'Plus Jakarta Sans',sans-serif;padding:24px;text-align:center;">
-        <div style="max-width:500px;background:#fff;padding:36px;border-radius:24px;border:1px solid #e5dec9;box-shadow:0 10px 30px rgba(0,0,0,0.06);">
-          <div style="width:56px;height:56px;border-radius:18px;background:#fcf9f3;border:1px solid #dfd5c3;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;">🎨</div>
-          <h2 style="font-size:20px;font-weight:800;color:#1c1917;margin-bottom:8px;">Bespoke Demo Under Construction</h2>
-          <p style="font-size:13px;color:#78716c;line-height:1.6;margin-bottom:20px;">
-            Our atelier is preparing the website demo for <strong>${bizName}</strong>. Click <strong>Tải Lên Code (ZIP/HTML)</strong> in the Admin panel to upload your design files.
+    ? `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f1e8;color:#2b251e;font-family:'Plus Jakarta Sans',sans-serif;padding:24px 24px 130px;text-align:center;">
+        <div style="max-width:500px;background:#fcf9f3;padding:40px 36px;border-radius:28px;border:1px solid rgba(197,160,89,0.42);box-shadow:0 20px 44px -16px rgba(43,37,30,0.12);">
+          <div style="width:54px;height:54px;border-radius:999px;background:radial-gradient(circle at 32% 28%,#fbf3dc 0%,#dfc286 58%,#b38e46 100%);border:1px solid rgba(255,248,225,0.85);box-shadow:inset 0 2px 4px rgba(255,255,255,0.7),0 8px 18px rgba(150,67,43,0.16);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:700;font-size:24px;color:#96432b;">${monogram}</div>
+          <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;font-weight:700;color:#96432b;margin-bottom:8px;">WynnPages Australian Web Atelier</p>
+          <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;color:#2b251e;line-height:1.15;margin-bottom:10px;">Bespoke Concept in <em style="color:#96432b;">Final Preparation.</em></h2>
+          <p style="font-size:13px;color:#6b5e51;line-height:1.65;margin-bottom:22px;">
+            Our Australian design engineers are putting the finishing touches on the custom website preview crafted exclusively for <strong>${bizName}</strong>.
           </p>
-          <a href="https://wynnpages.com.au" style="display:inline-block;padding:10px 20px;border-radius:12px;background:#96432b;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">Visit WynnPages Atelier →</a>
+          <a href="https://wynnpages.com.au" style="display:inline-block;padding:11px 22px;border-radius:999px;background:#2b251e;color:#faf6f0;font-size:12px;font-weight:600;text-decoration:none;">Explore WynnPages Studio &rarr;</a>
         </div>
       </div>`
     : `<iframe src="${rawDemo.replace(/"/g, '&quot;')}" title="${bizName.replace(/"/g, '&quot;')} Demo Preview" allow="fullscreen"></iframe>`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${bizName} — Bespoke Website Demo by WynnPages</title>
-  <link rel="icon" type="image/png" href="https://wynnpages.com.au/assets/favicon.png">
+  <title>${bizName} — Bespoke Website Preview</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${bizName.replace(/"/g, '&quot;')} — Bespoke Website Preview">
+  <meta property="og:image" content="/og-share.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="/og-share.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -965,6 +989,264 @@ function buildBrandedPreviewHtml(client) {
   ${buildClaimBarSnippet(client)}
 </body>
 </html>`;
+}
+
+function buildClientMonogramFaviconSvg(bizName, palette = '01') {
+  const cleanAlpha = String(bizName || '').replace(/[^A-Za-z]/g, '');
+  const initial = (cleanAlpha.charAt(0) || 'A').toUpperCase();
+  const themes = {
+    '01': { bg1: '#FCF9F3', bg2: '#F3DFB2', ring: '#D49B28', accent: '#96432B' },
+    '02': { bg1: '#FFFDFB', bg2: '#F5DFD4', ring: '#C89378', accent: '#9E5850' },
+    '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052' }
+  };
+  const t = themes[palette] || themes['01'];
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="wax" cx="32%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="${t.bg1}"/>
+      <stop offset="72%" stop-color="${t.bg2}"/>
+      <stop offset="100%" stop-color="${t.bg2}"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#wax)" stroke="${t.ring}" stroke-width="2.2"/>
+  <circle cx="32" cy="32" r="25.5" fill="none" stroke="${t.ring}" stroke-width="0.9" stroke-opacity="0.55"/>
+  <text x="32" y="42.5" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="31" fill="${t.accent}">${initial}</text>
+</svg>`;
+}
+
+function buildClientRobotsTxt(origin) {
+  return `User-agent: *\nAllow: /\n\nSitemap: ${origin}/sitemap.xml\n`;
+}
+
+function buildClientSitemapXml(origin, meta) {
+  const lastmod = (meta && meta.uploadedAt ? String(meta.uploadedAt).slice(0, 10) : new Date().toISOString().slice(0, 10));
+  const pages = new Set(['/']);
+  if (meta && Array.isArray(meta.filesList)) {
+    for (const f of meta.filesList) {
+      if (typeof f === 'string' && /\.html$/i.test(f)) {
+        const clean = f === '/index.html' ? '/' : f.replace(/\/index\.html$/i, '/');
+        pages.add(clean.startsWith('/') ? clean : '/' + clean);
+      }
+    }
+  }
+  const urlNodes = Array.from(pages).map((p) => {
+    const loc = `${origin}${p}`.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const prio = p === '/' ? '1.0' : '0.8';
+    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${prio}</priority>\n  </url>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlNodes}\n</urlset>\n`;
+}
+
+function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, slug = '') {
+  if (!rawHtml || typeof rawHtml !== 'string') return rawHtml;
+  const assetOrigin = isPathDemo && slug ? `https://${slug}.wynnpages.com.au` : reqUrl.origin;
+  const cleanPath = (isPathDemo || reqUrl.pathname === '/index.html' || reqUrl.pathname === '') ? '/' : reqUrl.pathname;
+  const canonicalUrl = `${assetOrigin}${cleanPath}`;
+  const ogShareUrl = `${assetOrigin}/og-share.jpg`;
+  const bizName = ((client && (client.businessName || client.name)) || slug || 'Boutique Sanctuary').replace(/"/g, '&quot;');
+
+  let html = rawHtml;
+
+  // 1. Replace any accidental WynnPages studio favicon in <head> with client's bespoke favicon
+  html = html.replace(
+    /<link[^>]+rel=["'](?:shortcut\s+)?icon["'][^>]+wynnpages\.com\.au\/assets\/favicon[^>]*>/gi,
+    `<link rel="icon" type="image/svg+xml" href="/favicon.svg">\n  <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">\n  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">`
+  );
+
+  // 2. Canonical URL
+  if (/<link[^>]+rel=["']canonical["'][^>]*>/i.test(html)) {
+    html = html.replace(/<link([^>]+)rel=["']canonical["']([^>]*)>/i, `<link rel="canonical" id="page-canonical" href="${canonicalUrl}">`);
+  } else if (html.includes('</head>')) {
+    html = html.replace('</head>', `  <link rel="canonical" href="${canonicalUrl}">\n</head>`);
+  }
+
+  // 3. Meta Robots (ready for Google Search Console indexing)
+  if (!/<meta[^>]+name=["']robots["'][^>]*>/i.test(html) && html.includes('</head>')) {
+    html = html.replace('</head>', `  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">\n</head>`);
+  }
+
+  // 4. Absolute og:url, og:image, twitter:image for Facebook / iMessage / WhatsApp / Zalo
+  if (/<meta[^>]+property=["']og:url["'][^>]*>/i.test(html)) {
+    html = html.replace(/<meta[^>]+property=["']og:url["'][^>]*>/i, `<meta property="og:url" id="og-url" content="${canonicalUrl}">`);
+  } else if (html.includes('</head>')) {
+    html = html.replace('</head>', `  <meta property="og:url" content="${canonicalUrl}">\n</head>`);
+  }
+
+  if (/<meta[^>]+property=["']og:image["'][^>]*>/i.test(html)) {
+    html = html.replace(
+      /<meta([^>]+)property=["']og:image["']([^>]*)content=["'](?:\.\/|\/og-share\.jpg|https:\/\/wynnpages\.com\.au\/assets\/atelier\/nails\/hero-sanctuary\.jpg)["']([^>]*)>/i,
+      `<meta property="og:image" id="og-image" content="${ogShareUrl}">`
+    );
+  } else if (html.includes('</head>')) {
+    html = html.replace(
+      '</head>',
+      `  <meta property="og:image" content="${ogShareUrl}">\n  <meta property="og:image:width" content="1200">\n  <meta property="og:image:height" content="630">\n</head>`
+    );
+  }
+
+  if (/<meta[^>]+name=["']twitter:image["'][^>]*>/i.test(html)) {
+    html = html.replace(
+      /<meta([^>]+)name=["']twitter:image["']([^>]*)content=["'](?:\.\/|\/og-share\.jpg|https:\/\/wynnpages\.com\.au\/assets\/atelier\/nails\/hero-sanctuary\.jpg)["']([^>]*)>/i,
+      `<meta name="twitter:image" id="tw-image" content="${ogShareUrl}">`
+    );
+  } else if (html.includes('</head>')) {
+    html = html.replace(
+      '</head>',
+      `  <meta name="twitter:card" content="summary_large_image">\n  <meta name="twitter:title" content="${bizName}">\n  <meta name="twitter:image" content="${ogShareUrl}">\n</head>`
+    );
+  }
+
+  // 5. Upgrade relative /og-share.jpg inside JSON-LD to absolute URL
+  html = html.replace(/"image":\s*"\/og-share\.jpg"/g, `"url": "${canonicalUrl}",\n      "image": "${ogShareUrl}"`);
+
+  return html;
+}
+
+async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, stripeSecretKey, isLiveDomain, isPathDemo, forceBar }) {
+  const cleanSlug = slugifyName(slug);
+  const baseOrigin = isPathDemo && cleanSlug ? `https://${cleanSlug}.wynnpages.com.au` : url.origin;
+
+  // 1. HTML pages from KV
+  if (env && env.WYNN_KV && cleanSlug && (reqPath === '/index.html' || reqPath.endsWith('.html'))) {
+    const rawHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:${reqPath}`, 'text');
+    if (rawHtml) {
+      const resolvedClient = client || (stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
+      let finalHtml = ensureClientHtmlSeoTags(rawHtml, resolvedClient, url, isPathDemo, cleanSlug);
+      if (!isLiveDomain && (!resolvedClient || resolvedClient.stage !== 'launched' || forceBar)) {
+        finalHtml = injectClaimBarIntoHtml(finalHtml, resolvedClient || { businessName: slug, demoSlug: cleanSlug });
+      }
+      return new Response(finalHtml, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': isLiveDomain ? 'public, max-age=300' : 'no-cache, no-store, must-revalidate'
+        }
+      });
+    }
+  }
+
+  // 2. Per-Client /robots.txt (Google Search Console ready)
+  if (reqPath === '/robots.txt') {
+    if (env && env.WYNN_KV && cleanSlug) {
+      const customRobots = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/robots.txt`, 'text');
+      if (customRobots) {
+        return new Response(customRobots, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+        });
+      }
+    }
+    return new Response(buildClientRobotsTxt(baseOrigin), {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+    });
+  }
+
+  // 3. Per-Client /sitemap.xml (Google Search Console ready)
+  if (reqPath === '/sitemap.xml') {
+    if (env && env.WYNN_KV && cleanSlug) {
+      const customSitemap = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/sitemap.xml`, 'text');
+      if (customSitemap) {
+        return new Response(customSitemap, {
+          status: 200,
+          headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+        });
+      }
+      const meta = await env.WYNN_KV.get(`site_meta:${cleanSlug}`, 'json').catch(() => null);
+      return new Response(buildClientSitemapXml(baseOrigin, meta), {
+        status: 200,
+        headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+      });
+    }
+    return new Response(buildClientSitemapXml(baseOrigin, null), {
+      status: 200,
+      headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+    });
+  }
+
+  // 4. Per-Client Bespoke Favicon (/favicon.svg, /favicon.png, /favicon.ico, /apple-touch-icon.png)
+  if (
+    reqPath === '/favicon.svg' ||
+    reqPath === '/favicon.png' ||
+    reqPath === '/favicon.ico' ||
+    reqPath === '/apple-touch-icon.png'
+  ) {
+    if (env && env.WYNN_KV && cleanSlug) {
+      const directObj = await env.WYNN_KV.getWithMetadata(`site_asset:${cleanSlug}:${reqPath}`, 'arrayBuffer');
+      if (directObj && directObj.value) {
+        const mime = (directObj.metadata && directObj.metadata.mimeType) || getMimeType(reqPath);
+        return new Response(directObj.value, {
+          status: 200,
+          headers: { 'Content-Type': mime, 'Cache-Control': 'public, max-age=86400' }
+        });
+      }
+      if (reqPath !== '/favicon.svg') {
+        const pngFallback = await env.WYNN_KV.getWithMetadata(`site_asset:${cleanSlug}:/favicon.png`, 'arrayBuffer');
+        if (pngFallback && pngFallback.value) {
+          return new Response(pngFallback.value, {
+            status: 200,
+            headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' }
+          });
+        }
+      }
+      const svgStored = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/favicon.svg`, 'text');
+      if (svgStored) {
+        return new Response(svgStored, {
+          status: 200,
+          headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' }
+        });
+      }
+    }
+    const meta = (env && env.WYNN_KV && cleanSlug)
+      ? await env.WYNN_KV.get(`site_meta:${cleanSlug}`, 'json').catch(() => null)
+      : null;
+    const resolvedClient = client || ((!meta || !meta.businessName) && stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
+    const bizName = (meta && meta.businessName) || (resolvedClient && (resolvedClient.businessName || resolvedClient.name)) || slug || 'Atelier';
+    const palette = (meta && meta.palette) || '01';
+    return new Response(buildClientMonogramFaviconSvg(bizName, palette), {
+      status: 200,
+      headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=3600' }
+    });
+  }
+
+  // 5. Per-Client Social Share Image (/og-share.jpg -> 1200x630 JPEG)
+  if (reqPath === '/og-share.jpg') {
+    if (env && env.WYNN_KV && cleanSlug) {
+      const ogObj = await env.WYNN_KV.getWithMetadata(`site_asset:${cleanSlug}:/og-share.jpg`, 'arrayBuffer');
+      if (ogObj && ogObj.value) {
+        return new Response(ogObj.value, {
+          status: 200,
+          headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=3600' }
+        });
+      }
+    }
+    // Guaranteed oil-painting JPEG fallback so social shares never 404
+    const fallbackUrl = new URL('/assets/atelier/nails/hero-sanctuary.jpg', 'https://wynnpages.com.au');
+    if (env && env.ASSETS) {
+      const assetRes = await env.ASSETS.fetch(new Request(fallbackUrl.toString()));
+      if (assetRes.ok) {
+        return new Response(assetRes.body, {
+          status: 200,
+          headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=3600' }
+        });
+      }
+    }
+    return Response.redirect('https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg', 302);
+  }
+
+  // 6. Standard KV static assets
+  if (env && env.WYNN_KV && cleanSlug) {
+    const assetObj = await env.WYNN_KV.getWithMetadata(`site_asset:${cleanSlug}:${reqPath}`, 'arrayBuffer');
+    if (assetObj && assetObj.value) {
+      const mimeType = (assetObj.metadata && assetObj.metadata.mimeType) || getMimeType(reqPath);
+      return new Response(assetObj.value, {
+        status: 200,
+        headers: { 'Content-Type': mimeType, 'Cache-Control': 'public, max-age=86400' }
+      });
+    }
+  }
+
+  return null;
 }
 
 async function uploadStripeFile(fileObj, stripeSecretKey) {
@@ -1357,21 +1639,20 @@ export default {
     if (isCustomClientDomain && !url.pathname.startsWith('/api/')) {
       const liveClient = await findCustomerByLiveDomain(hostLower, cfg.stripeSecretKey);
       if (liveClient) {
-        // Check Cloudflare KV first so uploaded site assets run natively on live domain without claim bar
-        if (env && env.WYNN_KV && liveClient.demoSlug) {
-          let reqPath = url.pathname === '/' || url.pathname === '' ? '/index.html' : url.pathname;
-          const kvKey = `site_asset:${liveClient.demoSlug}:${reqPath}`;
-          const assetObj = await env.WYNN_KV.getWithMetadata(kvKey, 'arrayBuffer');
-          if (assetObj && assetObj.value) {
-            const mimeType = (assetObj.metadata && assetObj.metadata.mimeType) || getMimeType(reqPath);
-            return new Response(assetObj.value, {
-              status: 200,
-              headers: {
-                'Content-Type': mimeType,
-                'Cache-Control': 'public, max-age=3600'
-              }
-            });
-          }
+        const reqPath = url.pathname === '/' || url.pathname === '' ? '/index.html' : url.pathname;
+        if (liveClient.demoSlug) {
+          const kvOrSeoRes = await serveClientSpecialSeoOrAsset({
+            slug: liveClient.demoSlug,
+            client: liveClient,
+            reqPath,
+            url,
+            env,
+            stripeSecretKey: cfg.stripeSecretKey,
+            isLiveDomain: true,
+            isPathDemo: false,
+            forceBar: false
+          });
+          if (kvOrSeoRes) return kvOrSeoRes;
         }
         return serveLiveClientSite(liveClient, request, url);
       }
@@ -1396,54 +1677,30 @@ export default {
         }
       }
 
-      const cleanSlug = slugifyName(targetSlug);
-
-      // Check if this slug has code & assets stored in Cloudflare KV
-      if (env && env.WYNN_KV && cleanSlug) {
-        const kvKey = `site_asset:${cleanSlug}:${reqPath}`;
-        if (reqPath === '/index.html' || reqPath.endsWith('.html')) {
-          const rawHtml = await env.WYNN_KV.get(kvKey, 'text');
-          if (rawHtml) {
-            const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
-            const forceBar = url.searchParams.get('bar') === '1';
-            let finalHtml = rawHtml;
-            if (!client || client.stage !== 'launched' || forceBar) {
-              finalHtml = injectClaimBarIntoHtml(rawHtml, client || { businessName: targetSlug, demoSlug: targetSlug });
-            }
-            return new Response(finalHtml, {
-              status: 200,
-              headers: {
-                'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'no-cache, no-store, must-revalidate'
-              }
-            });
-          }
-        } else {
-          const assetObj = await env.WYNN_KV.getWithMetadata(kvKey, 'arrayBuffer');
-          if (assetObj && assetObj.value) {
-            const mimeType = (assetObj.metadata && assetObj.metadata.mimeType) || getMimeType(reqPath);
-            return new Response(assetObj.value, {
-              status: 200,
-              headers: {
-                'Content-Type': mimeType,
-                'Cache-Control': 'public, max-age=86400'
-              }
-            });
-          }
-        }
-      }
+      const forceBar = url.searchParams.get('bar') === '1';
+      const kvOrSeoRes = await serveClientSpecialSeoOrAsset({
+        slug: targetSlug,
+        client: null,
+        reqPath,
+        url,
+        env,
+        stripeSecretKey: cfg.stripeSecretKey,
+        isLiveDomain: false,
+        isPathDemo,
+        forceBar
+      });
+      if (kvOrSeoRes) return kvOrSeoRes;
 
       // If not in KV, fall back to existing iframe preview for root
       if (reqPath === '/index.html' || reqPath === '/') {
         const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
         if (client) {
-          const forceBar = url.searchParams.get('bar') === '1';
           if (client.stage === 'launched' && client.liveUrl && !forceBar) {
             const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
             return Response.redirect(cleanLive, 302);
           }
           const html = (client.stage === 'launched' && !forceBar)
-            ? buildCleanLiveHtml(client)
+            ? buildCleanLiveHtml(client, url.origin)
             : buildBrandedPreviewHtml(client);
           return new Response(html, {
             status: 200,
@@ -2210,15 +2467,20 @@ export default {
         }));
 
         if (prevMeta && Array.isArray(prevMeta.filesList)) {
-          for (const oldPath of prevMeta.filesList) {
-            if (!newPathsSet.has(oldPath)) {
-              await env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => {});
+          const obsoleteDeletes = prevMeta.filesList
+            .filter(oldPath => !newPathsSet.has(oldPath))
+            .map(oldPath => env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => {}));
+          if (obsoleteDeletes.length) {
+            if (ctx && typeof ctx.waitUntil === 'function') {
+              ctx.waitUntil(Promise.all(obsoleteDeletes));
+            } else {
+              await Promise.all(obsoleteDeletes);
             }
           }
         }
 
-        // 2. Put each file into KV
-        for (const file of files) {
+        // 2. Put all files into KV concurrently
+        await Promise.all(files.map(async (file) => {
           let normPath = (file.path || '').trim();
           if (!normPath.startsWith('/')) normPath = '/' + normPath;
           const assetKey = `site_asset:${targetSlug}:${normPath}`;
@@ -2234,12 +2496,27 @@ export default {
               metadata: { mimeType, size: file.text.length, updatedAt: nowIso }
             });
           }
-        }
+        }));
 
-        // 3. Save site metadata
+        // 3. Save site metadata (extract palette & salonName from index.html if present)
+        let detectedPalette = body.palette || '';
+        let detectedBizName = body.businessName || '';
+        const idxFile = files.find(f => f && (f.path === '/index.html' || f.path === 'index.html') && f.text);
+        if (idxFile && idxFile.text) {
+          if (!detectedPalette) {
+            const palMatch = idxFile.text.match(/data-palette=["'](0[123])["']/);
+            if (palMatch) detectedPalette = palMatch[1];
+          }
+          if (!detectedBizName) {
+            const nameMatch = idxFile.text.match(/salonName:\s*"([^"]+)"/);
+            if (nameMatch) detectedBizName = nameMatch[1];
+          }
+        }
         await env.WYNN_KV.put(metaKey, JSON.stringify({
           slug: targetSlug,
           customerId: customerId || (cust && cust.id) || '',
+          businessName: detectedBizName || (prevMeta && prevMeta.businessName) || '',
+          palette: detectedPalette || (prevMeta && prevMeta.palette) || '01',
           uploadedAt: nowIso,
           filesCount: files.length,
           filesList: Array.from(newPathsSet)
@@ -2275,8 +2552,12 @@ export default {
           }
         }
 
-        // 5. Ensure Cloudflare subdomain route
-        await ensureCloudflareSubdomain(targetSlug, env).catch(() => {});
+        // 5. Ensure subdomain route in background
+        if (ctx && typeof ctx.waitUntil === 'function') {
+          ctx.waitUntil(ensureCloudflareSubdomain(targetSlug, env).catch(() => {}));
+        } else {
+          await ensureCloudflareSubdomain(targetSlug, env).catch(() => {});
+        }
 
         return new Response(JSON.stringify({
           ok: true,
@@ -2475,54 +2756,68 @@ export default {
 
         if (action === 'delete_client' && customerId) {
           let slugToClean = (body.slug || '').trim();
-          let liveUrlToClean = '';
-          try {
-            const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
-              headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
-            });
-            if (cRes.ok) {
-              const cData = await cRes.json();
-              if (!slugToClean) {
+          let liveUrlToClean = (body.liveUrl || '').trim();
+          if (!slugToClean) {
+            try {
+              const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+                headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+              });
+              if (cRes.ok) {
+                const cData = await cRes.json();
                 slugToClean = cData.metadata?.demo_slug || (cData.metadata?.demo_url ? extractCleanHost(cData.metadata.demo_url) : '');
+                liveUrlToClean = cData.metadata?.live_url || '';
               }
-              liveUrlToClean = cData.metadata?.live_url || '';
-            }
-          } catch (_) {}
-
-          // 1. Delete from Cloudflare Worker domains
-          if (slugToClean) {
-            await removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken);
-            const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
-            if (env && env.WYNN_KV && cleanSlug) {
-              await env.WYNN_KV.delete(`sub_${cleanSlug}`);
-              await env.WYNN_KV.delete(`demo_code:${cleanSlug}`);
-              await env.WYNN_KV.delete(`code_${cleanSlug}`);
-              await env.WYNN_KV.delete(`demo_zip:${cleanSlug}`);
-
-              const metaKey = `site_meta:${cleanSlug}`;
-              const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
-              if (prevMeta && Array.isArray(prevMeta.filesList)) {
-                for (const p of prevMeta.filesList) {
-                  await env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => {});
-                }
-              }
-              await env.WYNN_KV.delete(metaKey).catch(() => {});
-            }
-          }
-          if (liveUrlToClean) {
-            await removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken);
-            await removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken);
-            if (env && env.WYNN_KV) {
-              await env.WYNN_KV.delete(`livedom_${liveUrlToClean}`);
-            }
+            } catch (_) {}
           }
 
+          // Delete primary customer record immediately (~400ms), then clean up Worker Domains & KV in background!
           const delRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
           });
           const delData = await delRes.json().catch(() => ({}));
-          return new Response(JSON.stringify({ ok: delRes.ok, deleted: delData }), { status: 200, headers: corsHeaders });
+
+          const cleanupJob = (async () => {
+            const tasks = [];
+            if (slugToClean) {
+              tasks.push(removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken).catch(() => {}));
+              const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
+              if (env && env.WYNN_KV && cleanSlug) {
+                const metaKey = `site_meta:${cleanSlug}`;
+                const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+                tasks.push(
+                  env.WYNN_KV.delete(`sub_${cleanSlug}`).catch(() => {}),
+                  env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => {}),
+                  env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => {}),
+                  env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => {}),
+                  env.WYNN_KV.delete(metaKey).catch(() => {})
+                );
+                if (prevMeta && Array.isArray(prevMeta.filesList)) {
+                  for (const p of prevMeta.filesList) {
+                    tasks.push(env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => {}));
+                  }
+                }
+              }
+            }
+            if (liveUrlToClean) {
+              tasks.push(
+                removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken).catch(() => {}),
+                removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken).catch(() => {})
+              );
+              if (env && env.WYNN_KV) {
+                tasks.push(env.WYNN_KV.delete(`livedom_${liveUrlToClean}`).catch(() => {}));
+              }
+            }
+            await Promise.all(tasks);
+          })();
+
+          if (ctx && typeof ctx.waitUntil === 'function') {
+            ctx.waitUntil(cleanupJob);
+          } else {
+            await cleanupJob;
+          }
+
+          return new Response(JSON.stringify({ ok: delRes.ok, customerId, deleted: delData }), { status: 200, headers: corsHeaders });
         }
 
         // Action: Update Subdomain (Cloudflare + KV + Stripe sync)
@@ -2570,8 +2865,12 @@ export default {
             }
           }
 
-          // 2. Attach new subdomain to Cloudflare
-          await ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken);
+          // 2. Attach new subdomain in background
+          if (ctx && typeof ctx.waitUntil === 'function') {
+            ctx.waitUntil(ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken).catch(() => {}));
+          } else {
+            await ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken);
+          }
 
           // 3. Update Stripe Customer
           const newDemoUrl = `https://${newSlug}.wynnpages.com.au`;
@@ -2592,7 +2891,7 @@ export default {
             updatedCust = formatCustomerRecord(patchData);
           }
 
-          return new Response(JSON.stringify({ ok: true, newSlug, newDemoUrl, client: updatedCust }), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: true, success: true, newSlug, newDemoUrl, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
         // Action 0b: Sync Existing Uploaded File to Google Drive
@@ -2798,9 +3097,21 @@ export default {
           });
           let updatedCust = await saveRes.json();
           let formatted = formatCustomerRecord(updatedCust);
-          await ensureCloudflareSubdomain(formatted.demoSlug, env);
+
+          // Attach demo subdomain in background so creating/editing clients finishes in ~450ms!
+          if (ctx && typeof ctx.waitUntil === 'function') {
+            ctx.waitUntil(ensureCloudflareSubdomain(formatted.demoSlug, env, effectiveCfg.cfApiToken));
+          } else {
+            await ensureCloudflareSubdomain(formatted.demoSlug, env, effectiveCfg.cfApiToken);
+          }
+
+          const prevLiveUrl = (cust && cust.metadata && cust.metadata.live_url) || '';
+          const shouldProvisionLiveDomain =
+            Boolean(formatted.liveUrl) &&
+            (extractCleanHost(formatted.liveUrl) !== extractCleanHost(prevLiveUrl) || !formatted.cfNameservers);
+
           let liveDomainBindResult = null;
-          if (formatted.liveUrl) {
+          if (shouldProvisionLiveDomain) {
             liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
             if (liveDomainBindResult && liveDomainBindResult.nameservers) {
               const nsChanged = liveDomainBindResult.nameservers !== formatted.cfNameservers;

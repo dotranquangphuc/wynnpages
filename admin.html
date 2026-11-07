@@ -41,9 +41,79 @@
       filter: grayscale(65%);
       box-shadow: none !important;
     }
+    @keyframes wynnSpin {
+      to { transform: rotate(360deg); }
+    }
+    .wynn-spin {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(255, 255, 255, 0.32);
+      border-top-color: #ffffff;
+      border-radius: 9999px;
+      animation: wynnSpin 0.65s linear infinite;
+      vertical-align: -2px;
+      flex-shrink: 0;
+    }
+    .wynn-spin-dark {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(150, 67, 43, 0.22);
+      border-top-color: #96432b;
+      border-radius: 9999px;
+      animation: wynnSpin 0.65s linear infinite;
+      vertical-align: -2px;
+      flex-shrink: 0;
+    }
+    .wynn-spin-gold {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(232, 185, 72, 0.25);
+      border-top-color: #e8b948;
+      border-radius: 9999px;
+      animation: wynnSpin 0.65s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes wynnProgressSlide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(250%); }
+    }
+    .wynn-top-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      z-index: 9999;
+      overflow: hidden;
+      background: rgba(150, 67, 43, 0.14);
+    }
+    .wynn-top-loader::after {
+      content: '';
+      display: block;
+      width: 42%;
+      height: 100%;
+      background: linear-gradient(90deg, #96432b, #e8b948, #96432b);
+      animation: wynnProgressSlide 1s ease-in-out infinite;
+    }
+    .card-is-busy {
+      opacity: 0.55;
+      pointer-events: none;
+      transform: scale(0.995);
+      transition: all 0.18s ease;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
+
+  <!-- Global Instant Activity Bar & Floating Spinner Pill -->
+  <div id="global-top-loader" class="wynn-top-loader hidden"></div>
+  <div id="global-sync-pill" class="hidden fixed bottom-5 right-5 z-[100] bg-stone-900/95 backdrop-blur-md text-[#fcf9f3] px-4 py-2.5 rounded-2xl shadow-2xl border border-[#e8b948]/40 flex items-center gap-2.5 text-xs font-bold">
+    <span class="wynn-spin-gold"></span>
+    <span id="global-sync-text">Đang xử lý lệnh...</span>
+  </div>
 
   <!-- Top Header -->
   <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/95 backdrop-blur-md sticky top-0 z-40">
@@ -58,17 +128,17 @@
       </div>
 
       <div id="header-actions" class="hidden items-center gap-2 flex-wrap">
-        <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs">
+        <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs cursor-pointer">
           <span>🔑</span>
           <span>Cấu hình API &amp; Google Drive</span>
         </button>
-        <button id="btn-new-client" type="button" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs">
+        <button id="btn-new-client" type="button" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs cursor-pointer">
           <span>＋</span>
           <span>Thêm Hồ Sơ Inbound</span>
         </button>
-        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors">
-          <span>↻</span>
-          <span>Làm mới</span>
+        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors cursor-pointer">
+          <span id="refresh-icon" class="inline-block transition-transform">↻</span>
+          <span id="refresh-label">Làm mới</span>
         </button>
         <button id="btn-logout" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-700 border border-stone-200 text-xs font-semibold transition-colors cursor-pointer" title="Khoá bảng điều khiển">
           <span>🔒</span>
@@ -205,21 +275,30 @@
         </div>
 
         <form id="quick-outbound-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-          <div class="lg:col-span-4">
+          <div class="lg:col-span-3">
             <label class="text-[11px] font-bold text-stone-600 block mb-1">Tên Tiệm / Thương Hiệu *</label>
             <input type="text" id="qo-biz-name" required placeholder="VD: Lush Nails &amp; Spa" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
           </div>
-          <div class="lg:col-span-3">
-            <label class="text-[11px] font-bold text-emerald-800 block mb-1">📱 SĐT Nhận SMS (Khuyên dùng)</label>
-            <input type="tel" id="qo-phone" placeholder="VD: 0412 345 678" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono font-semibold">
+          <div class="lg:col-span-2">
+            <label class="text-[11px] font-bold text-emerald-800 block mb-1">📱 SĐT Nhận SMS</label>
+            <input type="tel" id="qo-phone" placeholder="0412 345 678" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-mono font-semibold">
+          </div>
+          <div class="lg:col-span-2">
+            <label class="text-[11px] font-bold text-stone-600 block mb-1">📧 Email <span class="text-stone-400 font-normal">(Tuỳ chọn)</span></label>
+            <input type="email" id="qo-email" placeholder="Tuỳ chọn" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-mono">
           </div>
           <div class="lg:col-span-3">
-            <label class="text-[11px] font-bold text-stone-600 block mb-1">📧 Email <span class="text-stone-400 font-normal">(Tuỳ chọn)</span></label>
-            <input type="email" id="qo-email" placeholder="Để trống nếu chỉ có SĐT" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <label class="text-[11px] font-bold text-[#96432b] block mb-1">🎨 Tự Động Dựng Khung Web</label>
+            <select id="qo-auto-template" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold text-stone-800">
+              <option value="nails-01">Nails • 01 Terracotta Gold (Tự dựng ngay)</option>
+              <option value="nails-02">Nails • 02 Rose Silk (Tự dựng ngay)</option>
+              <option value="nails-03">Nails • 03 Botanical Sage (Tự dựng ngay)</option>
+              <option value="manual">Chưa dựng (Tự tải file ZIP/HTML sau)</option>
+            </select>
           </div>
           <div class="lg:col-span-2 flex items-end">
-            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer">
-              <span>＋ Tạo &amp; Lấy Link Mua</span>
+            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-60 text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>＋ Tạo &amp; Dựng Web</span>
             </button>
           </div>
         </form>
@@ -472,11 +551,11 @@
           </div>
         </div>
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" id="btn-cancel-client-modal" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs">
+          <button type="button" id="btn-cancel-client-modal" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs cursor-pointer">
             Huỷ
           </button>
-          <button type="submit" class="px-6 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs">
-            Lưu Hồ Sơ Khách Hàng
+          <button type="submit" id="btn-submit-client-form" class="px-6 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-60 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
+            <span>Lưu Hồ Sơ Khách Hàng</span>
           </button>
         </div>
       </form>
@@ -512,14 +591,25 @@
                 Tự động khắc dấu sáp vàng chữ cái đầu tên tiệm, gắn 6 bức sơn dầu độc quyền &amp; Menu mẫu chuẩn Úc trong 2 giây.
               </p>
             </div>
-            <button
-              type="button"
-              id="btn-copy-antigravity-pull"
-              class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 shrink-0 cursor-pointer"
-              title="Copy lệnh mở dự án riêng của tiệm này trong Antigravity để sửa Menu thật / Logo / Vẽ thêm ảnh"
-            >
-              <span>🤖 Copy Lệnh Kéo Về Antigravity</span>
-            </button>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <a
+                id="btn-preview-palette-live"
+                href="/templates/nails-atelier?palette=01"
+                target="_blank"
+                class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#e2d9c8] text-[11px] font-bold text-stone-700 transition-colors inline-flex items-center gap-1"
+                title="Xem thử giao diện của bộ màu đang chọn"
+              >
+                <span>👁️ Xem Mẫu</span>
+              </a>
+              <button
+                type="button"
+                id="btn-copy-antigravity-pull"
+                class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                title="Copy lệnh mở dự án riêng của tiệm này trong Antigravity để sửa Menu thật / Logo / Vẽ thêm ảnh"
+              >
+                <span>🤖 Copy Lệnh Kéo Về Antigravity</span>
+              </button>
+            </div>
           </div>
 
           <!-- 3 Fixed Haute Couture Palettes -->
@@ -860,9 +950,63 @@
       modeTabOutbound.addEventListener('click', () => switchMainTab('outbound'));
       modeTabInbound.addEventListener('click', () => switchMainTab('inbound'));
 
-      async function loadClients() {
+      const globalTopLoader = document.getElementById('global-top-loader');
+      const globalSyncPill = document.getElementById('global-sync-pill');
+      const globalSyncText = document.getElementById('global-sync-text');
+      const refreshIcon = document.getElementById('refresh-icon');
+      const refreshLabel = document.getElementById('refresh-label');
+      let busyCount = 0;
+
+      function beginGlobalBusy(message = 'Đang xử lý lệnh...') {
+        busyCount++;
+        if (globalSyncText) globalSyncText.textContent = message;
+        if (globalTopLoader) globalTopLoader.classList.remove('hidden');
+        if (globalSyncPill) globalSyncPill.classList.remove('hidden');
+      }
+
+      function endGlobalBusy() {
+        busyCount = Math.max(0, busyCount - 1);
+        if (busyCount === 0) {
+          if (globalTopLoader) globalTopLoader.classList.add('hidden');
+          if (globalSyncPill) globalSyncPill.classList.add('hidden');
+        }
+      }
+
+      function setCardBusy(cid, isBusy) {
+        if (!cid) return;
+        document.querySelectorAll(`[data-card-cid="${cid}"]`).forEach((el) => {
+          if (isBusy) el.classList.add('card-is-busy');
+          else el.classList.remove('card-is-busy');
+        });
+      }
+
+      function upsertClientInCache(updatedClient) {
+        if (!updatedClient || !updatedClient.id) return;
+        const idx = clientsCache.findIndex(c => c.id === updatedClient.id);
+        if (idx >= 0) {
+          clientsCache[idx] = updatedClient;
+        } else {
+          clientsCache.unshift(updatedClient);
+        }
+        updateMetrics(clientsCache);
+        applyFiltersAndRender();
+      }
+
+      function removeClientFromCache(cid) {
+        if (!cid) return;
+        clientsCache = clientsCache.filter(c => c.id !== cid);
+        updateMetrics(clientsCache);
+        applyFiltersAndRender();
+      }
+
+      async function loadClients(statusMsg = 'Đang tải danh sách khách hàng...') {
+        const btnRefresh = document.getElementById('btn-refresh');
+        if (btnRefresh) btnRefresh.disabled = true;
+        if (refreshIcon) refreshIcon.classList.add('animate-spin');
+        if (refreshLabel) refreshLabel.textContent = 'Đang tải...';
+        beginGlobalBusy(statusMsg);
         try {
-          const res = await fetch(`/api/briefs?key=${encodeURIComponent(adminKey)}`);
+          const res = await fetch(`/api/briefs?key=${encodeURIComponent(adminKey)}`, { cache: 'no-store' });
           if (res.status === 401) {
             localStorage.removeItem('wynn_admin_key');
             authGate.classList.remove('hidden');
@@ -887,6 +1031,11 @@
           switchMainTab(activeMainTab);
         } catch (err) {
           showToast(err.message, true);
+        } finally {
+          if (btnRefresh) btnRefresh.disabled = false;
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+          if (refreshLabel) refreshLabel.textContent = 'Làm mới';
+          endGlobalBusy();
         }
       }
 
@@ -1050,7 +1199,7 @@
           ];
 
           return `
-            <div class="bg-white rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : 'border-[#e5dec9]'} shadow-xs space-y-4">
+            <div data-card-cid="${c.id}" class="bg-white rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : 'border-[#e5dec9]'} shadow-xs space-y-4 transition-all duration-200">
               <!-- Top Header -->
               <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
                 <div class="space-y-1.5">
@@ -1535,7 +1684,7 @@
             : (c.name || 'Khách chưa đặt tên');
 
           return `
-            <div class="bg-white rounded-3xl p-6 border border-[#e5dec9] shadow-xs space-y-5" id="card-${c.id}">
+            <div data-card-cid="${c.id}" class="bg-white rounded-3xl p-6 border border-[#e5dec9] shadow-xs space-y-5 transition-all duration-200" id="card-${c.id}">
               <!-- Header Row -->
               <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
                 <div class="space-y-1.5">
@@ -2098,15 +2247,33 @@
           });
         });
 
-        // Delete Client
+        // Delete Client (Instant card dimming + button spinner + fast background cleanup)
         document.querySelectorAll('.btn-delete-client').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const name = btn.getAttribute('data-name');
             const slug = btn.getAttribute('data-slug') || '';
-            if (!confirm(`Bạn có chắc muốn xoá hồ sơ "${name}" khỏi danh sách? Thao tác này sẽ xoá toàn bộ demo subdomain trên Cloudflare Worker và dọn dẹp KV.`)) return;
-            await runAdminAction({ action: 'delete_client', customerId: cid, slug });
-            showToast(`Đã xoá hồ sơ "${name}" và tên miền liên quan.`);
+            const existing = clientsCache.find(x => x.id === cid);
+            if (!confirm(`Bạn có chắc muốn xoá hồ sơ "${name}" khỏi danh sách? Thao tác này sẽ xoá toàn bộ demo subdomain và dọn dẹp dữ liệu.`)) return;
+
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="wynn-spin-dark"></span><span class="ml-1 text-[11px]">Đang xoá...</span>';
+            setCardBusy(cid, true);
+
+            const res = await runAdminAction(
+              { action: 'delete_client', customerId: cid, slug, liveUrl: existing ? existing.liveUrl : '' },
+              { busyText: `Đang xoá hồ sơ "${name}"...`, skipReload: true }
+            );
+
+            if (res && res.ok) {
+              removeClientFromCache(cid);
+              showToast(`Đã xoá hồ sơ "${name}" và tên miền liên quan.`);
+            } else {
+              setCardBusy(cid, false);
+              btn.disabled = false;
+              btn.innerHTML = origHtml;
+            }
           });
         });
 
@@ -2115,7 +2282,7 @@
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const currentSlug = btn.getAttribute('data-slug') || '';
-            const newSlug = prompt(`Nhập subdomain mới cho khách (VD: brisbane-tools):`, currentSlug);
+            const newSlug = prompt(`Nhập subdomain mới cho khách (VD: lush-nails):`, currentSlug);
             if (!newSlug || newSlug.trim() === '' || newSlug.trim().toLowerCase() === currentSlug.toLowerCase()) return;
             const sanitized = newSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '');
             if (!sanitized) {
@@ -2123,15 +2290,22 @@
               return;
             }
             btn.disabled = true;
-            btn.textContent = '⏳ Đang đổi...';
-            const res = await runAdminAction({
-              action: 'update_subdomain',
-              customerId: cid,
-              oldSlug: currentSlug,
-              newSlug: sanitized
-            });
-            if (res && res.success) {
-              showToast(`Đã đổi subdomain thành "${sanitized}.wynnpages.com.au" và cập nhật Cloudflare!`);
+            btn.innerHTML = '<span class="wynn-spin-dark"></span><span>Đang đổi...</span>';
+            setCardBusy(cid, true);
+            const res = await runAdminAction(
+              {
+                action: 'update_subdomain',
+                customerId: cid,
+                oldSlug: currentSlug,
+                newSlug: sanitized
+              },
+              { busyText: `Đang đổi subdomain sang ${sanitized}.wynnpages.com.au...`, skipReload: true }
+            );
+            setCardBusy(cid, false);
+            if (res && (res.ok || res.success)) {
+              if (res.client) upsertClientInCache(res.client);
+              else await loadClients();
+              showToast(`Đã đổi subdomain thành "${sanitized}.wynnpages.com.au"!`);
             } else {
               btn.disabled = false;
               btn.innerHTML = '<span>✏️ Sửa</span>';
@@ -2148,13 +2322,14 @@
             const demoUrl = demoInput ? demoInput.value.trim() : undefined;
             const liveUrl = liveInput ? liveInput.value.trim() : '';
             const origText = btn.innerHTML;
-            btn.innerHTML = '<span>⏳ Đang tạo DNS...</span>';
+            btn.innerHTML = '<span class="wynn-spin-dark"></span><span class="ml-1.5">Đang lưu &amp; tạo DNS...</span>';
             btn.disabled = true;
             const actionPayload = { action: 'save_client', customerId: cid, liveUrl };
             if (demoUrl) actionPayload.demoUrl = demoUrl;
-            const res = await runAdminAction(actionPayload);
+            const res = await runAdminAction(actionPayload, { busyText: 'Đang lưu tên miền & cấu hình DNS...', skipReload: true });
             btn.disabled = false;
             btn.innerHTML = origText;
+            if (res && res.client) upsertClientInCache(res.client);
             if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {
               showToast(`🎉 Đã lưu tên miền & tạo DNS Zone thành công! Nameservers: ${res.liveDomainBindResult.nameservers} (Bấm nút "Gửi Mail DNS" nếu muốn gửi hướng dẫn cho khách).`);
             } else if (res && res.ok) {
@@ -2163,13 +2338,13 @@
           });
         });
 
-        // Copy Cloudflare Nameservers
+        // Copy Nameservers
         document.querySelectorAll('.btn-copy-ns').forEach((btn) => {
           btn.addEventListener('click', () => {
             const ns = btn.getAttribute('data-ns') || '';
             if (ns) {
               navigator.clipboard.writeText(ns);
-              showToast(`Đã copy cặp Cloudflare Nameservers: ${ns}`);
+              showToast(`Đã copy cặp Nameservers: ${ns}`);
             }
           });
         });
@@ -2181,8 +2356,11 @@
             const targetEmail = btn.getAttribute('data-email');
             const origHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span>⏳ Đang gửi mail...</span>';
-            const res = await runAdminAction({ action: 'send_dns_email', customerId: cid });
+            btn.innerHTML = '<span class="wynn-spin"></span><span>Đang gửi mail...</span>';
+            const res = await runAdminAction(
+              { action: 'send_dns_email', customerId: cid },
+              { busyText: `Đang gửi hướng dẫn DNS tới ${targetEmail}...`, skipReload: true }
+            );
             btn.disabled = false;
             btn.innerHTML = origHtml;
             if (res && res.ok) {
@@ -2225,15 +2403,22 @@
 
             const origHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span>⏳ Đang gửi...</span><span class="text-[10px]">Vui lòng đợi 2s</span>';
+            btn.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="wynn-spin"></span><span>Đang gửi...</span></span><span class="text-[10px]">Đang kết nối SMS/Email</span>';
 
-            const res = await runAdminAction({
-              action: 'trigger_stage',
-              customerId: cid,
-              stage,
-              demoUrl,
-              liveUrl
-            });
+            const res = await runAdminAction(
+              {
+                action: 'trigger_stage',
+                customerId: cid,
+                stage,
+                demoUrl,
+                liveUrl
+              },
+              { busyText: 'Đang gửi thông báo SMS / Email cho khách...', skipReload: true }
+            );
+
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+            }
 
             if (res && res.notifyRes) {
               const smsOk = res.notifyRes.smsResult && res.notifyRes.smsResult.sent;
@@ -2247,7 +2432,6 @@
 
               showToast(`Kết quả [${stage}] → ${smsStatus} | ${emailStatus}`, !smsOk && !emailOk);
 
-              // If SMS failed via ClickSend and we have phone & smsText, open Mac SMS Fallback modal!
               if (!smsOk && res.notifyRes.phone && res.notifyRes.smsText) {
                 openMacSmsModal({
                   phone: res.notifyRes.phone,
@@ -2263,7 +2447,9 @@
         });
       }
 
-      async function runAdminAction(payload) {
+      async function runAdminAction(payload, opts = {}) {
+        const busyLabel = opts.busyText || 'Đang xử lý yêu cầu...';
+        beginGlobalBusy(busyLabel);
         try {
           const res = await fetch('/api/admin/action', {
             method: 'POST',
@@ -2276,12 +2462,60 @@
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Thao tác thất bại');
-          await loadClients();
+          if (!opts.skipReload) {
+            if (data && data.client) {
+              upsertClientInCache(data.client);
+            } else {
+              await loadClients();
+            }
+          }
           return data;
         } catch (err) {
           showToast(err.message, true);
           return null;
+        } finally {
+          endGlobalBusy();
         }
+      }
+
+      // Helper to auto-deploy Nails Atelier template + bespoke Favicon + 1200x630 SEO Share Image for a client
+      async function deployNailsAtelierForClient(clientObj, palette = '01', customAddr = undefined, customSoc = undefined) {
+        const tplRes = await fetch('/templates/nails-atelier.html', { cache: 'no-cache' });
+        if (!tplRes.ok) throw new Error('Không tải được khung mẫu /templates/nails-atelier.html');
+        const rawTemplate = await tplRes.text();
+        const hydratedHtml = hydrateNailsAtelierHtml(rawTemplate, clientObj, palette, customAddr, customSoc);
+        const seoAssets = await generateClientSeoAssetsBrowser(clientObj, palette, customAddr);
+
+        const bundleFiles = [
+          {
+            path: '/index.html',
+            type: 'text/html; charset=utf-8',
+            text: hydratedHtml
+          },
+          ...seoAssets
+        ];
+
+        const upRes = await fetch('/api/upload-demo-bundle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': adminKey
+          },
+          body: JSON.stringify({
+            adminKey,
+            customerId: clientObj.id,
+            slug: clientObj.demoSlug,
+            businessName: clientObj.businessName || clientObj.name || '',
+            palette,
+            files: bundleFiles,
+            credentials: localCreds
+          })
+        });
+        const data = await upRes.json().catch(() => ({}));
+        if (!upRes.ok || !data.ok) {
+          throw new Error(data.error || 'Không thể lưu bản dựng lên hệ thống');
+        }
+        return data;
       }
 
       // Quick 1-Row Outbound Prospect Creator Form
@@ -2290,6 +2524,8 @@
         const bizName = document.getElementById('qo-biz-name').value.trim();
         const email = document.getElementById('qo-email').value.trim();
         const phone = document.getElementById('qo-phone').value.trim();
+        const autoTplEl = document.getElementById('qo-auto-template');
+        const autoTpl = autoTplEl ? autoTplEl.value : 'nails-01';
         const submitBtn = document.getElementById('qo-submit-btn');
 
         if (!bizName) {
@@ -2302,35 +2538,58 @@
         }
 
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Đang tạo...';
+        submitBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang tạo...</span>';
 
-        const res = await runAdminAction({
-          action: 'save_client',
-          name: bizName,
-          businessName: bizName,
-          email,
-          phone,
-          flowType: 'outbound',
-          paymentStatus: 'unpaid',
-          stage: 'outbound_pending'
-        });
-
-        submitBtn.disabled = false;
-        submitBtn.textContent = '＋ Tạo & Lấy Link Mua $599';
+        const res = await runAdminAction(
+          {
+            action: 'save_client',
+            name: bizName,
+            businessName: bizName,
+            email,
+            phone,
+            flowType: 'outbound',
+            paymentStatus: 'unpaid',
+            stage: 'outbound_pending'
+          },
+          { busyText: `Đang khởi tạo hồ sơ "${bizName}"...`, skipReload: true }
+        );
 
         if (res && res.client) {
+          let finalClient = res.client;
           document.getElementById('qo-biz-name').value = '';
           document.getElementById('qo-email').value = '';
           document.getElementById('qo-phone').value = '';
-          const previewUrl = res.client.brandedDemoUrl || `https://${encodeURIComponent(res.client.demoSlug || res.client.id)}.wynnpages.com.au`;
-          navigator.clipboard.writeText(previewUrl).catch(() => {});
-          showToast(`Đã tạo khách Outbound "${bizName}" thành công! Subdomain: ${res.client.demoSlug}.wynnpages.com.au`);
 
-          // Automatically open upload modal to upload HTML/ZIP!
-          setTimeout(() => {
-            openUploadModal(res.client);
-          }, 300);
+          if (autoTpl && autoTpl.startsWith('nails-')) {
+            const pal = autoTpl.replace('nails-', '') || '01';
+            submitBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang dựng Web...</span>';
+            beginGlobalBusy(`Đang dựng Khung Nails Atelier (Màu ${pal}) cho "${bizName}"...`);
+            try {
+              const built = await deployNailsAtelierForClient(finalClient, pal);
+              if (built && built.client) finalClient = built.client;
+              upsertClientInCache(finalClient);
+              const previewUrl = finalClient.brandedDemoUrl || `https://${encodeURIComponent(finalClient.demoSlug || finalClient.id)}.wynnpages.com.au`;
+              navigator.clipboard.writeText(previewUrl).catch(() => {});
+              showToast(`🎉 Đã tạo & lên sóng ngay Web Nails Atelier (Màu ${pal}) cho "${bizName}" tại ${previewUrl} (Đã tự copy link)!`);
+            } catch (err) {
+              upsertClientInCache(finalClient);
+              showToast(`Đã tạo khách nhưng dựng khung tự động gặp lỗi: ${err.message}`, true);
+            } finally {
+              endGlobalBusy();
+            }
+          } else {
+            upsertClientInCache(finalClient);
+            const previewUrl = finalClient.brandedDemoUrl || `https://${encodeURIComponent(finalClient.demoSlug || finalClient.id)}.wynnpages.com.au`;
+            navigator.clipboard.writeText(previewUrl).catch(() => {});
+            showToast(`Đã tạo khách Outbound "${bizName}"! Subdomain: ${finalClient.demoSlug}.wynnpages.com.au`);
+            setTimeout(() => {
+              openUploadModal(finalClient);
+            }, 200);
+          }
         }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>＋ Tạo &amp; Dựng Web</span>';
       });
 
       // Outbound Sub-Filter Tabs
@@ -2364,10 +2623,20 @@
       });
 
       // Auth Form
-      authForm.addEventListener('submit', (e) => {
+      authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         adminKey = adminKeyInput.value.trim();
-        loadClients();
+        const authBtn = authForm.querySelector('button[type="submit"]');
+        const origHtml = authBtn ? authBtn.innerHTML : '';
+        if (authBtn) {
+          authBtn.disabled = true;
+          authBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang xác thực...</span>';
+        }
+        await loadClients();
+        if (authBtn) {
+          authBtn.disabled = false;
+          authBtn.innerHTML = origHtml;
+        }
       });
 
       // Refresh
@@ -2406,7 +2675,13 @@
         settingsModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
-      document.getElementById('btn-save-settings').addEventListener('click', () => {
+      document.getElementById('btn-save-settings').addEventListener('click', async () => {
+        const saveBtn = document.getElementById('btn-save-settings');
+        const origHtml = saveBtn ? saveBtn.innerHTML : '';
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang lưu...</span>';
+        }
         localCreds = {
           clicksendUsername: cfgClicksendUser.value.trim(),
           clicksendApiKey: cfgClicksendKey.value.trim(),
@@ -2418,7 +2693,11 @@
         };
         localStorage.setItem('wynn_Messaging_creds', JSON.stringify(localCreds));
         if (localCreds.cfApiToken !== undefined) {
-          runAdminAction({ action: 'save_cf_token', cfToken: localCreds.cfApiToken }).catch(() => {});
+          await runAdminAction({ action: 'save_cf_token', cfToken: localCreds.cfApiToken }, { skipReload: true }).catch(() => {});
+        }
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
         }
         settingsModal.classList.add('hidden');
         loadClients();
@@ -2477,6 +2756,8 @@
       document.getElementById('client-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const cid = editCid.value.trim();
+        const submitBtn = document.getElementById('btn-submit-client-form');
+        const origHtml = submitBtn ? submitBtn.innerHTML : '<span>Lưu Hồ Sơ Khách Hàng</span>';
         const payload = {
           action: 'save_client',
           customerId: cid,
@@ -2498,9 +2779,30 @@
           demoUrl: editDemoUrl.value.trim(),
           liveUrl: editLiveUrl.value.trim()
         };
-        clientModal.classList.add('hidden');
-        await runAdminAction(payload);
-        showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ "${payload.businessName || payload.name}"!`);
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang lưu hồ sơ...</span>';
+        }
+        if (cid) setCardBusy(cid, true);
+
+        const res = await runAdminAction(payload, {
+          busyText: `Đang lưu hồ sơ "${payload.businessName || payload.name}"...`,
+          skipReload: true
+        });
+
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origHtml;
+        }
+        if (cid) setCardBusy(cid, false);
+
+        if (res && res.ok) {
+          if (res.client) upsertClientInCache(res.client);
+          else await loadClients();
+          clientModal.classList.add('hidden');
+          showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ "${payload.businessName || payload.name}"!`);
+        }
       });
 
       // ========================================================
@@ -2577,6 +2879,10 @@
             ? 'atelier-palette-card cursor-pointer rounded-xl border-2 border-[#96432b] bg-white p-2.5 flex items-center gap-2.5 transition-all shadow-2xs'
             : 'atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all';
         });
+        const previewBtn = document.getElementById('btn-preview-palette-live');
+        if (previewBtn) {
+          previewBtn.href = `/templates/nails-atelier?palette=${encodeURIComponent(selected)}`;
+        }
       }
 
       document.querySelectorAll('input[name="atelier-palette"]').forEach((r) => {
@@ -2618,10 +2924,65 @@
         return result;
       }
 
+      function inferAuStateBrowser(pc) {
+        const n = Number(pc);
+        if (!pc || Number.isNaN(n)) return '';
+        if (pc.startsWith('08') || pc.startsWith('09')) return 'NT';
+        if ((n >= 2600 && n <= 2618) || (n >= 2900 && n <= 2920)) return 'ACT';
+        if (n >= 2000 && n <= 2999) return 'NSW';
+        if (n >= 3000 && n <= 3999) return 'VIC';
+        if (n >= 4000 && n <= 4999) return 'QLD';
+        if (n >= 5000 && n <= 5799) return 'SA';
+        if (n >= 6000 && n <= 6797) return 'WA';
+        if (n >= 7000 && n <= 7799) return 'TAS';
+        return '';
+      }
+
+      function parseAuAddressBrowser(raw) {
+        const str = String(raw || '').trim();
+        if (!str) return { street: '', streetName: '', suburb: '', state: '', postcode: '' };
+        const pcMatch = str.match(/\b(\d{4})\b/);
+        const postcode = pcMatch ? pcMatch[1] : '';
+        const stMatch = str.match(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/i);
+        const state = stMatch ? stMatch[1].toUpperCase() : inferAuStateBrowser(postcode);
+
+        const cleanedParts = str
+          .split(',')
+          .map((p) => p
+            .replace(/\bAustralia\b/gi, '')
+            .replace(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/gi, '')
+            .replace(/\b\d{4}\b/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+          )
+          .filter(Boolean);
+
+        let street = '';
+        let suburb = '';
+        if (cleanedParts.length >= 2) {
+          street = cleanedParts[0];
+          suburb = cleanedParts[1];
+        } else if (cleanedParts.length === 1) {
+          const single = cleanedParts[0];
+          if (/^\d+|^(shop|suite|unit|level)\b/i.test(single)) {
+            street = single;
+          } else {
+            suburb = single;
+          }
+        }
+        const streetName = street
+          .replace(/^(?:shop|suite|unit|level|lvl)\s*[a-z0-9/-]+[,\s/]*/i, '')
+          .replace(/^\d+[a-z]?[/-]?\d*\s+/i, '')
+          .trim();
+
+        return { street, streetName, suburb, state, postcode };
+      }
+
       function hydrateNailsAtelierHtml(templateHtml, client, palette, customAddress, customSocials) {
         const bizName = (client && (client.businessName || client.name)) || 'Maison Élan';
         const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'A';
         const address = (customAddress !== undefined ? customAddress : (client && client.businessAddress)) || '';
+        const parsedAddr = parseAuAddressBrowser(address);
         const displayPhone = (client && (client.displayPhone || client.phone)) || '';
         const smsPhone = (client && (client.phone || client.displayPhone)) || '';
         const email = (client && client.email) || '';
@@ -2641,24 +3002,69 @@
         patchStringField('salonName', bizName);
         patchStringField('monogram', monogram);
 
+        const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
+        const resolvedState = address ? parsedAddr.state : '';
+        const shortLoc = [resolvedSuburb, resolvedState].filter(Boolean).join(' ') || 'Australia';
+
         const safeTitleBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const shortLoc = address ? address.split(',')[0].trim().replace(/&/g, '&amp;') : 'Australia';
+        const safeAttrBiz = safeTitleBiz.replace(/"/g, '&quot;');
+        const safeLoc = shortLoc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        const seoTitle = `${safeAttrBiz} — Bespoke BIAB &amp; Nail Sanctuary | ${safeLoc}`;
+        const seoDesc = `Experience bespoke HEMA-free BIAB overlays, fine-art manicure design, and botanical spa pedicures at ${safeAttrBiz} in ${safeLoc}. Reserve your appointment online.`;
+
         html = html.replace(
           /<title id="page-meta-title">[\s\S]*?<\/title>/,
-          `<title id="page-meta-title">${safeTitleBiz} — Bespoke BIAB &amp; Nail Sanctuary | ${shortLoc}</title>`
+          `<title id="page-meta-title">${seoTitle}</title>`
         );
         html = html.replace(
-          /<meta property="og:title" content="[^"]*">/,
-          `<meta property="og:title" content="${safeTitleBiz.replace(/"/g, '&quot;')} — Bespoke BIAB &amp; Hand Care">`
+          /<meta name="description"[^>]*>/,
+          `<meta name="description" id="page-meta-desc" content="${seoDesc}">`
+        );
+        html = html.replace(
+          /<meta property="og:site_name"[^>]*>/,
+          `<meta property="og:site_name" id="og-site-name" content="${safeAttrBiz}">`
+        );
+        html = html.replace(
+          /<meta property="og:title"[^>]*>/,
+          `<meta property="og:title" id="og-title" content="${seoTitle}">`
+        );
+        html = html.replace(
+          /<meta property="og:description"[^>]*>/,
+          `<meta property="og:description" id="og-desc" content="${seoDesc}">`
+        );
+        html = html.replace(
+          /<meta property="og:image:alt"[^>]*>/,
+          `<meta property="og:image:alt" id="og-image-alt" content="${safeAttrBiz} — Bespoke Nail Sanctuary">`
+        );
+        html = html.replace(
+          /<meta name="twitter:title"[^>]*>/,
+          `<meta name="twitter:title" id="tw-title" content="${seoTitle}">`
+        );
+        html = html.replace(
+          /<meta name="twitter:description"[^>]*>/,
+          `<meta name="twitter:description" id="tw-desc" content="${seoDesc}">`
         );
 
         if (address) {
           patchStringField('address', address);
           patchStringField('mapsQuery', `${address}, Australia`);
-          const shortSuburb = address.split(',')[0].trim();
-          patchStringField('suburb', shortSuburb);
-          patchStringField('heroBadge', `${shortSuburb} • BIAB & Non-Toxic Nail Sanctuary`);
+          patchStringField('suburb', parsedAddr.suburb || parsedAddr.street || address);
+          patchStringField('state', parsedAddr.state || '');
+          const badgeLoc = parsedAddr.suburb || parsedAddr.street || 'Boutique';
+          patchStringField('heroBadge', `${badgeLoc} • BIAB & Non-Toxic Nail Sanctuary`);
+          const parkingText = parsedAddr.streetName
+            ? `Convenient client parking right near ${parsedAddr.streetName} with effortless ground-level boutique arrival.`
+            : `Convenient local client parking nearby in ${badgeLoc} with effortless boutique arrival.`;
+          patchStringField('parkingNote', parkingText);
+        } else {
+          patchStringField('address', 'Australia');
+          patchStringField('mapsQuery', `${bizName}, Australia`);
+          patchStringField('suburb', 'Australia');
+          patchStringField('state', '');
+          patchStringField('heroBadge', `${bizName} • BIAB & Non-Toxic Nail Sanctuary`);
+          patchStringField('parkingNote', 'Convenient local client parking right near our boutique entrance.');
         }
+
         if (displayPhone) patchStringField('displayPhone', displayPhone);
         if (smsPhone) patchStringField('smsPhone', smsPhone);
         if (email) patchStringField('email', email);
@@ -2667,7 +3073,242 @@
         if (parsedLinks.instagramHandle) patchStringField('instagramHandle', parsedLinks.instagramHandle);
         if (parsedLinks.facebookUrl) patchStringField('facebookUrl', parsedLinks.facebookUrl);
 
+        // Hydrate static Schema.org NailSalon JSON-LD for Google Search Console
+        const jsonLdObj = {
+          '@context': 'https://schema.org',
+          '@type': 'NailSalon',
+          name: bizName,
+          description: `Bespoke BIAB overlays, artisanal nail artistry, and hospital-grade botanical hand & foot care in ${shortLoc}.`,
+          image: '/og-share.jpg',
+          priceRange: '$$',
+          currenciesAccepted: 'AUD',
+          telephone: displayPhone || smsPhone || '',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: parsedAddr.street || address || '',
+            addressLocality: parsedAddr.suburb || '',
+            addressRegion: parsedAddr.state || '',
+            postalCode: parsedAddr.postcode || '',
+            addressCountry: 'AU'
+          },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.9',
+            reviewCount: '280'
+          }
+        };
+        const sameAs = [parsedLinks.instagramUrl, parsedLinks.facebookUrl].filter(Boolean);
+        if (sameAs.length) jsonLdObj.sameAs = sameAs;
+        html = html.replace(
+          /<script type="application\/ld\+json" id="salon-jsonld">[\s\S]*?<\/script>/,
+          '<' + 'script type="application/ld+json" id="salon-jsonld">\n' + JSON.stringify(jsonLdObj, null, 2) + '\n  <' + '/script>'
+        );
+
         return html;
+      }
+
+      // Browser Canvas Generator: Bespoke Wax Monogram Favicon (SVG + 192x192 PNG) & 1200x630 Oil-Painting SEO Share Card (JPEG)
+      let cachedAtelierHeroImg = null;
+      function loadAtelierHeroImageForCanvas() {
+        if (cachedAtelierHeroImg && cachedAtelierHeroImg.complete && cachedAtelierHeroImg.naturalWidth > 0) {
+          return Promise.resolve(cachedAtelierHeroImg);
+        }
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          const timer = setTimeout(() => resolve(null), 2600);
+          img.onload = () => {
+            clearTimeout(timer);
+            cachedAtelierHeroImg = img;
+            resolve(img);
+          };
+          img.onerror = () => {
+            clearTimeout(timer);
+            resolve(null);
+          };
+          img.src = '/assets/atelier/nails/hero-sanctuary.jpg';
+        });
+      }
+
+      async function generateClientSeoAssetsBrowser(client, palette = '01', customAddr = undefined) {
+        const bizName = (client && (client.businessName || client.name)) || 'Nail Sanctuary';
+        const initial = (bizName.replace(/[^A-Za-z]/g, '').charAt(0) || 'A').toUpperCase();
+        const address = (customAddr !== undefined ? customAddr : (client && client.businessAddress)) || '';
+        const parsed = parseAuAddressBrowser(address);
+        const locBadge = [parsed.suburb, parsed.state].filter(Boolean).join(', ') || parsed.street || 'AUSTRALIA';
+
+        const themes = {
+          '01': { bg1: '#FCF9F3', bg2: '#F3DFB2', ring: '#D49B28', accent: '#96432B', dark: '#241B15' },
+          '02': { bg1: '#FFFDFB', bg2: '#F5DFD4', ring: '#C89378', accent: '#9E5850', dark: '#231918' },
+          '03': { bg1: '#FAFCF8', bg2: '#DCE6DF', ring: '#B59461', accent: '#466052', dark: '#19221D' }
+        };
+        const t = themes[palette] || themes['01'];
+
+        const assets = [];
+
+        // 1. Crisp Vector /favicon.svg
+        const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><radialGradient id="wax" cx="32%" cy="28%" r="72%"><stop offset="0%" stop-color="${t.bg1}"/><stop offset="100%" stop-color="${t.bg2}"/></radialGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wax)" stroke="${t.ring}" stroke-width="2.2"/><circle cx="32" cy="32" r="25.5" fill="none" stroke="${t.ring}" stroke-width="0.9" stroke-opacity="0.55"/><text x="32" y="42.5" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="31" fill="${t.accent}">${initial}</text></svg>`;
+        assets.push({ path: '/favicon.svg', type: 'image/svg+xml', text: faviconSvg });
+
+        try {
+          // 2. 192x192 /favicon.png (also served for /apple-touch-icon.png & /favicon.ico)
+          const favCanvas = document.createElement('canvas');
+          favCanvas.width = 192;
+          favCanvas.height = 192;
+          const fctx = favCanvas.getContext('2d');
+          if (fctx) {
+            const grad = fctx.createRadialGradient(62, 54, 10, 96, 96, 92);
+            grad.addColorStop(0, t.bg1);
+            grad.addColorStop(1, t.bg2);
+            fctx.beginPath();
+            fctx.arc(96, 96, 90, 0, Math.PI * 2);
+            fctx.fillStyle = grad;
+            fctx.fill();
+            fctx.lineWidth = 6;
+            fctx.strokeStyle = t.ring;
+            fctx.stroke();
+
+            fctx.beginPath();
+            fctx.arc(96, 96, 76, 0, Math.PI * 2);
+            fctx.lineWidth = 2.2;
+            fctx.strokeStyle = t.ring;
+            fctx.globalAlpha = 0.55;
+            fctx.stroke();
+            fctx.globalAlpha = 1;
+
+            fctx.fillStyle = t.accent;
+            fctx.font = 'italic 700 96px "Cormorant Garamond", Georgia, serif';
+            fctx.textAlign = 'center';
+            fctx.textBaseline = 'middle';
+            fctx.fillText(initial, 96, 101);
+
+            const favDataUrl = favCanvas.toDataURL('image/png');
+            const favB64 = favDataUrl.split(',')[1];
+            if (favB64) {
+              assets.push({ path: '/favicon.png', type: 'image/png', base64: favB64 });
+            }
+          }
+
+          // 3. 1200x630 /og-share.jpg Social Preview Card (Facebook, iMessage, Zalo, WhatsApp)
+          const ogCanvas = document.createElement('canvas');
+          ogCanvas.width = 1200;
+          ogCanvas.height = 630;
+          const ctx = ogCanvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = t.dark;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            const heroImg = await loadAtelierHeroImageForCanvas();
+            if (heroImg) {
+              const scale = Math.max(1200 / heroImg.naturalWidth, 630 / heroImg.naturalHeight);
+              const dw = heroImg.naturalWidth * scale;
+              const dh = heroImg.naturalHeight * scale;
+              const dx = (1200 - dw) / 2;
+              const dy = (630 - dh) / 2;
+              ctx.drawImage(heroImg, dx, dy, dw, dh);
+            }
+
+            // Editorial warm dark vignette for crisp luxury typography contrast
+            const overlay = ctx.createLinearGradient(0, 0, 1200, 0);
+            overlay.addColorStop(0, 'rgba(26, 20, 16, 0.90)');
+            overlay.addColorStop(0.58, 'rgba(26, 20, 16, 0.72)');
+            overlay.addColorStop(1, 'rgba(26, 20, 16, 0.34)');
+            ctx.fillStyle = overlay;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Double metallic gold-leaf inset frame
+            ctx.strokeStyle = 'rgba(212, 155, 40, 0.62)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(26, 26, 1148, 578);
+            ctx.strokeStyle = 'rgba(255, 246, 224, 0.28)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(36, 36, 1128, 558);
+
+            // Embossed Gold Wax Monogram Seal (top-left)
+            const sx = 122, sy = 124;
+            const sGrad = ctx.createRadialGradient(sx - 14, sy - 14, 6, sx, sy, 44);
+            sGrad.addColorStop(0, t.bg1);
+            sGrad.addColorStop(1, t.bg2);
+            ctx.beginPath();
+            ctx.arc(sx, sy, 42, 0, Math.PI * 2);
+            ctx.fillStyle = sGrad;
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = t.ring;
+            ctx.stroke();
+
+            ctx.fillStyle = t.accent;
+            ctx.font = 'italic 700 42px "Cormorant Garamond", Georgia, serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initial, sx, sy + 2);
+
+            // Eyebrow Location Tag
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = '#F3DFB2';
+            ctx.font = '600 18px "Plus Jakarta Sans", -apple-system, sans-serif';
+            const eyebrow = `${locBadge.toUpperCase()}  •  BESPOKE NAIL & HAND SANCTUARY`;
+            ctx.fillText(eyebrow.slice(0, 68), 82, 232);
+
+            // Salon Name (auto-wrapped up to 2 lines)
+            ctx.fillStyle = '#FCF9F3';
+            const titleFontSize = bizName.length > 24 ? 64 : 78;
+            ctx.font = `600 ${titleFontSize}px "Cormorant Garamond", Georgia, serif`;
+            const words = bizName.split(/\s+/);
+            const lines = [];
+            let curLine = '';
+            for (const w of words) {
+              const test = curLine ? `${curLine} ${w}` : w;
+              if (ctx.measureText(test).width > 940 && curLine) {
+                lines.push(curLine);
+                curLine = w;
+              } else {
+                curLine = test;
+              }
+            }
+            if (curLine) lines.push(curLine);
+            const displayLines = lines.slice(0, 2);
+            let ty = 322;
+            for (const ln of displayLines) {
+              ctx.fillText(ln, 82, ty);
+              ty += titleFontSize + 8;
+            }
+
+            // Editorial Subtitle
+            ctx.fillStyle = 'rgba(246, 241, 232, 0.86)';
+            ctx.font = 'italic 500 30px "Cormorant Garamond", Georgia, serif';
+            ctx.fillText('Structured BIAB  •  Fine-Art Manicure  •  Botanical Spa Rituals', 82, ty + 14);
+
+            // Bottom Gold CTA Pill
+            const pillY = 500;
+            ctx.fillStyle = t.accent;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+              ctx.roundRect(82, pillY, 336, 54, 27);
+            } else {
+              ctx.rect(82, pillY, 336, 54);
+            }
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 240, 205, 0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '600 18px "Plus Jakarta Sans", -apple-system, sans-serif';
+            ctx.fillText('Reserve Appointment Online  →', 112, pillY + 33);
+
+            const ogDataUrl = ogCanvas.toDataURL('image/jpeg', 0.86);
+            const ogB64 = ogDataUrl.split(',')[1];
+            if (ogB64) {
+              assets.push({ path: '/og-share.jpg', type: 'image/jpeg', base64: ogB64 });
+            }
+          }
+        } catch (_) {
+          // Non-blocking: _worker.js also provides native SVG favicon + JPEG fallback
+        }
+
+        return assets;
       }
 
       function resetUploadState() {
@@ -2712,68 +3353,53 @@
       if (btnGenerateNailsAtelier) {
         btnGenerateNailsAtelier.addEventListener('click', async () => {
           if (!currentUploadClient) return;
+          const targetClient = currentUploadClient;
           const palette = (document.querySelector('input[name="atelier-palette"]:checked') || {}).value || '01';
           const customAddr = atelierQuickAddress ? atelierQuickAddress.value.trim() : '';
           const customSoc = atelierQuickSocials ? atelierQuickSocials.value.trim() : '';
 
           btnGenerateNailsAtelier.disabled = true;
-          btnGenerateNailsAtelier.innerHTML = '<span>⏳ Đang dựng khung sơn dầu &amp; xuất bản lên Edge...</span>';
+          btnGenerateNailsAtelier.innerHTML = '<span class="wynn-spin"></span><span>Đang dựng khung, tạo Favicon &amp; ảnh SEO Share...</span>';
+          beginGlobalBusy(`Đang dựng khung Nails Atelier (Màu ${palette}) & tạo ảnh SEO cho "${targetClient.businessName || targetClient.name}"...`);
 
           try {
-            const tplRes = await fetch('/templates/nails-atelier.html', { cache: 'no-cache' });
-            if (!tplRes.ok) throw new Error('Không tải được khung mẫu /templates/nails-atelier.html');
-            const rawTemplate = await tplRes.text();
-            const hydratedHtml = hydrateNailsAtelierHtml(rawTemplate, currentUploadClient, palette, customAddr, customSoc);
-
             // Persist quick address/socials to client metadata if newly updated
             if (
-              (customAddr && customAddr !== (currentUploadClient.businessAddress || '')) ||
-              (customSoc && customSoc !== (currentUploadClient.socialLinks || ''))
+              (customAddr && customAddr !== (targetClient.businessAddress || '')) ||
+              (customSoc && customSoc !== (targetClient.socialLinks || ''))
             ) {
-              await fetch('/api/admin/action', {
+              const saveRes = await fetch('/api/admin/action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   action: 'save_client',
                   adminKey,
-                  customerId: currentUploadClient.id,
-                  businessAddress: customAddr || currentUploadClient.businessAddress || '',
-                  socialLinks: customSoc || currentUploadClient.socialLinks || '',
+                  customerId: targetClient.id,
+                  businessAddress: customAddr || targetClient.businessAddress || '',
+                  socialLinks: customSoc || targetClient.socialLinks || '',
                   credentials: localCreds
                 })
-              }).catch(() => {});
+              }).then(r => r.json()).catch(() => null);
+              if (saveRes && saveRes.client) {
+                Object.assign(targetClient, saveRes.client);
+              }
             }
 
-            const upRes = await fetch('/api/upload-demo-bundle', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-admin-key': adminKey
-              },
-              body: JSON.stringify({
-                adminKey,
-                customerId: currentUploadClient.id,
-                slug: currentUploadClient.demoSlug,
-                files: [{
-                  path: '/index.html',
-                  type: 'text/html; charset=utf-8',
-                  text: hydratedHtml
-                }],
-                credentials: localCreds
-              })
-            });
-            const data = await upRes.json().catch(() => ({}));
-            if (!upRes.ok || !data.ok) {
-              throw new Error(data.error || 'Không thể lưu bản dựng lên hệ thống');
-            }
+            const data = await deployNailsAtelierForClient(targetClient, palette, customAddr, customSoc);
 
-            showToast(`🎉 Đã dựng Khung Nails Atelier (Bộ màu ${palette}) thành công tại: ${data.demoUrl}`);
+            showToast(`🎉 Đã dựng Khung Nails Atelier (Bộ màu ${palette}) kèm Favicon & ảnh SEO Share tại: ${data.demoUrl}`);
             closeUploadModal();
-            await loadClients();
+            if (data.client) {
+              upsertClientInCache(data.client);
+            } else {
+              await loadClients();
+            }
           } catch (err) {
             showToast(`Lỗi dựng khung Nails: ${err.message}`, true);
             btnGenerateNailsAtelier.disabled = false;
             btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>';
+          } finally {
+            endGlobalBusy();
           }
         });
       }
@@ -2956,14 +3582,25 @@
 
       btnSubmitBundle.addEventListener('click', async () => {
         if (!currentUploadClient || !preparedBundleFiles.length) return;
+        const targetClient = currentUploadClient;
 
         btnSubmitBundle.disabled = true;
-        btnSubmitBundle.innerHTML = '<span>⏳ Đang lưu lên Cloudflare KV...</span>';
+        btnSubmitBundle.innerHTML = '<span class="wynn-spin"></span><span>Đang đồng bộ &amp; tạo tài nguyên SEO...</span>';
         uploadProgressBox.classList.remove('hidden');
         uploadProgressBar.style.width = '35%';
-        uploadStatusText.textContent = `Đang đồng bộ ${preparedBundleFiles.length} files lên Cloudflare KV...`;
+        uploadStatusText.textContent = `Đang đồng bộ ${preparedBundleFiles.length} files & kiểm tra Favicon/SEO...`;
+        beginGlobalBusy(`Đang xuất bản mã nguồn cho "${targetClient.businessName || targetClient.name}"...`);
 
         try {
+          const existingPaths = new Set(preparedBundleFiles.map(f => f.path));
+          let finalFiles = [...preparedBundleFiles];
+          if (!existingPaths.has('/favicon.png') || !existingPaths.has('/og-share.jpg')) {
+            const generatedSeo = await generateClientSeoAssetsBrowser(targetClient, '01');
+            for (const g of generatedSeo) {
+              if (!existingPaths.has(g.path)) finalFiles.push(g);
+            }
+          }
+
           const res = await fetch('/api/upload-demo-bundle', {
             method: 'POST',
             headers: {
@@ -2972,14 +3609,15 @@
             },
             body: JSON.stringify({
               adminKey,
-              customerId: currentUploadClient.id,
-              slug: currentUploadClient.demoSlug,
-              files: preparedBundleFiles,
+              customerId: targetClient.id,
+              slug: targetClient.demoSlug,
+              businessName: targetClient.businessName || targetClient.name || '',
+              files: finalFiles,
               credentials: localCreds
             })
           });
 
-          uploadProgressBar.style.width = '80%';
+          uploadProgressBar.style.width = '85%';
           const data = await res.json().catch(() => ({}));
 
           if (!res.ok || !data.ok) {
@@ -2989,14 +3627,20 @@
           uploadProgressBar.style.width = '100%';
           uploadStatusText.textContent = 'Hoàn tất!';
 
-          showToast(`🎉 Đã tải lên ${data.filesCount} file thành công! Web demo đã chạy tại: ${data.demoUrl}`);
+          showToast(`🎉 Đã tải lên ${data.filesCount} file (kèm Favicon & SEO) thành công tại: ${data.demoUrl}`);
           closeUploadModal();
-          await loadClients();
+          if (data.client) {
+            upsertClientInCache(data.client);
+          } else {
+            await loadClients();
+          }
         } catch (err) {
           showToast(`Lỗi upload: ${err.message}`, true);
           btnSubmitBundle.disabled = false;
-          btnSubmitBundle.innerHTML = '<span>🚀 Lưu &amp; Kích Hoạt Demo Lên Cloudflare</span>';
+          btnSubmitBundle.innerHTML = '<span>🚀 Lưu &amp; Kích Hoạt File Đã Chọn</span>';
           uploadProgressBox.classList.add('hidden');
+        } finally {
+          endGlobalBusy();
         }
       });
 
