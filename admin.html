@@ -178,14 +178,10 @@
     <!-- Dashboard Workspace -->
     <div id="dashboard-content" class="hidden space-y-6">
 
-      <!-- Top Row: Integrations + AI Direct Command -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- Integration Status Card -->
-        <div class="bg-white rounded-2xl p-5 border border-[#e5dec9] shadow-xs flex flex-col justify-between gap-3">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Trạng thái hệ thống</span>
-            <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="text-[11px] font-semibold text-[#96432b] hover:underline">Cài đặt Key</button>
-          </div>
+      <!-- Top Row: Compact Integration Status Strip -->
+      <div class="bg-white rounded-2xl px-5 py-3.5 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 mr-1">Trạng thái hệ thống:</span>
           <div class="flex flex-wrap gap-2" id="integration-pills">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Stripe DB
@@ -198,27 +194,7 @@
             </span>
           </div>
         </div>
-
-        <!-- AI Retrieval Endpoint Box -->
-        <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#e5dec9] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🤖</span>
-              <span class="text-xs font-bold uppercase tracking-wider text-[#96432b]">Cổng Dữ Liệu Trực Tiếp Cho AI Thiết Kế Web</span>
-            </div>
-            <p class="text-xs text-stone-600 leading-relaxed">
-              Khi cần AI thiết kế web cho khách, bấm nút bên phải để copy lệnh cho AI (AI tự động đọc tên quán, SĐT, địa chỉ, ngành nghề, bảng màu, web mẫu, tên miền &amp; logo).
-            </p>
-          </div>
-          <button 
-            type="button" 
-            id="btn-copy-ai-command"
-            class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
-          >
-            <span>📋</span>
-            <span>Copy Lệnh Gọi API Cho AI</span>
-          </button>
-        </div>
+        <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="text-xs font-semibold text-[#96432b] hover:underline cursor-pointer">Cài đặt Key ⚙️</button>
       </div>
 
       <!-- ======================================================== -->
@@ -1223,16 +1199,7 @@
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-copy-brief inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
-                    title="Copy toàn bộ thông tin tiệm để dán vào Claude / Gemini code web demo"
-                  >
-                    <span>🤖</span>
-                    <span>Copy Brief Cho AI</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors"
+                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
                   >
                     <span>✏️ Sửa</span>
                   </button>
@@ -1241,7 +1208,7 @@
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
                   >
                     🗑️
                   </button>
@@ -1710,15 +1677,7 @@
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-copy-brief inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors"
-                  >
-                    <span>🤖</span>
-                    <span>Copy Brief Cho AI</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors"
+                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
                   >
                     <span>✏️</span>
                     <span>Sửa hồ sơ</span>
@@ -1728,7 +1687,7 @@
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
                     title="Xoá khách hàng này"
                   >
                     🗑️
@@ -2142,17 +2101,6 @@
             if (client) {
               openUploadModal(client);
             }
-          });
-        });
-
-        // Copy AI Brief
-        document.querySelectorAll('.btn-copy-brief').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const cid = btn.getAttribute('data-cid');
-            const client = clientsCache.find(x => x.id === cid);
-            if (!client) return;
-            navigator.clipboard.writeText(client.aiPrompt);
-            showToast(`Đã copy toàn bộ Brief chuẩn Antigravity của "${client.businessName || client.name || client.email}"!`);
           });
         });
 
@@ -2651,14 +2599,6 @@
         adminKeyInput.value = '';
         adminKeyInput.focus();
         showToast('Đã đăng xuất và khoá bảng điều khiển.');
-      });
-
-      // Copy AI API Command
-      document.getElementById('btn-copy-ai-command').addEventListener('click', () => {
-        const apiUrl = `${window.location.origin}/api/briefs?key=${encodeURIComponent(adminKey)}`;
-        const commandText = `Hãy truy cập API ${apiUrl} để lấy thông tin Brief của khách hàng mới nhất trên WynnPages và thiết kế trang web hoàn chỉnh theo đúng ngành nghề, bảng màu và phong cách khách yêu cầu.`;
-        navigator.clipboard.writeText(commandText);
-        showToast('Đã copy câu lệnh cho AI! Bạn chỉ cần dán thẳng câu lệnh đó vào khung chat AI bất cứ lúc nào.');
       });
 
       // Settings Modal
