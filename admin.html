@@ -483,14 +483,14 @@
     </div>
   </div>
 
-  <!-- Modal: Upload Demo Source Code (Single HTML or ZIP bundle) -->
+  <!-- Modal: Upload Demo Source Code & 1-Click Nails Atelier Generator -->
   <div id="modal-upload-demo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[92vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[92vh] overflow-y-auto">
       <div class="flex items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
         <div>
-          <h3 class="text-xl font-extrabold text-stone-900 flex items-center gap-2">
-            <span>📦 Tải Lên Source Code Web Demo</span>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#fbdeb9] text-[#96432b]">Cloudflare KV Native</span>
+          <h3 class="text-xl font-extrabold text-stone-900 flex items-center gap-2 flex-wrap">
+            <span>🎨 Dựng Khung Nails Atelier / Tải Source Code</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#fbdeb9] text-[#96432b]">KV Native Edge</span>
           </h3>
           <p class="text-xs text-stone-500 mt-1">
             Tiệm: <strong class="text-stone-900 text-sm" id="up-biz-name">—</strong>
@@ -501,26 +501,103 @@
       </div>
 
       <div class="space-y-4 text-xs">
-        <!-- Explanatory Guide Box -->
-        <div class="p-3.5 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] text-stone-600 leading-relaxed space-y-1.5">
-          <p class="font-bold text-stone-900 flex items-center gap-1.5">
-            <span>💡 Cơ chế hoạt động Native không cần Repo riêng:</span>
-          </p>
-          <ul class="list-disc list-inside space-y-1 text-[11px] text-stone-600">
-            <li>Bạn có thể tải <strong>1 file .html đơn lẻ</strong> HOẶC <strong>1 file .zip</strong> (chứa <code>index.html</code> và thư mục hình ảnh <code>assets/</code>, <code>images/</code>...).</li>
-            <li>Hệ thống tự động bung nén và lưu toàn bộ ảnh &amp; file tĩnh lên Cloudflare KV. Web tải siêu tốc tại rìa mạng Úc (Sydney/Melbourne).</li>
-            <li>Thanh Claim Mua $599 AUD thương hiệu WynnPages sẽ được tự động gắn vào đáy trang demo.</li>
-            <li>Sau khi khách mua $599 và gắn tên miền riêng, toàn bộ mã này sẽ chạy trực tiếp trên tên miền chính thức của khách (tắt thanh $599)!</li>
-          </ul>
+        <!-- 1-CLICK NAILS ATELIER GENERATOR -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-[#fcf9f3] to-[#f4ece0] border-2 border-[#d8c39e] space-y-3.5 shadow-2xs">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p class="font-extrabold text-stone-900 text-sm flex items-center gap-1.5">
+                <span>✨ 1-Click Dựng Khung Xương Nails Atelier (Sơn Dầu &amp; Ánh Kim)</span>
+              </p>
+              <p class="text-[11px] text-stone-600 mt-0.5">
+                Tự động khắc dấu sáp vàng chữ cái đầu tên tiệm, gắn 6 bức sơn dầu độc quyền &amp; Menu mẫu chuẩn Úc trong 2 giây.
+              </p>
+            </div>
+            <button
+              type="button"
+              id="btn-copy-antigravity-pull"
+              class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 shrink-0 cursor-pointer"
+              title="Copy lệnh mở dự án riêng của tiệm này trong Antigravity để sửa Menu thật / Logo / Vẽ thêm ảnh"
+            >
+              <span>🤖 Copy Lệnh Kéo Về Antigravity</span>
+            </button>
+          </div>
+
+          <!-- 3 Fixed Haute Couture Palettes -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label class="atelier-palette-card cursor-pointer rounded-xl border-2 border-[#96432b] bg-white p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="01">
+              <input type="radio" name="atelier-palette" value="01" checked class="accent-[#96432b]">
+              <span class="flex -space-x-1.5 shrink-0">
+                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#F6F1E8"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#96432B"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#C5A059"></span>
+              </span>
+              <span class="leading-tight">
+                <strong class="block text-[11px] text-stone-900">01 • Terracotta Gold</strong>
+                <span class="text-[10px] text-stone-500">Lụa kem &amp; Vàng kim</span>
+              </span>
+            </label>
+
+            <label class="atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="02">
+              <input type="radio" name="atelier-palette" value="02" class="accent-[#8C4A52]">
+              <span class="flex -space-x-1.5 shrink-0">
+                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#FBF7F6"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#8C4A52"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#D4AF7A"></span>
+              </span>
+              <span class="leading-tight">
+                <strong class="block text-[11px] text-stone-900">02 • Rose Silk</strong>
+                <span class="text-[10px] text-stone-500">Hồng khô &amp; Espresso</span>
+              </span>
+            </label>
+
+            <label class="atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="03">
+              <input type="radio" name="atelier-palette" value="03" class="accent-[#3B5243]">
+              <span class="flex -space-x-1.5 shrink-0">
+                <span class="w-4 h-4 rounded-full border border-stone-300" style="background:#F4F5F0"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#3B5243"></span>
+                <span class="w-4 h-4 rounded-full border border-white" style="background:#C29F61"></span>
+              </span>
+              <span class="leading-tight">
+                <strong class="block text-[11px] text-stone-900">03 • Botanical Sage</strong>
+                <span class="text-[10px] text-stone-500">Thảo mộc Úc &amp; Đá cẩm</span>
+              </span>
+            </label>
+          </div>
+
+          <!-- Quick Salon Metadata Hydration Inputs -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">Địa chỉ / Suburb hiển thị trên Web</label>
+              <input type="text" id="atelier-quick-address" placeholder="VD: 142 High St, Armadale VIC" class="w-full atelier-input rounded-xl px-3 py-2 text-xs bg-white">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">Link Booking / Instagram / FB (Tuỳ chọn)</label>
+              <input type="text" id="atelier-quick-socials" placeholder="VD: @maisonelan, fresha.com/..." class="w-full atelier-input rounded-xl px-3 py-2 text-xs bg-white">
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="btn-generate-nails-atelier"
+            class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-[#96432b] text-[#fcf9f3] text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>
+          </button>
+        </div>
+
+        <div class="relative flex items-center py-0.5">
+          <div class="flex-grow border-t border-[#e5dec9]"></div>
+          <span class="shrink-0 mx-3 text-[10px] font-extrabold uppercase tracking-wider text-stone-400">Hoặc tải lên file .ZIP / .HTML từ máy tính</span>
+          <div class="flex-grow border-t border-[#e5dec9]"></div>
         </div>
 
         <!-- Dropzone -->
-        <div id="demo-dropzone" class="border-2 border-dashed border-[#d8ccb8] hover:border-[#96432b] bg-[#faf6ee] hover:bg-[#f6efe1] rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2">
+        <div id="demo-dropzone" class="border-2 border-dashed border-[#d8ccb8] hover:border-[#96432b] bg-[#faf6ee] hover:bg-[#f6efe1] rounded-2xl p-5 text-center cursor-pointer transition-all space-y-1.5">
           <input type="file" id="demo-file-input" accept=".html,.htm,.zip" class="hidden">
-          <div class="w-12 h-12 mx-auto rounded-full bg-white shadow-xs flex items-center justify-center text-2xl text-[#96432b]">
+          <div class="w-10 h-10 mx-auto rounded-full bg-white shadow-xs flex items-center justify-center text-xl text-[#96432b]">
             📁
           </div>
-          <p class="font-extrabold text-stone-800 text-sm">
+          <p class="font-extrabold text-stone-800 text-xs sm:text-sm">
             Kéo thả file <span class="text-[#96432b]">.zip</span> hoặc <span class="text-[#96432b]">.html</span> vào đây
           </p>
           <p class="text-[11px] text-stone-500">hoặc click để chọn file từ máy tính (Tối đa 25MB)</p>
@@ -546,7 +623,7 @@
         <!-- Upload Progress & Status -->
         <div id="upload-progress-box" class="hidden space-y-2">
           <div class="flex items-center justify-between text-[11px] font-bold text-stone-700">
-            <span id="upload-status-text">Đang tải lên Cloudflare KV...</span>
+            <span id="upload-status-text">Đang tải lên KV...</span>
             <span id="upload-percent-text">0%</span>
           </div>
           <div class="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
@@ -560,7 +637,7 @@
           Đóng
         </button>
         <button type="button" id="btn-submit-bundle" disabled class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-2">
-          <span>🚀 Lưu &amp; Kích Hoạt Demo Lên Cloudflare</span>
+          <span>🚀 Lưu &amp; Kích Hoạt File Đã Chọn</span>
         </button>
       </div>
     </div>
@@ -1117,9 +1194,18 @@
                         data-slug="${escapeHtml(c.demoSlug || '')}"
                         data-name="${escapeHtml(titleName)}"
                         class="btn-open-upload-modal px-3 py-1.5 rounded-xl ${c.demoSourceType === 'kv' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-[#96432b] hover:bg-[#7d3520]'} text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                        title="Tải lên gói source code HTML/ZIP để lưu trữ native trên Cloudflare KV"
+                        title="Dựng khung Nails Atelier 1-Click hoặc tải gói source code HTML/ZIP"
                       >
-                        <span>📤 ${c.demoSourceType === 'kv' ? `Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Tải Lên Code (ZIP/HTML)'}</span>
+                        <span>🎨 ${c.demoSourceType === 'kv' ? `Đổi Khung / Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Dựng Khung Nails / Tải Code'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-slug="${escapeHtml(c.demoSlug || '')}"
+                        class="btn-copy-ag-cmd px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy lệnh mở folder riêng clients/<slug>/ trên Antigravity để sửa sâu"
+                      >
+                        <span>🤖 Kéo Về Antigravity</span>
                       </button>
                       ${hasValidDemo ? `
                         <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1">
@@ -1615,9 +1701,18 @@
                         type="button"
                         data-cid="${c.id}"
                         data-slug="${escapeHtml(c.demoSlug || '')}"
-                        class="btn-upload-code px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        class="btn-open-upload-modal px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
-                        <span>📥 Tải Lên Code (ZIP/HTML)</span>
+                        <span>🎨 Dựng Khung Nails / Tải Code</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        data-slug="${escapeHtml(c.demoSlug || '')}"
+                        class="btn-copy-ag-cmd px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy lệnh mở folder riêng clients/<slug>/ trên Antigravity để sửa sâu"
+                      >
+                        <span>🤖 Kéo Về Antigravity</span>
                       </button>
                       <a href="${escapeHtml(c.demoUrl || c.brandedDemoUrl || ('https://' + (c.demoSlug || c.id) + '.wynnpages.com.au'))}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-200/80 hover:bg-stone-300/80 text-xs font-bold text-stone-800 inline-flex items-center gap-1">
                         <span>👁️ Mở Demo ↗</span>
@@ -1908,7 +2003,20 @@
             const client = clientsCache.find(x => x.id === cid);
             if (!client) return;
             navigator.clipboard.writeText(client.aiPrompt);
-            showToast(`Đã copy toàn bộ Brief của "${client.businessName || client.name || client.email}"!`);
+            showToast(`Đã copy toàn bộ Brief chuẩn Antigravity của "${client.businessName || client.name || client.email}"!`);
+          });
+        });
+
+        // Copy Antigravity Pull Command for a specific client
+        document.querySelectorAll('.btn-copy-ag-cmd').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const slug = (client && client.demoSlug) || btn.getAttribute('data-slug') || cid;
+            const biz = (client && (client.businessName || client.name)) || slug;
+            const cmd = `Kéo dự án "${biz}" về máy bằng lệnh \`node scripts/atelier-sync.mjs pull ${slug}\`, đọc \`clients/${slug}/ATELIER_MANIFEST.md\` và chỉnh sửa theo đúng chuẩn WynnPages Atelier như sau: `;
+            navigator.clipboard.writeText(cmd);
+            showToast(`Đã copy lệnh kéo dự án "${slug}"! Hãy mở + New Chat trên Antigravity và dán vào.`);
           });
         });
 
@@ -2048,7 +2156,7 @@
             btn.disabled = false;
             btn.innerHTML = origText;
             if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {
-              showToast(`🎉 Đã tạo Cloudflare Zone & tự động gửi mail cấu hình DNS cho khách! Nameservers: ${res.liveDomainBindResult.nameservers}`);
+              showToast(`🎉 Đã lưu tên miền & tạo DNS Zone thành công! Nameservers: ${res.liveDomainBindResult.nameservers} (Bấm nút "Gửi Mail DNS" nếu muốn gửi hướng dẫn cho khách).`);
             } else if (res && res.ok) {
               showToast('Đã lưu Tên Miền Chính Thức!');
             }
@@ -2456,6 +2564,112 @@
         return ['html', 'htm', 'css', 'js', 'mjs', 'json', 'svg', 'txt', 'xml'].includes(ext);
       }
 
+      const atelierQuickAddress = document.getElementById('atelier-quick-address');
+      const atelierQuickSocials = document.getElementById('atelier-quick-socials');
+      const btnGenerateNailsAtelier = document.getElementById('btn-generate-nails-atelier');
+      const btnCopyAntigravityPull = document.getElementById('btn-copy-antigravity-pull');
+
+      function syncPaletteCardHighlight() {
+        const selected = (document.querySelector('input[name="atelier-palette"]:checked') || {}).value || '01';
+        document.querySelectorAll('.atelier-palette-card').forEach((card) => {
+          const isMatch = card.getAttribute('data-pal-card') === selected;
+          card.className = isMatch
+            ? 'atelier-palette-card cursor-pointer rounded-xl border-2 border-[#96432b] bg-white p-2.5 flex items-center gap-2.5 transition-all shadow-2xs'
+            : 'atelier-palette-card cursor-pointer rounded-xl border border-[#e2d9c8] hover:border-stone-400 bg-white/80 p-2.5 flex items-center gap-2.5 transition-all';
+        });
+      }
+
+      document.querySelectorAll('input[name="atelier-palette"]').forEach((r) => {
+        r.addEventListener('change', syncPaletteCardHighlight);
+      });
+
+      function parseSocialAndBookingBrowser(raw) {
+        const result = { instagramUrl: '', instagramHandle: '', facebookUrl: '', bookingUrl: '' };
+        if (!raw) return result;
+        const tokens = String(raw).split(/[\s,|;]+/).map(s => s.trim()).filter(Boolean);
+        for (const t of tokens) {
+          const lower = t.toLowerCase();
+          if (lower.includes('instagram.com/') || lower.startsWith('@')) {
+            if (lower.startsWith('@')) {
+              result.instagramHandle = t;
+              result.instagramUrl = `https://instagram.com/${t.slice(1)}`;
+            } else {
+              result.instagramUrl = t.startsWith('http') ? t : `https://${t}`;
+              const m = result.instagramUrl.match(/instagram\.com\/([^/?#]+)/i);
+              if (m && m[1]) result.instagramHandle = `@${m[1]}`;
+            }
+          } else if (lower.includes('facebook.com/') || lower.includes('fb.com/')) {
+            result.facebookUrl = t.startsWith('http') ? t : `https://${t}`;
+          } else if (
+            lower.includes('fresha.com') ||
+            lower.includes('timely') ||
+            lower.includes('squareup.com') ||
+            lower.includes('square.site') ||
+            lower.includes('vagaro.com') ||
+            lower.includes('booksy.com') ||
+            lower.includes('treatwell') ||
+            lower.startsWith('http')
+          ) {
+            if (!result.bookingUrl) {
+              result.bookingUrl = t.startsWith('http') ? t : `https://${t}`;
+            }
+          }
+        }
+        return result;
+      }
+
+      function hydrateNailsAtelierHtml(templateHtml, client, palette, customAddress, customSocials) {
+        const bizName = (client && (client.businessName || client.name)) || 'Maison Élan';
+        const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'A';
+        const address = (customAddress !== undefined ? customAddress : (client && client.businessAddress)) || '';
+        const displayPhone = (client && (client.displayPhone || client.phone)) || '';
+        const smsPhone = (client && (client.phone || client.displayPhone)) || '';
+        const email = (client && client.email) || '';
+        const rawSocials = customSocials !== undefined ? customSocials : (client && client.socialLinks);
+        const parsedLinks = parseSocialAndBookingBrowser(rawSocials);
+
+        let html = templateHtml.replace(/data-palette="0[123]"/, `data-palette="${palette}"`);
+
+        const patchStringField = (fieldName, newValue) => {
+          if (newValue === undefined || newValue === null) return;
+          const escaped = JSON.stringify(String(newValue));
+          const re = new RegExp(`(${fieldName}:\\s*)"[^"]*"`);
+          html = html.replace(re, `$1${escaped}`);
+        };
+
+        patchStringField('palette', palette);
+        patchStringField('salonName', bizName);
+        patchStringField('monogram', monogram);
+
+        const safeTitleBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const shortLoc = address ? address.split(',')[0].trim().replace(/&/g, '&amp;') : 'Australia';
+        html = html.replace(
+          /<title id="page-meta-title">[\s\S]*?<\/title>/,
+          `<title id="page-meta-title">${safeTitleBiz} — Bespoke BIAB &amp; Nail Sanctuary | ${shortLoc}</title>`
+        );
+        html = html.replace(
+          /<meta property="og:title" content="[^"]*">/,
+          `<meta property="og:title" content="${safeTitleBiz.replace(/"/g, '&quot;')} — Bespoke BIAB &amp; Hand Care">`
+        );
+
+        if (address) {
+          patchStringField('address', address);
+          patchStringField('mapsQuery', `${address}, Australia`);
+          const shortSuburb = address.split(',')[0].trim();
+          patchStringField('suburb', shortSuburb);
+          patchStringField('heroBadge', `${shortSuburb} • BIAB & Non-Toxic Nail Sanctuary`);
+        }
+        if (displayPhone) patchStringField('displayPhone', displayPhone);
+        if (smsPhone) patchStringField('smsPhone', smsPhone);
+        if (email) patchStringField('email', email);
+        if (parsedLinks.bookingUrl) patchStringField('bookingUrl', parsedLinks.bookingUrl);
+        if (parsedLinks.instagramUrl) patchStringField('instagramUrl', parsedLinks.instagramUrl);
+        if (parsedLinks.instagramHandle) patchStringField('instagramHandle', parsedLinks.instagramHandle);
+        if (parsedLinks.facebookUrl) patchStringField('facebookUrl', parsedLinks.facebookUrl);
+
+        return html;
+      }
+
       function resetUploadState() {
         preparedBundleFiles = [];
         demoFileInput.value = '';
@@ -2464,8 +2678,12 @@
         uploadProgressBox.classList.add('hidden');
         uploadProgressBar.style.width = '0%';
         btnSubmitBundle.disabled = true;
-        btnSubmitBundle.innerHTML = '<span>🚀 Lưu &amp; Kích Hoạt Demo Lên Cloudflare</span>';
+        btnSubmitBundle.innerHTML = '<span>🚀 Lưu &amp; Kích Hoạt File Đã Chọn</span>';
         demoFilesBreakdown.innerHTML = '';
+        if (btnGenerateNailsAtelier) {
+          btnGenerateNailsAtelier.disabled = false;
+          btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>';
+        }
       }
 
       function openUploadModal(client) {
@@ -2474,7 +2692,90 @@
         upBizName.textContent = client.businessName || client.name || 'Khách hàng';
         const slug = client.demoSlug || client.id.toLowerCase();
         upSlugDisplay.textContent = `https://${slug}.wynnpages.com.au`;
+        if (atelierQuickAddress) atelierQuickAddress.value = client.businessAddress || '';
+        if (atelierQuickSocials) atelierQuickSocials.value = client.socialLinks || '';
+        syncPaletteCardHighlight();
         uploadModal.classList.remove('hidden');
+      }
+
+      if (btnCopyAntigravityPull) {
+        btnCopyAntigravityPull.addEventListener('click', () => {
+          if (!currentUploadClient) return;
+          const slug = currentUploadClient.demoSlug || currentUploadClient.id.toLowerCase();
+          const biz = currentUploadClient.businessName || currentUploadClient.name || slug;
+          const cmd = `Kéo dự án "${biz}" về máy bằng lệnh \`node scripts/atelier-sync.mjs pull ${slug}\`, đọc \`clients/${slug}/ATELIER_MANIFEST.md\` và chỉnh sửa theo đúng chuẩn WynnPages Atelier như sau: `;
+          navigator.clipboard.writeText(cmd);
+          showToast(`Đã copy lệnh kéo dự án "${slug}"! Hãy mở + New Chat trên Antigravity và dán vào.`);
+        });
+      }
+
+      if (btnGenerateNailsAtelier) {
+        btnGenerateNailsAtelier.addEventListener('click', async () => {
+          if (!currentUploadClient) return;
+          const palette = (document.querySelector('input[name="atelier-palette"]:checked') || {}).value || '01';
+          const customAddr = atelierQuickAddress ? atelierQuickAddress.value.trim() : '';
+          const customSoc = atelierQuickSocials ? atelierQuickSocials.value.trim() : '';
+
+          btnGenerateNailsAtelier.disabled = true;
+          btnGenerateNailsAtelier.innerHTML = '<span>⏳ Đang dựng khung sơn dầu &amp; xuất bản lên Edge...</span>';
+
+          try {
+            const tplRes = await fetch('/templates/nails-atelier.html', { cache: 'no-cache' });
+            if (!tplRes.ok) throw new Error('Không tải được khung mẫu /templates/nails-atelier.html');
+            const rawTemplate = await tplRes.text();
+            const hydratedHtml = hydrateNailsAtelierHtml(rawTemplate, currentUploadClient, palette, customAddr, customSoc);
+
+            // Persist quick address/socials to client metadata if newly updated
+            if (
+              (customAddr && customAddr !== (currentUploadClient.businessAddress || '')) ||
+              (customSoc && customSoc !== (currentUploadClient.socialLinks || ''))
+            ) {
+              await fetch('/api/admin/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'save_client',
+                  adminKey,
+                  customerId: currentUploadClient.id,
+                  businessAddress: customAddr || currentUploadClient.businessAddress || '',
+                  socialLinks: customSoc || currentUploadClient.socialLinks || '',
+                  credentials: localCreds
+                })
+              }).catch(() => {});
+            }
+
+            const upRes = await fetch('/api/upload-demo-bundle', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': adminKey
+              },
+              body: JSON.stringify({
+                adminKey,
+                customerId: currentUploadClient.id,
+                slug: currentUploadClient.demoSlug,
+                files: [{
+                  path: '/index.html',
+                  type: 'text/html; charset=utf-8',
+                  text: hydratedHtml
+                }],
+                credentials: localCreds
+              })
+            });
+            const data = await upRes.json().catch(() => ({}));
+            if (!upRes.ok || !data.ok) {
+              throw new Error(data.error || 'Không thể lưu bản dựng lên hệ thống');
+            }
+
+            showToast(`🎉 Đã dựng Khung Nails Atelier (Bộ màu ${palette}) thành công tại: ${data.demoUrl}`);
+            closeUploadModal();
+            await loadClients();
+          } catch (err) {
+            showToast(`Lỗi dựng khung Nails: ${err.message}`, true);
+            btnGenerateNailsAtelier.disabled = false;
+            btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>';
+          }
+        });
       }
 
       function closeUploadModal() {

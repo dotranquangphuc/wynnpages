@@ -1,3 +1,5 @@
 .agents/
 .wrangler/
 tailwindcss-macos-arm64
+.DS_Store
+clients/*/_client_uploads/

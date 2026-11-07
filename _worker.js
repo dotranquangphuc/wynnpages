@@ -432,8 +432,12 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
 }
 
 function buildAiPromptForClient(c) {
+  const slug = c.demoSlug || slugifyName(c.businessName || c.name || c.id);
   return [
-    `=== WYNNPAGES ATELIER AI DESIGN BRIEF ===`,
+    `=== WYNNPAGES ATELIER — ANTIGRAVITY PROJECT BRIEF ===`,
+    `Project Slug: ${slug}`,
+    `Local Workspace Folder: clients/${slug}/`,
+    `Live Demo Subdomain: https://${slug}.wynnpages.com.au`,
     `Client / Account Name: ${c.name || 'N/A'}`,
     `Business Name (Trading Name): ${c.businessName || c.name || 'N/A'}`,
     `Client Email: ${c.email || 'N/A'}`,
@@ -441,21 +445,20 @@ function buildAiPromptForClient(c) {
     `Display Phone (For Website): ${c.displayPhone || c.phone || 'N/A'}`,
     `Business Address / Service Area: ${c.businessAddress || 'N/A'}`,
     `Social Media & Booking Links: ${c.socialLinks || 'N/A'}`,
-    `Brief Type: ${c.briefType || 'organic'}`,
-    `Current Stage: ${c.stage || 'brief_completed'}`,
-    `Industry / Niche: ${c.industry || 'See notes'}`,
-    `Preferred Brand Colors: ${c.brandColors || 'Curated Atelier Palette'}`,
+    `Brief Type: ${c.briefType || 'organic'} | Stage: ${c.stage || 'brief_completed'}`,
+    `Industry / Niche: ${c.industry || 'Nail Salon / Beauty Atelier'}`,
+    `Client Color Notes: ${c.brandColors || 'Select best match from Haute Couture Palettes 01, 02, or 03'}`,
     `Reference Websites / Vibe Links: ${c.vibeLinks || 'N/A'}`,
-    `Has Existing Domain?: ${c.hasDomain || 'N/A'}`,
-    `Existing Domain: ${c.existingDomain || 'N/A'}`,
-    `Desired Domains to Check: ${c.desiredDomains || 'N/A'}`,
-    `Logo Asset: ${c.logoFileName || 'N/A'} ${c.logoFileId ? `(Stripe File ID: ${c.logoFileId})` : ''}`,
-    `Menu / Pricing Asset: ${c.menuFileName || 'N/A'} ${c.menuFileId ? `(Stripe File ID: ${c.menuFileId})` : ''}`,
-    `Professional Photos?: ${c.hasPhotos || 'N/A'} ${c.photosFileName ? `(${c.photosFileName})` : ''} ${c.photosFileId ? `[Stripe File ID: ${c.photosFileId}]` : ''}`,
-    `Demo URL: ${c.demoUrl || 'Not assigned yet'}`,
-    `Submitted At: ${c.submittedAt || 'N/A'}`,
-    `=========================================`,
-    `Instruction for AI: Design and code a bespoke, high-converting Australian small-business website for "${c.businessName || c.name || 'Local Business'}" (${c.industry || 'Service Business'}) located at "${c.businessAddress || 'Australia'}", displaying phone "${c.displayPhone || c.phone || ''}", social/booking links "${c.socialLinks || ''}", incorporating the color palette "${c.brandColors || 'Warm Parchment & Terracotta'}" and drawing layout/vibe inspiration from "${c.vibeLinks || 'WynnPages Atelier aesthetic'}".`
+    `Domain Info: Existing=${c.existingDomain || 'N/A'} | Desired=${c.desiredDomains || 'N/A'} | Official=${c.liveUrl || 'N/A'}`,
+    `Uploaded Logo: ${c.logoFileName || 'None (Use Tier A Embossed Gold Wax Monogram Seal)'}`,
+    `Uploaded Menu / Price List: ${c.menuFileName || 'None (Use curated Australian AUD sample menu)'}`,
+    `Uploaded Photos: ${c.photosFileName || c.hasPhotos || 'None (Use Atelier Fine-Art Oil + Gold-Leaf Vault)'}`,
+    `=====================================================`,
+    `ANTIGRAVITY EXECUTION WORKFLOW:`,
+    `1. Pull or initialize the local client workspace: \`node scripts/atelier-sync.mjs pull ${slug}\` (this also downloads any uploaded menu/logo into \`clients/${slug}/_client_uploads/\`).`,
+    `2. Read \`clients/GEMINI.md\` and \`clients/${slug}/ATELIER_MANIFEST.md\`. Strictly enforce the WynnPages Bespoke Oil-Painting & Gold-Leaf aesthetic, 3 fixed Haute Couture Palettes (01 Terracotta & Gold, 02 Rose Silk & Espresso, 03 Botanical Sage), editorial Cormorant Garamond italic heading accents, and ZERO emojis.`,
+    `3. Customize \`clients/${slug}/index.html\` (\`window.ATELIER_CONFIG\` & \`window.SALON_MENU_DATA\`, or transcribe real menu prices from \`_client_uploads/\` if present).`,
+    `4. Push live immediately when done: \`node scripts/atelier-sync.mjs push ${slug}\` and verify \`https://${slug}.wynnpages.com.au\`.`
   ].join('\n');
 }
 
@@ -2242,10 +2245,15 @@ export default {
           filesList: Array.from(newPathsSet)
         }));
 
-        // 4. Update customer in Stripe if customerId exists
+        // 4. Update customer in Stripe if customerId exists (or auto-resolve by slug)
         const brandedDemoUrl = `https://${targetSlug}.wynnpages.com.au`;
+        let resolvedCustomerId = customerId;
+        if (!resolvedCustomerId && effectiveCfg.stripeSecretKey) {
+          const matched = await findCustomerBySlugOrId(targetSlug, effectiveCfg.stripeSecretKey).catch(() => null);
+          if (matched && matched.id) resolvedCustomerId = matched.id;
+        }
         let updatedCustRecord = null;
-        if (customerId && effectiveCfg.stripeSecretKey) {
+        if (resolvedCustomerId && effectiveCfg.stripeSecretKey) {
           const uParams = new URLSearchParams();
           uParams.append('metadata[demo_source_type]', 'kv');
           uParams.append('metadata[demo_files_count]', String(files.length));
@@ -2253,7 +2261,7 @@ export default {
           uParams.append('metadata[demo_slug]', targetSlug);
           uParams.append('metadata[demo_url]', brandedDemoUrl);
 
-          const uRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+          const uRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(resolvedCustomerId)}`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
@@ -2276,6 +2284,67 @@ export default {
           demoUrl: brandedDemoUrl,
           filesCount: files.length,
           client: updatedCustRecord
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 4d. Export Client Demo Bundle for Antigravity Local Editing (GET /api/demo-bundle?slug=xxx&key=...)
+    if (url.pathname === '/api/demo-bundle' && request.method === 'GET') {
+      try {
+        const providedKey = url.searchParams.get('key') || request.headers.get('x-admin-key') || '';
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Unauthorized. Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        }
+
+        const rawSlugOrId = (url.searchParams.get('slug') || url.searchParams.get('cid') || '').trim();
+        if (!rawSlugOrId) {
+          return new Response(JSON.stringify({ error: 'Missing ?slug= or ?cid= parameter.' }), { status: 400, headers: corsHeaders });
+        }
+
+        const client = cfg.stripeSecretKey
+          ? await findCustomerBySlugOrId(rawSlugOrId, cfg.stripeSecretKey).catch(() => null)
+          : null;
+        const targetSlug = slugifyName((client && client.demoSlug) || rawSlugOrId);
+
+        let meta = null;
+        const files = [];
+        if (env && env.WYNN_KV && targetSlug) {
+          meta = await env.WYNN_KV.get(`site_meta:${targetSlug}`, 'json').catch(() => null);
+          const pathsToRead = (meta && Array.isArray(meta.filesList) && meta.filesList.length)
+            ? meta.filesList
+            : ['/index.html'];
+
+          for (const p of pathsToRead) {
+            const normPath = p.startsWith('/') ? p : '/' + p;
+            const assetKey = `site_asset:${targetSlug}:${normPath}`;
+            const isText = /\.(html?|css|m?js|json|svg|txt|md|xml)$/i.test(normPath);
+            if (isText) {
+              const txt = await env.WYNN_KV.get(assetKey, 'text').catch(() => null);
+              if (txt !== null) {
+                files.push({ path: normPath, type: getMimeType(normPath), text: txt });
+              }
+            } else {
+              const obj = await env.WYNN_KV.getWithMetadata(assetKey, 'arrayBuffer').catch(() => null);
+              if (obj && obj.value) {
+                files.push({
+                  path: normPath,
+                  type: (obj.metadata && obj.metadata.mimeType) || getMimeType(normPath),
+                  base64: arrayBufferToBase64(obj.value)
+                });
+              }
+            }
+          }
+        }
+
+        return new Response(JSON.stringify({
+          ok: true,
+          slug: targetSlug,
+          demoUrl: `https://${targetSlug}.wynnpages.com.au`,
+          client,
+          meta,
+          files
         }), { status: 200, headers: corsHeaders });
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
