@@ -428,7 +428,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     email ? sendResendEmail({ to: email, subject: emailSubject, html: emailHtml, cfg }) : Promise.resolve({ sent: false, reason: 'No email on record' })
   ]);
 
-  return { smsResult, emailResult, stage };
+  return { smsResult, emailResult, stage, smsText, phone };
 }
 
 function buildAiPromptForClient(c) {
@@ -1135,7 +1135,7 @@ async function ensureCloudflareSubdomain(rawSlug, env, tokenOverride = '') {
   return false;
 }
 
-async function ensureCustomLiveDomainOnCloudflare(rawDomain, env) {
+async function ensureCustomLiveDomainOnCloudflare(rawDomain, env, tokenOverride = '') {
   const rootDomain = extractCleanHost(rawDomain);
   if (
     !rootDomain ||
@@ -1151,7 +1151,7 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env) {
 
   const accountId = '8daebe5da641a8b2fc3185586ba888e2';
   try {
-    let accessToken = await getValidCloudflareToken(env, false);
+    let accessToken = await getValidCloudflareToken(env, false, tokenOverride);
     if (!accessToken) return { attached: false, reason: 'no_token' };
 
     let zoneRes = await fetch(
@@ -1159,7 +1159,7 @@ async function ensureCustomLiveDomainOnCloudflare(rawDomain, env) {
       { headers: { 'Authorization': `Bearer ${accessToken}` } }
     );
     if (zoneRes.status === 401 || zoneRes.status === 403) {
-      accessToken = await getValidCloudflareToken(env, true);
+      accessToken = await getValidCloudflareToken(env, true, tokenOverride);
       if (accessToken) {
         zoneRes = await fetch(
           `https://api.cloudflare.com/client/v4/zones?name=${encodeURIComponent(rootDomain)}`,
@@ -2591,7 +2591,7 @@ export default {
           await ensureCloudflareSubdomain(formatted.demoSlug, env);
           let liveDomainBindResult = null;
           if (formatted.liveUrl) {
-            liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env);
+            liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
             if (liveDomainBindResult && liveDomainBindResult.nameservers && liveDomainBindResult.nameservers !== formatted.cfNameservers) {
               const nsParams = new URLSearchParams();
               nsParams.append('metadata[cf_nameservers]', liveDomainBindResult.nameservers.slice(0, 490));
@@ -2606,6 +2606,40 @@ export default {
               if (nsRes.ok) {
                 updatedCust = await nsRes.json();
                 formatted = formatCustomerRecord(updatedCust);
+              }
+
+              // Automatically send DNS configuration instructions email to the client!
+              if (formatted.email && effectiveCfg.resendApiKey && liveDomainBindResult.nameservers) {
+                const guideUrl = `${url.origin}/domain-guide?domain=${encodeURIComponent(formatted.liveUrl)}&name=${encodeURIComponent(formatted.businessName || formatted.name)}&email=${encodeURIComponent(formatted.email)}&cid=${encodeURIComponent(formatted.id)}&tab=existing&ns=${encodeURIComponent(liveDomainBindResult.nameservers)}`;
+                const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
+                const parts = liveDomainBindResult.nameservers.split(',').map(s => s.trim());
+
+                await sendResendEmail({
+                  to: formatted.email,
+                  subject: `Action Required: Configure DNS Nameservers for ${formatted.liveUrl}`,
+                  html: buildAtelierEmailHtml({
+                    preheader: `Cloudflare DNS Nameservers for ${formatted.liveUrl}`,
+                    heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
+                    bodyHtml: `
+                      <p>We have provisioned the Cloudflare high-speed network configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
+                      <p>To connect your domain to your bespoke website, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
+                      <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
+                        <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
+                        ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
+                      </div>
+                      <p><strong>Prefer zero technical hassle?</strong> You can also delegate access or reply with temporary registrar login credentials, and our Australian engineers will point it for you in 60 seconds.</p>
+                    `,
+                    primaryCta: {
+                      label: 'Open Domain Connection Guide →',
+                      url: guideUrl
+                    },
+                    secondaryCta: {
+                      label: 'Visit WynnPages Studio',
+                      url: url.origin
+                    }
+                  }),
+                  cfg: effectiveCfg
+                }).catch(() => {});
               }
             }
           }

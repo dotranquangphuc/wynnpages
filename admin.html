@@ -566,11 +566,51 @@
     </div>
   </div>
 
+  <!-- Modal: Mac iMessage / SMS Fallback -->
+  <div id="modal-mac-sms" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">💬</span>
+          <div>
+            <h3 class="text-base font-extrabold text-stone-900">Gửi SMS Qua Ứng Dụng Mac (iMessage)</h3>
+            <p class="text-xs text-stone-500 mt-0.5">Sử dụng SIM điện thoại iPhone miễn phí khi ClickSend hết số dư</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-mac-sms" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1">✕</button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+        <p class="font-bold">⚠️ Trạng thái ClickSend:</p>
+        <p id="mac-sms-reason" class="text-[11px] font-mono text-amber-800 break-words"></p>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="text-[11px] font-bold text-stone-600 block mb-1">Người nhận (SĐT):</label>
+          <input type="text" id="mac-sms-phone" readonly class="w-full atelier-input rounded-xl px-3.5 py-2 text-xs font-mono font-bold bg-stone-50">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-stone-600 block mb-1">Nội dung tin nhắn:</label>
+          <textarea id="mac-sms-body" rows="4" readonly class="w-full atelier-input rounded-xl px-3.5 py-2 text-xs font-mono bg-stone-50"></textarea>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-[#f0eade]">
+        <button type="button" id="btn-copy-mac-sms" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors">
+          📋 Copy Tin Nhắn
+        </button>
+        <a id="btn-open-mac-sms" href="#" class="px-4 py-2.5 rounded-xl bg-[#2e7d32] hover:bg-[#256628] text-white text-xs font-bold transition-colors text-center inline-flex items-center justify-center gap-1.5 shadow-xs">
+          <span>🚀 Mở Tin Nhắn Mac &amp; Gửi Ngay</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
-      // Never auto-login on load; always require entering password!
-      localStorage.removeItem('wynn_admin_key');
-      let adminKey = '';
+      // Auto-load saved admin key from localStorage if present
+      let adminKey = localStorage.getItem('wynn_admin_key') || '';
       let localCreds = JSON.parse(localStorage.getItem('wynn_Messaging_creds') || '{}');
       let clientsCache = [];
 
@@ -747,10 +787,11 @@
         try {
           const res = await fetch(`/api/briefs?key=${encodeURIComponent(adminKey)}`);
           if (res.status === 401) {
+            localStorage.removeItem('wynn_admin_key');
             authGate.classList.remove('hidden');
             dashboardContent.classList.add('hidden');
             document.getElementById('header-actions').classList.add('hidden');
-            showToast('Mã khoá quản trị không chính xác!', true);
+            showToast('Mã khoá quản trị không chính xác hoặc đã hết hạn!', true);
             adminKeyInput.value = '';
             adminKeyInput.focus();
             return;
@@ -758,6 +799,7 @@
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Lỗi tải dữ liệu');
 
+          localStorage.setItem('wynn_admin_key', adminKey);
           authGate.classList.add('hidden');
           dashboardContent.classList.remove('hidden');
           document.getElementById('header-actions').classList.remove('hidden');
@@ -890,7 +932,8 @@
           const hasValidLive = isValidUrl(resolvedLiveUrl);
           const isPaid = c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched';
           const isPitched = Boolean(c.demoSentAt) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
-          const isLaunched = c.stage === 'launched';
+          const isLaunched = c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
+          const canOpenLiveWeb = hasValidLive && isLaunched;
 
           const titleName = c.businessName
             ? `${c.businessName}${c.name && c.name !== c.businessName ? ` (${c.name})` : ''}`
@@ -1074,24 +1117,6 @@
                         <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1">
                           <span>👁️ Mở Demo ↗</span>
                         </a>
-                        <button
-                          type="button"
-                          data-cid="${c.id}"
-                          data-name="${escapeHtml(titleName)}"
-                          class="btn-copy-preview px-2.5 py-1.5 rounded-xl bg-[#1c1917] hover:bg-[#96432b] text-xs font-bold text-[#f6f1e8] transition-colors inline-flex items-center gap-1 cursor-pointer"
-                          title="Copy link Demo thương hiệu: ${escapeHtml(previewOverlayUrl)}"
-                        >
-                          <span>📋 Copy Link Demo</span>
-                        </button>
-                        <button
-                          type="button"
-                          data-cid="${c.id}"
-                          data-name="${escapeHtml(titleName)}"
-                          class="btn-copy-claim px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-[11px] font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                          title="Copy link thanh toán Stripe $599 trực tiếp"
-                        >
-                          <span>💳 Link Mua $599</span>
-                        </button>
                       ` : ''}
                     </div>
                   </div>
@@ -1129,11 +1154,15 @@
                       >
                         <span>📖 Xem HD ↗</span>
                       </a>
-                      ${hasValidLive ? `
+                      ${canOpenLiveWeb ? `
                         <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs">
                           <span>🚀 Mở Web Thật ↗</span>
                         </a>
-                      ` : ''}
+                      ` : (resolvedLiveUrl ? `
+                        <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-[10px] font-bold inline-flex items-center gap-1" title="Tên miền chưa trỏ DNS hoặc chưa lên sóng">
+                          <span>⏳ Chờ trỏ DNS / Chưa lên sóng</span>
+                        </span>
+                      ` : '')}
                     </div>
                   </div>
 
@@ -1145,23 +1174,44 @@
                       data-cid="${c.id}"
                       data-paid="${isPaid ? '1' : '0'}"
                       value="${escapeHtml(resolvedLiveUrl)}" 
-                      placeholder="${isPaid ? 'Nhập tên miền thật (VD: lushnailsbar.com.au) — Tự động gắn vào web & tắt thanh $599 khi lên sóng...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
+                      placeholder="${isPaid ? 'Nhập tên miền thật (VD: lushnailsbar.com.au) — Tự động cấu hình Cloudflare DNS & gửi mail cho khách...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập tên miền thật tại đây...'}" 
                       class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
                     >
                     <button 
                       type="button"
                       data-cid="${c.id}"
-                      class="btn-save-demo px-3 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                      class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
                     >
                       Lưu &amp; Cài Đặt Tên Miền
                     </button>
                   </div>
 
                   ${c.cfNameservers ? `
-                    <div class="text-[11px] text-emerald-900 bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
-                      <span>☁️ <strong>Đã tự động tạo cấu hình trên Cloudflare!</strong> Nameservers của khách: <code class="font-mono font-bold">${escapeHtml(c.cfNameservers)}</code></span>
+                    <div class="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-xs space-y-2">
+                      <div class="flex items-center justify-between flex-wrap gap-2">
+                        <span class="font-extrabold text-emerald-950 flex items-center gap-1.5 text-xs">
+                          <span>☁️ Cặp Nameservers Cloudflare cần trỏ cho tên miền này:</span>
+                        </span>
+                        <button 
+                          type="button" 
+                          data-ns="${escapeHtml(c.cfNameservers)}"
+                          class="btn-copy-ns text-[11px] font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-2xs inline-flex items-center gap-1"
+                        >
+                          <span>📋 Copy Cặp Nameservers</span>
+                        </button>
+                      </div>
+                      <div class="font-mono font-bold text-stone-900 bg-white p-2.5 rounded-xl border border-emerald-200 text-xs select-all">
+                        <code>${escapeHtml(c.cfNameservers)}</code>
+                      </div>
+                      <p class="text-[11px] text-emerald-800 leading-relaxed">
+                        ✉️ Đã tự động gửi email hướng dẫn cấu hình DNS tới <strong>${escapeHtml(c.email || 'khách hàng')}</strong>! Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") cũng sẽ thấy đúng cặp DNS này.
+                      </p>
                     </div>
-                  ` : ''}
+                  ` : (resolvedLiveUrl ? `
+                    <div class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
+                      <span>⚠️ Bấm <strong>"Lưu &amp; Cài Đặt Tên Miền"</strong> để hệ thống tự động tạo Zone trên Cloudflare, lấy cặp Nameservers và gửi mail cho khách!</span>
+                    </div>
+                  ` : '')}
                 </div>
 
                 <!-- 3 Outbound Automated SMS + Email Action Buttons -->
@@ -1356,6 +1406,8 @@
           const resolvedLiveUrl = (c.liveUrl || '').trim();
           const hasValidLive = isValidUrl(resolvedLiveUrl);
           const isPaid = c.paymentStatus !== 'unpaid';
+          const isLaunched = c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
+          const canOpenLiveWeb = hasValidLive && isLaunched;
           const canLaunch = isPaid && hasValidDemo && hasSentDemo && hasValidLive;
 
           const domainDisplay = c.existingDomain
@@ -1580,17 +1632,42 @@
                   >
                     <span>📖 Xem HD ↗</span>
                   </a>
-                  ${hasValidLive ? `
-                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1">
+                  ${canOpenLiveWeb ? `
+                    <a href="${escapeHtml(resolvedLiveUrl.startsWith('http') ? resolvedLiveUrl : 'https://' + resolvedLiveUrl)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-xs font-bold text-emerald-900 shrink-0 inline-flex items-center gap-1 shadow-2xs">
                       <span>Mở Web Thật ↗</span>
                     </a>
-                  ` : ''}
+                  ` : (resolvedLiveUrl ? `
+                    <span class="px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold shrink-0">
+                      <span>⏳ Chờ trỏ DNS / Chưa lên sóng</span>
+                    </span>
+                  ` : '')}
                 </div>
                 ${c.cfNameservers ? `
-                  <div class="text-[11px] text-emerald-900 bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
-                    <span>☁️ <strong>Đã tự động tạo cấu hình trên Cloudflare!</strong> Nameservers của khách: <code class="font-mono font-bold">${escapeHtml(c.cfNameservers)}</code></span>
+                  <div class="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-xs space-y-2">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                      <span class="font-extrabold text-emerald-950 flex items-center gap-1.5 text-xs">
+                        <span>☁️ Cặp Nameservers Cloudflare cần trỏ cho tên miền này:</span>
+                      </span>
+                      <button 
+                        type="button" 
+                        data-ns="${escapeHtml(c.cfNameservers)}"
+                        class="btn-copy-ns text-[11px] font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-2xs inline-flex items-center gap-1"
+                      >
+                        <span>📋 Copy Cặp Nameservers</span>
+                      </button>
+                    </div>
+                    <div class="font-mono font-bold text-stone-900 bg-white p-2.5 rounded-xl border border-emerald-200 text-xs select-all">
+                      <code>${escapeHtml(c.cfNameservers)}</code>
+                    </div>
+                    <p class="text-[11px] text-emerald-800 leading-relaxed">
+                      ✉️ Đã tự động gửi email hướng dẫn cấu hình DNS tới <strong>${escapeHtml(c.email || 'khách hàng')}</strong>! Khách mở trang Hướng dẫn (bấm "📖 Xem HD ↗") cũng sẽ thấy đúng cặp DNS này.
+                    </p>
                   </div>
-                ` : ''}
+                ` : (resolvedLiveUrl ? `
+                  <div class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
+                    <span>⚠️ Bấm <strong>"Lưu &amp; Cài Đặt Tên Miền"</strong> để hệ thống tự động tạo Zone trên Cloudflare, lấy cặp Nameservers và gửi mail cho khách!</span>
+                  </div>
+                ` : '')}
 
                 <!-- 5 Smart Stage Trigger Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
@@ -1915,12 +1992,27 @@
             const liveInput = document.getElementById(`live-url-${cid}`);
             const demoUrl = demoInput ? demoInput.value.trim() : '';
             const liveUrl = liveInput ? liveInput.value.trim() : '';
-            btn.textContent = 'Đang lưu...';
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳ Đang tạo DNS...</span>';
+            btn.disabled = true;
             const res = await runAdminAction({ action: 'save_client', customerId: cid, demoUrl, liveUrl });
+            btn.disabled = false;
+            btn.innerHTML = origText;
             if (res && res.liveDomainBindResult && res.liveDomainBindResult.nameservers) {
-              showToast(`Đã lưu & tạo Cloudflare zone! Nameservers: ${res.liveDomainBindResult.nameservers}`);
-            } else {
+              showToast(`🎉 Đã tạo Cloudflare Zone & tự động gửi mail cấu hình DNS cho khách! Nameservers: ${res.liveDomainBindResult.nameservers}`);
+            } else if (res && res.ok) {
               showToast('Đã lưu Tên Miền Chính Thức!');
+            }
+          });
+        });
+
+        // Copy Cloudflare Nameservers
+        document.querySelectorAll('.btn-copy-ns').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const ns = btn.getAttribute('data-ns') || '';
+            if (ns) {
+              navigator.clipboard.writeText(ns);
+              showToast(`Đã copy cặp Cloudflare Nameservers: ${ns}`);
             }
           });
         });
@@ -1978,6 +2070,15 @@
                 : `Email: ${res.notifyRes.emailResult ? res.notifyRes.emailResult.reason : 'Bỏ qua'}`;
 
               showToast(`Kết quả [${stage}] → ${smsStatus} | ${emailStatus}`, !smsOk && !emailOk);
+
+              // If SMS failed via ClickSend and we have phone & smsText, open Mac SMS Fallback modal!
+              if (!smsOk && res.notifyRes.phone && res.notifyRes.smsText) {
+                openMacSmsModal({
+                  phone: res.notifyRes.phone,
+                  text: res.notifyRes.smsText,
+                  reason: (res.notifyRes.smsResult && res.notifyRes.smsResult.reason) || 'ClickSend chưa gửi được hoặc tài khoản hết số dư'
+                });
+              }
             } else {
               btn.disabled = false;
               btn.innerHTML = origHtml;
@@ -2530,6 +2631,34 @@
         }
       });
 
+      // Mac SMS Fallback modal helpers
+      function openMacSmsModal({ phone, text, reason }) {
+        const modal = document.getElementById('modal-mac-sms');
+        const reasonEl = document.getElementById('mac-sms-reason');
+        const phoneInput = document.getElementById('mac-sms-phone');
+        const bodyTextarea = document.getElementById('mac-sms-body');
+        const openLink = document.getElementById('btn-open-mac-sms');
+
+        reasonEl.textContent = reason || 'ClickSend không gửi được SMS hoặc tài khoản hết số dư.';
+        phoneInput.value = phone || '';
+        bodyTextarea.value = text || '';
+
+        const cleanPhone = (phone || '').replace(/[^0-9+]/g, '');
+        openLink.href = `sms:${cleanPhone}&body=${encodeURIComponent(text || '')}`;
+
+        modal.classList.remove('hidden');
+      }
+
+      document.getElementById('btn-close-mac-sms').addEventListener('click', () => {
+        document.getElementById('modal-mac-sms').classList.add('hidden');
+      });
+
+      document.getElementById('btn-copy-mac-sms').addEventListener('click', () => {
+        const bodyTextarea = document.getElementById('mac-sms-body');
+        navigator.clipboard.writeText(bodyTextarea.value);
+        showToast('Đã copy nội dung tin nhắn SMS!');
+      });
+
       function escapeHtml(str) {
         return String(str || '')
           .replace(/&/g, '&amp;')
@@ -2538,10 +2667,14 @@
           .replace(/"/g, '&quot;');
       }
 
-      // Do not auto-login on page load. User must submit the password form.
-      authGate.classList.remove('hidden');
-      dashboardContent.classList.add('hidden');
-      document.getElementById('header-actions').classList.add('hidden');
+      // Auto-login on load if key is saved in localStorage
+      if (adminKey) {
+        loadClients();
+      } else {
+        authGate.classList.remove('hidden');
+        dashboardContent.classList.add('hidden');
+        document.getElementById('header-actions').classList.add('hidden');
+      }
     })();
   </script>
 </body>
