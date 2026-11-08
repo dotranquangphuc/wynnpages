@@ -566,6 +566,7 @@ function formatCustomerRecord(cust) {
     driveFolderUrl: m.drive_folder_url || '',
     demoUrl: m.demo_url || brandedDemoUrl,
     demoSourceType: m.demo_source_type || 'url',
+    demoPalette: m.demo_palette || '01',
     demoFilesCount: Number(m.demo_files_count || 0),
     demoUploadedAt: m.demo_uploaded_at || '',
     liveUrl: m.live_url || '',
@@ -1172,7 +1173,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, s
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': isLiveDomain ? 'public, max-age=300' : 'no-cache, no-store, must-revalidate'
+          'Cache-Control': 'public, max-age=0, must-revalidate'
         }
       });
     }
@@ -2563,6 +2564,7 @@ export default {
         const nowIso = new Date().toISOString();
 
         // 1. Check previous manifest to clean up obsolete deleted files
+        const isPartial = body.partialUpdate === true;
         const metaKey = `site_meta:${targetSlug}`;
         const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
         const newPathsSet = new Set(files.map(f => {
@@ -2571,7 +2573,7 @@ export default {
           return p;
         }));
 
-        if (prevMeta && Array.isArray(prevMeta.filesList)) {
+        if (!isPartial && prevMeta && Array.isArray(prevMeta.filesList)) {
           const obsoleteDeletes = prevMeta.filesList
             .filter(oldPath => !newPathsSet.has(oldPath))
             .map(oldPath => env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => { }));
@@ -2617,14 +2619,18 @@ export default {
             if (nameMatch) detectedBizName = nameMatch[1];
           }
         }
+        const mergedFilesList = isPartial && prevMeta && Array.isArray(prevMeta.filesList)
+          ? Array.from(new Set([...prevMeta.filesList, ...newPathsSet]))
+          : Array.from(newPathsSet);
+
         await env.WYNN_KV.put(metaKey, JSON.stringify({
           slug: targetSlug,
           customerId: customerId || (cust && cust.id) || '',
           businessName: detectedBizName || (prevMeta && prevMeta.businessName) || '',
           palette: detectedPalette || (prevMeta && prevMeta.palette) || '01',
           uploadedAt: nowIso,
-          filesCount: files.length,
-          filesList: Array.from(newPathsSet)
+          filesCount: mergedFilesList.length,
+          filesList: mergedFilesList
         }));
 
         // 4. Update customer in Stripe if customerId exists (or auto-resolve by slug)
@@ -2638,10 +2644,13 @@ export default {
         if (resolvedCustomerId && effectiveCfg.stripeSecretKey) {
           const uParams = new URLSearchParams();
           uParams.append('metadata[demo_source_type]', 'kv');
-          uParams.append('metadata[demo_files_count]', String(files.length));
+          uParams.append('metadata[demo_files_count]', String(mergedFilesList.length));
           uParams.append('metadata[demo_uploaded_at]', nowIso);
           uParams.append('metadata[demo_slug]', targetSlug);
           uParams.append('metadata[demo_url]', brandedDemoUrl);
+          if (detectedPalette) {
+            uParams.append('metadata[demo_palette]', detectedPalette);
+          }
 
           const uRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(resolvedCustomerId)}`, {
             method: 'POST',
@@ -2737,6 +2746,108 @@ export default {
       }
     }
 
+    // 4d. Lossless In-Place Palette Switcher (POST /api/switch-palette)
+    if (url.pathname === '/api/switch-palette' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Unauthorized. Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        }
+
+        if (!env || !env.WYNN_KV) {
+          return new Response(JSON.stringify({ error: 'Cloudflare KV (WYNN_KV) is not bound or available!' }), { status: 500, headers: corsHeaders });
+        }
+
+        const validPalettes = ['01', '02', '03', '04', '05'];
+        const targetPalette = String(body.palette || '').trim();
+        if (!validPalettes.includes(targetPalette)) {
+          return new Response(JSON.stringify({ error: 'Mã bộ màu không hợp lệ (hỗ trợ 01 - 05).' }), { status: 400, headers: corsHeaders });
+        }
+
+        const rawSlug = (body.slug || '').trim();
+        const customerId = (body.customerId || '').trim();
+        let targetSlug = slugifyName(rawSlug);
+        let effectiveCfg = getConfig(env, body.credentials || {});
+
+        if (!targetSlug && customerId && effectiveCfg.stripeSecretKey) {
+          const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (cRes.ok) {
+            const cust = await cRes.json();
+            const formatted = formatCustomerRecord(cust);
+            targetSlug = formatted.demoSlug;
+          }
+        }
+
+        if (!targetSlug) {
+          return new Response(JSON.stringify({ error: 'Thiếu slug tiệm cần đổi màu.' }), { status: 400, headers: corsHeaders });
+        }
+
+        // 1. Fetch index.html from KV
+        const assetKey = `site_asset:${targetSlug}:/index.html`;
+        let htmlText = await env.WYNN_KV.get(assetKey);
+        if (!htmlText) {
+          return new Response(JSON.stringify({ error: `Không tìm thấy index.html trong KV cho slug "${targetSlug}"!` }), { status: 404, headers: corsHeaders });
+        }
+
+        // 2. Perform lossless in-place replacement of data-palette and config.palette
+        if (/data-palette=["']0[1-5]["']/.test(htmlText)) {
+          htmlText = htmlText.replace(/data-palette=["']0[1-5]["']/, `data-palette="${targetPalette}"`);
+        } else {
+          htmlText = htmlText.replace(/<html([^>]*)>/, `<html$1 data-palette="${targetPalette}">`);
+        }
+
+        if (/palette:\s*['"]0[1-5]['"]/.test(htmlText)) {
+          htmlText = htmlText.replace(/palette:\s*['"]0[1-5]['"]/, `palette: '${targetPalette}'`);
+        }
+
+        const nowIso = new Date().toISOString();
+        await env.WYNN_KV.put(assetKey, htmlText, {
+          metadata: { mimeType: 'text/html; charset=utf-8', size: htmlText.length, updatedAt: nowIso }
+        });
+
+        // 3. Update site_meta in KV
+        const metaKey = `site_meta:${targetSlug}`;
+        const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+        if (prevMeta) {
+          prevMeta.palette = targetPalette;
+          prevMeta.updatedAt = nowIso;
+          await env.WYNN_KV.put(metaKey, JSON.stringify(prevMeta));
+        }
+
+        // 4. Update Stripe customer metadata if customerId is present
+        let resolvedCustomerId = customerId;
+        if (!resolvedCustomerId && effectiveCfg.stripeSecretKey) {
+          const matched = await findCustomerBySlugOrId(targetSlug, effectiveCfg.stripeSecretKey).catch(() => null);
+          if (matched && matched.id) resolvedCustomerId = matched.id;
+        }
+        if (resolvedCustomerId && effectiveCfg.stripeSecretKey) {
+          const uParams = new URLSearchParams();
+          uParams.append('metadata[demo_palette]', targetPalette);
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(resolvedCustomerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          }).catch(() => {});
+        }
+
+        return new Response(JSON.stringify({
+          ok: true,
+          slug: targetSlug,
+          palette: targetPalette,
+          message: `Đã đổi chuẩn màu ${targetPalette} thành công!`
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message || 'Lỗi server khi đổi màu!' }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 5. AI & Admin Brief Retrieval Endpoint (GET /api/briefs)
     if (url.pathname === '/api/briefs' && request.method === 'GET') {
       const providedKey = url.searchParams.get('key') || request.headers.get('x-admin-key') || '';
@@ -2766,6 +2877,17 @@ export default {
       const rawList = data.data || [];
 
       const clients = rawList.map(formatCustomerRecord);
+
+      if (env && env.WYNN_KV) {
+        await Promise.all(clients.map(async (c) => {
+          if (!c.demoPalette || c.demoPalette === '01') {
+            const meta = await env.WYNN_KV.get(`site_meta:${c.demoSlug}`, 'json').catch(() => null);
+            if (meta && meta.palette) {
+              c.demoPalette = meta.palette;
+            }
+          }
+        }));
+      }
 
       if (ctx && typeof ctx.waitUntil === 'function') {
         ctx.waitUntil(

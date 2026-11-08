@@ -50,6 +50,54 @@
       }
     }
   </script>
+  <script type="application/ld+json" id="faq-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How long does a BIAB manicure last, and how often should I infill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A structured BIAB (Builder in a Bottle) overlay typically maintains its strength and porcelain shine for 3 to 4 weeks. We recommend scheduling an infill appointment every 3 to 4 weeks to re-balance the apex and protect your natural nail plate from lifting or snapping."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is BIAB or Gel-X damaging to my natural nail plate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Never when applied and removed professionally. We work exclusively with high-grade, HEMA-free gels, zero aggressive mechanical thinning of the natural nail plate, and gentle soak-off protocols that preserve natural keratin layers."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to book in advance or do you accept walk-ins?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "To maintain our calm, whisper-quiet sanctuary atmosphere and dedicate unhurried one-on-one attention to each client, we operate primarily by appointment. We strongly recommend booking through our live reservation portal 1 to 2 weeks in advance."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is your sanitisation and hygiene standard?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "All surgical-grade stainless steel implements undergo multi-stage ultrasonic cleaning followed by hospital-grade autoclave sterilisation, unsealed from single-use pouches directly in front of you. Nail files, buffers, and pedicure sanding caps are strictly 100% single-use."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I purchase an Atelier Gift Certificate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. We offer beautifully presented digital gift vouchers valid for all bespoke services and retail botanical care products, available directly through our booking concierge."
+          }
+        }
+      ]
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -392,6 +440,11 @@
       pointer-events: none;
       z-index: 2;
     }
+    @media (max-width: 640px) {
+      .gold-foil-frame::after {
+        inset: 8px;
+      }
+    }
 
     /* ==========================================================================
        PRIMARY & SECONDARY BUTTONS WITH APPLE SPRING & GOLD SHIMMER
@@ -587,12 +640,14 @@
     }
 
     /* ==========================================================================
-       APPLE FLOATING QUICK-RESERVE CAPSULE (APPEARS ON SCROLL DOWN, RETRACTS UP)
+       APPLE FLOATING CALL RECEPTION PILL (DEDICATED & SEPARATE FROM BOOKING)
+       Top sticky header hosts primary "Book Visit", while bottom-right hosts
+       only "Call Salon" so mobile thumbs never confuse Call with Reserve.
        ========================================================================== */
     #atelier-float-dock {
       position: fixed;
-      right: 20px;
-      bottom: 22px;
+      right: 18px;
+      bottom: 20px;
       z-index: 38;
       opacity: 0;
       transform: translate3d(0, 26px, 0) scale(0.92);
@@ -862,8 +917,10 @@
         <div class="hidden lg:flex items-center gap-1.5 xl:gap-2 text-xs font-medium tracking-wide whitespace-nowrap" style="color: var(--ink-muted);">
           <a href="#philosophy" data-smooth-anchor="#philosophy" data-nav-spy="philosophy" class="nav-section-link">The Sanctuary</a>
           <a href="#menu" data-smooth-anchor="#menu" data-nav-spy="menu" class="nav-section-link">Price Menu</a>
+          <a href="#matchmaker" data-smooth-anchor="#matchmaker" data-nav-spy="matchmaker" class="nav-section-link">Matchmaker</a>
           <a href="#lookbook" data-smooth-anchor="#lookbook" data-nav-spy="lookbook" class="nav-section-link">Lookbook</a>
           <a href="#reviews" data-smooth-anchor="#reviews" data-nav-spy="reviews" class="nav-section-link">Client Words</a>
+          <a href="#faq" data-smooth-anchor="#faq" data-nav-spy="faq" class="nav-section-link">FAQ</a>
           <a href="#visit" data-smooth-anchor="#visit" data-nav-spy="visit" class="nav-section-link">Hours &amp; Visit</a>
         </div>
 
@@ -921,17 +978,25 @@
             <span>Rituals &amp; Price Menu</span>
             <span class="text-xs opacity-45">02</span>
           </a>
+          <a href="#matchmaker" data-smooth-anchor="#matchmaker" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>Treatment Matchmaker</span>
+            <span class="text-xs opacity-45">03</span>
+          </a>
           <a href="#lookbook" data-smooth-anchor="#lookbook" data-mobile-link class="py-3 px-2 flex items-center justify-between">
             <span>Seasonal Lookbook</span>
-            <span class="text-xs opacity-45">03</span>
+            <span class="text-xs opacity-45">04</span>
           </a>
           <a href="#reviews" data-smooth-anchor="#reviews" data-mobile-link class="py-3 px-2 flex items-center justify-between">
             <span>Client Words</span>
-            <span class="text-xs opacity-45">04</span>
+            <span class="text-xs opacity-45">05</span>
+          </a>
+          <a href="#faq" data-smooth-anchor="#faq" data-mobile-link class="py-3 px-2 flex items-center justify-between">
+            <span>Atelier FAQs</span>
+            <span class="text-xs opacity-45">06</span>
           </a>
           <a href="#visit" data-smooth-anchor="#visit" data-mobile-link class="py-3 px-2 flex items-center justify-between">
             <span>Hours, Map &amp; Visit</span>
-            <span class="text-xs opacity-45">05</span>
+            <span class="text-xs opacity-45">07</span>
           </a>
         </div>
         <div class="pt-3 mt-1 border-t flex items-center justify-between gap-2.5" style="border-color: var(--border-hairline);">
@@ -1144,7 +1209,129 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 4: EDITORIAL OIL-PAINTING DUO (SIGNATURE HANDS & SPA PEDICURE)
+         SECTION 4: TREATMENT MATCHMAKER (WHICH RITUAL IS RIGHT FOR YOU?)
+         ====================================================================== -->
+    <section id="matchmaker" class="space-y-7 sm:space-y-9">
+      <div data-apple-reveal="header" class="text-center max-w-2xl mx-auto space-y-2.5">
+        <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Treatment Matchmaker</span>
+        <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
+          Which ritual is <span class="accent-italic">right for you?</span>
+        </h2>
+        <p class="text-xs sm:text-sm leading-relaxed text-pretty" style="color: var(--ink-muted);">
+          Every set is tailored to your lifestyle, natural nail plate condition, and aesthetic vision.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-stretch">
+        <!-- Ritual 1: Structured BIAB Overlay -->
+        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Most Requested</span>
+              <span class="text-xs font-semibold" style="color: var(--ink-muted);">3–4 Weeks Wear</span>
+            </div>
+            <div>
+              <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Structured BIAB</h3>
+              <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Natural Nail Strengthening</p>
+            </div>
+            <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+              A thick, flexible builder gel that creates a reinforced apex over your natural nails. Perfect for growing out fragile or bitten nails without tips or damage.
+            </p>
+            <div class="pt-4 border-t space-y-2.5 text-xs" style="border-color: var(--border-hairline);">
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Ideal for:</span>
+                <span>Weak, bending, or brittle natural nails seeking length growth.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Maintenance:</span>
+                <span>Refill recommended every 3 to 4 weeks. No soak-off required.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Removal:</span>
+                <span>Gentle foil wrap soak-off; never electric e-filed down to plate.</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-booking="Structured BIAB Overlay" class="btn-atelier-secondary rounded-full w-full py-2.5 text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Book BIAB Ritual</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </article>
+
+        <!-- Ritual 2: Après Gel-X Extensions -->
+        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden" style="border-color: var(--foil-gold);">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Instant Length</span>
+              <span class="text-xs font-semibold" style="color: var(--ink-muted);">3–4 Weeks Wear</span>
+            </div>
+            <div>
+              <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Après Gel-X™</h3>
+              <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Soft Gel Extension System</p>
+            </div>
+            <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+              Full-cover tips sculpted from 100% soak-off soft gel. Lightweight, perfectly contoured, and applied with gentle LED gel—zero monomer chemical smell.
+            </p>
+            <div class="pt-4 border-t space-y-2.5 text-xs" style="border-color: var(--border-hairline);">
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Ideal for:</span>
+                <span>Instant flawless shape &amp; length for events, weddings, or chic style.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Maintenance:</span>
+                <span>Fresh new set every 3–4 weeks for optimal structural integrity.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Removal:</span>
+                <span>100% pure acetone soak-off in 15 mins without natural nail trauma.</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-booking="Après Gel-X Full Set" class="btn-atelier-primary rounded-full w-full py-2.5 text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Book Gel-X Set</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </article>
+
+        <!-- Ritual 3: Japanese Gel & Botanical Spa -->
+        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Nourish &amp; Shine</span>
+              <span class="text-xs font-semibold" style="color: var(--ink-muted);">2–3 Weeks Wear</span>
+            </div>
+            <div>
+              <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Botanical Gel Care</h3>
+              <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Clean Cuticle &amp; Spa Polish</p>
+            </div>
+            <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+              Meticulous waterless e-manicure cuticle restoration followed by non-toxic Japanese gel polish, hot botanical towels, and cold-pressed botanical cuticle oils.
+            </p>
+            <div class="pt-4 border-t space-y-2.5 text-xs" style="border-color: var(--border-hairline);">
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Ideal for:</span>
+                <span>Healthy natural nails, minimalist beauty, and lovers of sheer milk glazes.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Maintenance:</span>
+                <span>Re-coat or refresh every 2 to 3 weeks.</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-semibold shrink-0" style="color: var(--accent-primary);">Removal:</span>
+                <span>Ultra-fast 8-minute gentle soak-off or breathable buff finish.</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-booking="Botanical Gel Care Manicure" class="btn-atelier-secondary rounded-full w-full py-2.5 text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Book Botanical Care</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 5: EDITORIAL OIL-PAINTING DUO (SIGNATURE HANDS & SPA PEDICURE)
          ====================================================================== -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
       <!-- Feature Card 1 -->
@@ -1193,7 +1380,7 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 5: CURATED LOOKBOOK & INTERACTIVE LIGHTBOX PORTFOLIO
+         SECTION 6: CURATED LOOKBOOK & INTERACTIVE LIGHTBOX PORTFOLIO
          ====================================================================== -->
     <section id="lookbook" class="space-y-7 sm:space-y-9">
       <div data-apple-reveal="header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1220,7 +1407,7 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 6: CLIENT WORDS & LOCAL GOOGLE REVIEWS
+         SECTION 7: CLIENT WORDS & LOCAL GOOGLE REVIEWS
          ====================================================================== -->
     <section id="reviews" class="space-y-7 sm:space-y-9">
       <div data-apple-reveal="header" class="text-center max-w-xl mx-auto space-y-2">
@@ -1234,7 +1421,99 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 7: VISIT THE SANCTUARY, HOURS, PARKING & BOOKING CONCIERGE
+         SECTION 8: ATELIER FAQS & CARE PROTOCOL (WITH SCHEMA.ORG FAQPAGE SEO)
+         ====================================================================== -->
+    <section id="faq" class="space-y-7 sm:space-y-9 max-w-4xl mx-auto">
+      <div data-apple-reveal="header" class="text-center space-y-2.5">
+        <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Client Etiquette &amp; FAQ</span>
+        <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
+          Everything you <span class="accent-italic">need to know.</span>
+        </h2>
+        <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+          Transparent guidance on appointment bookings, nail aftercare, and hygiene standards.
+        </p>
+      </div>
+
+      <div class="space-y-3.5 sm:space-y-4">
+        <!-- FAQ 1 -->
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+          <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
+            <span>How long does a BIAB manicure last, and how often should I infill?</span>
+            <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </summary>
+          <div class="pt-3 text-xs sm:text-sm leading-relaxed space-y-2" style="color: var(--ink-muted);">
+            <p>
+              A structured BIAB (Builder in a Bottle) overlay typically maintains its strength and porcelain shine for 3 to 4 weeks. Because natural nails grow continuously, we recommend scheduling an infill appointment every 3 to 4 weeks to re-balance the apex and protect your stress zone from lifting or snapping.
+            </p>
+          </div>
+        </details>
+
+        <!-- FAQ 2 -->
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+          <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
+            <span>Is BIAB or Gel-X damaging to my natural nail plate?</span>
+            <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </summary>
+          <div class="pt-3 text-xs sm:text-sm leading-relaxed space-y-2" style="color: var(--ink-muted);">
+            <p>
+              Never when applied and removed professionally. Damage in traditional salons occurs from over-filing the natural plate with aggressive drill bits or peeling off product. At our atelier, we work exclusively with high-grade, HEMA-free gels, zero abrasive thinning, and gentle soak-off protocols that preserve your natural keratin layers.
+            </p>
+          </div>
+        </details>
+
+        <!-- FAQ 3 -->
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+          <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
+            <span>Do I need to book in advance or do you accept walk-ins?</span>
+            <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </summary>
+          <div class="pt-3 text-xs sm:text-sm leading-relaxed space-y-2" style="color: var(--ink-muted);">
+            <p>
+              To maintain our calm, whisper-quiet sanctuary atmosphere and dedicate unhurried one-on-one attention to each client, we operate primarily by appointment. We strongly recommend booking through our live reservation portal 1 to 2 weeks in advance, especially for evening and weekend appointments.
+            </p>
+          </div>
+        </details>
+
+        <!-- FAQ 4 -->
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+          <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
+            <span>What is your sanitisation and hygiene standard?</span>
+            <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </summary>
+          <div class="pt-3 text-xs sm:text-sm leading-relaxed space-y-2" style="color: var(--ink-muted);">
+            <p>
+              Your health is our utmost priority. All surgical-grade stainless steel implements undergo multi-stage ultrasonic cleaning followed by hospital-grade autoclave sterilisation, sealed in pouches unsealed directly in front of you. Nail files, buffers, and pedicure sanding caps are strictly 100% single-use.
+            </p>
+          </div>
+        </details>
+
+        <!-- FAQ 5 -->
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+          <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
+            <span>Can I purchase an Atelier Gift Certificate?</span>
+            <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </summary>
+          <div class="pt-3 text-xs sm:text-sm leading-relaxed space-y-2" style="color: var(--ink-muted);">
+            <p>
+              Yes. We offer beautifully presented digital gift vouchers valid for all bespoke services and retail botanical care products. Gift certificates can be arranged directly through our booking link or by contacting salon reception.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 9: VISIT THE SANCTUARY, HOURS, PARKING & BOOKING CONCIERGE
          ====================================================================== -->
     <section id="visit" class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
       <!-- Left: Hours, Address, Australian Parking Guide & Atelier Map (7 Cols) -->
@@ -1371,31 +1650,26 @@
   </footer>
 
   <!-- ========================================================================
-       APPLE FLOATING CONCIERGE CAPSULE
+       APPLE FLOATING CALL RECEPTION PILL
        (Glides up when scrolling down past Hero; tucks away on scroll-up to top or at #visit)
+       Strictly dedicated to phone calls so it can never be mistapped for booking.
        ======================================================================== -->
-  <div id="atelier-float-dock" aria-label="Quick salon actions">
-    <div class="atelier-card rounded-full p-1.5 flex items-center gap-1.5 shadow-2xl" style="background: var(--bg-card-elevated);">
-      <a
-        id="dock-call-link"
-        href="tel:0391234567"
-        aria-label="Call salon reception"
-        title="Call salon reception"
-        class="w-10 h-10 rounded-full btn-atelier-secondary flex items-center justify-center"
-      >
-        <svg class="w-4 h-4" style="color: var(--accent-primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <div id="atelier-float-dock" aria-label="Call salon reception">
+    <a
+      id="dock-call-link"
+      href="tel:0391234567"
+      aria-label="Call salon reception"
+      title="Call salon reception"
+      class="atelier-card rounded-full h-11 px-4 sm:px-5 inline-flex items-center gap-2.5 shadow-2xl cursor-pointer transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
+      style="background: var(--bg-card-elevated); border-color: var(--foil-gold);"
+    >
+      <span class="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style="background: var(--pill-bg); color: var(--accent-primary);">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
         </svg>
-      </a>
-      <button
-        type="button"
-        data-open-booking=""
-        class="btn-atelier-primary rounded-full px-4 sm:px-5 h-10 text-xs font-semibold tracking-wide inline-flex items-center gap-1.5 cursor-pointer"
-      >
-        <span>Reserve</span>
-        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8h9M8.5 4l4 4-4 4"/></svg>
-      </button>
-    </div>
+      </span>
+      <span class="text-xs font-semibold tracking-wide" style="color: var(--ink-primary);">Call Salon</span>
+    </a>
   </div>
 
   <!-- ========================================================================
@@ -1783,6 +2057,9 @@
           el.href = `tel:${cleanTel}`;
         } else if (id === 'dock-call-link' || id === 'mobile-call-link') {
           el.style.display = 'none';
+          if (id === 'dock-call-link' && el.parentElement) {
+            el.parentElement.style.display = 'none';
+          }
         }
         if (id === 'visit-phone-link' && cfg.displayPhone) el.textContent = cfg.displayPhone;
       });
@@ -1945,22 +2222,25 @@
 
       if (lookbookGrid && resolvedImages && Array.isArray(resolvedImages.lookbook)) {
         const zoomCls = activePalette === '01'
-          ? 'scale-[1.12] group-hover:scale-[1.18]'
-          : 'scale-[1.03] group-hover:scale-[1.09]';
+          ? 'scale-[1.18] group-hover:scale-[1.24]'
+          : 'scale-[1.06] group-hover:scale-[1.12]';
+        lookbookGrid.className = 'grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 items-stretch';
         lookbookGrid.innerHTML = resolvedImages.lookbook.map((tile, idx) => `
           <button
             type="button"
             data-apple-reveal="card"
             data-lookbook-idx="${idx}"
-            class="group atelier-card atelier-card-lift rounded-[22px] sm:rounded-[26px] p-2 sm:p-2.5 block text-left w-full cursor-pointer"
+            class="group atelier-card atelier-card-lift rounded-[24px] sm:rounded-[28px] p-2.5 sm:p-3 flex flex-col justify-between text-left w-full h-full cursor-pointer"
           >
-            <div class="rounded-[17px] sm:rounded-[20px] gold-foil-frame overflow-hidden aspect-square relative" style="background-color: var(--bg-canvas-alt);">
+            <div class="rounded-[17px] sm:rounded-[20px] gold-foil-frame overflow-hidden aspect-square relative w-full shrink-0" style="background-color: var(--bg-canvas-alt);">
               <img src="${tile.src}" alt="${tile.title}" loading="lazy" width="520" height="520" class="w-full h-full object-cover ${zoomCls} transition-transform duration-1000 ease-out">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-90"></div>
-              <div class="absolute bottom-2.5 sm:bottom-3 left-2.5 sm:left-3 right-2.5 sm:right-3 text-white">
-                <span class="text-[8.5px] sm:text-[9px] uppercase tracking-[0.15em] opacity-85 block truncate">${tile.tag || ''}</span>
-                <span class="font-editorial italic text-base sm:text-lg leading-tight block truncate">${tile.title || ''}</span>
-              </div>
+              <span class="w-7 h-7 rounded-full atelier-card hidden sm:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute top-2.5 right-2.5 z-10 pointer-events-none" style="background: var(--bg-card-elevated); color: var(--accent-primary);" aria-hidden="true">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+              </span>
+            </div>
+            <div class="pt-3 pb-1 px-1 sm:px-1.5 flex-1 flex flex-col justify-start gap-1 min-w-0">
+              <span class="text-[8.5px] sm:text-[9.5px] uppercase tracking-[0.14em] font-semibold block leading-snug break-words" style="color: var(--accent-primary);">${tile.tag || ''}</span>
+              <span class="font-editorial italic font-semibold text-[16.5px] sm:text-[19px] leading-[1.2] block text-pretty" style="color: var(--ink-primary);">${tile.title || ''}</span>
             </div>
           </button>
         `).join('');
