@@ -239,23 +239,19 @@
       </div>
 
       <!-- ======================================================== -->
-      <!-- GOOGLE MAPS LEAD HUNTER (SĂN KHÁCH HÀNG TỰ ĐỘNG)        -->
+      <!-- GOOGLE PLACES LEAD CRM & ACCUMULATIVE HUNTER             -->
       <!-- ======================================================== -->
-      <div id="lead-hunter-panel" class="bg-gradient-to-br from-white via-[#fcfaf6] to-[#f8f2e7] rounded-3xl border-2 border-[#d49b28]/40 shadow-sm overflow-hidden transition-all duration-300">
-        <!-- Collapsible Header Banner -->
-        <button
-          type="button"
-          id="btn-toggle-lead-hunter"
-          class="w-full px-5 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3 text-left hover:bg-stone-50/70 transition-colors cursor-pointer select-none"
-        >
+      <div id="lead-hunter-panel" class="bg-[#fcfbf9] rounded-3xl border-2 border-[#96432b]/30 shadow-sm overflow-hidden transition-all duration-300">
+        <!-- Header Banner with Live Badges & Quick Tools -->
+        <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fcf9f3] flex flex-wrap items-center justify-between gap-3 border-b border-[#ece4d5]">
           <div class="flex items-center gap-3">
             <span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#96432b] to-[#d49b28] text-white flex items-center justify-center text-xl shadow-xs shrink-0">
-              🔍
+              💎
             </span>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="text-sm sm:text-base font-extrabold text-stone-900">
-                  Săn Khách Hàng Tiềm Năng (Google Maps Lead Hunter)
+                  Kho Dữ Liệu Khách Hàng Tiềm Năng (Google Maps Leads CRM)
                 </h3>
                 <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase tracking-wider">
                   Places API New
@@ -265,64 +261,140 @@
                 </span>
               </div>
               <p class="text-xs text-stone-500 mt-0.5">
-                Quét tiệm theo khu vực Úc • Tự bóc tách Giờ mở cửa &amp; 3 đánh giá 5 sao • 1-Click Import dựng Web Demo
+                Quét &amp; cộng dồn không mất dữ liệu • Tách riêng từng ngành nghề • 1-Click Import &amp; Dựng Web Demo
               </p>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <span id="lead-hunter-toggle-label" class="text-xs font-bold text-[#96432b]">Mở Bộ Săn Khách</span>
-            <span id="lead-hunter-toggle-icon" class="text-stone-400 text-sm transform transition-transform duration-200">▼</span>
-          </div>
-        </button>
 
-        <!-- Collapsible Body Content -->
-        <div id="lead-hunter-body" class="hidden px-5 sm:px-6 pb-6 pt-2 border-t border-[#ece4d5] space-y-4">
-          <!-- Search Control Bar -->
+          <!-- Quick Actions & Toggle -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              id="btn-export-leads-csv"
+              class="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1.5 cursor-pointer"
+              title="Xuất file CSV danh sách khách hàng đang hiển thị"
+            >
+              <span>📥 Xuất CSV / Excel</span>
+            </button>
+            <button
+              type="button"
+              id="btn-toggle-lead-hunter"
+              class="px-3 py-1.5 rounded-xl bg-[#f5ede0] hover:bg-[#ebdcc8] text-[#96432b] text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <span id="lead-hunter-toggle-label">Thu Gọn</span>
+              <span id="lead-hunter-toggle-icon" class="text-sm">▲</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Body Content -->
+        <div id="lead-hunter-body" class="px-5 sm:px-6 pb-6 pt-4 space-y-4">
+          <!-- Live KPI Badges -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+            <div class="bg-white p-3 rounded-2xl border border-[#e5dec9] shadow-2xs flex items-center gap-2.5">
+              <span class="text-xl">🗂️</span>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Kho Đã Lưu Trữ</span>
+                <span id="lh-total-stored-badge" class="text-lg font-black text-stone-900 block leading-tight">0 tiệm</span>
+              </div>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-red-200 shadow-2xs flex items-center gap-2.5">
+              <span class="text-xl">🔥</span>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-red-700 block tracking-wider">Chưa Có Website</span>
+                <span id="lh-hot-badge" class="text-lg font-black text-red-800 block leading-tight">0 tiệm</span>
+              </div>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-amber-200 shadow-2xs flex items-center gap-2.5">
+              <span class="text-xl">🟡</span>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-amber-700 block tracking-wider">Chỉ Dùng MXH / Booking</span>
+                <span id="lh-social-badge" class="text-lg font-black text-amber-800 block leading-tight">0 tiệm</span>
+              </div>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-emerald-200 shadow-2xs flex items-center gap-2.5">
+              <span class="text-xl">✅</span>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block tracking-wider">Đã Import Outbound</span>
+                <span id="lh-imported-badge" class="text-lg font-black text-emerald-800 block leading-tight">0 tiệm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scanner Controls (Quét Mới & Tự Động Cộng Dồn) -->
           <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#e5dec9] shadow-xs space-y-3.5">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <span class="text-xs font-black uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                <span>🚀 Quét Mới Google Maps &amp; Tự Động Cộng Dồn</span>
+              </span>
+              <span class="text-[11px] text-stone-400">
+                ✨ Quét bao nhiêu lần cũng không mất dữ liệu cũ • Tự lọc trùng Place ID
+              </span>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-              <div class="lg:col-span-4">
+              <!-- Industry Selector -->
+              <div class="lg:col-span-3">
                 <label class="text-[11px] font-bold text-stone-700 block mb-1">
-                  1. Từ khoá tìm kiếm (Industry / Keyword)
+                  1. Chọn Ngành Nghề
+                </label>
+                <select id="lh-industry-select" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold text-stone-800">
+                  <option value="nails" selected>💅 Nails &amp; Beauty Atelier</option>
+                  <option value="hair">💇 Hair Salon &amp; Barber Shop</option>
+                  <option value="lash_brow">👁️ Lash, Brow &amp; Cosmetic</option>
+                  <option value="spa">💆 Day Spa &amp; Massage Therapy</option>
+                  <option value="dining">☕ Cafe, Dining &amp; Bistro</option>
+                  <option value="other">✨ Tuỳ chỉnh ngành khác...</option>
+                </select>
+              </div>
+
+              <!-- Keyword -->
+              <div class="lg:col-span-3">
+                <label class="text-[11px] font-bold text-stone-700 block mb-1">
+                  2. Từ khoá tìm kiếm
                 </label>
                 <div class="relative">
                   <input
                     type="text"
                     id="lh-keyword"
                     value="Nail Salon"
-                    placeholder="VD: Nail Salon, Hair &amp; Beauty, Day Spa"
+                    placeholder="VD: Nail Salon, Hair Salon..."
                     class="atelier-input w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-semibold"
                   >
-                  <span class="absolute left-2.5 top-2.5 text-xs text-stone-400">💅</span>
+                  <span id="lh-keyword-icon" class="absolute left-2.5 top-2.5 text-xs text-stone-400">💅</span>
                 </div>
               </div>
 
-              <div class="lg:col-span-4">
+              <!-- Suburb/Location -->
+              <div class="lg:col-span-3">
                 <label class="text-[11px] font-bold text-stone-700 block mb-1">
-                  2. Khu vực / Thành phố Úc (Suburb / City)
+                  3. Khu vực / Thành phố Úc
                 </label>
                 <div class="relative">
                   <input
                     type="text"
                     id="lh-location"
                     value="Brisbane QLD"
-                    placeholder="VD: Brisbane QLD, Ipswich QLD, Sydney NSW"
+                    placeholder="VD: Brisbane QLD, Ipswich QLD..."
                     class="atelier-input w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-semibold"
                   >
                   <span class="absolute left-2.5 top-2.5 text-xs text-stone-400">📍</span>
                 </div>
               </div>
 
-              <div class="lg:col-span-2">
+              <!-- Min Rating -->
+              <div class="lg:col-span-1">
                 <label class="text-[11px] font-bold text-stone-700 block mb-1">
-                  3. Lọc Rating
+                  Rating
                 </label>
-                <select id="lh-min-rating" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold text-stone-800">
-                  <option value="4.0" selected>4.0+ ⭐ (Khuyên dùng)</option>
-                  <option value="4.5">4.5+ ⭐ (Chỉ lấy tiệm đỉnh)</option>
-                  <option value="0">Tất cả rating</option>
+                <select id="lh-min-rating" class="atelier-input w-full rounded-xl px-2 py-2.5 text-xs font-bold text-stone-800">
+                  <option value="4.0" selected>4.0+ ⭐</option>
+                  <option value="4.5">4.5+ ⭐</option>
+                  <option value="0">Tất cả</option>
                 </select>
               </div>
 
+              <!-- Button Scan -->
               <div class="lg:col-span-2">
                 <button
                   type="button"
@@ -330,7 +402,7 @@
                   class="w-full px-4 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-extrabold text-xs transition-all shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span id="scan-leads-icon">🚀</span>
-                  <span id="scan-leads-label">Quét Google Maps</span>
+                  <span id="scan-leads-label">Quét &amp; Cộng Dồn</span>
                 </button>
               </div>
             </div>
@@ -341,29 +413,115 @@
               <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Brisbane QLD">Brisbane QLD</button>
               <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Gold Coast QLD">Gold Coast QLD</button>
               <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Ipswich QLD">Ipswich QLD</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Sunshine Coast QLD">Sunshine Coast</button>
               <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Melbourne VIC">Melbourne VIC</button>
               <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Sydney NSW">Sydney NSW</button>
               <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Perth WA">Perth WA</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Adelaide SA">Adelaide SA</button>
             </div>
           </div>
 
-          <!-- Stats & Filter Bar (hidden initially) -->
-          <div id="lh-stats-banner" class="hidden bg-white rounded-2xl px-5 py-3 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div class="flex items-center gap-3 flex-wrap" id="lh-stats-content">
-              <!-- Dynamically populated stats -->
+          <!-- INDUSTRY TABS (PHÂN TÁCH CÁC NGÀNH NGHỀ) -->
+          <div class="bg-white rounded-2xl p-2 border border-[#e5dec9] shadow-2xs">
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="lh-industry-tabs">
+              <button
+                type="button"
+                data-industry-tab="all"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#96432b] text-white font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <span>🌟 Tất Cả Ngành</span>
+                <span id="tab-cnt-all" class="px-2 py-0.5 rounded-full bg-black/25 text-white text-[11px] font-mono">0</span>
+              </button>
+
+              <button
+                type="button"
+                data-industry-tab="nails"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>💅 Nails &amp; Beauty</span>
+                <span id="tab-cnt-nails" class="px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono">0</span>
+              </button>
+
+              <button
+                type="button"
+                data-industry-tab="hair"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>💇 Hair &amp; Barber</span>
+                <span id="tab-cnt-hair" class="px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono">0</span>
+              </button>
+
+              <button
+                type="button"
+                data-industry-tab="lash_brow"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>👁️ Lash &amp; Brow</span>
+                <span id="tab-cnt-lash_brow" class="px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono">0</span>
+              </button>
+
+              <button
+                type="button"
+                data-industry-tab="spa"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>💆 Day Spa &amp; Massage</span>
+                <span id="tab-cnt-spa" class="px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono">0</span>
+              </button>
+
+              <button
+                type="button"
+                data-industry-tab="dining"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>☕ Cafe &amp; Dining</span>
+                <span id="tab-cnt-dining" class="px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono">0</span>
+              </button>
+
+              <button
+                type="button"
+                data-industry-tab="other"
+                class="lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>✨ Ngành Khác</span>
+                <span id="tab-cnt-other" class="px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono">0</span>
+              </button>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] text-stone-400 font-semibold">Lọc nhanh:</span>
-              <button type="button" class="lh-filter-chip px-2.5 py-1 rounded-lg bg-stone-900 text-white font-bold text-[11px]" data-lead-filter="all">Tất cả</button>
-              <button type="button" class="lh-filter-chip px-2.5 py-1 rounded-lg bg-red-50 text-red-800 border border-red-200 font-bold text-[11px]" data-lead-filter="hot">🔥 Chưa có Web</button>
-              <button type="button" class="lh-filter-chip px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[11px]" data-lead-filter="social">🟡 Chỉ dùng MXH/Booking</button>
+          </div>
+
+          <!-- In-Database Search & Status Filter Chips -->
+          <div class="bg-white rounded-2xl px-4 py-3 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <!-- Search in stored data -->
+            <div class="relative w-full sm:w-72">
+              <input
+                type="text"
+                id="lh-search-input"
+                placeholder="🔍 Tìm nhanh tên tiệm, số ĐT, suburb..."
+                class="atelier-input w-full rounded-xl pl-8 pr-3 py-2 text-xs font-medium"
+              >
+              <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔎</span>
+            </div>
+
+            <!-- Status Chips -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] text-stone-400 font-semibold mr-0.5">Trạng thái:</span>
+              <button type="button" class="lh-status-chip px-2.5 py-1 rounded-lg bg-stone-900 text-white font-bold text-[11px] cursor-pointer" data-status-filter="all">Tất cả</button>
+              <button type="button" class="lh-status-chip px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 font-bold text-[11px] cursor-pointer" data-status-filter="hot">🔥 Chưa có Web</button>
+              <button type="button" class="lh-status-chip px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[11px] cursor-pointer" data-status-filter="social">🟡 Chỉ dùng MXH/Booking</button>
+              <button type="button" class="lh-status-chip px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 text-[11px] font-medium cursor-pointer" data-status-filter="custom">⚪ Đã có Web</button>
+              <button type="button" class="lh-status-chip px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[11px] cursor-pointer" data-status-filter="imported">✅ Đã Import</button>
+            </div>
+
+            <div class="text-[11px] text-stone-500 font-medium">
+              Hiển thị <strong id="lh-filtered-count" class="text-stone-900 font-black">0</strong> / <span id="lh-total-count">0</span> tiệm
             </div>
           </div>
 
           <!-- Results Table Container -->
           <div id="lh-results-container" class="space-y-2">
             <div class="bg-white/80 rounded-2xl p-8 text-center text-xs text-stone-500 border border-[#e5dec9]">
-              Chọn khu vực và bấm <strong>"🚀 Quét Google Maps"</strong> để bắt đầu quét các tiệm Nails tiềm năng quanh vùng.
+              <span class="wynn-spin-gold text-2xl inline-block mb-1"></span>
+              <p>Đang tải kho dữ liệu khách hàng tiềm năng...</p>
             </div>
           </div>
         </div>
@@ -1185,6 +1343,11 @@
           clientsCache = data.clients || [];
           updateMetrics(clientsCache);
           switchMainTab(activeMainTab);
+
+          // Auto-load cumulative Google Maps Leads CRM database from KV
+          if (typeof loadStoredLeads === 'function') {
+            loadStoredLeads(true);
+          }
         } catch (err) {
           showToast(err.message, true);
         } finally {
@@ -2728,7 +2891,7 @@
 
       // Quick 1-Row Outbound Prospect Creator Form
       // ========================================================
-      // GOOGLE MAPS LEAD HUNTER (SĂN KHÁCH HÀNG TỰ ĐỘNG)
+      // GOOGLE PLACES LEAD CRM & ACCUMULATIVE HUNTER (JS LOGIC)
       // ========================================================
       const leadHunterPanel = document.getElementById('lead-hunter-panel');
       const btnToggleLeadHunter = document.getElementById('btn-toggle-lead-hunter');
@@ -2739,22 +2902,35 @@
       const btnScanLeads = document.getElementById('btn-scan-leads');
       const scanLeadsIcon = document.getElementById('scan-leads-icon');
       const scanLeadsLabel = document.getElementById('scan-leads-label');
+      const lhIndustrySelect = document.getElementById('lh-industry-select');
       const lhKeyword = document.getElementById('lh-keyword');
+      const lhKeywordIcon = document.getElementById('lh-keyword-icon');
       const lhLocation = document.getElementById('lh-location');
       const lhMinRating = document.getElementById('lh-min-rating');
-      const lhStatsBanner = document.getElementById('lh-stats-banner');
-      const lhStatsContent = document.getElementById('lh-stats-content');
+      const lhSearchInput = document.getElementById('lh-search-input');
       const lhResultsContainer = document.getElementById('lh-results-container');
+      const btnExportLeadsCsv = document.getElementById('btn-export-leads-csv');
 
-      let currentScannedLeads = [];
-      let currentLeadFilter = 'all';
+      let allStoredLeads = [];
+      let currentIndustryTab = 'all';
+      let currentStatusFilter = 'all';
+      let currentSearchQuery = '';
+
+      const INDUSTRY_CONFIG = {
+        nails: { label: '💅 Nails & Beauty', kw: 'Nail Salon', icon: '💅', defaultTpl: 'nails-01' },
+        hair: { label: '💇 Hair & Barber', kw: 'Hair Salon', icon: '💇', defaultTpl: 'nails-04' },
+        lash_brow: { label: '👁️ Lash & Brow', kw: 'Lash and Brow', icon: '👁️', defaultTpl: 'nails-02' },
+        spa: { label: '💆 Day Spa & Massage', kw: 'Day Spa', icon: '💆', defaultTpl: 'nails-03' },
+        dining: { label: '☕ Cafe & Dining', kw: 'Cafe', icon: '☕', defaultTpl: 'nails-01' },
+        other: { label: '✨ Ngành Khác', kw: '', icon: '✨', defaultTpl: 'nails-01' }
+      };
 
       if (btnToggleLeadHunter && leadHunterBody) {
         btnToggleLeadHunter.addEventListener('click', () => {
           const isOpen = !leadHunterBody.classList.contains('hidden');
           if (isOpen) {
             leadHunterBody.classList.add('hidden');
-            leadHunterToggleLabel.textContent = 'Mở Bộ Săn Khách';
+            leadHunterToggleLabel.textContent = 'Mở Kho Leads';
             leadHunterToggleIcon.textContent = '▼';
           } else {
             leadHunterBody.classList.remove('hidden');
@@ -2772,6 +2948,21 @@
       }
       updateLeadKeyIndicator();
 
+      // Quick industry preset selection changes keyword & icon
+      if (lhIndustrySelect) {
+        lhIndustrySelect.addEventListener('change', () => {
+          const val = lhIndustrySelect.value || 'nails';
+          const cfg = INDUSTRY_CONFIG[val] || INDUSTRY_CONFIG.other;
+          if (lhKeywordIcon) lhKeywordIcon.textContent = cfg.icon;
+          if (cfg.kw && lhKeyword) {
+            lhKeyword.value = cfg.kw;
+          }
+          // Optionally switch active tab to match selected industry
+          switchIndustryTab(val);
+        });
+      }
+
+      // Quick suburb buttons
       document.querySelectorAll('.lh-quick-loc').forEach((btn) => {
         btn.addEventListener('click', () => {
           const loc = btn.getAttribute('data-loc');
@@ -2783,20 +2974,55 @@
         });
       });
 
-      document.querySelectorAll('.lh-filter-chip').forEach((btn) => {
+      // Quick Suburb Shortcuts & Search input listener
+      if (lhSearchInput) {
+        lhSearchInput.addEventListener('input', () => {
+          currentSearchQuery = lhSearchInput.value.trim().toLowerCase();
+          renderLeadHunterCRM();
+        });
+      }
+
+      // Status Filter Chips listener
+      document.querySelectorAll('.lh-status-chip').forEach((btn) => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.lh-filter-chip').forEach((b) => {
+          document.querySelectorAll('.lh-status-chip').forEach((b) => {
             b.classList.remove('bg-stone-900', 'text-white');
             b.classList.add('bg-stone-100', 'text-stone-700');
           });
           btn.classList.remove('bg-stone-100', 'text-stone-700');
           btn.classList.add('bg-stone-900', 'text-white');
-          currentLeadFilter = btn.getAttribute('data-lead-filter') || 'all';
-          renderLeadResults(currentScannedLeads);
+          currentStatusFilter = btn.getAttribute('data-status-filter') || 'all';
+          renderLeadHunterCRM();
+        });
+      });
+
+      // Industry Tabs listener
+      function switchIndustryTab(tabKey) {
+        currentIndustryTab = tabKey || 'all';
+        document.querySelectorAll('.lh-ind-tab').forEach((tab) => {
+          const tKey = tab.getAttribute('data-industry-tab');
+          if (tKey === currentIndustryTab) {
+            tab.className = 'lh-ind-tab px-3.5 py-2 rounded-xl bg-[#96432b] text-white font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
+            const badge = tab.querySelector('span[id^="tab-cnt-"]');
+            if (badge) badge.className = 'px-2 py-0.5 rounded-full bg-black/25 text-white text-[11px] font-mono';
+          } else {
+            tab.className = 'lh-ind-tab px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-stone-100 text-stone-700 border border-[#e5dec9] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer';
+            const badge = tab.querySelector('span[id^="tab-cnt-"]');
+            if (badge) badge.className = 'px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[11px] font-mono';
+          }
+        });
+        renderLeadHunterCRM();
+      }
+
+      document.querySelectorAll('.lh-ind-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const ind = tab.getAttribute('data-industry-tab') || 'all';
+          switchIndustryTab(ind);
         });
       });
 
       function isLeadAlreadyInSystem(lead) {
+        if (lead.imported) return true;
         if (!clientsCache || !clientsCache.length) return false;
         const leadPhoneClean = normalizePhone(lead.phone);
         const leadNameClean = (lead.name || '').trim().toLowerCase();
@@ -2815,33 +3041,145 @@
         return String(p).replace(/[^0-9]/g, '').slice(-9);
       }
 
-      function renderLeadResults(leads) {
-        if (!leads || !leads.length) {
-          lhResultsContainer.innerHTML = `
-            <div class="bg-white rounded-2xl p-8 text-center text-xs text-stone-500 border border-[#e5dec9]">
-              Không tìm thấy tiệm nào phù hợp với bộ lọc. Hãy thử đổi khu vực hoặc hạ mức rating.
-            </div>
-          `;
+      function updateLeadHunterCounters(leads, serverIndustryCounts = null, serverStats = null) {
+        const total = leads.length;
+        let hot = 0;
+        let social = 0;
+        let custom = 0;
+        let imported = 0;
+
+        const localIndCounts = {
+          all: total,
+          nails: 0,
+          hair: 0,
+          lash_brow: 0,
+          spa: 0,
+          dining: 0,
+          other: 0
+        };
+
+        for (const l of leads) {
+          const isImp = isLeadAlreadyInSystem(l);
+          if (isImp) imported++;
+
+          if (l.leadType === 'hot_lead_no_web') hot++;
+          else if (l.leadType === 'social_booking_only') social++;
+          else custom++;
+
+          const ind = l.industry || 'other';
+          if (localIndCounts[ind] !== undefined) localIndCounts[ind]++;
+          else localIndCounts.other++;
+        }
+
+        const badgeTotal = document.getElementById('lh-total-stored-badge');
+        const badgeHot = document.getElementById('lh-hot-badge');
+        const badgeSocial = document.getElementById('lh-social-badge');
+        const badgeImported = document.getElementById('lh-imported-badge');
+
+        if (badgeTotal) badgeTotal.textContent = `${total} tiệm`;
+        if (badgeHot) badgeHot.textContent = `${serverStats?.hotNoWeb ?? hot} tiệm`;
+        if (badgeSocial) badgeSocial.textContent = `${serverStats?.socialBooking ?? social} tiệm`;
+        if (badgeImported) badgeImported.textContent = `${serverStats?.imported ?? imported} tiệm`;
+
+        const countsToUse = serverIndustryCounts || localIndCounts;
+        for (const [key, count] of Object.entries(countsToUse)) {
+          const el = document.getElementById(`tab-cnt-${key}`);
+          if (el) el.textContent = count;
+        }
+        const elAll = document.getElementById('tab-cnt-all');
+        if (elAll) elAll.textContent = total;
+      }
+
+      // LOAD ALL STORED LEADS FROM KV CACHE
+      async function loadStoredLeads(quiet = false) {
+        if (!adminKey) return;
+        try {
+          const res = await fetch('/api/admin/lead-hunter', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': adminKey
+            },
+            body: JSON.stringify({
+              action: 'list',
+              adminKey
+            })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            allStoredLeads = Array.isArray(data.leads) ? data.leads : [];
+            updateLeadHunterCounters(allStoredLeads, data.industryCounts, data.stats);
+            renderLeadHunterCRM();
+          }
+        } catch (err) {
+          if (!quiet) console.warn('Không thể nạp kho leads lưu trữ:', err);
+        }
+      }
+
+      // RENDER LEAD CRM TABLE
+      function renderLeadHunterCRM() {
+        if (!lhResultsContainer) return;
+
+        // 1. Filter by Industry Tab
+        let filtered = allStoredLeads;
+        if (currentIndustryTab !== 'all') {
+          filtered = filtered.filter((l) => (l.industry || 'other') === currentIndustryTab);
+        }
+
+        // 2. Filter by Status
+        if (currentStatusFilter === 'hot') {
+          filtered = filtered.filter((l) => l.leadType === 'hot_lead_no_web');
+        } else if (currentStatusFilter === 'social') {
+          filtered = filtered.filter((l) => l.leadType === 'social_booking_only');
+        } else if (currentStatusFilter === 'custom') {
+          filtered = filtered.filter((l) => l.leadType === 'custom_web');
+        } else if (currentStatusFilter === 'imported') {
+          filtered = filtered.filter((l) => isLeadAlreadyInSystem(l));
+        }
+
+        // 3. Filter by In-Database Search Query
+        if (currentSearchQuery) {
+          filtered = filtered.filter((l) => {
+            const name = (l.name || '').toLowerCase();
+            const phone = (l.phone || '').toLowerCase();
+            const suburb = (l.suburb || l.address || '').toLowerCase();
+            return name.includes(currentSearchQuery) || phone.includes(currentSearchQuery) || suburb.includes(currentSearchQuery);
+          });
+        }
+
+        // Update counts
+        const filteredCountEl = document.getElementById('lh-filtered-count');
+        const totalCountEl = document.getElementById('lh-total-count');
+        if (filteredCountEl) filteredCountEl.textContent = filtered.length;
+        if (totalCountEl) totalCountEl.textContent = allStoredLeads.length;
+
+        // Empty state
+        if (!filtered.length) {
+          if (!allStoredLeads.length) {
+            lhResultsContainer.innerHTML = `
+              <div class="bg-white rounded-2xl p-10 text-center text-xs text-stone-500 border border-[#e5dec9] space-y-2">
+                <span class="text-3xl block">🔍</span>
+                <p class="font-bold text-stone-800 text-sm">Kho dữ liệu khách hàng tiềm năng đang trống</p>
+                <p class="text-[11px] text-stone-400 max-w-md mx-auto">
+                  Hãy chọn ngành nghề và bấm <strong>"🚀 Quét &amp; Cộng Dồn"</strong> để quét các tiệm tiềm năng từ Google Maps. Toàn bộ dữ liệu sẽ được lưu trữ vĩnh viễn và cộng dồn tại đây.
+                </p>
+              </div>
+            `;
+          } else {
+            lhResultsContainer.innerHTML = `
+              <div class="bg-white rounded-2xl p-8 text-center text-xs text-stone-500 border border-[#e5dec9] space-y-2">
+                <p class="font-bold text-stone-700">Không có tiệm nào khớp với bộ lọc hiện tại</p>
+                <p class="text-[11px] text-stone-400">
+                  Thử chuyển tab <strong>🌟 Tất Cả Ngành</strong> hoặc bấm nút lọc <strong>Tất cả</strong> để xem danh sách.
+                </p>
+              </div>
+            `;
+          }
           return;
         }
 
-        let displayLeads = leads;
-        if (currentLeadFilter === 'hot') {
-          displayLeads = leads.filter((x) => x.leadType === 'hot_lead_no_web');
-        } else if (currentLeadFilter === 'social') {
-          displayLeads = leads.filter((x) => x.leadType === 'social_booking_only');
-        }
-
-        if (!displayLeads.length) {
-          lhResultsContainer.innerHTML = `
-            <div class="bg-white rounded-2xl p-6 text-center text-xs text-stone-500 border border-[#e5dec9]">
-              Không có tiệm nào trong nhóm <strong>${currentLeadFilter === 'hot' ? 'Chưa có Web' : 'Chỉ dùng MXH/Booking'}</strong>.
-            </div>
-          `;
-          return;
-        }
-
-        const rowsHtml = displayLeads.map((lead, idx) => {
+        // Render rows
+        const rowsHtml = filtered.map((lead, idx) => {
           const alreadyImported = isLeadAlreadyInSystem(lead);
           let badgeClass = 'bg-stone-100 text-stone-600 border-stone-200';
           let badgeText = '⚪ Đã có Web riêng';
@@ -2854,21 +3192,25 @@
           }
 
           const reviewSnippet = (lead.topReviews && lead.topReviews.length)
-            ? `"${escapeHtml(lead.topReviews[0].text.slice(0, 85))}..." — <strong>${escapeHtml(lead.topReviews[0].author)}</strong>`
-            : 'Đánh giá thực tế từ Google Maps';
+            ? `"${escapeHtml(lead.topReviews[0].text.slice(0, 95))}..." — <strong>${escapeHtml(lead.topReviews[0].author)}</strong>`
+            : 'Đánh giá thực tế từ khách hàng trên Google Maps';
+
+          const indLabel = lead.industryLabel || (INDUSTRY_CONFIG[lead.industry]?.label) || '✨ Khác';
 
           return `
             <tr class="border-b border-[#f0eade] hover:bg-[#fcfbf8] transition-colors text-xs">
               <td class="py-3 px-3.5">
-                <div class="space-y-0.5">
+                <div class="space-y-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="font-bold text-stone-900 text-sm">${escapeHtml(lead.name)}</span>
-                    ${lead.leadType === 'hot_lead_no_web' ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Hot Lead Outbound"></span>' : ''}
+                    <span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px] font-semibold">${indLabel}</span>
+                    ${lead.leadType === 'hot_lead_no_web' ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Hot Lead Không Có Web"></span>' : ''}
+                    ${alreadyImported ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Đã Import</span>' : ''}
                   </div>
                   <p class="text-[11px] text-stone-500 line-clamp-1" title="${escapeHtml(lead.address)}">
                     📍 ${escapeHtml(lead.suburb || lead.address)}
                   </p>
-                  <div class="text-[10px] text-stone-400 italic line-clamp-1 pt-0.5">
+                  <div class="text-[10.5px] text-stone-400 italic line-clamp-1 pt-0.5">
                     💬 ${reviewSnippet}
                   </div>
                 </div>
@@ -2876,7 +3218,7 @@
 
               <td class="py-3 px-3 whitespace-nowrap">
                 <div class="flex items-center gap-1">
-                  <span class="text-amber-600 font-bold">★ ${lead.rating ? lead.rating.toFixed(1) : 'N/A'}</span>
+                  <span class="text-amber-600 font-bold text-xs">★ ${lead.rating ? lead.rating.toFixed(1) : 'N/A'}</span>
                   <span class="text-[11px] text-stone-400">(${lead.userRatingCount || 0})</span>
                 </div>
               </td>
@@ -2887,7 +3229,7 @@
                     <span>📱</span>
                     <span>${escapeHtml(lead.phone)}</span>
                   </a>
-                ` : `<span class="text-stone-300 italic">Chưa có</span>`}
+                ` : `<span class="text-stone-300 italic">Chưa có SĐT</span>`}
               </td>
 
               <td class="py-3 px-3">
@@ -2896,7 +3238,7 @@
                     ${badgeText}
                   </span>
                   ${lead.website ? `
-                    <a href="${escapeHtml(lead.website)}" target="_blank" rel="noopener noreferrer" class="block text-[10px] text-[#96432b] hover:underline font-mono truncate max-w-[140px]" title="${escapeHtml(lead.website)}">
+                    <a href="${escapeHtml(lead.website)}" target="_blank" rel="noopener noreferrer" class="block text-[10px] text-[#96432b] hover:underline font-mono truncate max-w-[150px]" title="${escapeHtml(lead.website)}">
                       🔗 ${escapeHtml(lead.website.replace(/^https?:\/\/(www\.)?/, ''))}
                     </a>
                   ` : ''}
@@ -2904,19 +3246,29 @@
               </td>
 
               <td class="py-3 px-3 whitespace-nowrap text-right">
-                ${alreadyImported ? `
-                  <button type="button" disabled class="px-3 py-1.5 rounded-xl bg-stone-100 text-stone-400 border border-stone-200 text-xs font-semibold cursor-not-allowed inline-flex items-center gap-1">
-                    <span>✓ Đã có trong hệ thống</span>
-                  </button>
-                ` : `
+                <div class="flex items-center justify-end gap-1.5">
+                  ${alreadyImported ? `
+                    <button type="button" disabled class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold cursor-not-allowed inline-flex items-center gap-1">
+                      <span>✅ Đã Có Trong Pipeline</span>
+                    </button>
+                  ` : `
+                    <button
+                      type="button"
+                      data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
+                      class="btn-import-lead px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>⚡ Import &amp; Làm Demo</span>
+                    </button>
+                  `}
                   <button
                     type="button"
-                    data-lead-idx="${idx}"
-                    class="btn-import-lead px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer"
+                    data-del-id="${escapeHtml(lead.placeId || lead.id)}"
+                    class="btn-delete-lead p-1.5 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-700 transition-colors cursor-pointer"
+                    title="Xoá tiệm này khỏi kho dữ liệu"
                   >
-                    <span>⚡ Import &amp; Làm Demo</span>
+                    🗑️
                   </button>
-                `}
+                </div>
               </td>
             </tr>
           `;
@@ -2928,7 +3280,7 @@
               <table class="w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-[#fcf9f3] border-b border-[#e5dec9] text-[10px] font-bold uppercase tracking-wider text-stone-500">
-                    <th class="py-2.5 px-3.5">Tiệm &amp; Đánh Giá</th>
+                    <th class="py-2.5 px-3.5">Tiệm &amp; Đánh Giá Thực Tế</th>
                     <th class="py-2.5 px-3">Rating</th>
                     <th class="py-2.5 px-3">Số Điện Thoại</th>
                     <th class="py-2.5 px-3">Tình Trạng Web</th>
@@ -2943,10 +3295,11 @@
           </div>
         `;
 
+        // Bind Import buttons
         lhResultsContainer.querySelectorAll('.btn-import-lead').forEach((btn) => {
           btn.addEventListener('click', async () => {
-            const idx = parseInt(btn.getAttribute('data-lead-idx'), 10);
-            const lead = displayLeads[idx];
+            const leadId = btn.getAttribute('data-lead-id');
+            const lead = allStoredLeads.find((l) => (l.placeId || l.id) === leadId);
             if (!lead) return;
 
             const origHtml = btn.innerHTML;
@@ -2962,6 +3315,9 @@
                 ? lead.topReviews.map((r, i) => `${i + 1}. ${r.author} (5★): "${r.text}"`).join(' | ')
                 : '';
 
+              const industryName = INDUSTRY_CONFIG[lead.industry]?.label || 'Nail Salon / Beauty Atelier';
+
+              // 1. Save client to Outbound CRM
               const res = await runAdminAction(
                 {
                   action: 'save_client',
@@ -2970,7 +3326,7 @@
                   phone: lead.phone,
                   displayPhone: lead.phone,
                   businessAddress: lead.address,
-                  industry: 'Nail Salon / Beauty Atelier',
+                  industry: industryName,
                   socialLinks: lead.bookingOrSocialLink || lead.website || '',
                   flowType: 'outbound',
                   paymentStatus: 'unpaid',
@@ -2988,9 +3344,20 @@
 
               if (res && res.client) {
                 upsertClientInCache(res.client);
-                btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold cursor-not-allowed inline-flex items-center gap-1';
+
+                // 2. Mark imported in Lead Hunter KV Storage
+                lead.imported = true;
+                lead.importedAt = new Date().toISOString();
+                fetch('/api/admin/lead-hunter', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                  body: JSON.stringify({ action: 'mark_imported', placeId: lead.placeId || lead.id, adminKey })
+                }).catch(() => {});
+
+                btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold cursor-not-allowed inline-flex items-center gap-1';
                 btn.innerHTML = '<span>✅ Đã Import</span>';
-                showToast(`🎉 Đã import thành công "${lead.name}" vào danh sách Outbound!`);
+                updateLeadHunterCounters(allStoredLeads);
+                showToast(`🎉 Đã import "${lead.name}" vào danh sách Outbound!`);
 
                 setTimeout(() => {
                   if (confirm(`Đã import thành công "${lead.name}"!\n\nBạn có muốn mở ngay công cụ dựng Web Demo 1-Click (chọn màu 01-05) để lên sóng trong 2 giây không?`)) {
@@ -3007,10 +3374,40 @@
             }
           });
         });
+
+        // Bind Delete buttons
+        lhResultsContainer.querySelectorAll('.btn-delete-lead').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const leadId = btn.getAttribute('data-del-id');
+            const lead = allStoredLeads.find((l) => (l.placeId || l.id) === leadId);
+            const leadName = lead ? lead.name : 'tiệm này';
+
+            if (!confirm(`Bạn có chắc muốn xoá "${leadName}" khỏi kho dữ liệu lưu trữ không?`)) {
+              return;
+            }
+
+            allStoredLeads = allStoredLeads.filter((l) => (l.placeId || l.id) !== leadId);
+            updateLeadHunterCounters(allStoredLeads);
+            renderLeadHunterCRM();
+
+            try {
+              await fetch('/api/admin/lead-hunter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                body: JSON.stringify({ action: 'delete_lead', placeId: leadId, adminKey })
+              });
+              showToast(`Đã xoá "${leadName}" khỏi kho dữ liệu.`);
+            } catch (err) {
+              showToast(`Lỗi xoá lead: ${err.message}`, true);
+            }
+          });
+        });
       }
 
+      // SCAN LEADS AND ACCUMULATE
       if (btnScanLeads) {
         btnScanLeads.addEventListener('click', async () => {
+          const rawInd = lhIndustrySelect ? lhIndustrySelect.value : 'nails';
           const keyword = (lhKeyword ? lhKeyword.value : 'Nail Salon').trim();
           const location = (lhLocation ? lhLocation.value : 'Brisbane QLD').trim();
           const minRating = parseFloat(lhMinRating ? lhMinRating.value : '4.0') || 0;
@@ -3024,13 +3421,13 @@
           const origLabel = scanLeadsLabel.innerHTML;
           btnScanLeads.disabled = true;
           scanLeadsIcon.innerHTML = '<span class="wynn-spin"></span>';
-          scanLeadsLabel.textContent = 'Đang quét Google Maps...';
+          scanLeadsLabel.textContent = 'Đang quét & cộng dồn...';
 
           lhResultsContainer.innerHTML = `
             <div class="bg-white rounded-2xl p-10 text-center text-xs text-stone-500 border border-[#e5dec9] space-y-2.5">
               <span class="wynn-spin-gold text-2xl inline-block mb-1"></span>
               <p class="font-bold text-stone-800 text-sm">Đang kết nối Google Places API (New)...</p>
-              <p class="text-[11px] text-stone-400">Đang quét "${escapeHtml(keyword)}" tại "${escapeHtml(location)}", bóc tách Giờ mở cửa &amp; đánh giá 5 sao...</p>
+              <p class="text-[11px] text-stone-400">Đang quét "${escapeHtml(keyword)}" tại "${escapeHtml(location)}", bóc tách Giờ mở cửa, reviews và cộng dồn vào kho dữ liệu...</p>
             </div>
           `;
 
@@ -3042,7 +3439,9 @@
                 'x-admin-key': adminKey
               },
               body: JSON.stringify({
+                action: 'scan',
                 adminKey,
+                industry: rawInd,
                 keyword,
                 location,
                 minRating,
@@ -3069,25 +3468,21 @@
               throw new Error(data.error || 'Quét dữ liệu thất bại.');
             }
 
-            currentScannedLeads = data.leads || [];
-            const stats = data.stats || {};
+            allStoredLeads = data.leads || [];
+            updateLeadHunterCounters(allStoredLeads, data.industryCounts, data.stats);
 
-            lhStatsBanner.classList.remove('hidden');
-            lhStatsContent.innerHTML = `
-              <span class="font-bold text-stone-900">Tìm thấy ${data.totalFound || currentScannedLeads.length} tiệm:</span>
-              <span class="px-2 py-0.5 rounded-md bg-red-100 text-red-800 font-extrabold text-[11px]">
-                🔥 ${stats.hotNoWeb || 0} Chưa có Web
-              </span>
-              <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[11px]">
-                🟡 ${stats.socialBooking || 0} MXH &amp; Booking
-              </span>
-              <span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[11px]">
-                ⚪ ${stats.customWeb || 0} Đã có Web
-              </span>
-            `;
+            // Switch to the scanned industry tab if specific
+            if (rawInd && rawInd !== 'other') {
+              switchIndustryTab(rawInd);
+            } else {
+              renderLeadHunterCRM();
+            }
 
-            renderLeadResults(currentScannedLeads);
-            showToast(`Quét thành công! Tìm thấy ${currentScannedLeads.length} tiệm tại ${location}.`);
+            const added = data.addedCount || 0;
+            const updated = data.updatedCount || 0;
+            const total = data.totalLeads || allStoredLeads.length;
+
+            showToast(`🎉 Đã cộng dồn thành công! Thêm mới ${added} tiệm, cập nhật ${updated} tiệm. Kho hiện có ${total} tiệm!`);
           } catch (err) {
             const isPerm = err.message && (err.message.includes('Permission denied') || err.message.includes('từ chối quyền') || err.message.includes('403'));
             lhResultsContainer.innerHTML = `
@@ -3125,6 +3520,91 @@
             scanLeadsIcon.innerHTML = origIcon;
             scanLeadsLabel.innerHTML = origLabel;
           }
+        });
+      }
+
+      // EXPORT LEADS TO CSV (EXCEL COMPATIBLE WITH UTF-8 BOM)
+      if (btnExportLeadsCsv) {
+        btnExportLeadsCsv.addEventListener('click', () => {
+          let exportList = allStoredLeads;
+          if (currentIndustryTab !== 'all') {
+            exportList = exportList.filter((l) => (l.industry || 'other') === currentIndustryTab);
+          }
+          if (currentStatusFilter === 'hot') {
+            exportList = exportList.filter((l) => l.leadType === 'hot_lead_no_web');
+          } else if (currentStatusFilter === 'social') {
+            exportList = exportList.filter((l) => l.leadType === 'social_booking_only');
+          } else if (currentStatusFilter === 'custom') {
+            exportList = exportList.filter((l) => l.leadType === 'custom_web');
+          } else if (currentStatusFilter === 'imported') {
+            exportList = exportList.filter((l) => isLeadAlreadyInSystem(l));
+          }
+
+          if (!exportList.length) {
+            showToast('Không có dữ liệu tiệm nào để xuất CSV!', true);
+            return;
+          }
+
+          const headers = [
+            'Tên Tiệm',
+            'Ngành Nghề',
+            'Địa Chỉ Đầy Đủ',
+            'Suburb / Thành Phố',
+            'Số Điện Thoại',
+            'Rating',
+            'Lượng Đánh Giá',
+            'Tình Trạng Website',
+            'Website / Social Link',
+            'Giờ Mở Cửa',
+            'Đánh Giá 5 Sao Nổi Bật',
+            'Trạng Thái Import',
+            'Ngày Lưu'
+          ];
+
+          const csvEscape = (field) => {
+            if (field === null || field === undefined) return '""';
+            const str = String(field).replace(/"/g, '""');
+            return `"${str}"`;
+          };
+
+          const rows = exportList.map((l) => {
+            const indLabel = l.industryLabel || (INDUSTRY_CONFIG[l.industry]?.label) || 'Khác';
+            const hours = (l.openingHours && l.openingHours.length) ? l.openingHours.join(' | ') : '';
+            const topRev = (l.topReviews && l.topReviews.length)
+              ? l.topReviews.map(r => `${r.author} (${r.rating}★): ${r.text}`).join(' || ')
+              : '';
+            const isImp = isLeadAlreadyInSystem(l) ? 'Đã Import Outbound' : 'Chưa Import';
+
+            return [
+              csvEscape(l.name),
+              csvEscape(indLabel),
+              csvEscape(l.address),
+              csvEscape(l.suburb),
+              csvEscape(l.phone),
+              csvEscape(l.rating || 0),
+              csvEscape(l.userRatingCount || 0),
+              csvEscape(l.statusBadge || l.leadType),
+              csvEscape(l.website || l.bookingOrSocialLink || ''),
+              csvEscape(hours),
+              csvEscape(topRev),
+              csvEscape(isImp),
+              csvEscape(l.createdAt || '')
+            ].join(',');
+          });
+
+          // UTF-8 BOM \uFEFF ensures Excel displays Vietnamese correctly
+          const csvContent = '\uFEFF' + [headers.map(csvEscape).join(','), ...rows].join('\r\n');
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const dateStr = new Date().toISOString().slice(0, 10);
+          a.href = url;
+          a.download = `WynnPages_Leads_${currentIndustryTab}_${dateStr}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast(`Đã xuất file CSV thành công với ${exportList.length} tiệm!`);
         });
       }
 

@@ -2986,6 +2986,199 @@ export default {
           return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
         }
 
+        const action = body.action || 'scan';
+
+        // Helper: classify industry
+        const classifyLeadIndustry = (rawInd, kw = '', nm = '') => {
+          if (rawInd && ['nails', 'hair', 'lash_brow', 'spa', 'dining', 'other'].includes(rawInd)) {
+            return rawInd;
+          }
+          const text = `${kw} ${nm}`.toLowerCase();
+          if (/(nail|nails|manicure|pedicure|biab|acrylic|gel polish)/.test(text)) return 'nails';
+          if (/(hair|barber|haircut|salon|stylist|balayage|barbershop)/.test(text)) return 'hair';
+          if (/(lash|brow|eyebrow|microblading|eyelash|lamination)/.test(text)) return 'lash_brow';
+          if (/(spa|massage|facial|skin care|wellness|dermal|clinic)/.test(text)) return 'spa';
+          if (/(cafe|coffee|restaurant|dining|bakery|bistro|bar|food)/.test(text)) return 'dining';
+          return 'other';
+        };
+
+        const getLeadIndustryLabel = (ind) => {
+          switch (ind) {
+            case 'nails': return '💅 Nails & Beauty';
+            case 'hair': return '💇 Hair & Barber';
+            case 'lash_brow': return '👁️ Lash & Brow';
+            case 'spa': return '💆 Day Spa & Massage';
+            case 'dining': return '☕ Cafe & Dining';
+            default: return '✨ Ngành Khác';
+          }
+        };
+
+        const computeLeadStats = (leadsArr = []) => {
+          const stats = {
+            total: leadsArr.length,
+            hotNoWeb: 0,
+            socialBooking: 0,
+            customWeb: 0,
+            imported: 0,
+            unimported: 0
+          };
+          const industryCounts = {
+            all: leadsArr.length,
+            nails: 0,
+            hair: 0,
+            lash_brow: 0,
+            spa: 0,
+            dining: 0,
+            other: 0
+          };
+
+          for (const l of leadsArr) {
+            if (l.imported) stats.imported++;
+            else stats.unimported++;
+
+            if (l.leadType === 'hot_lead_no_web') stats.hotNoWeb++;
+            else if (l.leadType === 'social_booking_only') stats.socialBooking++;
+            else stats.customWeb++;
+
+            const ind = l.industry || 'other';
+            if (industryCounts[ind] !== undefined) {
+              industryCounts[ind]++;
+            } else {
+              industryCounts.other++;
+            }
+          }
+          return { stats, industryCounts };
+        };
+
+        const sortLeads = (arr) => {
+          return arr.sort((a, b) => {
+            // Unimported first
+            if (Boolean(a.imported) !== Boolean(b.imported)) {
+              return a.imported ? 1 : -1;
+            }
+            // Higher priority score first (Hot Lead 3 -> Social 2 -> Custom Web 1)
+            if ((b.priorityScore || 0) !== (a.priorityScore || 0)) {
+              return (b.priorityScore || 0) - (a.priorityScore || 0);
+            }
+            // Higher review count first
+            if ((b.userRatingCount || 0) !== (a.userRatingCount || 0)) {
+              return (b.userRatingCount || 0) - (a.userRatingCount || 0);
+            }
+            return (b.rating || 0) - (a.rating || 0);
+          });
+        };
+
+        // Load existing stored leads from KV
+        let storedLeads = [];
+        if (env && env.WYNN_KV) {
+          const rawKv = await env.WYNN_KV.get('studio_lead_hunter_db', 'json').catch(() => null);
+          if (Array.isArray(rawKv)) {
+            storedLeads = rawKv;
+          }
+        }
+
+        // ACTION 1: LIST STORED LEADS (Immediate cached read)
+        if (action === 'list') {
+          const sorted = sortLeads([...storedLeads]);
+          const { stats, industryCounts } = computeLeadStats(sorted);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              totalLeads: sorted.length,
+              leads: sorted,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 2: MARK IMPORTED
+        if (action === 'mark_imported') {
+          const targetId = body.placeId || body.id;
+          let found = false;
+          let updatedLead = null;
+
+          storedLeads = storedLeads.map((l) => {
+            if ((l.placeId && l.placeId === targetId) || (l.id && l.id === targetId)) {
+              found = true;
+              updatedLead = {
+                ...l,
+                imported: true,
+                importedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              return updatedLead;
+            }
+            return l;
+          });
+
+          if (found && env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
+          }
+
+          const { stats, industryCounts } = computeLeadStats(storedLeads);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              found,
+              lead: updatedLead,
+              totalLeads: storedLeads.length,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 3: DELETE LEAD
+        if (action === 'delete_lead') {
+          const targetId = body.placeId || body.id;
+          const initialLen = storedLeads.length;
+          storedLeads = storedLeads.filter((l) => !(l.placeId === targetId || l.id === targetId));
+
+          if (storedLeads.length !== initialLen && env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
+          }
+
+          const { stats, industryCounts } = computeLeadStats(storedLeads);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              deleted: storedLeads.length !== initialLen,
+              totalLeads: storedLeads.length,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 4: CLEAR LEADS (Per industry or all)
+        if (action === 'clear_leads') {
+          const indFilter = body.industry || 'all';
+          if (indFilter === 'all') {
+            storedLeads = [];
+          } else {
+            storedLeads = storedLeads.filter((l) => (l.industry || 'other') !== indFilter);
+          }
+          if (env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
+          }
+          const { stats, industryCounts } = computeLeadStats(storedLeads);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              clearedIndustry: indFilter,
+              totalLeads: storedLeads.length,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 5: SCAN GOOGLE MAPS AND ACCUMULATE (DEFAULT)
         const effectivePlacesKey = (body.googlePlacesApiKey || cfg.googlePlacesApiKey || '').trim();
         if (!effectivePlacesKey) {
           return new Response(
@@ -3000,6 +3193,7 @@ export default {
 
         const keyword = (body.keyword || 'Nail Salon').trim();
         const location = (body.location || 'Brisbane QLD').trim();
+        const rawSelectedIndustry = (body.industry || '').trim();
         const minRating = parseFloat(body.minRating) || 0;
         const textQuery = `${keyword} in ${location}`;
 
@@ -3109,7 +3303,7 @@ export default {
         // Classify & Process Leads
         const socialRegex = /(facebook\.com|instagram\.com|linktr\.ee|fresha\.com|timely\.com|square\.site|booksy\.com|heygoldie\.com|vagaro\.com|tiktok\.com|ovatu\.com|appointfix\.com|glossgenius\.com)/i;
 
-        const processed = rawPlaces.map((p) => {
+        const newProcessed = rawPlaces.map((p) => {
           const name = p.displayName?.text || p.name || '';
           const address = p.formattedAddress || '';
           const phone = p.nationalPhoneNumber || p.internationalPhoneNumber || '';
@@ -3157,7 +3351,11 @@ export default {
             suburb = `${auMatch[1].trim()}, ${auMatch[2].toUpperCase()} ${auMatch[3]}`;
           }
 
+          const industry = classifyLeadIndustry(rawSelectedIndustry, keyword, name);
+          const industryLabel = getLeadIndustryLabel(industry);
+
           return {
+            id: p.id || ('lead_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)),
             placeId: p.id || '',
             name,
             phone,
@@ -3171,37 +3369,85 @@ export default {
             priorityScore,
             bookingOrSocialLink,
             openingHours: weekdayDescriptions,
-            topReviews
+            topReviews,
+            industry,
+            industryLabel,
+            imported: false,
+            scannedKeyword: keyword,
+            scannedLocation: location
           };
         });
 
         // Filter by min rating
-        const filtered = minRating > 0
-          ? processed.filter((item) => item.rating >= minRating)
-          : processed;
+        const filteredNew = minRating > 0
+          ? newProcessed.filter((item) => item.rating >= minRating)
+          : newProcessed;
 
-        // Sort: Hot leads (3) -> Social/Booking (2) -> Custom Web (1), then by reviews DESC
-        filtered.sort((a, b) => {
-          if (b.priorityScore !== a.priorityScore) {
-            return b.priorityScore - a.priorityScore;
+        // CUMULATIVE MERGE & DEDUPLICATION WITH KV
+        const leadMap = new Map();
+        // 1. Seed with existing stored leads
+        for (const item of storedLeads) {
+          const key = item.placeId || `${(item.name || '').toLowerCase().trim()}||${(item.suburb || item.address || '').toLowerCase().trim()}`;
+          leadMap.set(key, item);
+        }
+
+        let addedCount = 0;
+        let updatedCount = 0;
+        const nowIso = new Date().toISOString();
+
+        // 2. Merge newly scanned leads
+        for (const shop of filteredNew) {
+          const key = shop.placeId || `${(shop.name || '').toLowerCase().trim()}||${(shop.suburb || shop.address || '').toLowerCase().trim()}`;
+          if (leadMap.has(key)) {
+            const existing = leadMap.get(key);
+            // Preserve imported state and original creation timestamp
+            leadMap.set(key, {
+              ...existing,
+              rating: shop.rating || existing.rating,
+              userRatingCount: shop.userRatingCount || existing.userRatingCount,
+              topReviews: (shop.topReviews && shop.topReviews.length) ? shop.topReviews : existing.topReviews,
+              openingHours: (shop.openingHours && shop.openingHours.length) ? shop.openingHours : existing.openingHours,
+              phone: shop.phone || existing.phone,
+              website: shop.website || existing.website,
+              leadType: shop.leadType || existing.leadType,
+              statusBadge: shop.statusBadge || existing.statusBadge,
+              priorityScore: shop.priorityScore || existing.priorityScore,
+              bookingOrSocialLink: shop.bookingOrSocialLink || existing.bookingOrSocialLink,
+              industry: existing.industry || shop.industry,
+              industryLabel: existing.industryLabel || shop.industryLabel,
+              updatedAt: nowIso
+            });
+            updatedCount++;
+          } else {
+            leadMap.set(key, {
+              ...shop,
+              createdAt: nowIso,
+              updatedAt: nowIso
+            });
+            addedCount++;
           }
-          if (b.userRatingCount !== a.userRatingCount) {
-            return b.userRatingCount - a.userRatingCount;
-          }
-          return b.rating - a.rating;
-        });
+        }
+
+        const mergedLeads = sortLeads(Array.from(leadMap.values()));
+
+        // Save cumulative database back to KV
+        if (env && env.WYNN_KV) {
+          await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(mergedLeads));
+        }
+
+        const { stats, industryCounts } = computeLeadStats(mergedLeads);
 
         return new Response(
           JSON.stringify({
             ok: true,
-            query: { keyword, location, minRating },
-            totalFound: rawPlaces.length,
-            leads: filtered,
-            stats: {
-              hotNoWeb: filtered.filter((x) => x.leadType === 'hot_lead_no_web').length,
-              socialBooking: filtered.filter((x) => x.leadType === 'social_booking_only').length,
-              customWeb: filtered.filter((x) => x.leadType === 'custom_web').length
-            }
+            query: { keyword, location, minRating, industry: rawSelectedIndustry },
+            scannedThisBatch: filteredNew.length,
+            addedCount,
+            updatedCount,
+            totalLeads: mergedLeads.length,
+            leads: mergedLeads,
+            stats,
+            industryCounts
           }),
           { status: 200, headers: corsHeaders }
         );
