@@ -271,21 +271,24 @@
     }
 
     /* ==========================================================================
-       APPLE REFINED PEARL & ELEVATED CARDS (GPU 120 FPS OPTIMIZED)
-       Backdrop-filter is strictly reserved for floating chrome (header & modals)
-       to ensure zero GPU rasterization jank during continuous high-speed scroll.
+       HAUTE COUTURE FROSTED GLASS & SPECULAR ELEVATION (APPLE SILK 120 FPS)
+       Optimized with pure GPU composited translate3d without scale distortion
+       so frosted glass passes execute at full 60–120 FPS ProMotion refresh rate.
        ========================================================================== */
     .atelier-card {
       background: var(--bg-card);
+      backdrop-filter: blur(14px) saturate(160%);
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
       border: 1px solid var(--border-pearl);
       box-shadow:
-        0 18px 42px -18px rgba(43, 37, 30, 0.07),
+        0 20px 45px -18px rgba(43, 37, 30, 0.08),
         0 0 0 1px var(--border-hairline);
-      transform: translateZ(0);
+      transform: translate3d(0, 0, 0);
+      contain: layout style;
       transition:
-        transform 0.4s var(--apple-silk),
-        box-shadow 0.4s var(--apple-silk),
-        background-color 0.3s ease;
+        transform 0.48s var(--apple-silk),
+        box-shadow 0.48s var(--apple-silk),
+        background-color 0.35s ease;
     }
 
     .atelier-card-lift {
@@ -550,24 +553,50 @@
       }
     }
 
+    /* ==========================================================================
+       WYNNPAGES HAUTE COUTURE CINEMATIC APPLE REVEAL & RETRACT ENGINE
+       - Poised, slow 1.38s blossom with subtle optical de-blur & spring elevation
+       - Deep Apple-spring bidirectional retract when scrolling back up
+       - 100% Native IntersectionObserver driven: GPU compositor zero-jank
+       ========================================================================== */
     [data-apple-reveal] {
       opacity: 0;
-      transform: translate3d(0, 22px, 0);
+      transform: translate3d(0, 48px, 0) scale(0.965);
+      filter: blur(4px);
       transition:
-        opacity 0.48s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.58s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 1.38s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: var(--stagger-ms, 0ms);
+      will-change: transform, opacity, filter;
     }
 
     [data-apple-reveal="header"] {
-      transform: translate3d(0, 16px, 0);
+      transform: translate3d(0, 36px, 0) scale(0.98);
+      filter: blur(3px);
       transition:
-        opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity 1.15s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 1.28s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: var(--stagger-ms, 0ms);
     }
 
     [data-apple-reveal].is-inview {
       opacity: 1;
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0px);
+    }
+
+    /* Apple-Spring Retract: Smoothly tucks back down when scrolling back up */
+    [data-apple-reveal].is-retracting {
+      opacity: 0;
+      transform: translate3d(0, 42px, 0) scale(0.968);
+      filter: blur(3px);
+      transition:
+        opacity 0.85s cubic-bezier(0.32, 0.72, 0, 1),
+        transform 0.95s cubic-bezier(0.32, 0.72, 0, 1),
+        filter 0.85s ease;
+      transition-delay: 0ms !important;
     }
 
     /* Menu Category Row Cascade on Tab Switch */
@@ -2448,35 +2477,63 @@
       }
 
       // ======================================================================
-      // 9. NATIVE HARDWARE-ACCELERATED APPLE SCROLL REVEALS & HUD (60–120 FPS)
-      //    - Native IntersectionObserver: runs in browser C++ compositor, 0ms JS thrash
-      //    - Throttled passive scroll for sticky header, progress hairline & floating dock
-      //    - Zero getBoundingClientRect layout reflows during continuous scroll
+      // 9. BREAKTHROUGH NATIVE APPLE BIDIRECTIONAL REVEAL & RETRACT ENGINE
+      //    - rootMargin -14%: blooms in poised & unhurried ("đừng sớm quá")
+      //    - Slow 1.38s ease-out with optical de-blur & sequential wave stagger
+      //    - Retracts gracefully when scrolling back up (never abrupt)
+      //    - Native C++ IntersectionObserver: 0ms JS reflow, locked 60–120 FPS
       // ======================================================================
       const headerEl = document.getElementById('atelier-header');
       const floatDock = document.getElementById('atelier-float-dock');
-      const revealNodes = document.querySelectorAll('[data-apple-reveal]');
+      const heroCopyCol = document.getElementById('hero-copy-col');
+      const heroArtCol = document.getElementById('hero-art-col');
+      const friezeTrack = document.getElementById('craft-frieze-track');
+      const revealNodes = Array.from(document.querySelectorAll('[data-apple-reveal]'));
       const navSpyLinks = Array.from(document.querySelectorAll('[data-nav-spy]'));
 
-      // 9a. Asynchronous Native IntersectionObserver for Smooth Reveals
-      if ('IntersectionObserver' in window) {
-        const revealObserver = new IntersectionObserver((entries, obs) => {
+      // 9a. Group cards by parent to compute wave stagger delays
+      const parentGroups = new Map();
+      revealNodes.forEach((node) => {
+        const parent = node.parentElement;
+        if (!parentGroups.has(parent)) parentGroups.set(parent, []);
+        parentGroups.get(parent).push(node);
+      });
+      parentGroups.forEach((children) => {
+        if (children.length > 1) {
+          children.forEach((child, idx) => {
+            child.style.setProperty('--stagger-ms', `${Math.min(idx * 120, 360)}ms`);
+          });
+        }
+      });
+
+      // 9b. Asynchronous Native IntersectionObserver (Bidirectional Reveal & Retract)
+      if ('IntersectionObserver' in window && !prefersReducedMotion) {
+        const revealObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
+            const target = entry.target;
             if (entry.isIntersecting) {
-              entry.target.classList.add('is-inview');
-              obs.unobserve(entry.target);
+              // User scrolling down: bloom in slowly, gracefully and unhurried
+              target.classList.remove('is-retracting');
+              target.classList.add('is-inview');
+            } else {
+              // User scrolled back up past element: smoothly retract back down!
+              if (entry.boundingClientRect && entry.boundingClientRect.top > 0) {
+                target.classList.remove('is-inview');
+                target.classList.add('is-retracting');
+              }
             }
           });
         }, {
-          rootMargin: '0px 0px -40px 0px',
-          threshold: 0.06
+          rootMargin: '0px 0px -14% 0px',
+          threshold: [0, 0.12]
         });
+
         revealNodes.forEach((node) => revealObserver.observe(node));
       } else {
         revealNodes.forEach((node) => node.classList.add('is-inview'));
       }
 
-      // 9b. Asynchronous Native IntersectionObserver for Active Header Nav Spy
+      // 9c. Asynchronous Native IntersectionObserver for Active Header Nav Spy
       if ('IntersectionObserver' in window && navSpyLinks.length) {
         const spySections = navSpyLinks
           .map((a) => ({ id: a.getAttribute('data-nav-spy'), el: document.getElementById(a.getAttribute('data-nav-spy')), link: a }))
@@ -2499,7 +2556,7 @@
         spySections.forEach((s) => spyObserver.observe(s.el));
       }
 
-      // 9c. Ultra-Lightweight Passive Scroll HUD (Throttled via requestAnimationFrame)
+      // 9d. Ultra-Lightweight Passive Scroll HUD & Optical Depth (Throttled via requestAnimationFrame)
       let scrollTicking = false;
       function updateScrollChrome() {
         const scrollY = window.scrollY || window.pageYOffset || 0;
@@ -2518,6 +2575,27 @@
           const pastHero = scrollY > 400;
           const nearBottom = scrollY > (document.documentElement.scrollHeight - vh - 320);
           floatDock.classList.toggle('is-docked', pastHero && !nearBottom);
+        }
+
+        if (!prefersReducedMotion) {
+          // Subtle Hero Recede & Arch Counter-Parallax (0 -> 580px)
+          if (scrollY < vh * 1.25) {
+            const heroT = Math.min(1, scrollY / 560);
+            if (heroCopyCol) {
+              heroCopyCol.style.transform = `translate3d(0, ${(-heroT * 20).toFixed(1)}px, 0)`;
+              heroCopyCol.style.opacity = (1 - heroT * 0.55).toFixed(3);
+            }
+            if (heroArtCol) {
+              heroArtCol.style.transform = `translate3d(0, ${(heroT * 22).toFixed(1)}px, 0)`;
+            }
+          }
+
+          // Subtle Craftsmanship Frieze Track Glide
+          if (friezeTrack && window.innerWidth >= 640) {
+            const friezeProgress = Math.min(1, Math.max(0, (scrollY - 200) / (vh * 1.4)));
+            const shiftX = (friezeProgress - 0.5) * 40;
+            friezeTrack.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`;
+          }
         }
 
         scrollTicking = false;
