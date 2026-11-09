@@ -553,16 +553,15 @@
     }
 
     /* ==========================================================================
-       WYNNPAGES SIGNATURE OPTICAL DE-BLUR & SILK BLOOM (120 FPS PROMOTION)
-       Directly adopting root wynnpages.com.au's acclaimed optical depth engine:
-       - Elements start out-of-focus: filter: blur(10px) translateY(26px) scale(0.985)
-       - When scrolled into view, they blossom into crystal-clear sharpness:
-         filter: blur(0px) translateY(0) scale(1) with 1.2s Apple Silk curve.
-       - Once revealed, they remain rock-solid and stable (zero jitter).
+       WYNNPAGES MULTI-DIRECTIONAL OPTICAL BLOOM & RETRACT ENGINE (120 FPS)
+       - Lookbook 4-corner convergence: corner-tl, corner-tr, corner-bl, corner-br
+       - Lateral glides: left (-44px), right (+44px)
+       - Center elevations: center / zoom
+       - Full bidirectional Apple-spring retract when scrolling back up (mobile-tuned)
        ========================================================================== */
     [data-apple-reveal] {
       opacity: 0;
-      transform: translate3d(0, 26px, 0) scale(0.985);
+      transform: translate3d(0, 28px, 0) scale(0.985);
       filter: blur(10px);
       transition:
         opacity 1.15s cubic-bezier(0.16, 1, 0.3, 1),
@@ -573,7 +572,7 @@
     }
 
     [data-apple-reveal="header"] {
-      transform: translate3d(0, 20px, 0) scale(0.99);
+      transform: translate3d(0, 18px, 0) scale(0.99);
       filter: blur(8px);
       transition:
         opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
@@ -582,10 +581,128 @@
       transition-delay: var(--stagger-ms, 0ms);
     }
 
+    /* Direction: Lateral Left */
+    [data-apple-reveal="left"] {
+      transform: translate3d(-46px, 0, 0) scale(0.975);
+      filter: blur(10px);
+    }
+
+    /* Direction: Lateral Right */
+    [data-apple-reveal="right"] {
+      transform: translate3d(46px, 0, 0) scale(0.975);
+      filter: blur(10px);
+    }
+
+    /* Direction: Center Scale Zoom */
+    [data-apple-reveal="center"],
+    [data-apple-reveal="zoom"] {
+      transform: translate3d(0, 24px, 0) scale(0.935);
+      filter: blur(10px);
+    }
+
+    /* Lookbook 4-Diagonal Corner Entrances */
+    [data-apple-reveal="corner-tl"] {
+      transform: translate3d(-48px, -36px, 0) scale(0.96);
+      filter: blur(12px);
+    }
+    [data-apple-reveal="corner-tr"] {
+      transform: translate3d(48px, -36px, 0) scale(0.96);
+      filter: blur(12px);
+    }
+    [data-apple-reveal="corner-bl"] {
+      transform: translate3d(-48px, 36px, 0) scale(0.96);
+      filter: blur(12px);
+    }
+    [data-apple-reveal="corner-br"] {
+      transform: translate3d(48px, 36px, 0) scale(0.96);
+      filter: blur(12px);
+    }
+
+    /* Unified In-View Target State */
     [data-apple-reveal].is-inview {
       opacity: 1;
       transform: translate3d(0, 0, 0) scale(1);
       filter: blur(0px);
+    }
+
+    /* Graceful Apple-Spring Retract on Scroll-Up (Mobile & Desktop) */
+    [data-apple-reveal].is-retracting {
+      opacity: 0;
+      filter: blur(8px);
+      transition:
+        opacity 0.65s cubic-bezier(0.32, 0.72, 0, 1),
+        transform 0.75s cubic-bezier(0.32, 0.72, 0, 1),
+        filter 0.65s ease;
+      transition-delay: 0ms !important;
+    }
+
+    /* Retract Destinations match their respective origin directions */
+    [data-apple-reveal="header"].is-retracting {
+      transform: translate3d(0, 20px, 0) scale(0.99);
+    }
+    [data-apple-reveal="left"].is-retracting {
+      transform: translate3d(-42px, 0, 0) scale(0.975);
+    }
+    [data-apple-reveal="right"].is-retracting {
+      transform: translate3d(42px, 0, 0) scale(0.975);
+    }
+    [data-apple-reveal="center"].is-retracting,
+    [data-apple-reveal="zoom"].is-retracting {
+      transform: translate3d(0, 22px, 0) scale(0.94);
+    }
+    [data-apple-reveal="corner-tl"].is-retracting {
+      transform: translate3d(-44px, -32px, 0) scale(0.96);
+    }
+    [data-apple-reveal="corner-tr"].is-retracting {
+      transform: translate3d(44px, -32px, 0) scale(0.96);
+    }
+    [data-apple-reveal="corner-bl"].is-retracting {
+      transform: translate3d(-44px, 32px, 0) scale(0.96);
+    }
+    [data-apple-reveal="corner-br"].is-retracting {
+      transform: translate3d(44px, 32px, 0) scale(0.96);
+    }
+    [data-apple-reveal]:not([data-apple-reveal="header"]):not([data-apple-reveal="left"]):not([data-apple-reveal="right"]):not([data-apple-reveal="center"]):not([data-apple-reveal="zoom"]):not([data-apple-reveal^="corner-"]).is-retracting {
+      transform: translate3d(0, 26px, 0) scale(0.985);
+    }
+
+    /* ==========================================================================
+       HAUTE COUTURE STACKING DECK (XẾP CHỒNG THU HỒI TỰ NHIÊN)
+       On mobile & tablet (< 1024px), review cards stack tactilely on top of each other.
+       When scrolling down, Card 2 stacks over Card 1; Card 3 over Card 2.
+       When scrolling back up, the top card retracts/peels off the deck smoothly!
+       ========================================================================== */
+    @media (max-width: 1023px) {
+      .atelier-stack-deck {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+        position: relative;
+      }
+      .atelier-stack-card {
+        position: sticky !important;
+        top: calc(82px + var(--stack-offset, 0px)) !important;
+        transform-origin: center top;
+        box-shadow:
+          0 20px 45px -15px rgba(43, 37, 30, 0.14),
+          0 0 0 1px var(--border-hairline) !important;
+        transition:
+          transform 0.45s var(--apple-silk),
+          box-shadow 0.45s var(--apple-silk),
+          filter 0.45s ease;
+      }
+      .atelier-stack-card:nth-child(1) {
+        --stack-offset: 0px;
+        z-index: 1;
+      }
+      .atelier-stack-card:nth-child(2) {
+        --stack-offset: 16px;
+        z-index: 2;
+      }
+      .atelier-stack-card:nth-child(3) {
+        --stack-offset: 32px;
+        z-index: 3;
+      }
     }
 
     /* Menu Category Row Cascade on Tab Switch */
@@ -1140,7 +1257,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
         <!-- Pillar 1 -->
-        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
+        <article data-apple-reveal="left" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
           <div class="w-11 h-11 rounded-2xl wax-monogram-seal flex items-center justify-center" style="color: var(--accent-primary);">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2.5c3.5 4 6 7.5 6 11a6 6 0 1 1-12 0c0-3.5 2.5-7 6-11z"></path>
@@ -1153,7 +1270,7 @@
         </article>
 
         <!-- Pillar 2 -->
-        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
+        <article data-apple-reveal="center" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
           <div class="w-11 h-11 rounded-2xl wax-monogram-seal flex items-center justify-center" style="color: var(--accent-primary);">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 3l7 3v6c0 4.5-3 8.2-7 9.5-4-1.3-7-5-7-9.5V6l7-3z"></path>
@@ -1167,7 +1284,7 @@
         </article>
 
         <!-- Pillar 3 -->
-        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
+        <article data-apple-reveal="right" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 space-y-4">
           <div class="w-11 h-11 rounded-2xl wax-monogram-seal flex items-center justify-center" style="color: var(--accent-primary);">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
@@ -1238,7 +1355,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-stretch">
         <!-- Ritual 1: Structured BIAB Overlay -->
-        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden">
+        <article data-apple-reveal="left" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden">
           <div class="space-y-4">
             <div class="flex items-center justify-between gap-2">
               <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Most Requested</span>
@@ -1273,7 +1390,7 @@
         </article>
 
         <!-- Ritual 2: Après Gel-X Extensions -->
-        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden" style="border-color: var(--foil-gold);">
+        <article data-apple-reveal="center" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden" style="border-color: var(--foil-gold);">
           <div class="space-y-4">
             <div class="flex items-center justify-between gap-2">
               <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Instant Length</span>
@@ -1308,7 +1425,7 @@
         </article>
 
         <!-- Ritual 3: Japanese Gel & Botanical Spa -->
-        <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden">
+        <article data-apple-reveal="right" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-6 relative overflow-hidden">
           <div class="space-y-4">
             <div class="flex items-center justify-between gap-2">
               <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Nourish &amp; Shine</span>
@@ -1349,7 +1466,7 @@
          ====================================================================== -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
       <!-- Feature Card 1 -->
-      <div data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 space-y-5 group">
+      <div data-apple-reveal="left" class="atelier-card atelier-card-lift rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 space-y-5 group">
         <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
@@ -1371,7 +1488,7 @@
       </div>
 
       <!-- Feature Card 2 -->
-      <div data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 space-y-5 group">
+      <div data-apple-reveal="right" class="atelier-card atelier-card-lift rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 space-y-5 group">
         <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-pedi-img"
@@ -1431,7 +1548,7 @@
         </h2>
       </div>
 
-      <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6"></div>
+      <div id="reviews-grid" class="atelier-stack-deck grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6"></div>
     </section>
 
     <!-- ======================================================================
@@ -1450,7 +1567,7 @@
 
       <div class="space-y-3.5 sm:space-y-4">
         <!-- FAQ 1 -->
-        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="left" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>How long does a BIAB manicure last, and how often should I infill?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1465,7 +1582,7 @@
         </details>
 
         <!-- FAQ 2 -->
-        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="right" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>Is BIAB or Gel-X damaging to my natural nail plate?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1480,7 +1597,7 @@
         </details>
 
         <!-- FAQ 3 -->
-        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="left" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>Do I need to book in advance or do you accept walk-ins?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1495,7 +1612,7 @@
         </details>
 
         <!-- FAQ 4 -->
-        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="right" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>What is your sanitisation and hygiene standard?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1510,7 +1627,7 @@
         </details>
 
         <!-- FAQ 5 -->
-        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="left" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>Can I purchase an Atelier Gift Certificate?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1531,7 +1648,7 @@
          ====================================================================== -->
     <section id="visit" class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
       <!-- Left: Hours, Address, Australian Parking Guide & Atelier Map (7 Cols) -->
-      <div data-apple-reveal="card" class="lg:col-span-7 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 sm:space-y-7">
+      <div data-apple-reveal="left" class="lg:col-span-7 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 sm:space-y-7">
         <div class="space-y-2.5 sm:space-y-3">
           <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Find Our Sanctuary</span>
           <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
@@ -1598,7 +1715,7 @@
       </div>
 
       <!-- Right: Dedicated Reserve Card (5 Cols) -->
-      <div data-apple-reveal="card" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
+      <div data-apple-reveal="right" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
           <div class="w-12 h-12 rounded-full wax-monogram-seal flex items-center justify-center">
             <span id="footer-monogram" class="font-editorial italic font-bold text-xl" style="color: var(--accent-primary);">M</span>
@@ -2239,10 +2356,11 @@
           ? 'scale-[1.18] group-hover:scale-[1.24]'
           : 'scale-[1.06] group-hover:scale-[1.12]';
         lookbookGrid.className = 'grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 items-stretch';
+        const lookbookDirs = ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br'];
         lookbookGrid.innerHTML = resolvedImages.lookbook.map((tile, idx) => `
           <button
             type="button"
-            data-apple-reveal="card"
+            data-apple-reveal="${lookbookDirs[idx % 4] || 'corner-tl'}"
             data-lookbook-idx="${idx}"
             class="group atelier-card atelier-card-lift rounded-[24px] sm:rounded-[28px] p-2.5 sm:p-3 flex flex-col justify-between text-left w-full h-full cursor-pointer"
           >
@@ -2275,12 +2393,18 @@
         });
       }
 
-      // 5. Render Client Reviews
+      // 5. Render Client Reviews (with Stacking Deck on Mobile)
       const reviewsGrid = document.getElementById('reviews-grid');
       if (reviewsGrid && Array.isArray(cfg.reviews)) {
         const starSvg = '<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M10 1.5l2.59 5.25 5.79.84-4.19 4.08.99 5.77L10 14.72l-5.18 2.72.99-5.77-4.19-4.08 5.79-.84L10 1.5z"/></svg>';
-        reviewsGrid.innerHTML = cfg.reviews.map((r) => `
-          <article data-apple-reveal="card" class="atelier-card atelier-card-lift rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-5">
+        const reviewDirs = ['left', 'center', 'right'];
+        reviewsGrid.innerHTML = cfg.reviews.map((r, idx) => `
+          <article
+            data-apple-reveal="${reviewDirs[idx % 3] || 'center'}"
+            data-stack-idx="${idx}"
+            style="--stack-offset: ${idx * 16}px;"
+            class="atelier-card atelier-card-lift atelier-stack-card rounded-[28px] p-6 sm:p-7 flex flex-col justify-between space-y-5"
+          >
             <div class="space-y-3">
               <div class="flex items-center gap-0.5" style="color: var(--foil-gold);" aria-hidden="true">
                 ${starSvg.repeat(5)}
@@ -2465,59 +2589,66 @@
       }
 
       // ======================================================================
-      // 9. WYNNPAGES BESPOKE SMOOTH SCROLL & OPTICAL DE-BLUR ENGINE (120 FPS)
+      // 9. WYNNPAGES MULTI-DIRECTIONAL OPTICAL BLOOM & RETRACT ENGINE (120 FPS)
       //    - Lenis inertia momentum scroll (matching wynnpages.com.au standard)
-      //    - Optical de-blur entrance bloom: elements bloom from soft blur(10px)
-      //      into razor-sharp clarity, then remain stably revealed (unobserved)
-      //    - Retract strictly reserved for floating chrome: bottom call dock,
-      //      sticky glass header, and hero counter-depth parallax
+      //    - Multi-directional reveals: diagonal corners, lateral slides, center scale
+      //    - Bidirectional Apple-spring retract: retracts on scroll-up (mobile-tuned)
+      //    - Stacking card deck on mobile for Word of Mouth reviews
       // ======================================================================
       const headerEl = document.getElementById('atelier-header');
       const floatDock = document.getElementById('atelier-float-dock');
       const heroCopyCol = document.getElementById('hero-copy-col');
       const heroArtCol = document.getElementById('hero-art-col');
       const friezeTrack = document.getElementById('craft-frieze-track');
-      const revealNodes = Array.from(document.querySelectorAll('[data-apple-reveal]'));
       const navSpyLinks = Array.from(document.querySelectorAll('[data-nav-spy]'));
 
-      // 9a. Group cards by parent to compute wave stagger delays
-      const parentGroups = new Map();
-      revealNodes.forEach((node) => {
-        const parent = node.parentElement;
-        if (!parentGroups.has(parent)) parentGroups.set(parent, []);
-        parentGroups.get(parent).push(node);
-      });
-      parentGroups.forEach((children) => {
-        if (children.length > 1) {
-          children.forEach((child, idx) => {
-            child.style.setProperty('--stagger-ms', `${Math.min(idx * 110, 330)}ms`);
-          });
-        }
-      });
+      // 9a. Compute Wave Stagger Delays on all reveal nodes (grouped by parent)
+      function refreshStaggers() {
+        const allNodes = Array.from(document.querySelectorAll('[data-apple-reveal]'));
+        const parentGroups = new Map();
+        allNodes.forEach((node) => {
+          const parent = node.parentElement;
+          if (!parentGroups.has(parent)) parentGroups.set(parent, []);
+          parentGroups.get(parent).push(node);
+        });
+        parentGroups.forEach((children) => {
+          if (children.length > 1) {
+            children.forEach((child, idx) => {
+              if (!child.style.getPropertyValue('--stagger-ms')) {
+                child.style.setProperty('--stagger-ms', `${Math.min(idx * 90, 270)}ms`);
+              }
+            });
+          }
+        });
+      }
+      refreshStaggers();
 
-      // 9b. Native High-Performance IntersectionObserver (Optical De-Blur Bloom)
+      // 9b. Native High-Performance Bidirectional IntersectionObserver
       if ('IntersectionObserver' in window && !prefersReducedMotion) {
-        const revealObserver = new IntersectionObserver((entries, observer) => {
+        const revealObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
+            const target = entry.target;
             if (entry.isIntersecting) {
-              const target = entry.target;
+              target.classList.remove('is-retracting');
               target.classList.add('is-inview');
-              // Free compositor will-change memory once bloom transition ends
-              target.addEventListener('transitionend', () => {
-                target.style.willChange = 'auto';
-              }, { once: true });
-              // Stably revealed: unobserve immediately so scrolling past never causes jitter
-              observer.unobserve(target);
+            } else {
+              // Only retract if the element has fallen below the viewport (when user scrolls back up)
+              const rect = entry.boundingClientRect;
+              if (rect && rect.top > 50) {
+                target.classList.remove('is-inview');
+                target.classList.add('is-retracting');
+              }
             }
           });
         }, {
-          rootMargin: '0px 0px -30px 0px',
-          threshold: 0.04
+          rootMargin: '0px 0px -40px 0px',
+          threshold: [0, 0.08]
         });
 
-        revealNodes.forEach((node) => revealObserver.observe(node));
+        // Observe all static & dynamically injected reveal nodes
+        document.querySelectorAll('[data-apple-reveal]').forEach((node) => revealObserver.observe(node));
       } else {
-        revealNodes.forEach((node) => node.classList.add('is-inview'));
+        document.querySelectorAll('[data-apple-reveal]').forEach((node) => node.classList.add('is-inview'));
       }
 
       // 9c. Asynchronous Native IntersectionObserver for Active Header Nav Spy
