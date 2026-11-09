@@ -239,6 +239,137 @@
       </div>
 
       <!-- ======================================================== -->
+      <!-- GOOGLE MAPS LEAD HUNTER (SĂN KHÁCH HÀNG TỰ ĐỘNG)        -->
+      <!-- ======================================================== -->
+      <div id="lead-hunter-panel" class="bg-gradient-to-br from-white via-[#fcfaf6] to-[#f8f2e7] rounded-3xl border-2 border-[#d49b28]/40 shadow-sm overflow-hidden transition-all duration-300">
+        <!-- Collapsible Header Banner -->
+        <button
+          type="button"
+          id="btn-toggle-lead-hunter"
+          class="w-full px-5 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3 text-left hover:bg-stone-50/70 transition-colors cursor-pointer select-none"
+        >
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#96432b] to-[#d49b28] text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+              🔍
+            </span>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900">
+                  Săn Khách Hàng Tiềm Năng (Google Maps Lead Hunter)
+                </h3>
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                  Places API New
+                </span>
+                <span id="lead-hunter-key-indicator" class="hidden px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                  ● Key Sẵn Sàng
+                </span>
+              </div>
+              <p class="text-xs text-stone-500 mt-0.5">
+                Quét tiệm theo khu vực Úc • Tự bóc tách Giờ mở cửa &amp; 3 đánh giá 5 sao • 1-Click Import dựng Web Demo
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="lead-hunter-toggle-label" class="text-xs font-bold text-[#96432b]">Mở Bộ Săn Khách</span>
+            <span id="lead-hunter-toggle-icon" class="text-stone-400 text-sm transform transition-transform duration-200">▼</span>
+          </div>
+        </button>
+
+        <!-- Collapsible Body Content -->
+        <div id="lead-hunter-body" class="hidden px-5 sm:px-6 pb-6 pt-2 border-t border-[#ece4d5] space-y-4">
+          <!-- Search Control Bar -->
+          <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#e5dec9] shadow-xs space-y-3.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+              <div class="lg:col-span-4">
+                <label class="text-[11px] font-bold text-stone-700 block mb-1">
+                  1. Từ khoá tìm kiếm (Industry / Keyword)
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="lh-keyword"
+                    value="Nail Salon"
+                    placeholder="VD: Nail Salon, Hair &amp; Beauty, Day Spa"
+                    class="atelier-input w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-semibold"
+                  >
+                  <span class="absolute left-2.5 top-2.5 text-xs text-stone-400">💅</span>
+                </div>
+              </div>
+
+              <div class="lg:col-span-4">
+                <label class="text-[11px] font-bold text-stone-700 block mb-1">
+                  2. Khu vực / Thành phố Úc (Suburb / City)
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="lh-location"
+                    value="Brisbane QLD"
+                    placeholder="VD: Brisbane QLD, Ipswich QLD, Sydney NSW"
+                    class="atelier-input w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-semibold"
+                  >
+                  <span class="absolute left-2.5 top-2.5 text-xs text-stone-400">📍</span>
+                </div>
+              </div>
+
+              <div class="lg:col-span-2">
+                <label class="text-[11px] font-bold text-stone-700 block mb-1">
+                  3. Lọc Rating
+                </label>
+                <select id="lh-min-rating" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold text-stone-800">
+                  <option value="4.0" selected>4.0+ ⭐ (Khuyên dùng)</option>
+                  <option value="4.5">4.5+ ⭐ (Chỉ lấy tiệm đỉnh)</option>
+                  <option value="0">Tất cả rating</option>
+                </select>
+              </div>
+
+              <div class="lg:col-span-2">
+                <button
+                  type="button"
+                  id="btn-scan-leads"
+                  class="w-full px-4 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-extrabold text-xs transition-all shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span id="scan-leads-icon">🚀</span>
+                  <span id="scan-leads-label">Quét Google Maps</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Suburb Shortcuts -->
+            <div class="flex items-center gap-1.5 flex-wrap pt-1 text-[11px]">
+              <span class="text-stone-400 font-semibold mr-1">Khu vực nhanh:</span>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Brisbane QLD">Brisbane QLD</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Gold Coast QLD">Gold Coast QLD</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Ipswich QLD">Ipswich QLD</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Melbourne VIC">Melbourne VIC</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Sydney NSW">Sydney NSW</button>
+              <button type="button" class="lh-quick-loc px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/50 border border-[#e5dec9] text-stone-700 font-medium transition-colors" data-loc="Perth WA">Perth WA</button>
+            </div>
+          </div>
+
+          <!-- Stats & Filter Bar (hidden initially) -->
+          <div id="lh-stats-banner" class="hidden bg-white rounded-2xl px-5 py-3 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3 flex-wrap" id="lh-stats-content">
+              <!-- Dynamically populated stats -->
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-stone-400 font-semibold">Lọc nhanh:</span>
+              <button type="button" class="lh-filter-chip px-2.5 py-1 rounded-lg bg-stone-900 text-white font-bold text-[11px]" data-lead-filter="all">Tất cả</button>
+              <button type="button" class="lh-filter-chip px-2.5 py-1 rounded-lg bg-red-50 text-red-800 border border-red-200 font-bold text-[11px]" data-lead-filter="hot">🔥 Chưa có Web</button>
+              <button type="button" class="lh-filter-chip px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[11px]" data-lead-filter="social">🟡 Chỉ dùng MXH/Booking</button>
+            </div>
+          </div>
+
+          <!-- Results Table Container -->
+          <div id="lh-results-container" class="space-y-2">
+            <div class="bg-white/80 rounded-2xl p-8 text-center text-xs text-stone-500 border border-[#e5dec9]">
+              Chọn khu vực và bấm <strong>"🚀 Quét Google Maps"</strong> để bắt đầu quét các tiệm Nails tiềm năng quanh vùng.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
       <!-- OUTBOUND ONLY: QUICK 1-ROW PROSPECT CREATOR              -->
       <!-- ======================================================== -->
       <div id="outbound-quick-creator" class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#96432b]/25 shadow-sm space-y-4">
@@ -412,6 +543,19 @@
           </p>
           <div class="space-y-2 pt-1">
             <input type="password" id="cfg-cf-token" placeholder="Cloudflare API Token" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-bold text-stone-900">5. Google Places API Key (Săn Khách Hàng Tự Động)</p>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 uppercase">Places API New</span>
+          </div>
+          <p class="text-stone-500 leading-relaxed">
+            Dùng để quét danh sách tiệm Nails &amp; Spa quanh khu vực, tự động bóc Giờ mở cửa thật &amp; 3 đánh giá 5 sao thật. Lấy key tại Google Cloud Console (bật <strong>Places API (New)</strong>).
+          </p>
+          <div class="space-y-2 pt-1">
+            <input type="password" id="cfg-google-places-key" placeholder="AIzaSy..." class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
       </div>
@@ -2583,6 +2727,383 @@
       }
 
       // Quick 1-Row Outbound Prospect Creator Form
+      // ========================================================
+      // GOOGLE MAPS LEAD HUNTER (SĂN KHÁCH HÀNG TỰ ĐỘNG)
+      // ========================================================
+      const leadHunterPanel = document.getElementById('lead-hunter-panel');
+      const btnToggleLeadHunter = document.getElementById('btn-toggle-lead-hunter');
+      const leadHunterBody = document.getElementById('lead-hunter-body');
+      const leadHunterToggleLabel = document.getElementById('lead-hunter-toggle-label');
+      const leadHunterToggleIcon = document.getElementById('lead-hunter-toggle-icon');
+      const leadHunterKeyIndicator = document.getElementById('lead-hunter-key-indicator');
+      const btnScanLeads = document.getElementById('btn-scan-leads');
+      const scanLeadsIcon = document.getElementById('scan-leads-icon');
+      const scanLeadsLabel = document.getElementById('scan-leads-label');
+      const lhKeyword = document.getElementById('lh-keyword');
+      const lhLocation = document.getElementById('lh-location');
+      const lhMinRating = document.getElementById('lh-min-rating');
+      const lhStatsBanner = document.getElementById('lh-stats-banner');
+      const lhStatsContent = document.getElementById('lh-stats-content');
+      const lhResultsContainer = document.getElementById('lh-results-container');
+
+      let currentScannedLeads = [];
+      let currentLeadFilter = 'all';
+
+      if (btnToggleLeadHunter && leadHunterBody) {
+        btnToggleLeadHunter.addEventListener('click', () => {
+          const isOpen = !leadHunterBody.classList.contains('hidden');
+          if (isOpen) {
+            leadHunterBody.classList.add('hidden');
+            leadHunterToggleLabel.textContent = 'Mở Bộ Săn Khách';
+            leadHunterToggleIcon.textContent = '▼';
+          } else {
+            leadHunterBody.classList.remove('hidden');
+            leadHunterToggleLabel.textContent = 'Thu Gọn';
+            leadHunterToggleIcon.textContent = '▲';
+          }
+        });
+      }
+
+      function updateLeadKeyIndicator() {
+        const hasKey = Boolean(localCreds && localCreds.googlePlacesApiKey && localCreds.googlePlacesApiKey.trim());
+        if (leadHunterKeyIndicator) {
+          leadHunterKeyIndicator.classList.toggle('hidden', !hasKey);
+        }
+      }
+      updateLeadKeyIndicator();
+
+      document.querySelectorAll('.lh-quick-loc').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const loc = btn.getAttribute('data-loc');
+          if (loc && lhLocation) {
+            lhLocation.value = loc;
+            lhLocation.classList.add('ring-2', 'ring-[#96432b]');
+            setTimeout(() => lhLocation.classList.remove('ring-2', 'ring-[#96432b]'), 350);
+          }
+        });
+      });
+
+      document.querySelectorAll('.lh-filter-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.lh-filter-chip').forEach((b) => {
+            b.classList.remove('bg-stone-900', 'text-white');
+            b.classList.add('bg-stone-100', 'text-stone-700');
+          });
+          btn.classList.remove('bg-stone-100', 'text-stone-700');
+          btn.classList.add('bg-stone-900', 'text-white');
+          currentLeadFilter = btn.getAttribute('data-lead-filter') || 'all';
+          renderLeadResults(currentScannedLeads);
+        });
+      });
+
+      function isLeadAlreadyInSystem(lead) {
+        if (!clientsCache || !clientsCache.length) return false;
+        const leadPhoneClean = normalizePhone(lead.phone);
+        const leadNameClean = (lead.name || '').trim().toLowerCase();
+        return clientsCache.some((c) => {
+          const cPhoneClean = normalizePhone(c.phone || c.displayPhone);
+          const cNameClean = (c.businessName || c.name || '').trim().toLowerCase();
+          if (leadPhoneClean && cPhoneClean && leadPhoneClean === cPhoneClean) return true;
+          if (leadNameClean && cNameClean && (leadNameClean === cNameClean || (leadNameClean.length > 5 && cNameClean.includes(leadNameClean)))) return true;
+          if (lead.placeId && c.googlePlaceId && lead.placeId === c.googlePlaceId) return true;
+          return false;
+        });
+      }
+
+      function normalizePhone(p) {
+        if (!p) return '';
+        return String(p).replace(/[^0-9]/g, '').slice(-9);
+      }
+
+      function renderLeadResults(leads) {
+        if (!leads || !leads.length) {
+          lhResultsContainer.innerHTML = `
+            <div class="bg-white rounded-2xl p-8 text-center text-xs text-stone-500 border border-[#e5dec9]">
+              Không tìm thấy tiệm nào phù hợp với bộ lọc. Hãy thử đổi khu vực hoặc hạ mức rating.
+            </div>
+          `;
+          return;
+        }
+
+        let displayLeads = leads;
+        if (currentLeadFilter === 'hot') {
+          displayLeads = leads.filter((x) => x.leadType === 'hot_lead_no_web');
+        } else if (currentLeadFilter === 'social') {
+          displayLeads = leads.filter((x) => x.leadType === 'social_booking_only');
+        }
+
+        if (!displayLeads.length) {
+          lhResultsContainer.innerHTML = `
+            <div class="bg-white rounded-2xl p-6 text-center text-xs text-stone-500 border border-[#e5dec9]">
+              Không có tiệm nào trong nhóm <strong>${currentLeadFilter === 'hot' ? 'Chưa có Web' : 'Chỉ dùng MXH/Booking'}</strong>.
+            </div>
+          `;
+          return;
+        }
+
+        const rowsHtml = displayLeads.map((lead, idx) => {
+          const alreadyImported = isLeadAlreadyInSystem(lead);
+          let badgeClass = 'bg-stone-100 text-stone-600 border-stone-200';
+          let badgeText = '⚪ Đã có Web riêng';
+          if (lead.leadType === 'hot_lead_no_web') {
+            badgeClass = 'bg-red-50 text-red-800 border-red-300 font-extrabold shadow-2xs';
+            badgeText = '🔴 Chưa có Web (HOT LEAD 🔥)';
+          } else if (lead.leadType === 'social_booking_only') {
+            badgeClass = 'bg-amber-50 text-amber-900 border-amber-300 font-bold';
+            badgeText = '🟡 Chỉ dùng MXH / Booking';
+          }
+
+          const reviewSnippet = (lead.topReviews && lead.topReviews.length)
+            ? `"${escapeHtml(lead.topReviews[0].text.slice(0, 85))}..." — <strong>${escapeHtml(lead.topReviews[0].author)}</strong>`
+            : 'Đánh giá thực tế từ Google Maps';
+
+          return `
+            <tr class="border-b border-[#f0eade] hover:bg-[#fcfbf8] transition-colors text-xs">
+              <td class="py-3 px-3.5">
+                <div class="space-y-0.5">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-bold text-stone-900 text-sm">${escapeHtml(lead.name)}</span>
+                    ${lead.leadType === 'hot_lead_no_web' ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Hot Lead Outbound"></span>' : ''}
+                  </div>
+                  <p class="text-[11px] text-stone-500 line-clamp-1" title="${escapeHtml(lead.address)}">
+                    📍 ${escapeHtml(lead.suburb || lead.address)}
+                  </p>
+                  <div class="text-[10px] text-stone-400 italic line-clamp-1 pt-0.5">
+                    💬 ${reviewSnippet}
+                  </div>
+                </div>
+              </td>
+
+              <td class="py-3 px-3 whitespace-nowrap">
+                <div class="flex items-center gap-1">
+                  <span class="text-amber-600 font-bold">★ ${lead.rating ? lead.rating.toFixed(1) : 'N/A'}</span>
+                  <span class="text-[11px] text-stone-400">(${lead.userRatingCount || 0})</span>
+                </div>
+              </td>
+
+              <td class="py-3 px-3 whitespace-nowrap font-mono text-[11px]">
+                ${lead.phone ? `
+                  <a href="tel:${escapeHtml(lead.phone)}" class="text-emerald-800 font-semibold hover:underline flex items-center gap-1">
+                    <span>📱</span>
+                    <span>${escapeHtml(lead.phone)}</span>
+                  </a>
+                ` : `<span class="text-stone-300 italic">Chưa có</span>`}
+              </td>
+
+              <td class="py-3 px-3">
+                <div class="space-y-1">
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] border ${badgeClass}">
+                    ${badgeText}
+                  </span>
+                  ${lead.website ? `
+                    <a href="${escapeHtml(lead.website)}" target="_blank" rel="noopener noreferrer" class="block text-[10px] text-[#96432b] hover:underline font-mono truncate max-w-[140px]" title="${escapeHtml(lead.website)}">
+                      🔗 ${escapeHtml(lead.website.replace(/^https?:\/\/(www\.)?/, ''))}
+                    </a>
+                  ` : ''}
+                </div>
+              </td>
+
+              <td class="py-3 px-3 whitespace-nowrap text-right">
+                ${alreadyImported ? `
+                  <button type="button" disabled class="px-3 py-1.5 rounded-xl bg-stone-100 text-stone-400 border border-stone-200 text-xs font-semibold cursor-not-allowed inline-flex items-center gap-1">
+                    <span>✓ Đã có trong hệ thống</span>
+                  </button>
+                ` : `
+                  <button
+                    type="button"
+                    data-lead-idx="${idx}"
+                    class="btn-import-lead px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>⚡ Import &amp; Làm Demo</span>
+                  </button>
+                `}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        lhResultsContainer.innerHTML = `
+          <div class="bg-white rounded-2xl border border-[#e5dec9] shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-[#fcf9f3] border-b border-[#e5dec9] text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                    <th class="py-2.5 px-3.5">Tiệm &amp; Đánh Giá</th>
+                    <th class="py-2.5 px-3">Rating</th>
+                    <th class="py-2.5 px-3">Số Điện Thoại</th>
+                    <th class="py-2.5 px-3">Tình Trạng Web</th>
+                    <th class="py-2.5 px-3 text-right">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        lhResultsContainer.querySelectorAll('.btn-import-lead').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const idx = parseInt(btn.getAttribute('data-lead-idx'), 10);
+            const lead = displayLeads[idx];
+            if (!lead) return;
+
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="wynn-spin"></span><span>Đang import...</span>';
+
+            try {
+              const hoursSummary = (lead.openingHours && lead.openingHours.length)
+                ? lead.openingHours.join(' | ')
+                : '';
+
+              const reviewsSummary = (lead.topReviews && lead.topReviews.length)
+                ? lead.topReviews.map((r, i) => `${i + 1}. ${r.author} (5★): "${r.text}"`).join(' | ')
+                : '';
+
+              const res = await runAdminAction(
+                {
+                  action: 'save_client',
+                  name: lead.name,
+                  businessName: lead.name,
+                  phone: lead.phone,
+                  displayPhone: lead.phone,
+                  businessAddress: lead.address,
+                  industry: 'Nail Salon / Beauty Atelier',
+                  socialLinks: lead.bookingOrSocialLink || lead.website || '',
+                  flowType: 'outbound',
+                  paymentStatus: 'unpaid',
+                  stage: 'outbound_pending',
+                  googlePlaceId: lead.placeId || '',
+                  googleRating: lead.rating ? String(lead.rating) : '',
+                  googleReviewCount: lead.userRatingCount ? String(lead.userRatingCount) : '',
+                  googleLeadType: lead.statusBadge || '',
+                  googleWebsiteUri: lead.website || '',
+                  openingHours: hoursSummary,
+                  customerReviews: reviewsSummary
+                },
+                { busyText: `Đang tạo hồ sơ Outbound cho "${lead.name}"...`, skipReload: true }
+              );
+
+              if (res && res.client) {
+                upsertClientInCache(res.client);
+                btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold cursor-not-allowed inline-flex items-center gap-1';
+                btn.innerHTML = '<span>✅ Đã Import</span>';
+                showToast(`🎉 Đã import thành công "${lead.name}" vào danh sách Outbound!`);
+
+                setTimeout(() => {
+                  if (confirm(`Đã import thành công "${lead.name}"!\n\nBạn có muốn mở ngay công cụ dựng Web Demo 1-Click (chọn màu 01-05) để lên sóng trong 2 giây không?`)) {
+                    openUploadModal(res.client);
+                  }
+                }, 250);
+              } else {
+                throw new Error((res && res.error) || 'Không thể tạo khách hàng.');
+              }
+            } catch (err) {
+              btn.disabled = false;
+              btn.innerHTML = origHtml;
+              showToast(`Lỗi import: ${err.message}`, true);
+            }
+          });
+        });
+      }
+
+      if (btnScanLeads) {
+        btnScanLeads.addEventListener('click', async () => {
+          const keyword = (lhKeyword ? lhKeyword.value : 'Nail Salon').trim();
+          const location = (lhLocation ? lhLocation.value : 'Brisbane QLD').trim();
+          const minRating = parseFloat(lhMinRating ? lhMinRating.value : '4.0') || 0;
+
+          if (!location) {
+            showToast('Vui lòng nhập Khu vực / Thành phố Úc (VD: Brisbane QLD)!', true);
+            return;
+          }
+
+          const origIcon = scanLeadsIcon.innerHTML;
+          const origLabel = scanLeadsLabel.innerHTML;
+          btnScanLeads.disabled = true;
+          scanLeadsIcon.innerHTML = '<span class="wynn-spin"></span>';
+          scanLeadsLabel.textContent = 'Đang quét Google Maps...';
+
+          lhResultsContainer.innerHTML = `
+            <div class="bg-white rounded-2xl p-10 text-center text-xs text-stone-500 border border-[#e5dec9] space-y-2.5">
+              <span class="wynn-spin-gold text-2xl inline-block mb-1"></span>
+              <p class="font-bold text-stone-800 text-sm">Đang kết nối Google Places API (New)...</p>
+              <p class="text-[11px] text-stone-400">Đang quét "${escapeHtml(keyword)}" tại "${escapeHtml(location)}", bóc tách Giờ mở cửa &amp; đánh giá 5 sao...</p>
+            </div>
+          `;
+
+          try {
+            const res = await fetch('/api/admin/lead-hunter', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': adminKey
+              },
+              body: JSON.stringify({
+                adminKey,
+                keyword,
+                location,
+                minRating,
+                googlePlacesApiKey: localCreds.googlePlacesApiKey || ''
+              })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+              if (data.missingKey) {
+                lhResultsContainer.innerHTML = `
+                  <div class="bg-amber-50 rounded-2xl p-6 text-center text-xs text-amber-900 border border-amber-300 space-y-3">
+                    <p class="font-bold text-sm">⚠️ Chưa cấu hình Google Places API Key</p>
+                    <p class="max-w-md mx-auto text-amber-800">
+                      Vui lòng nhập Google Places API Key (bật Places API New trên Google Cloud) để hệ thống quét dữ liệu.
+                    </p>
+                    <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="px-4 py-2 rounded-xl bg-[#96432b] text-white font-bold text-xs shadow-xs hover:bg-[#7d3520] transition-colors cursor-pointer">
+                      ⚙️ Bấm vào đây để cài đặt Key
+                    </button>
+                  </div>
+                `;
+                return;
+              }
+              throw new Error(data.error || 'Quét dữ liệu thất bại.');
+            }
+
+            currentScannedLeads = data.leads || [];
+            const stats = data.stats || {};
+
+            lhStatsBanner.classList.remove('hidden');
+            lhStatsContent.innerHTML = `
+              <span class="font-bold text-stone-900">Tìm thấy ${data.totalFound || currentScannedLeads.length} tiệm:</span>
+              <span class="px-2 py-0.5 rounded-md bg-red-100 text-red-800 font-extrabold text-[11px]">
+                🔥 ${stats.hotNoWeb || 0} Chưa có Web
+              </span>
+              <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[11px]">
+                🟡 ${stats.socialBooking || 0} MXH &amp; Booking
+              </span>
+              <span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[11px]">
+                ⚪ ${stats.customWeb || 0} Đã có Web
+              </span>
+            `;
+
+            renderLeadResults(currentScannedLeads);
+            showToast(`Quét thành công! Tìm thấy ${currentScannedLeads.length} tiệm tại ${location}.`);
+          } catch (err) {
+            lhResultsContainer.innerHTML = `
+              <div class="bg-red-50 rounded-2xl p-6 text-center text-xs text-red-900 border border-red-300 space-y-2">
+                <p class="font-bold text-sm">❌ Quét Google Maps gặp lỗi</p>
+                <p class="font-mono text-[11px]">${escapeHtml(err.message)}</p>
+              </div>
+            `;
+            showToast(`Lỗi quét: ${err.message}`, true);
+          } finally {
+            btnScanLeads.disabled = false;
+            scanLeadsIcon.innerHTML = origIcon;
+            scanLeadsLabel.innerHTML = origLabel;
+          }
+        });
+      }
+
       document.getElementById('quick-outbound-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const bizName = document.getElementById('qo-biz-name').value.trim();
@@ -2720,6 +3241,7 @@
       // Settings Modal
       const cfgGdriveWebhook = document.getElementById('cfg-gdrive-webhook');
       const cfgCfToken = document.getElementById('cfg-cf-token');
+      const cfgGooglePlacesKey = document.getElementById('cfg-google-places-key');
       document.getElementById('btn-open-settings').addEventListener('click', () => {
         cfgClicksendUser.value = localCreds.clicksendUsername || '';
         cfgClicksendKey.value = localCreds.clicksendApiKey || '';
@@ -2728,6 +3250,7 @@
         cfgResendFrom.value = localCreds.resendFromEmail || 'WynnPages Atelier <hello@wynnpages.com.au>';
         if (cfgGdriveWebhook) cfgGdriveWebhook.value = localCreds.googleDriveWebhookUrl || '';
         if (cfgCfToken) cfgCfToken.value = localCreds.cfApiToken || '';
+        if (cfgGooglePlacesKey) cfgGooglePlacesKey.value = localCreds.googlePlacesApiKey || '';
         settingsModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
@@ -2745,19 +3268,19 @@
           resendApiKey: cfgResendKey.value.trim(),
           resendFromEmail: cfgResendFrom.value.trim(),
           googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : '',
-          cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : ''
+          cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : '',
+          googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : ''
         };
-        localStorage.setItem('wynn_Messaging_creds', JSON.stringify(localCreds));
-        if (localCreds.cfApiToken !== undefined) {
-          await runAdminAction({ action: 'save_cf_token', cfToken: localCreds.cfApiToken }, { skipReload: true }).catch(() => {});
-        }
+        localStorage.setItem('wynn_messaging_creds', JSON.stringify(localCreds));
+        if (typeof updateLeadKeyIndicator === 'function') updateLeadKeyIndicator();
+        await runAdminAction({ action: 'save_creds', cfToken: localCreds.cfApiToken, credentials: localCreds }, { skipReload: true }).catch(() => {});
         if (saveBtn) {
           saveBtn.disabled = false;
           saveBtn.innerHTML = origHtml;
         }
         settingsModal.classList.add('hidden');
         loadClients();
-        showToast('Đã lưu cấu hình ClickSend, Resend & Google Drive!');
+        showToast('Đã lưu cấu hình ClickSend, Resend, Google Drive & Google Places Key!');
       });
 
       const btnCopyGas = document.getElementById('btn-copy-gas-script');

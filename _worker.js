@@ -22,7 +22,8 @@ function getConfig(env, overrides = {}) {
     adminNotifyEmail: overrides.adminNotifyEmail || env.ADMIN_NOTIFY_EMAIL || ADMIN_NOTIFY_EMAIL_FALLBACK || '',
     adminNotifyPhone: overrides.adminNotifyPhone || env.ADMIN_NOTIFY_PHONE || ADMIN_NOTIFY_PHONE_FALLBACK || '',
     googleDriveWebhookUrl: overrides.googleDriveWebhookUrl || env.GOOGLE_DRIVE_WEBHOOK_URL || '',
-    cfApiToken: overrides.cfApiToken || overrides.cfToken || env.CLOUDFLARE_API_TOKEN || ''
+    cfApiToken: overrides.cfApiToken || overrides.cfToken || env.CLOUDFLARE_API_TOKEN || '',
+    googlePlacesApiKey: overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || ''
   };
 }
 
@@ -482,7 +483,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
 
 function buildAiPromptForClient(c) {
   const slug = c.demoSlug || slugifyName(c.businessName || c.name || c.id);
-  return [
+  const promptLines = [
     `=== WYNNPAGES ATELIER — ANTIGRAVITY PROJECT BRIEF ===`,
     `Project Slug: ${slug}`,
     `Local Workspace Folder: clients/${slug}/`,
@@ -501,14 +502,41 @@ function buildAiPromptForClient(c) {
     `Domain Info: Existing=${c.existingDomain || 'N/A'} | Desired=${c.desiredDomains || 'N/A'} | Official=${c.liveUrl || 'N/A'}`,
     `Uploaded Logo: ${c.logoFileName || 'None (Use Tier A Embossed Gold Wax Monogram Seal)'}`,
     `Uploaded Menu / Price List: ${c.menuFileName || 'None (Use curated Australian AUD sample menu)'}`,
-    `Uploaded Photos: ${c.photosFileName || c.hasPhotos || 'None (Use Atelier Fine-Art Oil + Gold-Leaf Vault)'}`,
+    `Uploaded Photos: ${c.photosFileName || c.hasPhotos || 'None (Use Atelier Fine-Art Oil + Gold-Leaf Vault)'}`
+  ];
+
+  if (c.googleRating || c.googleReviewCount || c.googleLeadType) {
+    promptLines.push(
+      `Google Maps Intelligence: Rating ⭐ ${c.googleRating || 'N/A'} (${c.googleReviewCount || 0} reviews) | Lead Status: ${c.googleLeadType || 'N/A'}`
+    );
+  }
+
+  if (c.openingHours) {
+    promptLines.push(
+      `=====================================================`,
+      `VERIFIED LOCAL OPENING HOURS (GOOGLE MAPS):`,
+      c.openingHours
+    );
+  }
+
+  if (c.customerReviews) {
+    promptLines.push(
+      `=====================================================`,
+      `TOP 3 REAL 5-STAR CUSTOMER REVIEWS (GOOGLE MAPS):`,
+      c.customerReviews
+    );
+  }
+
+  promptLines.push(
     `=====================================================`,
     `ANTIGRAVITY EXECUTION WORKFLOW:`,
     `1. Pull or initialize the local client workspace: \`node scripts/atelier-sync.mjs pull ${slug}\` (this also downloads any uploaded menu/logo into \`clients/${slug}/_client_uploads/\`).`,
     `2. Read \`clients/GEMINI.md\` and \`clients/${slug}/ATELIER_MANIFEST.md\`. Strictly enforce the WynnPages Bespoke Oil-Painting & Gold-Leaf aesthetic, 5 fixed Haute Couture Palettes (01 Terracotta & Gold, 02 Rose Silk, 03 Botanical Sage, 04 Espresso Cashmere, 05 Coastal Pearl), editorial Cormorant Garamond italic heading accents, and ZERO emojis.`,
-    `3. Customize \`clients/${slug}/index.html\` (\`window.ATELIER_CONFIG\` & \`window.SALON_MENU_DATA\`, or transcribe real menu prices from \`_client_uploads/\` if present).`,
+    `3. Customize \`clients/${slug}/index.html\` (\`window.ATELIER_CONFIG\` & \`window.SALON_MENU_DATA\`). ${c.openingHours ? 'Use the REAL trading hours in the Visit & Hours section. ' : ''}${c.customerReviews ? 'Weave the REAL 5-star customer reviews into the Testimonials / Word of Mouth section! ' : ''}Transcribe real menu prices from \`_client_uploads/\` if present.`,
     `4. Push live immediately when done: \`node scripts/atelier-sync.mjs push ${slug}\` and verify \`https://${slug}.wynnpages.com.au\`.`
-  ].join('\n');
+  );
+
+  return promptLines.join('\n');
 }
 
 function slugifyName(str) {
@@ -570,6 +598,13 @@ function formatCustomerRecord(cust) {
     demoFilesCount: Number(m.demo_files_count || 0),
     demoUploadedAt: m.demo_uploaded_at || '',
     liveUrl: m.live_url || '',
+    googlePlaceId: m.google_place_id || '',
+    googleRating: m.google_rating || '',
+    googleReviewCount: m.google_review_count || '',
+    googleLeadType: m.google_lead_type || '',
+    googleWebsiteUri: m.google_website_uri || '',
+    openingHours: m.opening_hours || '',
+    customerReviews: m.customer_reviews || '',
     domainDelegated: m.domain_delegated === 'true',
     domainDelegatedAt: m.domain_delegated_at || '',
     domainProvider: m.domain_provider || '',
@@ -2942,6 +2977,175 @@ export default {
       });
     }
 
+    // 5c. Google Places Lead Hunter Endpoint (POST /api/admin/lead-hunter)
+    if (url.pathname === '/api/admin/lead-hunter' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        }
+
+        const effectivePlacesKey = (body.googlePlacesApiKey || cfg.googlePlacesApiKey || '').trim();
+        if (!effectivePlacesKey) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              missingKey: true,
+              error: 'Chưa cấu hình Google Places API Key. Vui lòng bấm vào "Cài đặt Key ⚙️" và nhập key.'
+            }),
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const keyword = (body.keyword || 'Nail Salon').trim();
+        const location = (body.location || 'Brisbane QLD').trim();
+        const minRating = parseFloat(body.minRating) || 0;
+        const textQuery = `${keyword} in ${location}`;
+
+        // Call Google Places API (New): places.googleapis.com/v1/places:searchText
+        const fieldMask = [
+          'places.id',
+          'places.displayName',
+          'places.formattedAddress',
+          'places.nationalPhoneNumber',
+          'places.internationalPhoneNumber',
+          'places.rating',
+          'places.userRatingCount',
+          'places.websiteUri',
+          'places.regularOpeningHours',
+          'places.reviews'
+        ].join(',');
+
+        const gRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': effectivePlacesKey,
+            'X-Goog-FieldMask': fieldMask
+          },
+          body: JSON.stringify({
+            textQuery,
+            maxResultCount: 20
+          })
+        });
+
+        if (!gRes.ok) {
+          const gErr = await gRes.json().catch(() => ({}));
+          const errMsg = gErr.error?.message || `Google Places API HTTP ${gRes.status}`;
+          return new Response(
+            JSON.stringify({ ok: false, error: errMsg, details: gErr }),
+            { status: gRes.status, headers: corsHeaders }
+          );
+        }
+
+        const gData = await gRes.json();
+        const rawPlaces = Array.isArray(gData.places) ? gData.places : [];
+
+        // Classify & Process Leads
+        const socialRegex = /(facebook\.com|instagram\.com|linktr\.ee|fresha\.com|timely\.com|square\.site|booksy\.com|heygoldie\.com|vagaro\.com|tiktok\.com|ovatu\.com|appointfix\.com|glossgenius\.com)/i;
+
+        const processed = rawPlaces.map((p) => {
+          const name = p.displayName?.text || p.name || '';
+          const address = p.formattedAddress || '';
+          const phone = p.nationalPhoneNumber || p.internationalPhoneNumber || '';
+          const rating = typeof p.rating === 'number' ? p.rating : 0;
+          const userRatingCount = typeof p.userRatingCount === 'number' ? p.userRatingCount : 0;
+          const website = (p.websiteUri || '').trim();
+
+          // Top 3 Five-Star Reviews
+          const rawReviews = Array.isArray(p.reviews) ? p.reviews : [];
+          const topReviews = rawReviews
+            .filter((r) => (r.rating || 0) >= 4)
+            .slice(0, 3)
+            .map((r) => ({
+              author: r.authorAttribution?.displayName || 'Local Regular',
+              rating: r.rating || 5,
+              text: (r.text?.text || r.text || '').trim().slice(0, 280)
+            }));
+
+          // Opening Hours
+          const weekdayDescriptions = Array.isArray(p.regularOpeningHours?.weekdayDescriptions)
+            ? p.regularOpeningHours.weekdayDescriptions
+            : [];
+
+          // Classification
+          let leadType = 'custom_web';
+          let statusBadge = '⚪ Đã có Web riêng';
+          let priorityScore = 1;
+          let bookingOrSocialLink = '';
+
+          if (!website) {
+            leadType = 'hot_lead_no_web';
+            statusBadge = '🔴 Chưa có Web (Hot Lead)';
+            priorityScore = 3;
+          } else if (socialRegex.test(website)) {
+            leadType = 'social_booking_only';
+            statusBadge = '🟡 Chỉ dùng MXH / Link Booking';
+            priorityScore = 2;
+            bookingOrSocialLink = website;
+          }
+
+          // Extract Australian Suburb / State from address
+          let suburb = '';
+          const auMatch = address.match(/([A-Z\s]+)\s+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\s+(\d{4})/i);
+          if (auMatch) {
+            suburb = `${auMatch[1].trim()}, ${auMatch[2].toUpperCase()} ${auMatch[3]}`;
+          }
+
+          return {
+            placeId: p.id || '',
+            name,
+            phone,
+            address,
+            suburb,
+            rating,
+            userRatingCount,
+            website,
+            leadType,
+            statusBadge,
+            priorityScore,
+            bookingOrSocialLink,
+            openingHours: weekdayDescriptions,
+            topReviews
+          };
+        });
+
+        // Filter by min rating
+        const filtered = minRating > 0
+          ? processed.filter((item) => item.rating >= minRating)
+          : processed;
+
+        // Sort: Hot leads (3) -> Social/Booking (2) -> Custom Web (1), then by reviews DESC
+        filtered.sort((a, b) => {
+          if (b.priorityScore !== a.priorityScore) {
+            return b.priorityScore - a.priorityScore;
+          }
+          if (b.userRatingCount !== a.userRatingCount) {
+            return b.userRatingCount - a.userRatingCount;
+          }
+          return b.rating - a.rating;
+        });
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            query: { keyword, location, minRating },
+            totalFound: rawPlaces.length,
+            leads: filtered,
+            stats: {
+              hotNoWeb: filtered.filter((x) => x.leadType === 'hot_lead_no_web').length,
+              socialBooking: filtered.filter((x) => x.leadType === 'social_booking_only').length,
+              customWeb: filtered.filter((x) => x.leadType === 'custom_web').length
+            }
+          }),
+          { status: 200, headers: corsHeaders }
+        );
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 6. Admin Command Center Action Endpoint (POST /api/admin/action)
     if (url.pathname === '/api/admin/action' && request.method === 'POST') {
       try {
@@ -2954,7 +3158,7 @@ export default {
         if (body.credentials && typeof body.credentials === 'object' && env && env.WYNN_KV) {
           const mergedCreds = { ...runtimeCreds };
           let hasNewCred = false;
-          for (const k of ['clicksendUsername', 'clicksendApiKey', 'resendApiKey', 'resendFromEmail', 'googleDriveWebhookUrl', 'cfApiToken']) {
+          for (const k of ['clicksendUsername', 'clicksendApiKey', 'resendApiKey', 'resendFromEmail', 'googleDriveWebhookUrl', 'cfApiToken', 'googlePlacesApiKey']) {
             if (body.credentials[k] && String(body.credentials[k]).trim()) {
               mergedCreds[k] = String(body.credentials[k]).trim();
               hasNewCred = true;
@@ -3383,6 +3587,13 @@ export default {
           if (body.liveUrl !== undefined) uParams.append('metadata[live_url]', body.liveUrl.trim());
           if (body.flowType !== undefined) uParams.append('metadata[flow_type]', body.flowType);
           if (body.paymentStatus !== undefined) uParams.append('metadata[payment_status]', body.paymentStatus);
+          if (body.googlePlaceId !== undefined) uParams.append('metadata[google_place_id]', String(body.googlePlaceId).slice(0, 100));
+          if (body.googleRating !== undefined) uParams.append('metadata[google_rating]', String(body.googleRating).slice(0, 20));
+          if (body.googleReviewCount !== undefined) uParams.append('metadata[google_review_count]', String(body.googleReviewCount).slice(0, 20));
+          if (body.googleLeadType !== undefined) uParams.append('metadata[google_lead_type]', String(body.googleLeadType).slice(0, 50));
+          if (body.googleWebsiteUri !== undefined) uParams.append('metadata[google_website_uri]', String(body.googleWebsiteUri).slice(0, 300));
+          if (body.openingHours !== undefined) uParams.append('metadata[opening_hours]', String(body.openingHours).slice(0, 480));
+          if (body.customerReviews !== undefined) uParams.append('metadata[customer_reviews]', String(body.customerReviews).slice(0, 480));
 
           const stageMap = {
             payment_confirmed: 'paid',
