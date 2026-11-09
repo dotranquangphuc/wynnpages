@@ -271,20 +271,21 @@
     }
 
     /* ==========================================================================
-       APPLE TRANSLUCENT GLASS & SPECULAR SPOTLIGHT CARDS
+       APPLE REFINED PEARL & ELEVATED CARDS (GPU 120 FPS OPTIMIZED)
+       Backdrop-filter is strictly reserved for floating chrome (header & modals)
+       to ensure zero GPU rasterization jank during continuous high-speed scroll.
        ========================================================================== */
     .atelier-card {
       background: var(--bg-card);
-      backdrop-filter: blur(18px) saturate(165%);
-      -webkit-backdrop-filter: blur(18px) saturate(165%);
       border: 1px solid var(--border-pearl);
       box-shadow:
-        0 22px 48px -18px rgba(43, 37, 30, 0.08),
+        0 18px 42px -18px rgba(43, 37, 30, 0.07),
         0 0 0 1px var(--border-hairline);
+      transform: translateZ(0);
       transition:
-        transform 0.55s var(--apple-silk),
-        box-shadow 0.55s var(--apple-silk),
-        background-color 0.45s ease;
+        transform 0.4s var(--apple-silk),
+        box-shadow 0.4s var(--apple-silk),
+        background-color 0.3s ease;
     }
 
     .atelier-card-lift {
@@ -551,34 +552,22 @@
 
     [data-apple-reveal] {
       opacity: 0;
-      transform: translate3d(0, 34px, 0) scale(0.966);
+      transform: translate3d(0, 22px, 0);
       transition:
-        opacity 1.24s var(--apple-ease-out),
-        transform 1.42s var(--apple-ease-out);
-      transition-delay: var(--stagger-ms, 0ms);
-      will-change: transform, opacity;
+        opacity 0.48s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.58s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     [data-apple-reveal="header"] {
-      transform: translate3d(0, 26px, 0) scale(0.984);
+      transform: translate3d(0, 16px, 0);
       transition:
-        opacity 1.12s var(--apple-ease-out),
-        transform 1.28s var(--apple-ease-out);
-      transition-delay: var(--stagger-ms, 0ms);
+        opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     [data-apple-reveal].is-inview {
       opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
-    }
-
-    /* Smooth Apple-Spring Retract when scrolling back up */
-    [data-apple-reveal].is-retracting {
-      opacity: 0;
-      transform: translate3d(0, 30px, 0) scale(0.968);
-      transition-duration: 0.82s;
-      transition-timing-function: var(--apple-spring);
-      transition-delay: 0ms !important;
+      transform: translate3d(0, 0, 0);
     }
 
     /* Menu Category Row Cascade on Tab Switch */
@@ -1079,16 +1068,24 @@
             class="w-full h-full object-cover animate-canvas-breathe"
           >
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
-          <!-- Floating Gold Seal Caption -->
-          <div id="hero-floating-seal" class="absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5 atelier-card rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 z-10 will-change-transform">
+          <!-- Interactive Floating Craft Capsule (Glides to Treatment Matchmaker) -->
+          <a
+            id="hero-floating-seal"
+            href="#matchmaker"
+            data-smooth-anchor="#matchmaker"
+            class="group absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5 atelier-card rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 z-10 transition-transform duration-300 hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-lg"
+            title="Explore our BIAB craftsmanship & treatment matchmaker"
+          >
             <div class="min-w-0">
               <span class="text-[9.5px] sm:text-[10px] uppercase tracking-[0.16em] font-semibold block" style="color: var(--accent-primary);">Signature Craft</span>
               <span class="font-editorial italic text-sm sm:text-base font-semibold leading-snug block truncate">HEMA-Free BIAB &amp; Botanical Care</span>
             </div>
-            <span class="w-8 h-8 rounded-full wax-monogram-seal flex items-center justify-center shrink-0" style="color: var(--accent-primary);">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"/></svg>
+            <span class="w-8 h-8 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110" style="color: var(--accent-primary);" aria-hidden="true">
+              <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3.5 8h9M8.5 4l4 4-4 4"/>
+              </svg>
             </span>
-          </div>
+          </a>
         </div>
       </div>
     </section>
@@ -2403,7 +2400,7 @@
         }
 
         cancelAnchorGlide();
-        const duration = Math.min(1180, Math.max(680, Math.abs(distance) * 0.48));
+        const duration = Math.min(850, Math.max(450, Math.abs(distance) * 0.32));
         const startTime = performance.now();
 
         function step(now) {
@@ -2431,190 +2428,110 @@
       });
 
       // ======================================================================
-      // 8. DESKTOP SPECULAR CARD SPOTLIGHT
+      // 8. DESKTOP SPECULAR CARD SPOTLIGHT (CACHED BOUNDS, ZERO REFLOWS)
       // ======================================================================
       if (!prefersReducedMotion && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
         document.querySelectorAll('.atelier-card-lift').forEach((card) => {
+          let cachedRect = null;
+          card.addEventListener('pointerenter', () => {
+            cachedRect = card.getBoundingClientRect();
+          }, { passive: true });
           card.addEventListener('pointermove', (ev) => {
-            const r = card.getBoundingClientRect();
-            card.style.setProperty('--spot-x', `${(ev.clientX - r.left).toFixed(1)}px`);
-            card.style.setProperty('--spot-y', `${(ev.clientY - r.top).toFixed(1)}px`);
+            if (!cachedRect) cachedRect = card.getBoundingClientRect();
+            card.style.setProperty('--spot-x', `${(ev.clientX - cachedRect.left).toFixed(1)}px`);
+            card.style.setProperty('--spot-y', `${(ev.clientY - cachedRect.top).toFixed(1)}px`);
+          }, { passive: true });
+          card.addEventListener('pointerleave', () => {
+            cachedRect = null;
           }, { passive: true });
         });
       }
 
       // ======================================================================
-      // 9. APPLE BIDIRECTIONAL SCROLL REVEAL / RETRACT + DAMPED PARALLAX ENGINE
-      //    - Scroll down: slow, poised 1.32s staggered bloom (never rushed)
-      //    - Scroll up: smooth 0.82s Apple-spring retract back down
-      //    - Damped rAF lerp (0.11): silky inertial optical depth & progress
+      // 9. NATIVE HARDWARE-ACCELERATED APPLE SCROLL REVEALS & HUD (60–120 FPS)
+      //    - Native IntersectionObserver: runs in browser C++ compositor, 0ms JS thrash
+      //    - Throttled passive scroll for sticky header, progress hairline & floating dock
+      //    - Zero getBoundingClientRect layout reflows during continuous scroll
       // ======================================================================
       const headerEl = document.getElementById('atelier-header');
-      const heroCopyCol = document.getElementById('hero-copy-col');
-      const heroArtCol = document.getElementById('hero-art-col');
-      const heroSeal = document.getElementById('hero-floating-seal');
-      const friezeTrack = document.getElementById('craft-frieze-track');
       const floatDock = document.getElementById('atelier-float-dock');
-      const visitSection = document.getElementById('visit');
-      const parallaxFrames = Array.from(document.querySelectorAll('[data-parallax-frame]'));
-      const revealNodes = Array.from(document.querySelectorAll('[data-apple-reveal]'));
+      const revealNodes = document.querySelectorAll('[data-apple-reveal]');
       const navSpyLinks = Array.from(document.querySelectorAll('[data-nav-spy]'));
-      const spySections = navSpyLinks
-        .map((a) => ({ id: a.getAttribute('data-nav-spy'), el: document.getElementById(a.getAttribute('data-nav-spy')), link: a }))
-        .filter((s) => s.el);
 
-      function evaluateBidirectionalReveals() {
-        if (prefersReducedMotion) {
-          revealNodes.forEach((n) => n.classList.add('is-inview'));
-          return;
-        }
-        const vh = window.innerHeight || document.documentElement.clientHeight || 800;
-        const enterLine = vh * 0.865;
-        const retractLine = vh * 0.915;
-        const newlyEntering = [];
-
-        for (let i = 0; i < revealNodes.length; i++) {
-          const el = revealNodes[i];
-          const rect = el.getBoundingClientRect();
-          const isVisible = el.classList.contains('is-inview');
-
-          if (!isVisible && rect.top <= enterLine) {
-            if (rect.bottom <= 0) {
-              // Already scrolled completely past above viewport -> reveal instantly without consuming stagger slots
-              el.style.setProperty('--stagger-ms', '0ms');
-              el.classList.remove('is-retracting');
-              el.classList.add('is-inview');
-            } else {
-              newlyEntering.push({ el, top: rect.top, left: rect.left });
+      // 9a. Asynchronous Native IntersectionObserver for Smooth Reveals
+      if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-inview');
+              obs.unobserve(entry.target);
             }
-          } else if (isVisible && rect.top >= retractLine) {
-            // Element moved back below the lower viewport threshold while scrolling UP -> smoothly retract!
-            el.style.setProperty('--stagger-ms', '0ms');
-            el.classList.remove('is-inview');
-            el.classList.add('is-retracting');
-          }
-        }
-
-        if (newlyEntering.length > 0) {
-          // Sort top-to-bottom, left-to-right and stagger gently (155ms per item, capped at 465ms)
-          newlyEntering.sort((a, b) => (Math.abs(a.top - b.top) > 24 ? a.top - b.top : a.left - b.left));
-          newlyEntering.forEach((item, idx) => {
-            const delayMs = Math.min(idx * 155, 465);
-            item.el.style.setProperty('--stagger-ms', `${delayMs}ms`);
-            item.el.classList.remove('is-retracting');
-            item.el.classList.add('is-inview');
           });
-        }
+        }, {
+          rootMargin: '0px 0px -40px 0px',
+          threshold: 0.06
+        });
+        revealNodes.forEach((node) => revealObserver.observe(node));
+      } else {
+        revealNodes.forEach((node) => node.classList.add('is-inview'));
       }
 
-      let targetScrollY = window.scrollY || 0;
-      let smoothScrollY = targetScrollY;
-      let scrollRafId = 0;
+      // 9b. Asynchronous Native IntersectionObserver for Active Header Nav Spy
+      if ('IntersectionObserver' in window && navSpyLinks.length) {
+        const spySections = navSpyLinks
+          .map((a) => ({ id: a.getAttribute('data-nav-spy'), el: document.getElementById(a.getAttribute('data-nav-spy')), link: a }))
+          .filter((s) => s.el);
 
-      function updateContinuousScrollEffects() {
-        const diff = targetScrollY - smoothScrollY;
-        if (Math.abs(diff) > 0.12 && !prefersReducedMotion) {
-          smoothScrollY += diff * 0.115;
-          scrollRafId = requestAnimationFrame(updateContinuousScrollEffects);
-        } else {
-          smoothScrollY = targetScrollY;
-          scrollRafId = 0;
-        }
-
-        const vh = window.innerHeight || 800;
-        const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
-        const progress = Math.min(1, Math.max(0, smoothScrollY / maxScroll));
-
-        if (headerEl) {
-          headerEl.classList.toggle('is-scrolled', targetScrollY > 24);
-          headerEl.style.setProperty('--scroll-progress', progress.toFixed(4));
-        }
-
-        // Floating Quick-Reserve Capsule: appears when scrolling down past Hero, retracts near top or #visit
-        if (floatDock) {
-          const pastHero = targetScrollY > Math.min(460, vh * 0.58);
-          let nearVisit = false;
-          if (visitSection) {
-            const vRect = visitSection.getBoundingClientRect();
-            nearVisit = vRect.top < vh * 0.72;
-          }
-          floatDock.classList.toggle('is-docked', pastHero && !nearVisit);
-        }
-
-        // Active Section Highlight in Header
-        if (spySections.length) {
-          let activeId = '';
-          const probeLine = vh * 0.36;
-          for (let i = 0; i < spySections.length; i++) {
-            const r = spySections[i].el.getBoundingClientRect();
-            if (r.top <= probeLine && r.bottom >= 120) {
-              activeId = spySections[i].id;
+        const spyObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const currentId = entry.target.id;
+              navSpyLinks.forEach((link) => {
+                link.classList.toggle('is-active', link.getAttribute('data-nav-spy') === currentId);
+              });
             }
-          }
-          for (let i = 0; i < spySections.length; i++) {
-            spySections[i].link.classList.toggle('is-active', spySections[i].id === activeId);
-          }
-        }
+          });
+        }, {
+          rootMargin: '-20% 0px -65% 0px',
+          threshold: 0
+        });
 
-        if (prefersReducedMotion) return;
-
-        // Subtle Apple Hero Recede & Layered Arch Counter-Parallax (0 -> 620px)
-        if (smoothScrollY < vh * 1.25) {
-          const heroT = Math.min(1, Math.max(0, smoothScrollY / 620));
-          if (heroCopyCol) {
-            const copyY = -(heroT * 18);
-            const copyOpacity = 1 - heroT * 0.58;
-            heroCopyCol.style.transform = `translate3d(0, ${copyY.toFixed(2)}px, 0)`;
-            heroCopyCol.style.opacity = copyOpacity.toFixed(3);
-          }
-          if (heroArtCol) {
-            const artY = heroT * 22;
-            heroArtCol.style.transform = `translate3d(0, ${artY.toFixed(2)}px, 0)`;
-          }
-          if (heroSeal) {
-            const sealY = -(heroT * 10);
-            heroSeal.style.transform = `translate3d(0, ${sealY.toFixed(2)}px, 0)`;
-          }
-        }
-
-        // Subtle Horizontal Glide on the Craftsmanship Frieze
-        if (friezeTrack && window.innerWidth >= 640) {
-          const fRect = friezeTrack.getBoundingClientRect();
-          if (fRect.bottom > -80 && fRect.top < vh + 80) {
-            const centerNorm = ((vh * 0.5 - (fRect.top + fRect.height * 0.5)) / vh);
-            const shiftX = Math.max(-26, Math.min(26, centerNorm * 34));
-            friezeTrack.style.transform = `translate3d(${shiftX.toFixed(2)}px, 0, 0)`;
-          }
-        }
-
-        // Optical Window Parallax inside Editorial Oil-Painting Frames
-        for (let i = 0; i < parallaxFrames.length; i++) {
-          const frame = parallaxFrames[i];
-          const r = frame.getBoundingClientRect();
-          if (r.bottom < -60 || r.top > vh + 60) continue;
-          const img = frame.querySelector('img');
-          if (!img) continue;
-          const norm = ((vh * 0.5 - (r.top + r.height * 0.5)) / (vh * 0.75));
-          const clamped = Math.max(-1, Math.min(1, norm));
-          const panY = clamped * 15;
-          img.style.translate = `0px ${panY.toFixed(2)}px`;
-        }
+        spySections.forEach((s) => spyObserver.observe(s.el));
       }
 
-      function onScrollOrResize() {
-        targetScrollY = window.scrollY || 0;
-        evaluateBidirectionalReveals();
-        if (!scrollRafId) {
-          scrollRafId = requestAnimationFrame(updateContinuousScrollEffects);
+      // 9c. Ultra-Lightweight Passive Scroll HUD (Throttled via requestAnimationFrame)
+      let scrollTicking = false;
+      function updateScrollChrome() {
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        const vh = window.innerHeight || 800;
+
+        // Sticky Header Glass state
+        if (headerEl) {
+          headerEl.classList.toggle('is-scrolled', scrollY > 20);
+          const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+          const progress = Math.min(1, Math.max(0, scrollY / maxScroll));
+          headerEl.style.setProperty('--scroll-progress', progress.toFixed(3));
         }
+
+        // Floating Reception Call Pill
+        if (floatDock) {
+          const pastHero = scrollY > 400;
+          const nearBottom = scrollY > (document.documentElement.scrollHeight - vh - 320);
+          floatDock.classList.toggle('is-docked', pastHero && !nearBottom);
+        }
+
+        scrollTicking = false;
       }
 
-      window.addEventListener('scroll', onScrollOrResize, { passive: true });
-      window.addEventListener('resize', onScrollOrResize, { passive: true });
+      window.addEventListener('scroll', () => {
+        if (!scrollTicking) {
+          scrollTicking = true;
+          requestAnimationFrame(updateScrollChrome);
+        }
+      }, { passive: true });
 
-      // Initial evaluation on load
-      evaluateBidirectionalReveals();
-      updateContinuousScrollEffects();
+      // Initial execution
+      updateScrollChrome();
     })();
   </script>
 </body>
