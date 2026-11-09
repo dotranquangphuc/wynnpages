@@ -228,6 +228,8 @@
     html {
       -webkit-text-size-adjust: 100%;
       scroll-padding-top: 96px;
+      overflow-x: clip;
+      max-width: 100%;
     }
 
     body {
@@ -237,10 +239,18 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       overflow-x: clip;
+      max-width: 100%;
+      position: relative;
+    }
+
+    main {
+      overflow-x: clip;
+      max-width: 100%;
     }
 
     section[id] {
       scroll-margin-top: 96px;
+      max-width: 100%;
     }
 
     .font-editorial {
@@ -581,41 +591,67 @@
       transition-delay: var(--stagger-ms, 0ms);
     }
 
-    /* Direction: Lateral Left */
+    /* Direction: Lateral Left (Mobile: Safe 10px within padding; Desktop: Full 46px) */
     [data-apple-reveal="left"] {
-      transform: translate3d(-46px, 0, 0) scale(0.975);
+      transform: translate3d(-10px, 14px, 0) scale(0.98);
       filter: blur(10px);
     }
 
-    /* Direction: Lateral Right */
+    /* Direction: Lateral Right (Mobile: Safe 10px within padding; Desktop: Full 46px) */
     [data-apple-reveal="right"] {
-      transform: translate3d(46px, 0, 0) scale(0.975);
+      transform: translate3d(10px, 14px, 0) scale(0.98);
       filter: blur(10px);
     }
 
     /* Direction: Center Scale Zoom */
     [data-apple-reveal="center"],
     [data-apple-reveal="zoom"] {
-      transform: translate3d(0, 24px, 0) scale(0.935);
+      transform: translate3d(0, 18px, 0) scale(0.94);
       filter: blur(10px);
     }
 
-    /* Lookbook 4-Diagonal Corner Entrances */
+    /* Lookbook 4-Diagonal Corner Entrances (Mobile: 10px / 14px; Desktop: 48px / 36px) */
     [data-apple-reveal="corner-tl"] {
-      transform: translate3d(-48px, -36px, 0) scale(0.96);
+      transform: translate3d(-10px, -14px, 0) scale(0.97);
       filter: blur(12px);
     }
     [data-apple-reveal="corner-tr"] {
-      transform: translate3d(48px, -36px, 0) scale(0.96);
+      transform: translate3d(10px, -14px, 0) scale(0.97);
       filter: blur(12px);
     }
     [data-apple-reveal="corner-bl"] {
-      transform: translate3d(-48px, 36px, 0) scale(0.96);
+      transform: translate3d(-10px, 14px, 0) scale(0.97);
       filter: blur(12px);
     }
     [data-apple-reveal="corner-br"] {
-      transform: translate3d(48px, 36px, 0) scale(0.96);
+      transform: translate3d(10px, 14px, 0) scale(0.97);
       filter: blur(12px);
+    }
+
+    /* Desktop & Tablet: Full expressive 4-corner diagonal sweeps */
+    @media (min-width: 640px) {
+      [data-apple-reveal="left"] {
+        transform: translate3d(-46px, 0, 0) scale(0.975);
+      }
+      [data-apple-reveal="right"] {
+        transform: translate3d(46px, 0, 0) scale(0.975);
+      }
+      [data-apple-reveal="center"],
+      [data-apple-reveal="zoom"] {
+        transform: translate3d(0, 24px, 0) scale(0.935);
+      }
+      [data-apple-reveal="corner-tl"] {
+        transform: translate3d(-48px, -36px, 0) scale(0.96);
+      }
+      [data-apple-reveal="corner-tr"] {
+        transform: translate3d(48px, -36px, 0) scale(0.96);
+      }
+      [data-apple-reveal="corner-bl"] {
+        transform: translate3d(-48px, 36px, 0) scale(0.96);
+      }
+      [data-apple-reveal="corner-br"] {
+        transform: translate3d(48px, 36px, 0) scale(0.96);
+      }
     }
 
     /* Unified In-View Target State */
@@ -638,32 +674,61 @@
 
     /* Retract Destinations match their respective origin directions */
     [data-apple-reveal="header"].is-retracting {
-      transform: translate3d(0, 20px, 0) scale(0.99);
+      transform: translate3d(0, 18px, 0) scale(0.99);
     }
     [data-apple-reveal="left"].is-retracting {
-      transform: translate3d(-42px, 0, 0) scale(0.975);
+      transform: translate3d(-8px, 12px, 0) scale(0.98);
     }
     [data-apple-reveal="right"].is-retracting {
-      transform: translate3d(42px, 0, 0) scale(0.975);
+      transform: translate3d(8px, 12px, 0) scale(0.98);
     }
     [data-apple-reveal="center"].is-retracting,
     [data-apple-reveal="zoom"].is-retracting {
-      transform: translate3d(0, 22px, 0) scale(0.94);
+      transform: translate3d(0, 16px, 0) scale(0.95);
     }
     [data-apple-reveal="corner-tl"].is-retracting {
-      transform: translate3d(-44px, -32px, 0) scale(0.96);
+      transform: translate3d(-8px, -12px, 0) scale(0.97);
     }
     [data-apple-reveal="corner-tr"].is-retracting {
-      transform: translate3d(44px, -32px, 0) scale(0.96);
+      transform: translate3d(8px, -12px, 0) scale(0.97);
     }
     [data-apple-reveal="corner-bl"].is-retracting {
-      transform: translate3d(-44px, 32px, 0) scale(0.96);
+      transform: translate3d(-8px, 12px, 0) scale(0.97);
     }
     [data-apple-reveal="corner-br"].is-retracting {
-      transform: translate3d(44px, 32px, 0) scale(0.96);
+      transform: translate3d(8px, 12px, 0) scale(0.97);
     }
+
+    @media (min-width: 640px) {
+      [data-apple-reveal="header"].is-retracting {
+        transform: translate3d(0, 20px, 0) scale(0.99);
+      }
+      [data-apple-reveal="left"].is-retracting {
+        transform: translate3d(-42px, 0, 0) scale(0.975);
+      }
+      [data-apple-reveal="right"].is-retracting {
+        transform: translate3d(42px, 0, 0) scale(0.975);
+      }
+      [data-apple-reveal="center"].is-retracting,
+      [data-apple-reveal="zoom"].is-retracting {
+        transform: translate3d(0, 22px, 0) scale(0.94);
+      }
+      [data-apple-reveal="corner-tl"].is-retracting {
+        transform: translate3d(-44px, -32px, 0) scale(0.96);
+      }
+      [data-apple-reveal="corner-tr"].is-retracting {
+        transform: translate3d(44px, -32px, 0) scale(0.96);
+      }
+      [data-apple-reveal="corner-bl"].is-retracting {
+        transform: translate3d(-44px, 32px, 0) scale(0.96);
+      }
+      [data-apple-reveal="corner-br"].is-retracting {
+        transform: translate3d(44px, 32px, 0) scale(0.96);
+      }
+    }
+
     [data-apple-reveal]:not([data-apple-reveal="header"]):not([data-apple-reveal="left"]):not([data-apple-reveal="right"]):not([data-apple-reveal="center"]):not([data-apple-reveal="zoom"]):not([data-apple-reveal^="corner-"]).is-retracting {
-      transform: translate3d(0, 26px, 0) scale(0.985);
+      transform: translate3d(0, 22px, 0) scale(0.985);
     }
 
     /* Section 9 (Visit & Map): Pure GPU transform & opacity without blur shader overhead to ensure 120 FPS map entry */
@@ -1016,7 +1081,7 @@
   <!-- ========================================================================
        STICKY APPLE DYNAMIC ATELIER HEADER + MOBILE GLASS SHEET
        ======================================================================== -->
-  <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2">
+  <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2 w-full">
     <div class="max-w-6xl mx-auto relative">
       <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4" aria-label="Primary Navigation">
         <!-- Brand Identity + Wax Monogram Seal -->
@@ -1129,7 +1194,7 @@
     </div>
   </header>
 
-  <main id="top" class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-24 sm:pb-32 space-y-20 sm:space-y-32">
+  <main id="top" class="relative z-10 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-24 sm:pb-32 space-y-20 sm:space-y-32 overflow-x-clip">
 
     <!-- ======================================================================
          SECTION 1: HERO — OIL PAINTING ARCH & CHOREOGRAPHED EDITORIAL OPENING
@@ -1757,7 +1822,7 @@
   <!-- ========================================================================
        MINIMALIST ATELIER FOOTER
        ======================================================================== -->
-  <footer class="relative z-10 border-t py-10 px-4 sm:px-6 text-xs" style="border-color: var(--border-hairline); color: var(--ink-muted);">
+  <footer class="relative z-10 border-t py-10 px-4 sm:px-6 text-xs w-full overflow-x-clip" style="border-color: var(--border-hairline); color: var(--ink-muted);">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
       <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
         <span id="copyright-salon" class="font-editorial font-semibold text-base" style="color: var(--ink-primary);">Maison Élan</span>
