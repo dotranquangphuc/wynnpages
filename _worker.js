@@ -3030,17 +3030,81 @@ export default {
           })
         });
 
-        if (!gRes.ok) {
+        let rawPlaces = [];
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          rawPlaces = Array.isArray(gData.places) ? gData.places : [];
+        } else {
           const gErr = await gRes.json().catch(() => ({}));
           const errMsg = gErr.error?.message || `Google Places API HTTP ${gRes.status}`;
-          return new Response(
-            JSON.stringify({ ok: false, error: errMsg, details: gErr }),
-            { status: gRes.status, headers: corsHeaders }
-          );
-        }
 
-        const gData = await gRes.json();
-        const rawPlaces = Array.isArray(gData.places) ? gData.places : [];
+          // Try smart fallback to legacy Places API if Places API (New) is not enabled on project
+          let legacySucceeded = false;
+          try {
+            const legRes = await fetch(
+              `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(textQuery)}&key=${encodeURIComponent(effectivePlacesKey)}`
+            );
+            const legData = await legRes.json().catch(() => ({}));
+            if (legRes.ok && legData.status === 'OK' && Array.isArray(legData.results) && legData.results.length > 0) {
+              legacySucceeded = true;
+              rawPlaces = legData.results.slice(0, 20).map((r) => ({
+                id: r.place_id,
+                displayName: { text: r.name },
+                formattedAddress: r.formatted_address,
+                rating: r.rating || 0,
+                userRatingCount: r.user_ratings_total || 0,
+                websiteUri: '',
+                nationalPhoneNumber: '',
+                regularOpeningHours: { weekdayDescriptions: [] },
+                reviews: []
+              }));
+
+              // Enrich top 10 with Place Details (website, phone, hours, reviews)
+              const enrichPromises = rawPlaces.slice(0, 10).map(async (p) => {
+                try {
+                  const dRes = await fetch(
+                    `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.id}&fields=name,formatted_phone_number,international_phone_number,website,opening_hours,reviews&key=${encodeURIComponent(effectivePlacesKey)}`
+                  );
+                  const dData = await dRes.json().catch(() => ({}));
+                  if (dData.result) {
+                    p.nationalPhoneNumber = dData.result.formatted_phone_number || dData.result.international_phone_number || '';
+                    p.websiteUri = dData.result.website || '';
+                    if (dData.result.opening_hours?.weekday_text) {
+                      p.regularOpeningHours.weekdayDescriptions = dData.result.opening_hours.weekday_text;
+                    }
+                    if (Array.isArray(dData.result.reviews)) {
+                      p.reviews = dData.result.reviews.map((rv) => ({
+                        authorAttribution: { displayName: rv.author_name },
+                        rating: rv.rating,
+                        text: { text: rv.text }
+                      }));
+                    }
+                  }
+                } catch (_) {}
+              });
+              await Promise.all(enrichPromises);
+            }
+          } catch (_) {}
+
+          if (!legacySucceeded) {
+            const isPermissionDenied = errMsg.toLowerCase().includes('permission denied');
+            let friendlyMsg = errMsg;
+            if (isPermissionDenied) {
+              friendlyMsg = 'Google từ chối quyền (Permission denied): Vui lòng vào Google Cloud Console BẬT "Places API (New)" và kiểm tra API Key không bị giới hạn (Restrictions: None).';
+            }
+            return new Response(
+              JSON.stringify({
+                ok: false,
+                error: friendlyMsg,
+                isPermissionDenied,
+                details: gErr,
+                enableUrl: 'https://console.cloud.google.com/apis/library/places.googleapis.com',
+                credentialsUrl: 'https://console.cloud.google.com/apis/credentials'
+              }),
+              { status: 403, headers: corsHeaders }
+            );
+          }
+        }
 
         // Classify & Process Leads
         const socialRegex = /(facebook\.com|instagram\.com|linktr\.ee|fresha\.com|timely\.com|square\.site|booksy\.com|heygoldie\.com|vagaro\.com|tiktok\.com|ovatu\.com|appointfix\.com|glossgenius\.com)/i;

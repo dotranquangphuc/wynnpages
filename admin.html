@@ -3089,10 +3089,34 @@
             renderLeadResults(currentScannedLeads);
             showToast(`Quét thành công! Tìm thấy ${currentScannedLeads.length} tiệm tại ${location}.`);
           } catch (err) {
+            const isPerm = err.message && (err.message.includes('Permission denied') || err.message.includes('từ chối quyền') || err.message.includes('403'));
             lhResultsContainer.innerHTML = `
-              <div class="bg-red-50 rounded-2xl p-6 text-center text-xs text-red-900 border border-red-300 space-y-2">
-                <p class="font-bold text-sm">❌ Quét Google Maps gặp lỗi</p>
-                <p class="font-mono text-[11px]">${escapeHtml(err.message)}</p>
+              <div class="bg-red-50 rounded-2xl p-6 text-left text-xs text-red-900 border border-red-300 space-y-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">❌</span>
+                  <p class="font-bold text-sm text-red-900">Quét Google Maps gặp lỗi quyền truy cập</p>
+                </div>
+                <p class="font-mono text-[11.5px] bg-red-100/80 p-3 rounded-xl border border-red-200 break-words leading-relaxed">${escapeHtml(err.message)}</p>
+                ${isPerm ? `
+                  <div class="bg-white/90 rounded-xl p-4 border border-red-200 text-stone-700 space-y-2.5 mt-2 shadow-sm">
+                    <p class="font-bold text-stone-900 text-xs">🛠️ 3 bước xử lý nhanh trên Google Cloud Console (chỉ mất 1 phút):</p>
+                    <ol class="list-decimal list-inside space-y-1.5 text-[11.5px] text-stone-600">
+                      <li><strong>Bật "Places API (New)":</strong> Vào Library, tìm kiếm <code>Places API (New)</code> và bấm nút <strong>ENABLE</strong> (Bật).</li>
+                      <li><strong>Kiểm tra giới hạn Key (Restrictions):</strong> Vào trang Credentials, bấm vào API Key của bạn. Tại mục <em>Application restrictions</em> chọn <strong>None</strong> (để server worker gọi được), và đảm bảo <em>Places API (New)</em> được phép.</li>
+                      <li><strong>Kiểm tra Billing:</strong> Đảm bảo Google Cloud Project đã được liên kết thẻ thanh toán (Google tặng $200 free/tháng).</li>
+                    </ol>
+                    <div class="pt-2 flex flex-wrap gap-2.5">
+                      <a href="https://console.cloud.google.com/apis/library/places.googleapis.com" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-red-800 text-white font-semibold text-xs hover:bg-red-900 inline-flex items-center gap-1.5 transition-colors">
+                        <span>👉 Bật "Places API (New)"</span>
+                        <span>↗</span>
+                      </a>
+                      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold text-xs inline-flex items-center gap-1.5 border border-stone-300 transition-colors">
+                        <span>Kiểm tra Key Credentials</span>
+                        <span>↗</span>
+                      </a>
+                    </div>
+                  </div>
+                ` : ''}
               </div>
             `;
             showToast(`Lỗi quét: ${err.message}`, true);
