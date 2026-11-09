@@ -666,6 +666,12 @@
       transform: translate3d(0, 26px, 0) scale(0.985);
     }
 
+    /* Section 9 (Visit & Map): Pure GPU transform & opacity without blur shader overhead to ensure 120 FPS map entry */
+    #visit [data-apple-reveal] {
+      filter: none !important;
+      will-change: transform, opacity;
+    }
+
     /* ==========================================================================
        HAUTE COUTURE STACKING DECK (XẾP CHỒNG THU HỒI TỰ NHIÊN)
        On mobile & tablet (< 1024px), review cards stack tactilely on top of each other.
@@ -731,36 +737,24 @@
       animation: canvas-breathe 16s ease-in-out infinite;
     }
 
-    /* Palette-Harmonized Architectural Map Embed */
+    /* Palette-Harmonized Architectural Map Embed (GPU-Isolated, Zero-Jank) */
     .atelier-map-shell {
+      contain: paint layout;
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
+      will-change: transform;
       box-shadow:
-        0 18px 36px -16px rgba(43, 37, 30, 0.14),
+        0 18px 36px -16px rgba(43, 37, 30, 0.12),
         inset 0 0 0 1px var(--border-hairline);
     }
     .atelier-map-embed {
-      filter: grayscale(0.56) sepia(0.36) hue-rotate(-8deg) saturate(0.86) contrast(0.94) brightness(1.02);
-      transition: filter 0.5s var(--apple-silk);
-    }
-    html[data-palette="02"] .atelier-map-embed {
-      filter: grayscale(0.60) sepia(0.30) hue-rotate(-18deg) saturate(0.82) contrast(0.94) brightness(1.03);
-    }
-    html[data-palette="03"] .atelier-map-embed {
-      filter: grayscale(0.52) sepia(0.22) hue-rotate(46deg) saturate(0.80) contrast(0.95) brightness(1.02);
-    }
-    html[data-palette="04"] .atelier-map-embed {
-      filter: grayscale(0.58) sepia(0.38) hue-rotate(-4deg) saturate(0.76) contrast(0.95) brightness(1.01);
-    }
-    html[data-palette="05"] .atelier-map-embed {
-      filter: grayscale(0.54) sepia(0.24) hue-rotate(155deg) saturate(0.82) contrast(0.95) brightness(1.02);
-    }
-    .atelier-map-shell:hover .atelier-map-embed,
-    .atelier-map-shell:focus-within .atelier-map-embed {
-      filter: grayscale(0.22) sepia(0.18) saturate(0.95) contrast(0.98) brightness(1.01);
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
+      filter: none !important;
     }
     .atelier-map-tint {
-      background: linear-gradient(180deg, rgba(255, 252, 247, 0.08) 0%, var(--pill-bg) 100%);
-      mix-blend-mode: multiply;
-      opacity: 0.22;
+      background: rgba(196, 156, 103, 0.05);
+      pointer-events: none;
     }
 
     /* ==========================================================================
@@ -1567,7 +1561,7 @@
 
       <div class="space-y-3.5 sm:space-y-4">
         <!-- FAQ 1 -->
-        <details data-apple-reveal="left" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>How long does a BIAB manicure last, and how often should I infill?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1582,7 +1576,7 @@
         </details>
 
         <!-- FAQ 2 -->
-        <details data-apple-reveal="right" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>Is BIAB or Gel-X damaging to my natural nail plate?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1597,7 +1591,7 @@
         </details>
 
         <!-- FAQ 3 -->
-        <details data-apple-reveal="left" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>Do I need to book in advance or do you accept walk-ins?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1612,7 +1606,7 @@
         </details>
 
         <!-- FAQ 4 -->
-        <details data-apple-reveal="right" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>What is your sanitisation and hygiene standard?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1627,7 +1621,7 @@
         </details>
 
         <!-- FAQ 5 -->
-        <details data-apple-reveal="left" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
+        <details data-apple-reveal="card" class="atelier-card rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 group cursor-pointer transition-all duration-300">
           <summary class="flex items-center justify-between gap-4 font-editorial text-xl sm:text-2xl font-semibold select-none list-none">
             <span>Can I purchase an Atelier Gift Certificate?</span>
             <span class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 group-open:rotate-180" style="border-color: var(--border-hairline); background: var(--pill-bg); color: var(--accent-primary);">
@@ -1693,8 +1687,7 @@
           <iframe
             id="visit-map-iframe"
             title="Boutique Location on Google Maps"
-            src="https://maps.google.com/maps?q=1048%20High%20Street%2C%20Armadale%20VIC%203143%2C%20Australia&amp;t=m&amp;z=15&amp;ie=UTF8&amp;iwloc=near&amp;output=embed"
-            loading="lazy"
+            src="about:blank"
             referrerpolicy="no-referrer-when-downgrade"
             class="atelier-map-embed w-full h-full border-0 block"
             allowfullscreen
@@ -2141,8 +2134,28 @@
         if (mapPill) mapPill.href = externalMapUrl;
         const mapIframe = document.getElementById('visit-map-iframe');
         if (mapIframe) {
-          mapIframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(mapQueryStr)}&t=m&z=15&ie=UTF8&iwloc=near&output=embed`;
+          const targetMapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapQueryStr)}&t=m&z=15&ie=UTF8&iwloc=near&output=embed`;
           mapIframe.title = `${cfg.salonName || 'Boutique'} Location in ${locSpaceLabel}`;
+
+          // Pre-warm Google Maps iframe quietly during idle or on first touch/scroll
+          // so tiles and scripts finish loading in advance, eliminating the 1-time scroll stutter
+          let mapWarmed = false;
+          const warmMap = () => {
+            if (mapWarmed) return;
+            mapWarmed = true;
+            mapIframe.src = targetMapSrc;
+            window.removeEventListener('scroll', warmMap);
+            window.removeEventListener('pointerdown', warmMap);
+            window.removeEventListener('touchstart', warmMap);
+          };
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(warmMap, { timeout: 2000 });
+          } else {
+            setTimeout(warmMap, 1200);
+          }
+          window.addEventListener('scroll', warmMap, { passive: true, once: true });
+          window.addEventListener('pointerdown', warmMap, { passive: true, once: true });
+          window.addEventListener('touchstart', warmMap, { passive: true, once: true });
         }
       }
 
