@@ -631,6 +631,7 @@ function formatCustomerRecord(cust) {
     demoUploadedAt: m.demo_uploaded_at || '',
     liveUrl: m.live_url || '',
     googlePlaceId: m.google_place_id || '',
+    googleMapsUri: m.google_maps_uri || '',
     googleRating: m.google_rating || '',
     googleReviewCount: m.google_review_count || '',
     googleLeadType: m.google_lead_type || '',
@@ -663,8 +664,13 @@ function formatCustomerRecord(cust) {
     parkingInfo: m.parking_info || '',
     editorialSummary: m.editorial_summary || '',
     launchedAt: m.launched_at || '',
-    submittedAt: m.submitted_at || new Date((cust.created || 0) * 1000).toISOString(),
-    created: cust.created
+    fbPitchedAt: m.fb_pitched_at || '',
+    demoViewCount: Number(m.demo_view_count || 0),
+    demoFirstViewedAt: m.demo_first_viewed_at || '',
+    demoLastViewedAt: m.demo_last_viewed_at || '',
+    demoViewerDevice: m.demo_viewer_device || '',
+    submittedAt: m.submitted_at || new Date((cust.created && cust.created < 1e11 ? cust.created * 1000 : (cust.created || Date.now()))).toISOString(),
+    created: cust.created ? (cust.created < 1e11 ? cust.created * 1000 : cust.created) : Date.now()
   };
   record.aiPrompt = buildAiPromptForClient(record);
   return record;
@@ -1596,7 +1602,61 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
   return html;
 }
 
-async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, stripeSecretKey, isLiveDomain, isPathDemo, forceBar }) {
+// Track client viewing their bespoke demo website (0ms real-time in KV + async Stripe sync)
+async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx }) {
+  if (!slug || !env || !env.WYNN_KV) return;
+  try {
+    const url = request ? new URL(request.url) : null;
+    if (url && (url.searchParams.get('admin') || url.searchParams.get('preview') || url.searchParams.get('bar') === '1')) {
+      return;
+    }
+    const cleanSlug = slugifyName(slug);
+    const userAgent = (request && request.headers.get('user-agent')) || '';
+    const isMobile = /mobile|iphone|android|ipad/i.test(userAgent);
+    const device = isMobile ? 'Mobile' : 'Desktop';
+    const now = new Date().toISOString();
+
+    const kvKey = `demo_views:${cleanSlug}`;
+    const existing = await env.WYNN_KV.get(kvKey, 'json').catch(() => null);
+    const viewCount = Number(existing?.viewCount || 0) + 1;
+    const firstViewedAt = existing?.firstViewedAt || now;
+    const updateObj = {
+      slug: cleanSlug,
+      viewCount,
+      firstViewedAt,
+      lastViewedAt: now,
+      lastDevice: device
+    };
+    await env.WYNN_KV.put(kvKey, JSON.stringify(updateObj)).catch(() => {});
+
+    // Asynchronously update Stripe customer metadata if customer record is known
+    const targetId = (client && client.id) || null;
+    if (targetId && stripeSecretKey) {
+      const bgStripe = async () => {
+        const body = new URLSearchParams();
+        body.append('metadata[demo_view_count]', String(viewCount));
+        body.append('metadata[demo_first_viewed_at]', firstViewedAt);
+        body.append('metadata[demo_last_viewed_at]', now);
+        body.append('metadata[demo_viewer_device]', device);
+        await fetch(`https://api.stripe.com/v1/customers/${targetId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${stripeSecretKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: body.toString()
+        }).catch(() => {});
+      };
+      if (ctx && typeof ctx.waitUntil === 'function') {
+        ctx.waitUntil(bgStripe());
+      } else {
+        bgStripe().catch(() => {});
+      }
+    }
+  } catch (_) {}
+}
+
+async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, request, env, ctx, stripeSecretKey, isLiveDomain, isPathDemo, forceBar }) {
   const cleanSlug = slugifyName(slug);
   const baseOrigin = isPathDemo && cleanSlug ? `https://${cleanSlug}.wynnpages.com.au` : url.origin;
 
@@ -1605,6 +1665,9 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, s
     const rawHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:${reqPath}`, 'text');
     if (rawHtml) {
       const resolvedClient = client || (stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
+      if (!isLiveDomain && (reqPath === '/index.html' || reqPath === '/')) {
+        trackDemoView({ slug: cleanSlug, request, env, client: resolvedClient, stripeSecretKey, ctx });
+      }
       const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
       const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
       const isDealExpired = resolvedClient && (
@@ -2160,12 +2223,15 @@ async function runScheduledAutopilot(env, options = {}) {
     const isPaid = c.paymentStatus === 'paid' || c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
     if (!isOutbound || isPaid) continue;
 
-    const sentTime = c.demoSentAt || c.created;
+    // The 10-day autopilot countdown ONLY starts after the studio owner actually pitches the client (via SMS or Facebook)
+    const sentTime = c.demoSentAt || c.fbPitchedAt;
     if (!sentTime) continue;
 
     scannedCount++;
     const now = Date.now();
-    const daysElapsed = (now - new Date(sentTime).getTime()) / (1000 * 3600 * 24);
+    const sentTimeMs = typeof sentTime === 'number' ? (sentTime < 1e11 ? sentTime * 1000 : sentTime) : new Date(sentTime).getTime();
+    if (!sentTimeMs || isNaN(sentTimeMs)) continue;
+    const daysElapsed = (now - sentTimeMs) / (1000 * 3600 * 24);
     const biz = c.businessName || c.name || 'Boutique';
     const demoUrl = c.demoUrl || c.brandedDemoUrl;
     const claim50Url = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(c.id)}&deal=flash50`;
@@ -2365,7 +2431,9 @@ export default {
         client: null,
         reqPath,
         url,
+        request,
         env,
+        ctx,
         stripeSecretKey: cfg.stripeSecretKey,
         isLiveDomain: false,
         isPathDemo,
@@ -2377,6 +2445,7 @@ export default {
       if (reqPath === '/index.html' || reqPath === '/') {
         const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
         if (client) {
+          trackDemoView({ slug: targetSlug, request, env, client, stripeSecretKey: cfg.stripeSecretKey, ctx });
           if (client.stage === 'launched' && client.liveUrl && !forceBar) {
             const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
             return Response.redirect(cleanLive, 302);
@@ -3564,6 +3633,15 @@ export default {
               c.demoPalette = meta.palette;
             }
           }
+          if (c.demoSlug) {
+            const v = await env.WYNN_KV.get(`demo_views:${c.demoSlug}`, 'json').catch(() => null);
+            if (v && v.viewCount) {
+              c.demoViewCount = Math.max(c.demoViewCount || 0, Number(v.viewCount));
+              if (v.firstViewedAt) c.demoFirstViewedAt = v.firstViewedAt;
+              if (v.lastViewedAt) c.demoLastViewedAt = v.lastViewedAt;
+              if (v.lastDevice) c.demoViewerDevice = v.lastDevice;
+            }
+          }
         }));
       }
 
@@ -4470,6 +4548,32 @@ export default {
           }
 
           return new Response(JSON.stringify({ ok: Boolean(smsRes && smsRes.sent), result: smsRes, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Log Facebook Pitch Sent
+        if (action === 'log_fb_pitch' && customerId) {
+          const now = new Date().toISOString();
+          const fbUrl = (body.facebookUrl || '').trim();
+          const uP = new URLSearchParams();
+          uP.append('metadata[fb_pitched_at]', now);
+          uP.append('metadata[stage]', 'outbound_pitched');
+          if (fbUrl) {
+            uP.append('metadata[facebook_url]', fbUrl);
+          }
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = formatted;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+          return new Response(JSON.stringify({ ok: true, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
         // Action: Update Subdomain (Cloudflare + KV + Stripe sync)

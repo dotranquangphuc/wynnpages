@@ -1947,9 +1947,16 @@
 
         <div id="bk-confirmation" class="hidden rounded-2xl p-4 text-xs leading-relaxed" style="background: var(--pill-bg); color: var(--ink-primary);"></div>
 
-        <button type="submit" class="w-full btn-atelier-primary rounded-full py-4 text-xs sm:text-sm font-semibold tracking-wide cursor-pointer">
-          Confirm Request via SMS Concierge →
+        <button id="bk-submit-btn" type="submit" class="w-full btn-atelier-primary rounded-full py-4 text-xs sm:text-sm font-semibold tracking-wide cursor-pointer">
+          Confirm Request via Concierge →
         </button>
+
+        <div id="dialog-direct-call-wrap" class="pt-3 border-t text-center space-y-1.5" style="border-color: var(--border-hairline);">
+          <p class="text-[11px]" style="color: var(--ink-muted);">Prefer speaking directly with our reception?</p>
+          <a id="dialog-direct-call" href="#" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-xs transition-colors" style="background: var(--bg-card); color: var(--accent-primary); border: 1px solid var(--border-hairline);">
+            <span>📞 Call Reception: <strong id="dialog-call-phone"></strong></span>
+          </a>
+        </div>
       </form>
     </div>
   </dialog>
@@ -2538,6 +2545,31 @@
         btn.addEventListener('click', () => openBookingFlow(btn.getAttribute('data-open-booking')));
       });
 
+      const dialogCallLink = document.getElementById('dialog-direct-call');
+      const dialogCallPhone = document.getElementById('dialog-call-phone');
+      const dialogDirectCallWrap = document.getElementById('dialog-direct-call-wrap');
+      if (cleanTel && dialogCallLink && dialogCallPhone) {
+        dialogCallLink.href = `tel:${cleanTel}`;
+        dialogCallPhone.textContent = cfg.displayPhone || cfg.smsPhone;
+      } else if (dialogDirectCallWrap) {
+        dialogDirectCallWrap.style.display = 'none';
+      }
+
+      const isMobileDevice = /mobile|iphone|android|ipad/i.test(navigator.userAgent);
+      const isMobileNumber = (s) => /^(\+?61|0)4\d{8}$/.test(String(s || '').replace(/[\s\-\(\)]/g, ''));
+      const canSendSms = isMobileDevice && (isMobileNumber(cfg.smsPhone) || isMobileNumber(cfg.displayPhone));
+
+      const submitBtn = document.getElementById('bk-submit-btn');
+      if (submitBtn) {
+        if (canSendSms) {
+          submitBtn.textContent = 'Confirm Request via SMS Concierge →';
+        } else if (cleanTel) {
+          submitBtn.textContent = 'Call Reception to Reserve Directly →';
+        } else {
+          submitBtn.textContent = 'Send Appointment Request via Email →';
+        }
+      }
+
       if (bookingForm) {
         bookingForm.addEventListener('submit', (e) => {
           e.preventDefault();
@@ -2549,13 +2581,23 @@
           const smsTarget = String(cfg.smsPhone || cfg.displayPhone || '').replace(/[^+\d]/g, '');
           const msg = `Hi ${cfg.salonName || 'team'}, I'd love to book ${service} on ${dateVal} (${timeVal}). Name: ${clientName} (${clientPhone}). Thank you!`;
 
-          if (bkConfirm) {
-            bkConfirm.textContent = `Opening your SMS message to ${cfg.salonName || 'our reception'} to lock in ${service}...`;
-            bkConfirm.classList.remove('hidden');
-          }
-          if (smsTarget) {
+          if (canSendSms && smsTarget) {
+            if (bkConfirm) {
+              bkConfirm.textContent = `Opening SMS to ${cfg.salonName || 'our reception'}...`;
+              bkConfirm.classList.remove('hidden');
+            }
             window.location.href = `sms:${smsTarget}?&body=${encodeURIComponent(msg)}`;
+          } else if (cleanTel) {
+            if (bkConfirm) {
+              bkConfirm.textContent = `Connecting phone call to ${cfg.displayPhone || cfg.salonName}...`;
+              bkConfirm.classList.remove('hidden');
+            }
+            window.location.href = `tel:${cleanTel}`;
           } else if (cfg.email) {
+            if (bkConfirm) {
+              bkConfirm.textContent = `Opening email to ${cfg.salonName || 'our reception'}...`;
+              bkConfirm.classList.remove('hidden');
+            }
             window.location.href = `mailto:${cfg.email}?subject=${encodeURIComponent('Appointment Request — ' + service)}&body=${encodeURIComponent(msg)}`;
           }
         });

@@ -251,28 +251,6 @@
         </button>
       </div>
 
-      <!-- Quick Banner on Tab 1 (Linking to Tab 3 or fast scan) -->
-      <div id="tab1-lead-quickbar" class="bg-gradient-to-r from-[#fdfbf7] via-white to-[#fbf6ed] rounded-2xl px-5 py-3.5 border border-[#e5dec9] shadow-2xs flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="w-9 h-9 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center text-base shadow-2xs">💎</span>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs sm:text-sm font-extrabold text-stone-900">Kho Khách Hàng Tiềm Năng (Google Maps Leads CRM)</span>
-              <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase">Places API New</span>
-            </div>
-            <p class="text-[11px] text-stone-500 mt-0.5">
-              Đang lưu trữ <strong id="quick-bar-lead-count" class="text-stone-900 font-extrabold">0</strong> tiệm (<strong id="quick-bar-hot-count" class="text-rose-700 font-extrabold">0</strong> chưa có web) &bull; Dữ liệu lưu vĩnh viễn, bấm 1-click để đưa sang Tab 1 làm demo.
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="switchMainTab('leads')" class="px-4 py-2 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-extrabold text-xs transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer">
-            <span>🚀 Mở Kho Săn Khách (Tab 3)</span>
-            <span>&rarr;</span>
-          </button>
-        </div>
-      </div>
-
       <!-- Toast Notification Banner -->
       <div id="toast-banner" class="hidden rounded-2xl p-4 border text-xs font-semibold flex items-center justify-between gap-4 shadow-sm">
         <span id="toast-message"></span>
@@ -576,10 +554,6 @@
           <div class="flex items-center gap-2 flex-wrap">
             <span class="px-2.5 py-0.5 rounded-full bg-[#96432b] text-white text-[10px] font-extrabold uppercase tracking-wider">Bước 1 Outbound</span>
             <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Tạo Nhanh Khách Chào Hàng (Đã Có Link Demo)</h3>
-            <button type="button" onclick="switchMainTab('leads')" class="px-2.5 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 shadow-2xs">
-              <span>💎 Chọn từ Kho Lead</span>
-              <span>&rarr;</span>
-            </button>
           </div>
           <span class="text-[11px] text-stone-500">Không cần điền Brief — Tạo xong có ngay Link Demo gắn nút <strong>"Claim This Website - $599 AUD"</strong>!</span>
         </div>
@@ -1230,6 +1204,58 @@
     </div>
   </div>
 
+  <!-- Modal: Facebook Messenger Outbound Pitch -->
+  <div id="modal-facebook-pitch" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-[#1877f2]/10 text-[#1877f2] flex items-center justify-center text-lg">💬</span>
+          <div>
+            <h3 class="text-base font-extrabold text-stone-900">Chào Hàng Qua Facebook Messenger</h3>
+            <p id="fb-modal-subtitle" class="text-xs text-stone-500 mt-0.5">Tiếp cận trực tiếp trang Facebook của chủ tiệm</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-fb-modal" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-[11px] font-bold text-stone-700 block mb-1">Link Trang Facebook hoặc Messenger của tiệm:</label>
+          <div class="flex items-center gap-2">
+            <input type="url" id="fb-modal-url" placeholder="VD: https://facebook.com/tiemnails hoặc https://m.me/tiemnails" class="w-full atelier-input rounded-xl px-3.5 py-2 text-xs font-mono bg-stone-50">
+            <a id="btn-visit-fb-page" href="#" target="_blank" class="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1877f2] font-bold text-xs shrink-0 transition-colors inline-flex items-center gap-1">
+              <span>Mở FB ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-bold text-stone-700 block">Nội dung tin nhắn Facebook (Chuẩn Australian English &amp; Không áp lực):</label>
+            <span class="text-[10px] text-stone-400 font-mono" id="fb-modal-char-count"></span>
+          </div>
+          <textarea id="fb-modal-body" rows="9" class="w-full atelier-input rounded-xl p-3 text-xs font-sans leading-relaxed bg-[#fcfbf9] text-stone-800 border border-[#dfd5c3]"></textarea>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-[11px] text-blue-950 flex items-start gap-2">
+        <span>💡</span>
+        <span>Mẹo: Bấm <strong>"Copy Lời Chào"</strong>, sau đó bấm <strong>"Mở FB ↗"</strong> để dán trực tiếp vào khung chat Facebook/Messenger và gửi ngay!</span>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-[#f0eade]">
+        <button type="button" id="btn-copy-fb-body" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+          <span>📋 Copy Lời Chào</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-mark-fb-sent" class="px-4 py-2.5 rounded-xl bg-[#1877f2] hover:bg-[#1565c0] text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>✅ Đã Gửi Qua Facebook</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       // Auto-load saved admin key from localStorage if present
@@ -1257,11 +1283,8 @@
       const modeTabOutbound = document.getElementById('mode-tab-outbound');
       const modeTabInbound = document.getElementById('mode-tab-inbound');
       const modeTabLeads = document.getElementById('mode-tab-leads');
-      const tab1LeadQuickbar = document.getElementById('tab1-lead-quickbar');
       const clientsSection = document.getElementById('clients-section');
       const badgeCountLeads = document.getElementById('badge-count-leads');
-      const quickBarLeadCount = document.getElementById('quick-bar-lead-count');
-      const quickBarHotCount = document.getElementById('quick-bar-hot-count');
       const outboundQuickCreator = document.getElementById('outbound-quick-creator');
       const outboundFilters = document.getElementById('outbound-filters');
       const inboundFilters = document.getElementById('inbound-filters');
@@ -1344,15 +1367,47 @@
         return { filledCount, total: 4, isComplete };
       }
 
+      function parseTimestampMs(ts) {
+        if (!ts) return null;
+        if (typeof ts === 'number') {
+          return ts < 1e11 ? ts * 1000 : ts;
+        }
+        const num = Number(ts);
+        if (!isNaN(num) && num > 0) {
+          return num < 1e11 ? num * 1000 : num;
+        }
+        const parsed = new Date(ts).getTime();
+        return isNaN(parsed) ? null : parsed;
+      }
+
+      function formatTimeAgo(isoOrTs) {
+        if (!isoOrTs) return '';
+        const ms = parseTimestampMs(isoOrTs);
+        if (!ms) return '';
+        const diffMs = Date.now() - ms;
+        if (diffMs < 0) return 'Vừa xong';
+        const mins = Math.floor(diffMs / (60 * 1000));
+        if (mins < 1) return 'Vừa xong';
+        if (mins < 60) return `${mins} phút trước`;
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return `${hours} giờ trước`;
+        const days = Math.floor(hours / 24);
+        return `${days} ngày trước`;
+      }
+
       function getClientDueAction(c) {
         if (!c) return null;
         const isPaid = c.paymentStatus === 'paid' || c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
         if (isPaid) return null;
-        const sentTime = c.demoSentAt || c.created;
-        if (!sentTime) return null;
+        // The 10-day closing countdown ONLY begins after the studio owner actually pitches the client (via SMS or Facebook)
+        const pitchTime = c.demoSentAt || c.fbPitchedAt;
+        if (!pitchTime) return null;
         if (c.dealStatus === 'purged') return null;
 
-        const daysElapsed = Math.floor((Date.now() - new Date(sentTime).getTime()) / (1000 * 3600 * 24));
+        const pitchMs = parseTimestampMs(pitchTime);
+        if (!pitchMs) return null;
+        const daysElapsed = Math.floor((Date.now() - pitchMs) / (1000 * 3600 * 24));
+        if (daysElapsed < 0) return null;
 
         // Day 10+ Hard Expire (Needs Purge or Expire)
         if (daysElapsed >= 10 && c.dealStatus !== 'expired') {
@@ -1437,7 +1492,6 @@
           if (modeTabLeads) modeTabLeads.className = tabInactiveCls;
 
           if (leadHunterPanel) leadHunterPanel.classList.add('hidden');
-          if (tab1LeadQuickbar) tab1LeadQuickbar.classList.remove('hidden');
           if (outboundQuickCreator) outboundQuickCreator.classList.remove('hidden');
           if (outboundFilters) {
             outboundFilters.classList.remove('hidden');
@@ -1461,7 +1515,6 @@
           if (modeTabLeads) modeTabLeads.className = tabInactiveCls;
 
           if (leadHunterPanel) leadHunterPanel.classList.add('hidden');
-          if (tab1LeadQuickbar) tab1LeadQuickbar.classList.add('hidden');
           if (outboundQuickCreator) outboundQuickCreator.classList.add('hidden');
           if (outboundFilters) {
             outboundFilters.classList.add('hidden');
@@ -1488,7 +1541,6 @@
             leadHunterPanel.classList.remove('hidden');
             if (leadHunterBody) leadHunterBody.classList.remove('hidden');
           }
-          if (tab1LeadQuickbar) tab1LeadQuickbar.classList.add('hidden');
           if (outboundQuickCreator) outboundQuickCreator.classList.add('hidden');
           if (outboundFilters) {
             outboundFilters.classList.add('hidden');
@@ -1509,6 +1561,7 @@
           }
         }
       }
+      window.switchMainTab = switchMainTab;
 
       if (modeTabOutbound) modeTabOutbound.addEventListener('click', () => switchMainTab('outbound'));
       if (modeTabInbound) modeTabInbound.addEventListener('click', () => switchMainTab('inbound'));
@@ -1803,11 +1856,12 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (isPaid) return '';
 
         let daysElapsed = 0;
-        let daysText = 'Chưa gửi';
-        const sentTime = c.demoSentAt || c.created;
-        if (sentTime) {
-          daysElapsed = Math.floor((Date.now() - new Date(sentTime).getTime()) / (1000 * 3600 * 24));
-          daysText = daysElapsed === 0 ? 'Hôm nay (Ngày 0)' : `Ngày thứ ${daysElapsed}`;
+        let daysText = 'Chưa gửi chào hàng';
+        const pitchTime = c.demoSentAt || c.fbPitchedAt;
+        const pitchMs = parseTimestampMs(pitchTime);
+        if (pitchTime && pitchMs) {
+          daysElapsed = Math.max(0, Math.floor((Date.now() - pitchMs) / (1000 * 3600 * 24)));
+          daysText = daysElapsed === 0 ? 'Hôm nay (Ngày 1)' : `Ngày thứ ${daysElapsed + 1}`;
         }
 
         const isPurged = c.dealStatus === 'purged';
@@ -1822,6 +1876,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-stone-900 text-stone-200 border border-stone-700">🔒 DEMO ĐÃ HẾT HẠN (HTTP 403)</span>`;
         } else if (isDealActive) {
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-xs animate-pulse">⚡ DEAL 50% ($299 AUD) — ĐANG CHẠY</span>`;
+        } else if (!pitchTime) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-300">Chưa bắt đầu đếm (Chờ gửi Pitch)</span>`;
         } else {
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Chuẩn $599 AUD</span>`;
         }
@@ -1844,11 +1900,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         }
 
         // Time gates for buttons
-        const isDay3Due = daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && !isDealActive && !isExpired;
-        const isDay3Locked = daysElapsed < 3;
-        const isDay7Due = daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && !isExpired;
-        const isDay9Due = daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning';
-        const isDay10Due = daysElapsed >= 10 && !isExpired;
+        const isDay3Due = Boolean(pitchTime) && daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && !isDealActive && !isExpired;
+        const isDay3Locked = !pitchTime || daysElapsed < 3;
+        const isDay7Due = Boolean(pitchTime) && daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && !isExpired;
+        const isDay9Due = Boolean(pitchTime) && daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning';
+        const isDay10Due = Boolean(pitchTime) && daysElapsed >= 10 && !isExpired;
 
         return `
           <div class="bg-gradient-to-br from-[#fcfbf7] to-[#fbf6ed] rounded-2xl p-3.5 border border-[#e2d9c8] space-y-3 shadow-2xs">
@@ -2223,8 +2279,20 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2.5 flex-wrap">
-                    <h3 class="text-xl font-extrabold text-stone-900">${escapeHtml(titleName)}</h3>
+                    <a href="${c.googleMapsUri || (c.businessAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName + ' ' + c.businessAddress)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName)}`)}" target="_blank" rel="noopener noreferrer" class="text-xl font-extrabold text-stone-900 hover:text-[#96432b] hover:underline inline-flex items-center gap-1 group" title="Mở trang Google Maps của ${escapeHtml(titleName)} (Click xem trên Google Maps)">
+                      <span>${escapeHtml(titleName)}</span>
+                      <span class="text-stone-400 group-hover:text-[#96432b] text-sm">↗</span>
+                    </a>
                     ${paymentBadge}
+                    ${c.demoViewCount > 0
+                      ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs" title="Lần đầu xem: ${new Date(c.demoFirstViewedAt).toLocaleString('vi-VN')} (${c.demoViewerDevice || 'Mobile'})">
+                           <span>👀 Khách ĐÃ XEM DEMO</span>
+                           <span class="px-1.5 py-0.2 rounded-full bg-emerald-700 text-white text-[10px] font-extrabold">${c.demoViewCount} lần</span>
+                         </span>`
+                      : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-500 border border-stone-200 inline-flex items-center gap-1">
+                           <span>⏳ Khách CHƯA XEM DEMO</span>
+                         </span>`
+                    }
                     <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
@@ -2233,6 +2301,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       ? `<span class="font-mono text-emerald-800 font-semibold">📱 SMS: ${escapeHtml(c.phone)}</span>`
                       : `<span class="text-amber-700 font-semibold">📱 Chưa có SĐT (Bấm "✏️ Sửa" để thêm SĐT bắn SMS)</span>`
                     }
+                    ${c.facebookUrl ? `
+                      <a href="${escapeHtml(c.facebookUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#1877F2] font-semibold hover:underline" title="Mở Facebook của tiệm">
+                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        <span>Facebook</span>
+                      </a>
+                    ` : ''}
+                    ${c.instagramUrl ? `
+                      <a href="${escapeHtml(c.instagramUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#e1306c] font-semibold hover:underline" title="Mở Instagram của tiệm">
+                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        <span>Instagram</span>
+                      </a>
+                    ` : ''}
                     <span class="text-stone-400">🕒 ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
                   </div>
                 </div>
@@ -2382,21 +2462,39 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 <!-- Section 3: Urgency & Closing Engine (10-Day Automated Pipeline) -->
                 ${renderUrgencyClosingSection(c, { hasPhone, isPaid, isPitched, titleName })}
 
-                <!-- 3 Outbound Automated SMS + Email Action Buttons -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                  <!-- Button 1: Pitch Demo -->
+                <!-- 4 Outbound Automated Action Buttons (SMS, Facebook Messenger, Follow-up, Launch) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                  <!-- Button 1: Pitch Demo SMS / Email -->
                   <button
                     type="button"
                     data-cid="${c.id}"
                     data-stage="outbound_pitch"
                     ${!hasValidDemo ? 'disabled' : ''}
-                    class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#96432b] hover:bg-[#7d3520] text-white shadow-xs"
+                    class="btn-action btn-stage-action px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#96432b] hover:bg-[#7d3520] text-white shadow-xs"
                   >
-                    <span>${hasPhone && c.email ? '📩 1. Gửi SMS + Email Chào Hàng' : (hasPhone ? '📱 1. Bắn SMS Chào Hàng' : '📧 1. Gửi Email Chào Hàng')}</span>
+                    <span>${hasPhone && c.email ? '📩 1. Gửi SMS + Email' : (hasPhone ? '📱 1. Bắn SMS Chào Hàng' : '📧 1. Gửi Email Chào Hàng')}</span>
                     <span class="text-[10px] font-normal opacity-90">${
                       !hasValidDemo
                         ? '🔒 Nhập Link Demo trước'
                         : (isPitched ? '✓ Đã gửi chào hàng (Bấm gửi lại)' : (hasPhone ? `Bắn tin nhắn tới ${escapeHtml(c.phone)}` : 'Gửi link Demo + nút Claim $599'))
+                    }</span>
+                  </button>
+
+                  <!-- Button 2b: Chào Hàng Qua Facebook Messenger -->
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-name="${escapeHtml(titleName)}"
+                    data-slug="${escapeHtml(c.demoSlug || '')}"
+                    data-fb="${escapeHtml(c.facebookUrl || '')}"
+                    data-demo="${escapeHtml(previewOverlayUrl)}"
+                    ${!hasValidDemo ? 'disabled' : ''}
+                    class="btn-open-fb-modal px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#1877f2] hover:bg-[#1565c0] text-white shadow-xs cursor-pointer"
+                    title="Mở hộp thoại chào hàng qua Facebook Messenger với nội dung Australian English"
+                  >
+                    <span>💬 2b. Chào Qua Facebook</span>
+                    <span class="text-[10px] font-normal opacity-90">${
+                      c.fbPitchedAt ? `✓ Đã gửi FB (${new Date(c.fbPitchedAt).toLocaleDateString('vi-VN')})` : 'Mở Messenger &amp; Copy lời chào'
                     }</span>
                   </button>
 
@@ -2406,9 +2504,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-cid="${c.id}"
                     data-stage="outbound_followup"
                     ${!hasValidDemo ? 'disabled' : ''}
-                    class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
+                    class="btn-action btn-stage-action px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
                   >
-                    <span>${hasPhone && c.email ? '⏰ 2. Nhắc SMS + Email (Follow-up)' : (hasPhone ? '⏰ 2. Bắn SMS Nhắc Xem Demo' : '⏰ 2. Gửi Email Nhắc Xem Demo')}</span>
+                    <span>${hasPhone && c.email ? '⏰ 3. Nhắc SMS + Email' : (hasPhone ? '⏰ 3. Bắn SMS Nhắc Xem' : '⏰ 3. Gửi Email Nhắc Xem')}</span>
                     <span class="text-[10px] font-normal opacity-90">${
                       c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần (Bấm nhắc tiếp)` : 'Hỏi thăm chủ tiệm đã xem Demo chưa'
                     }</span>
@@ -2422,9 +2520,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-paid="${isPaid ? '1' : '0'}"
                     data-stage="site_launched"
                     ${(!isPaid || !hasValidLive) ? 'disabled' : ''}
-                    class="btn-action btn-stage-action px-4 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
+                    class="btn-action btn-stage-action px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
                   >
-                    <span>🚀 4. Báo Lên Sóng Chính Thức</span>
+                    <span>🚀 4. Báo Lên Sóng Live</span>
                     <span id="btn-stage5-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
                       !isPaid
                         ? '🔒 Chờ khách thanh toán $599 trước'
@@ -2957,6 +3055,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const client = clientsCache.find(x => x.id === cid);
             if (client) {
               openUploadModal(client);
+            }
+          });
+        });
+
+        // Open Facebook Messenger Pitch Modal
+        document.querySelectorAll('.btn-open-fb-modal').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const fb = btn.getAttribute('data-fb');
+            const demo = btn.getAttribute('data-demo');
+            if (client) {
+              openFacebookPitchModal(client, fb, demo);
             }
           });
         });
@@ -3724,20 +3835,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const badgeHot = document.getElementById('lh-hot-badge');
         const badgeSocial = document.getElementById('lh-social-badge');
         const badgeImported = document.getElementById('lh-imported-badge');
-
         const badgeCountLeadsEl = document.getElementById('badge-count-leads');
-        const quickBarLeadCountEl = document.getElementById('quick-bar-lead-count');
-        const quickBarHotCountEl = document.getElementById('quick-bar-hot-count');
 
         if (badgeTotal) badgeTotal.textContent = `${total} tiệm`;
         if (badgeHot) badgeHot.textContent = `${serverStats?.hotNoWeb ?? hot} tiệm`;
         if (badgeSocial) badgeSocial.textContent = `${serverStats?.socialBooking ?? social} tiệm`;
         if (badgeImported) badgeImported.textContent = `${serverStats?.imported ?? imported} tiệm`;
-
         if (badgeCountLeadsEl) badgeCountLeadsEl.textContent = total;
-        if (quickBarLeadCountEl) quickBarLeadCountEl.textContent = total;
-        const hotCountVal = serverStats?.hotNoWeb ?? hot;
-        if (quickBarHotCountEl) quickBarHotCountEl.textContent = hotCountVal;
 
         const countsToUse = serverIndustryCounts || localIndCounts;
         for (const [key, count] of Object.entries(countsToUse)) {
@@ -4754,6 +4858,130 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       });
 
       // ========================================================
+      // FACEBOOK MESSENGER OUTBOUND PITCH MODAL
+      // ========================================================
+      const modalFbPitch = document.getElementById('modal-facebook-pitch');
+      const fbModalSubtitle = document.getElementById('fb-modal-subtitle');
+      const btnCloseFbModal = document.getElementById('btn-close-fb-modal');
+      const fbModalUrl = document.getElementById('fb-modal-url');
+      const btnVisitFbPage = document.getElementById('btn-visit-fb-page');
+      const fbModalBody = document.getElementById('fb-modal-body');
+      const fbModalCharCount = document.getElementById('fb-modal-char-count');
+      const btnCopyFbBody = document.getElementById('btn-copy-fb-body');
+      const btnMarkFbSent = document.getElementById('btn-mark-fb-sent');
+      let currentFbClient = null;
+
+      function updateFbVisitLink(url, bizName) {
+        if (!btnVisitFbPage) return;
+        const trimmed = (url || '').trim();
+        if (trimmed.startsWith('http')) {
+          btnVisitFbPage.href = trimmed;
+        } else {
+          btnVisitFbPage.href = `https://www.facebook.com/search/top?q=${encodeURIComponent(bizName || '')}`;
+        }
+      }
+
+      function openFacebookPitchModal(client, explicitFb, explicitDemo) {
+        currentFbClient = client;
+        if (!modalFbPitch || !client) return;
+        const bizName = client.businessName || client.name || 'Boutique';
+        const slug = client.demoSlug || client.id;
+        const demoUrl = explicitDemo || client.brandedDemoUrl || `https://${slug}.wynnpages.com.au`;
+        const fbUrl = explicitFb || client.facebookUrl || '';
+
+        if (fbModalSubtitle) fbModalSubtitle.textContent = `Tiếp cận trực tiếp tiệm "${bizName}" qua Facebook`;
+        if (fbModalUrl) {
+          fbModalUrl.value = fbUrl;
+          updateFbVisitLink(fbUrl, bizName);
+        }
+
+        const pitchText = `Hi ${bizName}! 🌿
+
+I came across your beautiful boutique on Google Maps and created a bespoke, lightning-fast digital website preview for you:
+
+👉 ${demoUrl}
+
+• Zero monthly fees & zero ongoing retainers ($599 AUD one-time, 100% owned by you).
+• Integrated with your real services, Google reviews, and instant appointment booking.
+• Crafted on our Australian High-Speed Network with Grade A speed (<0.35s).
+
+Take a quick look whenever you have a quiet moment — no pressure at all! If you love it, you can claim it right on the preview.
+
+Warm regards,
+WynnPages Studio — Australian Digital Web Atelier
+https://wynnpages.com.au`;
+
+        if (fbModalBody) {
+          fbModalBody.value = pitchText;
+          if (fbModalCharCount) fbModalCharCount.textContent = `${pitchText.length} ký tự`;
+        }
+
+        modalFbPitch.classList.remove('hidden');
+      }
+
+      function closeFacebookPitchModal() {
+        if (modalFbPitch) modalFbPitch.classList.add('hidden');
+        currentFbClient = null;
+      }
+
+      if (btnCloseFbModal) btnCloseFbModal.addEventListener('click', closeFacebookPitchModal);
+      if (modalFbPitch) {
+        modalFbPitch.addEventListener('click', (e) => {
+          if (e.target === modalFbPitch) closeFacebookPitchModal();
+        });
+      }
+      if (fbModalUrl) {
+        fbModalUrl.addEventListener('input', () => {
+          const biz = (currentFbClient && (currentFbClient.businessName || currentFbClient.name)) || '';
+          updateFbVisitLink(fbModalUrl.value, biz);
+        });
+      }
+      if (fbModalBody) {
+        fbModalBody.addEventListener('input', () => {
+          if (fbModalCharCount) fbModalCharCount.textContent = `${fbModalBody.value.length} ký tự`;
+        });
+      }
+      if (btnCopyFbBody) {
+        btnCopyFbBody.addEventListener('click', () => {
+          if (fbModalBody) {
+            navigator.clipboard.writeText(fbModalBody.value);
+            showToast('📋 Đã copy lời chào Facebook! Giờ bấm "Mở FB ↗" để dán gửi cho tiệm.');
+          }
+        });
+      }
+      if (btnMarkFbSent) {
+        btnMarkFbSent.addEventListener('click', async () => {
+          if (!currentFbClient) return;
+          const cid = currentFbClient.id;
+          const fbUrl = fbModalUrl ? fbModalUrl.value.trim() : '';
+          const origHtml = btnMarkFbSent.innerHTML;
+          btnMarkFbSent.disabled = true;
+          btnMarkFbSent.innerHTML = '<span class="wynn-spin"></span><span>Đang ghi nhận...</span>';
+          try {
+            const res = await runAdminAction({
+              action: 'log_fb_pitch',
+              customerId: cid,
+              facebookUrl: fbUrl
+            }, { busyText: 'Đang ghi nhận đã chào hàng qua Facebook...', skipReload: true });
+
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`✅ Đã ghi nhận đã chào hàng qua Facebook cho "${res.client.businessName || res.client.name}"!`);
+              closeFacebookPitchModal();
+            } else {
+              showToast('Không lưu được trạng thái Facebook.', true);
+            }
+          } catch (err) {
+            showToast(`Lỗi: ${err.message}`, true);
+          } finally {
+            btnMarkFbSent.disabled = false;
+            btnMarkFbSent.innerHTML = origHtml;
+          }
+        });
+      }
+
+      // ========================================================
       // DEMO BUNDLE UPLOAD (HTML / ZIP NATIVE CLOUDFLARE KV)
       // ========================================================
       const uploadModal = document.getElementById('modal-upload-demo');
@@ -5057,6 +5285,101 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (parsedLinks.instagramHandle) patchStringField('instagramHandle', parsedLinks.instagramHandle);
         if (parsedLinks.facebookUrl) patchStringField('facebookUrl', parsedLinks.facebookUrl);
 
+        if (client && client.googleRating) {
+          patchStringField('googleRating', String(client.googleRating));
+        }
+        if (client && client.googleReviewCount) {
+          const revCountStr = `${client.googleReviewCount}+`;
+          patchStringField('reviewCount', revCountStr);
+        }
+
+        // Hydrate Real Google Maps Opening Hours
+        if (client && client.openingHours) {
+          const rawH = client.openingHours;
+          let items = [];
+          if (Array.isArray(rawH)) {
+            items = rawH;
+          } else if (typeof rawH === 'string') {
+            if (rawH.startsWith('[')) {
+              try { items = JSON.parse(rawH); } catch(_) {}
+            }
+            if (!items.length) {
+              items = rawH.split(/[|\n]/).map(s => s.trim()).filter(Boolean);
+            }
+          }
+          if (items.length) {
+            const parsedH = [];
+            for (const it of items) {
+              if (typeof it === 'object' && it.days && it.time) {
+                parsedH.push(it);
+                continue;
+              }
+              const str = String(it);
+              const colIdx = str.indexOf(':');
+              if (colIdx > 0) {
+                parsedH.push({
+                  days: str.slice(0, colIdx).trim(),
+                  time: str.slice(colIdx + 1).trim()
+                });
+              } else {
+                parsedH.push({ days: str, time: 'Open' });
+              }
+            }
+            if (parsedH.length) {
+              const hJson = JSON.stringify(parsedH, null, 8).trim();
+              html = html.replace(/hours:\s*\[[\s\S]*?\n\s*\],/, `hours: ${hJson},`);
+            }
+          }
+        }
+
+        // Hydrate Real Google Reviews
+        if (client && client.customerReviews) {
+          const rawR = client.customerReviews;
+          let rItems = [];
+          if (Array.isArray(rawR)) {
+            rItems = rawR;
+          } else if (typeof rawR === 'string') {
+            if (rawR.startsWith('[')) {
+              try { rItems = JSON.parse(rawR); } catch(_) {}
+            }
+            if (!rItems.length) {
+              rItems = rawR.split(/\s*\|\s*(?=\d+\.)/).map(s => s.trim()).filter(Boolean);
+            }
+          }
+          if (rItems.length) {
+            const parsedR = [];
+            for (const it of rItems) {
+              if (typeof it === 'object' && (it.quote || it.text)) {
+                parsedR.push({
+                  quote: it.quote || it.text,
+                  author: (it.author || it.author_name || 'Client Review').toLowerCase(),
+                  detail: `${shortLoc} Local • 5★ Google Review`
+                });
+                continue;
+              }
+              const str = String(it);
+              const m = str.match(/(?:\d+\.\s*)?([^(:]+)(?:\([^)]*\))?:\s*["“]?([^"”]+)["”]?/);
+              if (m) {
+                parsedR.push({
+                  quote: m[2].trim(),
+                  author: m[1].trim().toLowerCase(),
+                  detail: `${shortLoc} Local • 5★ Google Review`
+                });
+              } else {
+                parsedR.push({
+                  quote: str,
+                  author: 'verified client',
+                  detail: `${shortLoc} Local • 5★ Google Review`
+                });
+              }
+            }
+            if (parsedR.length) {
+              const rJson = JSON.stringify(parsedR.slice(0, 4), null, 8).trim();
+              html = html.replace(/reviews:\s*\[[\s\S]*?\n\s*\],/, `reviews: ${rJson},`);
+            }
+          }
+        }
+
         // Hydrate static Schema.org NailSalon JSON-LD for Google Search Console
         const jsonLdObj = {
           '@context': 'https://schema.org',
@@ -5077,8 +5400,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           },
           aggregateRating: {
             '@type': 'AggregateRating',
-            ratingValue: '4.9',
-            reviewCount: '280'
+            ratingValue: String((client && client.googleRating) || '4.9'),
+            reviewCount: String((client && client.googleReviewCount) || '280')
           }
         };
         const sameAs = [parsedLinks.instagramUrl, parsedLinks.facebookUrl].filter(Boolean);
