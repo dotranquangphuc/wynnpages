@@ -527,6 +527,33 @@ function buildAiPromptForClient(c) {
     );
   }
 
+  if (c.placesPhotos && Array.isArray(c.placesPhotos) && c.placesPhotos.length > 0) {
+    const photoUrls = c.placesPhotos.slice(0, 6).map((ph, idx) => `Photo ${idx + 1}: /api/places-photo?ref=${encodeURIComponent(ph)}&maxWidth=800`).join('\n');
+    promptLines.push(
+      `=====================================================`,
+      `GOOGLE MAPS REAL CLIENT PHOTOS (${c.placesPhotos.length} captured):`,
+      photoUrls,
+      ``,
+      `MANDATORY ARTWORK DIRECTIVE — CÁCH 2: AI FINE-ART TRANSLATION (Biến ảnh thật thành Tranh Sơn Dầu):`,
+      `1. KHÔNG dán ảnh chụp điện thoại thô của tiệm vào website làm mất tính Haute Couture.`,
+      `2. Lấy bố cục, kiểu móng (BIAB, French, Almond), dáng tay, góc tiệm thực tế từ các ảnh trên làm mẫu chuẩn (composition reference).`,
+      `3. Dùng subagent image-generator dịch sang Tranh Sơn Dầu Pháp (French Fine-Art Oil Painting) kèm dát vàng 24k (gold leaf foil accents), nét cọ sơn dầu nổi (impasto), ánh sáng tự nhiên trên nền vải thô lanh (linen canvas).`,
+      `4. Bộ màu tuân thủ 100% Haute Couture Palette ${c.demoPalette || '01'} (${c.brandColors || 'Terracotta Gold'}). Xuất các ảnh vào clients/${slug}/assets/ để gắn vào index.html.`
+    );
+  }
+
+  if (c.instagramUrl || c.facebookUrl) {
+    promptLines.push(
+      `Social Media Detected: Instagram: ${c.instagramUrl || 'N/A'} | Facebook: ${c.facebookUrl || 'N/A'}`
+    );
+  }
+
+  if (c.parkingInfo) {
+    promptLines.push(
+      `Parking & Boutique Access: ${c.parkingInfo}`
+    );
+  }
+
   promptLines.push(
     `=====================================================`,
     `ANTIGRAVITY EXECUTION WORKFLOW:`,
@@ -614,6 +641,22 @@ function formatCustomerRecord(cust) {
     lastEmailLog: m.last_email_log || '',
     demoSentAt: m.demo_sent_at || '',
     reminderCount: Number(m.reminder_count || 0),
+    dealStatus: m.deal_status || 'standard',
+    dealActivatedAt: m.deal_activated_at || '',
+    dealExpiresAt: m.deal_expires_at || '',
+    nurtureStep: m.nurture_step || '',
+    instagramUrl: m.instagram_url || '',
+    facebookUrl: m.facebook_url || '',
+    placesPhotos: (() => {
+      try {
+        if (!m.places_photos) return [];
+        return typeof m.places_photos === 'string' ? JSON.parse(m.places_photos) : m.places_photos;
+      } catch (_) {
+        return [];
+      }
+    })(),
+    parkingInfo: m.parking_info || '',
+    editorialSummary: m.editorial_summary || '',
     launchedAt: m.launched_at || '',
     submittedAt: m.submitted_at || new Date((cust.created || 0) * 1000).toISOString(),
     created: cust.created
@@ -792,11 +835,278 @@ function base64ToUint8Array(base64) {
   return bytes;
 }
 
+// Lightweight contact & social scraper from a business's public website
+async function extractSocialAndContactFromWebsite(websiteUrl) {
+  if (!websiteUrl || !websiteUrl.startsWith('http')) return {};
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2600);
+    const res = await fetch(websiteUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) return {};
+    const text = (await res.text()).slice(0, 180000);
+
+    let instagram = '';
+    let facebook = '';
+    let email = '';
+    let booking = '';
+
+    const igMatch = text.match(/https?:\/\/(?:www\.)?instagram\.com\/([a-zA-Z0-9_.]{2,30})/i);
+    if (igMatch && !['p', 'explore', 'reel', 'direct', 'stories'].includes(igMatch[1].toLowerCase())) {
+      instagram = `https://instagram.com/${igMatch[1]}`;
+    }
+
+    const fbMatch = text.match(/https?:\/\/(?:www\.)?facebook\.com\/([a-zA-Z0-9_.]{3,50})/i);
+    if (fbMatch && !['sharer', 'share', 'policies', 'dialog', 'privacy'].includes(fbMatch[1].toLowerCase())) {
+      facebook = `https://facebook.com/${fbMatch[1]}`;
+    }
+
+    const mailtoMatch = text.match(/mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+    if (mailtoMatch) {
+      const em = mailtoMatch[1].toLowerCase();
+      if (!/(sentry|wixpress|example|domain|schema|cloudflare|wix\.com)/.test(em)) {
+        email = em;
+      }
+    }
+    if (!email) {
+      const emailMatch = text.match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/i);
+      if (emailMatch) {
+        const em = emailMatch[1].toLowerCase();
+        if (!/(sentry|wixpress|example|domain|schema|cloudflare|wix\.com|jpg|png|webp)/.test(em)) {
+          email = em;
+        }
+      }
+    }
+
+    const bkMatch = text.match(/(https?:\/\/(?:www\.)?(?:[a-zA-Z0-9-]+\.)?(?:fresha\.com|timely\.com|square\.site|booksy\.com|heygoldie\.com|vagaro\.com|ovatu\.com)[^\s"'>]+)/i);
+    if (bkMatch) {
+      booking = bkMatch[1];
+    }
+
+    return { instagram, facebook, email, booking };
+  } catch (_) {
+    return {};
+  }
+}
+
+function buildExpiredDemoHtml(client) {
+  const bizName = (client && (client.businessName || client.name)) || 'Quý Doanh Nghiệp';
+  const expDateStr = client && client.dealExpiresAt ? new Date(client.dealExpiresAt).toLocaleDateString('en-AU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }) : 'gần đây';
+
+  return `<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bản Thiết Kế Đã Hết Hạn Lưu Trữ — WynnPages Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #fbf9f4;
+      color: #2b2723;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(#d49b28 0.7px, transparent 0.7px);
+      background-size: 24px 24px;
+      opacity: 0.18;
+      pointer-events: none;
+    }
+    .expired-card {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid #e7dfcc;
+      border-radius: 28px;
+      max-width: 600px;
+      width: 100%;
+      padding: 44px 34px;
+      text-align: center;
+      box-shadow: 0 25px 60px -15px rgba(150, 67, 43, 0.12), 0 0 0 1px rgba(212, 155, 40, 0.2);
+    }
+    .atelier-seal {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #96432b 0%, #7d3520 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 24px rgba(150, 67, 43, 0.35);
+      border: 1px solid rgba(251, 222, 185, 0.4);
+    }
+    .atelier-seal img { width: 36px; height: 36px; object-fit: contain; }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #1c1917;
+      margin-bottom: 12px;
+    }
+    h1 em {
+      font-style: italic;
+      color: #96432b;
+      font-weight: 600;
+    }
+    .client-target {
+      font-size: 13.5px;
+      color: #78716c;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    .client-target strong {
+      color: #1c1917;
+      font-weight: 800;
+    }
+    .expired-desc {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #57534e;
+      margin-bottom: 28px;
+      padding: 0 10px;
+    }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    @media (min-width: 640px) {
+      .btn-group { flex-direction: row; justify-content: center; }
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #96432b 0%, #7d3520 100%);
+      color: #ffffff;
+      padding: 13px 24px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 10px 20px rgba(150, 67, 43, 0.28);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 14px 28px rgba(150, 67, 43, 0.4);
+    }
+    .btn-secondary {
+      background: #fbf9f4;
+      color: #44403c;
+      border: 1px solid #dcd3be;
+      padding: 13px 20px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: #f5eedf;
+      border-color: #c9bc9d;
+    }
+    .footer-note {
+      font-size: 11px;
+      color: #a8a29e;
+      margin-top: 26px;
+    }
+  </style>
+</head>
+<body>
+  <div class="expired-card">
+    <div class="atelier-seal">
+      <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier">
+    </div>
+    <div class="status-pill">
+      <span>●</span> Demo Lưu Trữ Đã Hết Hạn
+    </div>
+    <h1>Bản Thiết Kế Đã Đóng &amp; <em>Thu Hồi</em></h1>
+    <p class="client-target">Dành riêng cho: <strong>${bizName}</strong></p>
+    <p class="expired-desc">
+      Thời hạn bảo lưu và suất tài trợ số hoá độc quyền (50% OFF) dành cho <strong>${bizName}</strong> đã chính thức kết thúc vào ngày <strong>${expDateStr}</strong>.<br><br>
+      Để bảo đảm an toàn hạ tầng và tính độc quyền, bản website demo này hiện đã được đưa vào kho lưu trữ bảo mật của <strong>WynnPages Australian Web Atelier</strong>.
+      Nếu bạn là chủ tiệm và muốn kích hoạt lại hệ thống website này để nhận khách, vui lòng liên hệ trực tiếp Studio theo biểu phí tiêu chuẩn <strong>$599 AUD</strong>.
+    </p>
+    <div class="btn-group">
+      <a href="sms:0424717777?&body=Hi%20WynnPages%2C%20t%C3%B4i%20l%C3%A0%20ch%E1%BB%A7%20ti%E1%BB%87m%20${encodeURIComponent(bizName)}%2C%20t%C3%B4i%20mu%E1%BB%91n%20k%C3%ADch%20ho%E1%BA%A1t%20l%E1%BA%A1i%20web%20demo%20c%E1%BB%A7a%20ti%E1%BB%87m." class="btn-primary">
+        <span>📱 SMS Kích Hoạt Lại (0424 717 777)</span>
+      </a>
+      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="btn-secondary">
+        <span>Về Trang Chủ Atelier ↗</span>
+      </a>
+    </div>
+    <p class="footer-note">WynnPages Studio — Australian Bespoke Web Atelier • Flat $599 AUD • Zero Retainers</p>
+  </div>
+</body>
+</html>`;
+}
+
 function buildClaimBarSnippet(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const cid = (client && client.id) || '';
   const email = (client && client.email) || '';
-  const claimHref = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+
+  // Check Flash Deal 50%
+  let isFlashDeal = false;
+  let expiresTimestamp = 0;
+  if (client && client.dealStatus === 'flash_deal' && client.dealExpiresAt) {
+    expiresTimestamp = new Date(client.dealExpiresAt).getTime();
+    if (expiresTimestamp > Date.now()) {
+      isFlashDeal = true;
+    }
+  }
+
+  const claimHref = isFlashDeal
+    ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`
+    : `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+
+  const btnLabel = isFlashDeal
+    ? `Claim Website — $299 AUD (50% OFF)`
+    : `Claim This Website — $599 AUD`;
 
   return `
   <style>
@@ -822,6 +1132,10 @@ function buildClaimBarSnippet(client) {
       color: #f6f1e8;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       box-sizing: border-box;
+    }
+    .claim-bar.deal-active {
+      border: 1.5px solid rgba(232, 185, 72, 0.7);
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.65), 0 0 24px rgba(232, 185, 72, 0.35);
     }
     .claim-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .claim-badge {
@@ -867,6 +1181,15 @@ function buildClaimBarSnippet(client) {
       color: #ffffff;
       transform: translateY(-0.5px);
     }
+    .claim-deal-badge {
+      background: linear-gradient(135deg, #d49b28 0%, #b87b1c 100%);
+      color: #1c1917;
+      font-weight: 800;
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-size: 9.5px;
+      letter-spacing: 0.04em;
+    }
     .claim-ext-arrow { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
     .claim-bullet { color: rgba(251, 222, 185, 0.4); font-size: 8px; flex-shrink: 0; }
     .claim-tag-text { color: rgba(251, 222, 185, 0.85); font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
@@ -881,6 +1204,29 @@ function buildClaimBarSnippet(client) {
       font-size: 16.5px; font-weight: 800; color: #ffffff;
       letter-spacing: -0.01em; text-shadow: 0 1px 4px rgba(0,0,0,0.6);
       overflow: hidden; text-overflow: ellipsis;
+    }
+    .claim-countdown-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(232, 185, 72, 0.12);
+      border: 1px solid rgba(232, 185, 72, 0.35);
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+    .cd-label {
+      color: #fbdeb9;
+      font-weight: 700;
+      font-size: 9.5px;
+      letter-spacing: 0.05em;
+    }
+    .cd-timer {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: 0.02em;
     }
     .claim-actions {
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
@@ -926,6 +1272,11 @@ function buildClaimBarSnippet(client) {
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
       animation: claim-glow 3.8s ease-in-out infinite;
+    }
+    .claim-btn.claim-deal-btn {
+      background: linear-gradient(135deg, #b83a24 0%, #d4452a 100%);
+      border-color: rgba(232, 185, 72, 0.6);
+      box-shadow: 0 10px 26px rgba(212, 69, 42, 0.6), 0 0 16px rgba(232, 185, 72, 0.4);
     }
     .claim-btn::after {
       content: '';
@@ -979,28 +1330,40 @@ function buildClaimBarSnippet(client) {
       .claim-biz-highlight { font-size: 15px; }
     }
   </style>
-  <div class="claim-bar">
+  <div class="claim-bar ${isFlashDeal ? 'deal-active' : ''}">
     <div class="claim-left">
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-badge" title="Visit WynnPages Studio (wynnpages.com.au)">
         <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" class="claim-badge-img">
       </a>
       <div class="claim-meta">
         <div class="claim-tag">
-          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-link" title="Visit WynnPages Studio (wynnpages.com.au)">
-            <span>wynnpages.com.au</span>
-            <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
-            </svg>
-          </a>
-          <span class="claim-bullet">•</span>
-          <span class="claim-tag-text">Bespoke Demo</span>
-          <span class="claim-bullet">•</span>
-          <span class="claim-tag-text">No Monthly Fees</span>
+          ${isFlashDeal ? `
+            <span class="claim-deal-badge">⚡ 50% OFF SPONSORSHIP</span>
+            <span class="claim-bullet">•</span>
+            <span class="claim-tag-text">Real-time Offer</span>
+          ` : `
+            <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-link" title="Visit WynnPages Studio (wynnpages.com.au)">
+              <span>wynnpages.com.au</span>
+              <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+              </svg>
+            </a>
+            <span class="claim-bullet">•</span>
+            <span class="claim-tag-text">Bespoke Demo</span>
+            <span class="claim-bullet">•</span>
+            <span class="claim-tag-text">No Monthly Fees</span>
+          `}
         </div>
         <div class="claim-title">
           <span class="claim-for-text">Crafted exclusively for</span>
           <strong class="claim-biz-highlight">${bizName}</strong>
         </div>
+        ${isFlashDeal ? `
+          <div class="claim-countdown-wrap">
+            <span class="cd-label">OFFER EXPIRES IN:</span>
+            <span class="cd-timer" id="claim-cd-display">--h : --m : --s</span>
+          </div>
+        ` : ''}
       </div>
     </div>
     <div class="claim-actions">
@@ -1010,12 +1373,40 @@ function buildClaimBarSnippet(client) {
           <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
         </svg>
       </a>
-      <a href="${claimHref}" class="claim-btn">
-        <span>Claim This Website — $599 AUD</span>
+      <a href="${claimHref}" class="claim-btn ${isFlashDeal ? 'claim-deal-btn' : ''}">
+        <span>${btnLabel}</span>
         <span class="claim-arrow">&rarr;</span>
       </a>
     </div>
-  </div>`;
+  </div>
+  ${isFlashDeal ? `
+  <script>
+    (function(){
+      var exp = ${expiresTimestamp};
+      if (!exp) return;
+      function updateCd() {
+        var diff = exp - Date.now();
+        var el = document.getElementById('claim-cd-display');
+        if (diff <= 0) {
+          if (el) el.textContent = '00:00:00 (Expired)';
+          setTimeout(function(){ window.location.reload(); }, 2500);
+          return;
+        }
+        var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        var secs = Math.floor((diff % (1000 * 60)) / 1000);
+        var str = (days > 0 ? (days + 'd : ') : '') +
+                  (hours < 10 ? '0' : '') + hours + 'h : ' +
+                  (mins < 10 ? '0' : '') + mins + 'm : ' +
+                  (secs < 10 ? '0' : '') + secs + 's';
+        if (el) el.textContent = str;
+      }
+      updateCd();
+      setInterval(updateCd, 1000);
+    })();
+  </script>
+  ` : ''}`;
 }
 
 function injectClaimBarIntoHtml(rawHtml, client) {
@@ -1027,7 +1418,16 @@ function injectClaimBarIntoHtml(rawHtml, client) {
   return rawHtml + snippet;
 }
 
-function buildBrandedPreviewHtml(client) {
+function buildBrandedPreviewHtml(client, options = {}) {
+  const isPaid = client && (client.paymentStatus === 'paid' || client.stage === 'launched');
+  const isDealExpired = client && (
+    client.dealStatus === 'expired' ||
+    (client.dealExpiresAt && Date.now() > new Date(client.dealExpiresAt).getTime())
+  );
+  if (!isPaid && isDealExpired && !options.bypass) {
+    return buildExpiredDemoHtml(client);
+  }
+
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'W';
   let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
@@ -1200,6 +1600,22 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, env, s
     const rawHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:${reqPath}`, 'text');
     if (rawHtml) {
       const resolvedClient = client || (stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
+      const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
+      const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
+      const isDealExpired = resolvedClient && (
+        resolvedClient.dealStatus === 'expired' ||
+        (resolvedClient.dealExpiresAt && Date.now() > new Date(resolvedClient.dealExpiresAt).getTime())
+      );
+      if (!isLiveDomain && !isPaid && isDealExpired && !bypass) {
+        return new Response(buildExpiredDemoHtml(resolvedClient), {
+          status: 403,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          }
+        });
+      }
+
       let finalHtml = ensureClientHtmlSeoTags(rawHtml, resolvedClient, url, isPathDemo, cleanSlug);
       if (!isLiveDomain && (!resolvedClient || resolvedClient.stage !== 'launched' || forceBar)) {
         finalHtml = injectClaimBarIntoHtml(finalHtml, resolvedClient || { businessName: slug, demoSlug: cleanSlug });
@@ -1792,6 +2208,15 @@ export default {
             const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
             return Response.redirect(cleanLive, 302);
           }
+          const isPaid = (client.paymentStatus === 'paid' || client.stage === 'launched');
+          const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
+          const isDealExpired = (client.dealStatus === 'expired' || (client.dealExpiresAt && Date.now() > new Date(client.dealExpiresAt).getTime()));
+          if (!isPaid && isDealExpired && !bypass) {
+            return new Response(buildExpiredDemoHtml(client), {
+              status: 403,
+              headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+            });
+          }
           const html = (client.stage === 'launched' && !forceBar)
             ? buildCleanLiveHtml(client, url.origin)
             : buildBrandedPreviewHtml(client);
@@ -1800,6 +2225,36 @@ export default {
             headers: { 'Content-Type': 'text/html; charset=utf-8' }
           });
         }
+      }
+    }
+
+    // 1aa. Google Places Photo Media Proxy (GET /api/places-photo?ref=places/.../photos/...&maxWidth=800)
+    if (url.pathname === '/api/places-photo' && request.method === 'GET') {
+      const photoRef = (url.searchParams.get('ref') || '').trim();
+      const maxWidth = parseInt(url.searchParams.get('maxWidth') || '800', 10);
+      const maxHeight = parseInt(url.searchParams.get('maxHeight') || '800', 10);
+      const effectivePlacesKey = (cfg.googlePlacesApiKey || '').trim();
+      if (!photoRef || !effectivePlacesKey) {
+        return new Response('Missing photo reference or API key', { status: 400 });
+      }
+      try {
+        const cleanRef = photoRef.replace(/^\/+/, '');
+        const gUrl = `https://places.googleapis.com/v1/${cleanRef}/media?maxWidthPx=${maxWidth}&maxHeightPx=${maxHeight}&key=${effectivePlacesKey}`;
+        const pRes = await fetch(gUrl, { redirect: 'follow' });
+        if (!pRes.ok) {
+          return new Response('Failed to load photo', { status: pRes.status });
+        }
+        const contentType = pRes.headers.get('content-type') || 'image/jpeg';
+        return new Response(pRes.body, {
+          status: 200,
+          headers: {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=604800, immutable',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      } catch (err) {
+        return new Response(err.message, { status: 500 });
       }
     }
 
@@ -1876,7 +2331,22 @@ export default {
         params.append('allow_promotion_codes', 'true');
         params.append('billing_address_collection', 'auto');
 
-        if (env.STRIPE_PRICE_ID) {
+        let isFlashDeal50 = (url.searchParams.get('deal') === 'flash50');
+        if (cust && cust.metadata && cust.metadata.deal_status === 'flash_deal') {
+          const expMs = new Date(cust.metadata.deal_expires_at).getTime();
+          if (expMs > Date.now()) {
+            isFlashDeal50 = true;
+          }
+        }
+
+        if (isFlashDeal50) {
+          params.append('line_items[0][price_data][currency]', 'aud');
+          params.append('line_items[0][price_data][unit_amount]', '29900');
+          params.append('line_items[0][price_data][product_data][name]', bizName ? `WynnPages — Atelier Sponsorship Deal (50% OFF) for ${bizName}` : 'WynnPages — Claim Website (50% OFF Sponsorship)');
+          params.append('line_items[0][price_data][product_data][description]', 'Exclusive 72h Atelier Sponsorship • 100% Full Ownership • Zero Monthly Retainers • $299 AUD Flat (Save $300 AUD)');
+          params.append('line_items[0][quantity]', '1');
+          params.append('metadata[deal_type]', 'flash_deal_50');
+        } else if (env.STRIPE_PRICE_ID) {
           params.append('line_items[0][price]', env.STRIPE_PRICE_ID);
           params.append('line_items[0][quantity]', '1');
         } else {
@@ -3208,7 +3678,10 @@ export default {
           'places.userRatingCount',
           'places.websiteUri',
           'places.regularOpeningHours',
-          'places.reviews'
+          'places.reviews',
+          'places.photos',
+          'places.parkingOptions',
+          'places.editorialSummary'
         ].join(',');
 
         const gRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
@@ -3327,11 +3800,33 @@ export default {
             ? p.regularOpeningHours.weekdayDescriptions
             : [];
 
+          // Real Client Photos (Places API New)
+          const rawPhotos = Array.isArray(p.photos) ? p.photos : [];
+          const photos = rawPhotos.slice(0, 8).map((ph) => ph.name);
+
+          // Parking Info
+          let parkingInfo = '';
+          if (p.parkingOptions) {
+            const opts = [];
+            if (p.parkingOptions.freeParkingLot) opts.push('Free parking lot');
+            if (p.parkingOptions.freeStreetParking) opts.push('Free street parking');
+            if (p.parkingOptions.paidParkingLot) opts.push('Paid parking lot');
+            if (p.parkingOptions.paidStreetParking) opts.push('Paid street parking');
+            if (p.parkingOptions.valetParking) opts.push('Valet parking');
+            parkingInfo = opts.join(', ');
+          }
+
+          // Editorial Summary
+          const editorialSummary = (p.editorialSummary?.text || p.editorialSummary || '').trim();
+
           // Classification
           let leadType = 'custom_web';
           let statusBadge = '⚪ Đã có Web riêng';
           let priorityScore = 1;
           let bookingOrSocialLink = '';
+          let instagram = '';
+          let facebook = '';
+          let email = '';
 
           if (!website) {
             leadType = 'hot_lead_no_web';
@@ -3342,6 +3837,8 @@ export default {
             statusBadge = '🟡 Chỉ dùng MXH / Link Booking';
             priorityScore = 2;
             bookingOrSocialLink = website;
+            if (/instagram\.com/i.test(website)) instagram = website;
+            if (/facebook\.com/i.test(website)) facebook = website;
           }
 
           // Extract Australian Suburb / State from address
@@ -3370,6 +3867,12 @@ export default {
             bookingOrSocialLink,
             openingHours: weekdayDescriptions,
             topReviews,
+            photos,
+            parkingInfo,
+            editorialSummary,
+            instagram,
+            facebook,
+            email,
             industry,
             industryLabel,
             imported: false,
@@ -3377,6 +3880,20 @@ export default {
             scannedLocation: location
           };
         });
+
+        // Enrich custom websites concurrently with social & contact scraping
+        const enrichPromises = newProcessed.map(async (lead) => {
+          if (lead.website && !socialRegex.test(lead.website)) {
+            try {
+              const scraped = await extractSocialAndContactFromWebsite(lead.website);
+              if (scraped.instagram && !lead.instagram) lead.instagram = scraped.instagram;
+              if (scraped.facebook && !lead.facebook) lead.facebook = scraped.facebook;
+              if (scraped.email && !lead.email) lead.email = scraped.email;
+              if (scraped.booking && !lead.bookingOrSocialLink) lead.bookingOrSocialLink = scraped.booking;
+            } catch (_) {}
+          }
+        });
+        await Promise.allSettled(enrichPromises);
 
         // Filter by min rating
         const filteredNew = minRating > 0
@@ -3413,6 +3930,12 @@ export default {
               statusBadge: shop.statusBadge || existing.statusBadge,
               priorityScore: shop.priorityScore || existing.priorityScore,
               bookingOrSocialLink: shop.bookingOrSocialLink || existing.bookingOrSocialLink,
+              photos: (shop.photos && shop.photos.length) ? shop.photos : (existing.photos || []),
+              parkingInfo: shop.parkingInfo || existing.parkingInfo || '',
+              editorialSummary: shop.editorialSummary || existing.editorialSummary || '',
+              instagram: shop.instagram || existing.instagram || '',
+              facebook: shop.facebook || existing.facebook || '',
+              email: shop.email || existing.email || '',
               industry: existing.industry || shop.industry,
               industryLabel: existing.industryLabel || shop.industryLabel,
               updatedAt: nowIso
@@ -3559,6 +4082,147 @@ export default {
           }
 
           return new Response(JSON.stringify({ ok: delRes.ok, customerId, deleted: delData }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Activate Flash Deal 50% ($299 AUD / 72h Server Synced)
+        if (action === 'activate_flash_deal' && customerId) {
+          const hours = parseFloat(body.hours) || 72;
+          const now = Date.now();
+          const dealExpiresAt = new Date(now + hours * 3600 * 1000).toISOString();
+          const dealActivatedAt = new Date(now).toISOString();
+
+          const uP = new URLSearchParams();
+          uP.append('metadata[deal_status]', 'flash_deal');
+          uP.append('metadata[deal_activated_at]', dealActivatedAt);
+          uP.append('metadata[deal_expires_at]', dealExpiresAt);
+          uP.append('metadata[nurture_step]', 'day7_deal_active');
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+
+          let notifyRes = null;
+          if (body.notify && updatedCust && updatedCust.phone && effectiveCfg.clicksendApiKey) {
+            const biz = updatedCust.businessName || updatedCust.name || 'Boutique';
+            const claimUrl = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(updatedCust.id)}&deal=flash50`;
+            const text = `Hi ${biz}, WynnPages Studio has opened a 72h Atelier Sponsorship for your salon: 50% OFF ($299 AUD, save $300 AUD). Claim your website before the window closes: ${claimUrl}`;
+            notifyRes = await sendClickSendSms({ to: updatedCust.phone, message: text, cfg: effectiveCfg });
+          }
+
+          return new Response(JSON.stringify({ ok: true, dealStatus: 'flash_deal', dealExpiresAt, client: updatedCust, notifyRes }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Expire / Archive Demo Hard (HTTP 403 Locked)
+        if (action === 'expire_demo' && customerId) {
+          const nowIso = new Date().toISOString();
+          const uP = new URLSearchParams();
+          uP.append('metadata[deal_status]', 'expired');
+          uP.append('metadata[deal_expires_at]', nowIso);
+          uP.append('metadata[nurture_step]', 'demo_expired');
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+          return new Response(JSON.stringify({ ok: true, dealStatus: 'expired', client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Restore Expired Demo to Standard
+        if (action === 'restore_demo' && customerId) {
+          const uP = new URLSearchParams();
+          uP.append('metadata[deal_status]', 'standard');
+          uP.append('metadata[deal_expires_at]', '');
+          uP.append('metadata[nurture_step]', 'restored');
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+          return new Response(JSON.stringify({ ok: true, dealStatus: 'standard', client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Send Nurture SMS (Day 3 Reminder, Day 7 Deal, Day 9 Final Warning)
+        if (action === 'send_nurture_sms' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          if (!formatted || !formatted.phone) {
+            return new Response(JSON.stringify({ error: 'Khách hàng này chưa có số điện thoại để gửi SMS!' }), { status: 400, headers: corsHeaders });
+          }
+
+          const templateKey = body.templateKey || 'day3_reminder';
+          const biz = formatted.businessName || formatted.name || 'Boutique';
+          const demoUrl = formatted.demoUrl || formatted.brandedDemoUrl;
+          const claim50Url = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(formatted.id)}&deal=flash50`;
+          let smsText = '';
+
+          if (templateKey === 'day3_reminder') {
+            smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your boutique: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
+          } else if (templateKey === 'day7_deal') {
+            smsText = `Hi ${biz}, WynnPages Studio has opened a 72-hour Atelier Sponsorship for your salon: 50% OFF ($299 AUD, save $300 AUD). Claim your website before the window closes: ${claim50Url}`;
+          } else if (templateKey === 'day9_warning') {
+            smsText = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived and withdrawn tomorrow: ${claim50Url} — WynnPages Studio`;
+          } else {
+            smsText = (body.customMessage || '').trim();
+          }
+
+          if (!smsText) {
+            return new Response(JSON.stringify({ error: 'Nội dung tin nhắn trống.' }), { status: 400, headers: corsHeaders });
+          }
+
+          const smsRes = await sendClickSendSms({ to: formatted.phone, message: smsText, cfg: effectiveCfg });
+          const nowIso = new Date().toISOString();
+          const logMsg = smsRes && smsRes.sent ? `OK (${smsRes.to}) [${templateKey}] @ ${nowIso}` : `ERR: ${(smsRes && smsRes.reason) || 'Failed'}`;
+
+          const uP = new URLSearchParams();
+          uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+          uP.append('metadata[nurture_step]', templateKey);
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = formatted;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+
+          return new Response(JSON.stringify({ ok: Boolean(smsRes && smsRes.sent), result: smsRes, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
         // Action: Update Subdomain (Cloudflare + KV + Stripe sync)
@@ -3904,6 +4568,18 @@ export default {
           if (body.googleWebsiteUri !== undefined) uParams.append('metadata[google_website_uri]', String(body.googleWebsiteUri).slice(0, 300));
           if (body.openingHours !== undefined) uParams.append('metadata[opening_hours]', String(body.openingHours).slice(0, 480));
           if (body.customerReviews !== undefined) uParams.append('metadata[customer_reviews]', String(body.customerReviews).slice(0, 480));
+          if (body.dealStatus !== undefined) uParams.append('metadata[deal_status]', String(body.dealStatus).slice(0, 50));
+          if (body.dealActivatedAt !== undefined) uParams.append('metadata[deal_activated_at]', String(body.dealActivatedAt).slice(0, 50));
+          if (body.dealExpiresAt !== undefined) uParams.append('metadata[deal_expires_at]', String(body.dealExpiresAt).slice(0, 50));
+          if (body.nurtureStep !== undefined) uParams.append('metadata[nurture_step]', String(body.nurtureStep).slice(0, 50));
+          if (body.instagramUrl !== undefined) uParams.append('metadata[instagram_url]', String(body.instagramUrl).slice(0, 300));
+          if (body.facebookUrl !== undefined) uParams.append('metadata[facebook_url]', String(body.facebookUrl).slice(0, 300));
+          if (body.parkingInfo !== undefined) uParams.append('metadata[parking_info]', String(body.parkingInfo).slice(0, 300));
+          if (body.editorialSummary !== undefined) uParams.append('metadata[editorial_summary]', String(body.editorialSummary).slice(0, 480));
+          if (body.placesPhotos !== undefined) {
+            const phStr = typeof body.placesPhotos === 'string' ? body.placesPhotos : JSON.stringify(body.placesPhotos);
+            uParams.append('metadata[places_photos]', phStr.slice(0, 490));
+          }
 
           const stageMap = {
             payment_confirmed: 'paid',

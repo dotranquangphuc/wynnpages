@@ -1502,6 +1502,181 @@
         `;
       }
 
+      function copyAiFineArtPromptHelper({ name, suburb, address, industry, palette, photos = [] }) {
+        const photoRefs = (Array.isArray(photos) ? photos : []).slice(0, 6).map((ph, idx) => `Photo ${idx + 1}: /api/places-photo?ref=${encodeURIComponent(ph)}&maxWidth=800`).join('\n');
+        const text = `Translate the real photography and manicure craftsmanship of "${name}" into WynnPages signature French Haute Couture fine-art oil painting with 24k gold leaf foil accents.
+
+Client / Salon Name: ${name}
+Suburban Location: ${suburb || address || 'Queensland Australia'}
+Industry / Craft: ${industry || 'Nail Salon / Beauty Atelier'}
+Palette Target: Haute Couture Palette ${palette || '01'}
+
+Composition Reference (Real Google Maps Photos):
+${photoRefs || 'Reference client boutique aesthetic.'}
+
+Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
+1. French Impressionist oil on fine woven linen canvas with visible impasto brushstrokes.
+2. Subject: Natural unhurried female artisan hands showcasing structured BIAB overlay, natural almond nail silhouette with clean micro-french or pearl glazed finish, gently resting on raw washed linen with olive foliage or holding handcrafted ceramic teacup.
+3. Palette Compliance: Palette ${palette || '01'} (${palette === '02' ? 'Rose Silk' : (palette === '03' ? 'Botanical Sage' : (palette === '04' ? 'Espresso Cashmere' : (palette === '05' ? 'Coastal Pearl' : 'Terracotta Gold')))}).
+4. Accents: Delicate 24k gold leaf foil leafing on canvas background catching soft natural daylight.
+5. Mood: Quiet Australian luxury, Grade A digital web atelier aesthetic, zero modern clutter, museum gallery finish.`;
+        copyToClipboard(text, `Đã copy Prompt Dịch Tranh Sơn Dầu (Cách 2) cho "${name}"!`);
+      }
+
+      function renderClientPhotosStrip(photos = []) {
+        if (!Array.isArray(photos) || !photos.length) return '';
+        const list = photos.slice(0, 6);
+        return `
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wider">📸 Ảnh Tiệm Thực Tế (${photos.length}):</span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              ${list.map((ph, idx) => {
+                const thumb = `/api/places-photo?ref=${encodeURIComponent(ph)}&maxWidth=160&maxHeight=160`;
+                const full = `/api/places-photo?ref=${encodeURIComponent(ph)}&maxWidth=1200&maxHeight=1200`;
+                return `
+                  <a href="${full}" target="_blank" class="w-10 h-10 rounded-lg overflow-hidden border border-[#d8ccb8] hover:border-[#96432b] shadow-2xs hover:scale-105 transition-all bg-stone-100 flex-shrink-0" title="Ảnh ${idx + 1} từ Google Maps (Click xem phóng to)">
+                    <img src="${thumb}" alt="Photo ${idx + 1}" class="w-full h-full object-cover" loading="lazy">
+                  </a>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderUrgencyClosingSection(c, { hasPhone, isPaid, isPitched, titleName }) {
+        if (isPaid) return ''; // No urgency controls needed once paid
+
+        let daysElapsed = 0;
+        let daysText = 'Chưa gửi';
+        if (c.demoSentAt) {
+          daysElapsed = Math.floor((Date.now() - new Date(c.demoSentAt).getTime()) / (1000 * 3600 * 24));
+          daysText = daysElapsed === 0 ? 'Hôm nay (Ngày 0)' : `Ngày thứ ${daysElapsed}`;
+        }
+
+        const isDealActive = c.dealStatus === 'flash_deal' && c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() > Date.now();
+        const isExpired = c.dealStatus === 'expired' || (c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() <= Date.now());
+        const expiresTs = c.dealExpiresAt ? new Date(c.dealExpiresAt).getTime() : 0;
+
+        let statusBadge = '';
+        if (isExpired) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-stone-900 text-stone-200 border border-stone-700">🔒 DEMO ĐÃ HẾT HẠN (THU HỒI)</span>`;
+        } else if (isDealActive) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-xs animate-pulse">⚡ DEAL 50% ($299 AUD) — ĐANG CHẠY</span>`;
+        } else {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Chuẩn $599 AUD</span>`;
+        }
+
+        const photosCount = (c.placesPhotos && Array.isArray(c.placesPhotos)) ? c.placesPhotos.length : 0;
+
+        return `
+          <div class="bg-gradient-to-br from-[#fcfbf7] to-[#fbf6ed] rounded-2xl p-3.5 border border-[#e2d9c8] space-y-3 shadow-2xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-extrabold text-stone-900">⚡ 3. Chốt SALE &amp; Thu Hồi Tự Động (10-Day Closing Engine):</span>
+                ${statusBadge}
+                ${c.demoSentAt ? `<span class="px-2 py-0.5 rounded-md bg-stone-200/80 text-stone-700 text-[10px] font-bold">🕒 ${daysText}</span>` : ''}
+              </div>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                ${isDealActive ? `
+                  <div class="text-xs font-mono font-bold text-amber-950 bg-amber-100/90 border border-amber-300 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                    <span>⏳ Deal hết hạn sau:</span>
+                    <strong class="deal-countdown-display text-rose-700" data-expires="${expiresTs}">--:--:--</strong>
+                  </div>
+                ` : ''}
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-name="${escapeHtml(titleName)}"
+                  class="btn-copy-art-card px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 hover:from-amber-200 hover:to-amber-300 border border-amber-300 text-amber-950 text-[11px] font-bold transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer"
+                  title="Copy Prompt Dịch Ảnh Sang Tranh Sơn Dầu (Cách 2)"
+                >
+                  <span>🎨 Copy Prompt Dịch Tranh (${photosCount} ảnh)</span>
+                </button>
+              </div>
+            </div>
+
+            ${renderClientPhotosStrip(c.placesPhotos)}
+
+            <!-- 4 Automated Urgency Triggers -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
+              <!-- Day 3 SMS -->
+              <button
+                type="button"
+                data-cid="${c.id}"
+                data-template="day3_reminder"
+                ${!hasPhone ? 'disabled' : ''}
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border ${c.nurtureStep === 'day3_reminder' ? 'border-emerald-300 bg-emerald-50/60' : 'border-[#dcd4c0] bg-white hover:bg-stone-50'} text-stone-800 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
+                title="Gửi SMS Ngày 3: Nhắc nhẹ khách xem website preview"
+              >
+                <div class="flex items-center justify-between font-bold text-xs">
+                  <span>📱 SMS Ngày 3</span>
+                  ${c.nurtureStep === 'day3_reminder' ? '<span class="text-emerald-700 text-[10px]">✓ Đã gửi</span>' : ''}
+                </div>
+                <span class="text-[10px] text-stone-500 truncate">Nhắc nhẹ xem link Demo</span>
+              </button>
+
+              <!-- Day 7 Flash Deal 50% -->
+              <button
+                type="button"
+                data-cid="${c.id}"
+                data-action="activate_flash_deal"
+                class="btn-trigger-deal px-3 py-2.5 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                title="Kích hoạt giảm 50% ($299 AUD) trong 72h + chạy đồng hồ đếm ngược trên web demo"
+              >
+                <div class="flex items-center justify-between font-extrabold text-xs">
+                  <span>⚡ Deal 50% (72 Giờ)</span>
+                  ${isDealActive ? '<span class="text-rose-600 animate-pulse text-[10px]">● Đang chạy</span>' : ''}
+                </div>
+                <span class="text-[10px] text-amber-800 truncate">Hạ $299 AUD + hiện đồng hồ</span>
+              </button>
+
+              <!-- Day 9 Warning SMS -->
+              <button
+                type="button"
+                data-cid="${c.id}"
+                data-template="day9_warning"
+                ${!hasPhone ? 'disabled' : ''}
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border ${c.nurtureStep === 'day9_warning' ? 'border-rose-300 bg-rose-50/60' : 'border-[#dcd4c0] bg-white hover:bg-rose-50'} text-rose-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
+                title="Gửi SMS Ngày 9: Cảnh báo 24 giờ cuối trước khi đóng & thu hồi demo vĩnh viễn"
+              >
+                <div class="flex items-center justify-between font-bold text-xs">
+                  <span>⏳ SMS Ngày 9 (24h Cuối)</span>
+                  ${c.nurtureStep === 'day9_warning' ? '<span class="text-rose-700 text-[10px]">✓ Đã gửi</span>' : ''}
+                </div>
+                <span class="text-[10px] text-rose-600 truncate">Báo sắp thu hồi demo vĩnh viễn</span>
+              </button>
+
+              <!-- Day 10 Hard Expire / Restore -->
+              ${isExpired ? `
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-action="restore_demo"
+                  class="btn-restore-demo px-3 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                  title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
+                >
+                  <div class="font-extrabold text-xs text-emerald-900">🔄 Khôi Phục Demo</div>
+                  <span class="text-[10px] text-emerald-700 truncate">Mở khoá link về chuẩn $599</span>
+                </button>
+              ` : `
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-action="expire_demo"
+                  class="btn-expire-demo px-3 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                  title="Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)"
+                >
+                  <div class="font-bold text-xs text-stone-800">🔒 Khoá / Thu Hồi Demo</div>
+                  <span class="text-[10px] text-stone-500 truncate">Khoá truy cập link demo</span>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }
+
       function renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName }) {
         const isDnsActive = c.cfZoneStatus === 'active' || isLaunched;
         const isUnregistered = c.cfZoneStatus === 'unregistered';
@@ -1864,6 +2039,9 @@
 
                 <!-- Section 2: Official Live Domain (Unified Smart Concierge Flow) -->
                 ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
+
+                <!-- Section 3: Urgency & Closing Engine (10-Day Automated Pipeline) -->
+                ${renderUrgencyClosingSection(c, { hasPhone, isPaid, isPitched, titleName })}
 
                 <!-- 3 Outbound Automated SMS + Email Action Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
@@ -2533,6 +2711,115 @@
           });
         });
 
+        // 10-Day Closing Engine: Activate Flash Deal 50% ($299 AUD / 72h)
+        document.querySelectorAll('.btn-trigger-deal').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            if (!confirm(`Kích hoạt suất tài trợ độc quyền 50% ($299 AUD) trong 72 giờ cho "${biz}"?\n\n• Website demo sẽ chạy đồng hồ đếm ngược 72h thật.\n• Nút Claim sẽ tự đổi sang $299 AUD (tiết kiệm $300 AUD).\n• Gửi SMS thông báo trực tiếp tới chủ tiệm.`)) {
+              return;
+            }
+            const res = await runAdminAction({
+              action: 'activate_flash_deal',
+              customerId: cid,
+              hours: 72,
+              notify: true
+            }, { busyText: 'Đang kích hoạt Deal 50% & thông báo SMS...', skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`⚡ Đã kích hoạt Deal 50% ($299 AUD) cho "${biz}"!`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Expire / Archive Demo Hard
+        document.querySelectorAll('.btn-expire-demo').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            if (!confirm(`Khoá & Thu hồi bản demo của "${biz}" ngay lập tức?\n\nKhách truy cập link demo sẽ nhận thông báo Hết Hạn Lưu Trữ (HTTP 403) và chỉ có thể SMS studio để kích hoạt lại với giá gốc $599 AUD.`)) {
+              return;
+            }
+            const res = await runAdminAction({
+              action: 'expire_demo',
+              customerId: cid
+            }, { busyText: 'Đang thu hồi bản demo...', skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`🔒 Đã thu hồi & khoá bản demo của "${biz}"!`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Restore Expired Demo
+        document.querySelectorAll('.btn-restore-demo').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            const res = await runAdminAction({
+              action: 'restore_demo',
+              customerId: cid
+            }, { busyText: 'Đang khôi phục demo...', skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`🔄 Đã khôi phục bản demo của "${biz}" về mức chuẩn!`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Nurture SMS (Day 3, Day 7, Day 9)
+        document.querySelectorAll('.btn-nurture-sms').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const tpl = btn.getAttribute('data-template');
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'tiệm';
+            let tplName = 'SMS Ngày 3 (Nhắc Xem Demo)';
+            if (tpl === 'day7_deal') tplName = 'SMS Ngày 7 (Deal 50% $299 AUD)';
+            if (tpl === 'day9_warning') tplName = 'SMS Ngày 9 (Cảnh Báo 24h Cuối)';
+            if (!client || !client.phone) {
+              showToast('Khách chưa có SĐT để gửi SMS!', true);
+              return;
+            }
+            if (!confirm(`Bắn ${tplName} tới số ${client.phone} của "${biz}"?`)) {
+              return;
+            }
+            const res = await runAdminAction({
+              action: 'send_nurture_sms',
+              customerId: cid,
+              templateKey: tpl
+            }, { busyText: `Đang gửi ${tplName}...`, skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`📱 Đã bắn ${tplName} thành công tới ${client.phone}!`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Copy AI Fine-Art Prompt for Outbound Card (Cách 2)
+        document.querySelectorAll('.btn-copy-art-card').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            if (!client) return;
+            copyAiFineArtPromptHelper({
+              name: client.businessName || client.name,
+              suburb: client.businessAddress,
+              address: client.businessAddress,
+              industry: client.industry,
+              palette: client.demoPalette,
+              photos: client.placesPhotos || []
+            });
+          });
+        });
+
         // Copy Non-Tech Client Domain Concierge Guide
         document.querySelectorAll('.btn-copy-domain-guide').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -3197,6 +3484,25 @@
 
           const indLabel = lead.industryLabel || (INDUSTRY_CONFIG[lead.industry]?.label) || '✨ Khác';
 
+          const photos = Array.isArray(lead.photos) ? lead.photos : [];
+          const photosStrip = photos.length ? `
+            <div class="flex items-center gap-1 pt-1 flex-wrap">
+              ${photos.slice(0, 4).map((ph, pi) => `
+                <a href="/api/places-photo?ref=${encodeURIComponent(ph)}&maxWidth=1200&maxHeight=1200" target="_blank" class="w-8 h-8 rounded-md overflow-hidden border border-[#d8ccb8] hover:border-[#96432b] shadow-2xs hover:scale-105 transition-all bg-stone-100 shrink-0" title="Ảnh ${pi + 1} từ Google Maps (Click xem phóng to)">
+                  <img src="/api/places-photo?ref=${encodeURIComponent(ph)}&maxWidth=100&maxHeight=100" alt="Ảnh ${pi + 1}" class="w-full h-full object-cover" loading="lazy">
+                </a>
+              `).join('')}
+              ${photos.length > 4 ? `<span class="text-[9.5px] font-bold text-stone-400">+${photos.length - 4} ảnh</span>` : ''}
+            </div>
+          ` : '';
+
+          const contactPills = [
+            lead.instagram ? `<a href="${escapeHtml(lead.instagram)}" target="_blank" rel="noopener" class="px-1.5 py-0.5 rounded-md bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-[10px] font-bold inline-flex items-center gap-0.5"><span>📷 IG</span></a>` : '',
+            lead.facebook ? `<a href="${escapeHtml(lead.facebook)}" target="_blank" rel="noopener" class="px-1.5 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold inline-flex items-center gap-0.5"><span>📘 FB</span></a>` : '',
+            lead.email ? `<a href="mailto:${escapeHtml(lead.email)}" class="px-1.5 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold inline-flex items-center gap-0.5 font-mono"><span>✉️ ${escapeHtml(lead.email)}</span></a>` : '',
+            lead.parkingInfo ? `<span class="px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px]" title="${escapeHtml(lead.parkingInfo)}">🅿️ ${escapeHtml(lead.parkingInfo)}</span>` : ''
+          ].filter(Boolean).join('');
+
           return `
             <tr class="border-b border-[#f0eade] hover:bg-[#fcfbf8] transition-colors text-xs">
               <td class="py-3 px-3.5">
@@ -3210,6 +3516,8 @@
                   <p class="text-[11px] text-stone-500 line-clamp-1" title="${escapeHtml(lead.address)}">
                     📍 ${escapeHtml(lead.suburb || lead.address)}
                   </p>
+                  ${contactPills ? `<div class="flex items-center gap-1.5 flex-wrap pt-0.5">${contactPills}</div>` : ''}
+                  ${photosStrip}
                   <div class="text-[10.5px] text-stone-400 italic line-clamp-1 pt-0.5">
                     💬 ${reviewSnippet}
                   </div>
@@ -3246,7 +3554,15 @@
               </td>
 
               <td class="py-3 px-3 whitespace-nowrap text-right">
-                <div class="flex items-center justify-end gap-1.5">
+                <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
+                    class="btn-copy-art-lead px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold text-xs transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                    title="Copy Prompt AI Dịch Ảnh Sang Tranh Sơn Dầu (Cách 2)"
+                  >
+                    <span>🎨 Copy Prompt AI</span>
+                  </button>
                   ${alreadyImported ? `
                     <button type="button" disabled class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold cursor-not-allowed inline-flex items-center gap-1">
                       <span>✅ Đã Có Trong Pipeline</span>
@@ -3325,12 +3641,19 @@
                   businessName: lead.name,
                   phone: lead.phone,
                   displayPhone: lead.phone,
+                  email: lead.email || '',
                   businessAddress: lead.address,
                   industry: industryName,
                   socialLinks: lead.bookingOrSocialLink || lead.website || '',
+                  instagramUrl: lead.instagram || '',
+                  facebookUrl: lead.facebook || '',
+                  placesPhotos: lead.photos || [],
+                  parkingInfo: lead.parkingInfo || '',
+                  editorialSummary: lead.editorialSummary || '',
                   flowType: 'outbound',
                   paymentStatus: 'unpaid',
                   stage: 'outbound_pending',
+                  dealStatus: 'standard',
                   googlePlaceId: lead.placeId || '',
                   googleRating: lead.rating ? String(lead.rating) : '',
                   googleReviewCount: lead.userRatingCount ? String(lead.userRatingCount) : '',
@@ -3372,6 +3695,23 @@
               btn.innerHTML = origHtml;
               showToast(`Lỗi import: ${err.message}`, true);
             }
+          });
+        });
+
+        // Bind Copy Art Prompt buttons (Lead Hunter - Cách 2)
+        lhResultsContainer.querySelectorAll('.btn-copy-art-lead').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const leadId = btn.getAttribute('data-lead-id');
+            const lead = allStoredLeads.find((l) => (l.placeId || l.id) === leadId);
+            if (!lead) return;
+            copyAiFineArtPromptHelper({
+              name: lead.name,
+              suburb: lead.suburb,
+              address: lead.address,
+              industry: lead.industryLabel,
+              palette: '01',
+              photos: lead.photos || []
+            });
           });
         });
 
@@ -4802,6 +5142,31 @@
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;');
       }
+
+      // 1-second Interval for Real-time Deal Countdown in Admin Cards
+      setInterval(() => {
+        const displays = document.querySelectorAll('.deal-countdown-display');
+        const now = Date.now();
+        displays.forEach((el) => {
+          const exp = parseInt(el.getAttribute('data-expires') || '0', 10);
+          if (!exp) return;
+          const diff = exp - now;
+          if (diff <= 0) {
+            el.textContent = '00:00:00 (Hết hạn)';
+            el.className = 'deal-countdown-display text-stone-500 line-through';
+            return;
+          }
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const secs = Math.floor((diff % (1000 * 60)) / 1000);
+          const text = (days > 0 ? `${days}d ` : '') +
+            (hours < 10 ? '0' : '') + hours + 'h : ' +
+            (mins < 10 ? '0' : '') + mins + 'm : ' +
+            (secs < 10 ? '0' : '') + secs + 's';
+          el.textContent = text;
+        });
+      }, 1000);
 
       // Auto-login on load if key is saved in localStorage
       if (adminKey) {
