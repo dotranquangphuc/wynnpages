@@ -15,5 +15,10 @@
       "binding": "WYNN_KV",
       "id": "5abe71ee8f14439aa25a5c51df0edb70"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": [
+      "0 23 * * *"
+    ]
+  }
 }

@@ -192,6 +192,10 @@
             <span id="pill-resend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
               <span class="w-2 h-2 rounded-full bg-stone-400"></span> Resend Email
             </span>
+            <button id="pill-autopilot" type="button" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition-colors shadow-2xs cursor-pointer" title="Cấu hình lịch trình chạy tự động 24/7 trên Cloudflare">
+              <span id="autopilot-dot" class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+              <span id="autopilot-status-text">⚡ Cloud Autopilot 24/7: Bật</span>
+            </button>
           </div>
         </div>
         <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="text-xs font-semibold text-[#96432b] hover:underline cursor-pointer">Cài đặt Key ⚙️</button>
@@ -575,10 +579,17 @@
       <!-- SUB-FILTER METRICS BAR (Dynamic per Tab)                 -->
       <!-- ======================================================== -->
       <!-- Outbound Sub-Filters -->
-      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-6 gap-3">
         <button type="button" data-ob-filter="all" class="ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all cursor-pointer">
           <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả Outbound</span>
           <span id="stat-ob-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
+        </button>
+        <button type="button" data-ob-filter="action_today" class="ob-filter-tab bg-gradient-to-br from-rose-50/70 to-amber-50/80 p-4 rounded-2xl border border-rose-300 hover:border-rose-500 text-left transition-all cursor-pointer relative overflow-hidden group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-rose-800 block">🔔 Cần Xử Lý Hôm Nay</span>
+            <span id="ping-ob-action-today" class="w-2 h-2 rounded-full bg-rose-500 hidden animate-ping"></span>
+          </div>
+          <span id="stat-ob-action-today" class="text-2xl font-black text-rose-900 mt-1 block">0</span>
         </button>
         <button type="button" data-ob-filter="pending" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
           <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">1. Mới tạo Demo</span>
@@ -722,6 +733,100 @@
         <button type="button" id="btn-save-settings" class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold">
           Lưu Cấu Hình
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cloud Autopilot 24/7 Engine -->
+  <div id="autopilot-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center text-lg">⚡</span>
+          <div>
+            <h3 class="text-xl font-extrabold text-stone-900">Cloud Autopilot 24/7 Engine</h3>
+            <p class="text-xs text-stone-500 mt-0.5">Tự động săn sóc, kích hoạt deal và thu hồi demo trên Cloudflare Edge.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-autopilot" class="text-stone-400 hover:text-stone-800 font-bold cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-purple-50/50 border border-indigo-100 text-xs text-indigo-950 space-y-2">
+        <div class="flex items-center gap-2 font-black text-indigo-900">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Lịch trình đám mây: 9:00 AM AEST (Giờ Úc) mỗi sáng</span>
+        </div>
+        <p class="text-[11px] text-stone-600 leading-relaxed">
+          Hệ thống chạy trên <strong>Cloudflare Workers Scheduled Edge</strong>. Kể cả khi bạn <strong>tắt máy tính / tắt trình duyệt</strong>, serverless edge vẫn tự động thức dậy đúng giờ để kiểm tra và xử lý cho từng tiệm theo đúng số ngày.
+        </p>
+      </div>
+
+      <!-- Settings Form -->
+      <div class="space-y-3.5 text-xs">
+        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+          <input type="checkbox" id="ap-enabled" class="mt-0.5 w-4 h-4 text-indigo-600 rounded">
+          <div>
+            <strong class="text-stone-900 block font-bold">Bật chế độ Tự Động Toàn Phần (Cloud Autopilot)</strong>
+            <span class="text-stone-500 text-[11px]">Nếu tắt, hệ thống sẽ chỉ nhắc trên giao diện để bạn bấm tay (Semi-Auto).</span>
+          </div>
+        </label>
+
+        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+          <input type="checkbox" id="ap-sms" class="mt-0.5 w-4 h-4 text-indigo-600 rounded">
+          <div>
+            <strong class="text-stone-900 block font-bold">Tự động gửi SMS Ngày 3 &amp; Ngày 9</strong>
+            <span class="text-stone-500 text-[11px]">Gửi SMS nhắc nhẹ xem demo ngày thứ 3, và cảnh báo 24h cuối ngày thứ 9.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+          <input type="checkbox" id="ap-deal" class="mt-0.5 w-4 h-4 text-indigo-600 rounded">
+          <div>
+            <strong class="text-stone-900 block font-bold">Tự động kích hoạt Flash Deal 50% ($299 AUD) Ngày 7</strong>
+            <span class="text-stone-500 text-[11px]">Tự động bật đồng hồ đếm ngược 72h trên web demo và hạ giá về $299 AUD.</span>
+          </div>
+        </label>
+
+        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+          <input type="checkbox" id="ap-expire" class="mt-0.5 w-4 h-4 text-indigo-600 rounded">
+          <div>
+            <strong class="text-stone-900 block font-bold">Tự động khoá Demo Ngày 10 (HTTP 403 Locked)</strong>
+            <span class="text-stone-500 text-[11px]">Chuyển link demo sang màn hình hết hạn và rút lại link nếu khách không chốt.</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Last Run History -->
+      <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2 text-xs">
+        <div class="flex items-center justify-between font-bold text-stone-900">
+          <span>🕒 Lần quét gần nhất:</span>
+          <span id="ap-last-run-time" class="text-stone-500 font-mono text-[11px]">Chưa chạy lần nào</span>
+        </div>
+        <div id="ap-last-run-summary" class="text-stone-600 text-[11px]">
+          Chưa có báo cáo chạy.
+        </div>
+        <div id="ap-last-run-logs" class="hidden max-h-32 overflow-y-auto bg-white p-2.5 rounded-lg border border-stone-200 font-mono text-[10px] text-stone-700 space-y-1">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 pt-2">
+        <button
+          type="button"
+          id="btn-run-autopilot-now"
+          class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>🚀</span>
+          <span>Chạy Quét Ngay Bây Giờ</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            id="btn-save-autopilot"
+            class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
+          >
+            Lưu Cài Đặt
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1192,6 +1297,35 @@
         return { filledCount, total: 4, isComplete };
       }
 
+      function getClientDueAction(c) {
+        if (!c) return null;
+        const isPaid = c.paymentStatus === 'paid' || c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
+        if (isPaid) return null;
+        const sentTime = c.demoSentAt || c.created;
+        if (!sentTime) return null;
+        if (c.dealStatus === 'purged') return null;
+
+        const daysElapsed = Math.floor((Date.now() - new Date(sentTime).getTime()) / (1000 * 3600 * 24));
+
+        // Day 10+ Hard Expire (Needs Purge or Expire)
+        if (daysElapsed >= 10 && c.dealStatus !== 'expired') {
+          return { type: 'expire', label: `Quá hạn ${daysElapsed} ngày (Chờ khoá / Dọn KV)`, badge: `❌ Quá hạn (Ngày ${daysElapsed})`, priority: 1, days: daysElapsed };
+        }
+        // Day 9 Final 24h Warning SMS
+        if (daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning') {
+          return { type: 'day9_warning', label: 'Hạn 24h cuối: Gửi SMS Cảnh báo thu hồi', badge: '⏳ Hạn Ngày 9 (24h Cuối)', priority: 2, days: daysElapsed };
+        }
+        // Day 7 Flash Deal 50%
+        if (daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired') {
+          return { type: 'day7_deal', label: 'Hạn 7 ngày: Kích hoạt Flash Deal 50% ($299 AUD)', badge: '⚡ Hạn Ngày 7 (Deal 50%)', priority: 3, days: daysElapsed };
+        }
+        // Day 3 SMS Reminder
+        if (daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired') {
+          return { type: 'day3_reminder', label: 'Hạn 3 ngày: Bấm gửi SMS Nhắc xem Demo', badge: '📱 Hạn Ngày 3 (SMS Nhắc)', priority: 4, days: daysElapsed };
+        }
+        return null;
+      }
+
       function updateMetrics(list) {
         const obList = list.filter(isOutboundClient);
         const ibList = list.filter(c => !isOutboundClient(c));
@@ -1205,11 +1339,19 @@
         const obPitched = obList.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup') && !isObLaunched(c)).length;
         const obPaidWaiting = obList.filter(c => (c.paymentStatus === 'paid' || c.stage === 'outbound_paid') && !isObLaunched(c)).length;
         const obLaunched = obList.filter(isObLaunched).length;
+        const obActionToday = obList.filter(c => Boolean(getClientDueAction(c))).length;
 
         document.getElementById('stat-ob-all').textContent = obList.length;
         document.getElementById('stat-ob-pending').textContent = obPending;
         document.getElementById('stat-ob-pitched').textContent = obPitched;
         document.getElementById('stat-ob-paid').textContent = obPaidWaiting;
+        const statObActionTodayEl = document.getElementById('stat-ob-action-today');
+        if (statObActionTodayEl) statObActionTodayEl.textContent = obActionToday;
+        const pingObActionTodayEl = document.getElementById('ping-ob-action-today');
+        if (pingObActionTodayEl) {
+          if (obActionToday > 0) pingObActionTodayEl.classList.remove('hidden');
+          else pingObActionTodayEl.classList.add('hidden');
+        }
         const statObLaunchedEl = document.getElementById('stat-ob-launched');
         if (statObLaunchedEl) statObLaunchedEl.textContent = obLaunched;
 
@@ -1348,6 +1490,9 @@
           if (typeof loadStoredLeads === 'function') {
             loadStoredLeads(true);
           }
+          if (typeof loadAutopilotSettings === 'function') {
+            loadAutopilotSettings();
+          }
         } catch (err) {
           showToast(err.message, true);
         } finally {
@@ -1365,7 +1510,9 @@
 
         if (activeMainTab === 'outbound') {
           const isObLaunched = (c) => c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
-          if (currentObFilter === 'pending') {
+          if (currentObFilter === 'action_today') {
+            filtered = filtered.filter(c => Boolean(getClientDueAction(c)));
+          } else if (currentObFilter === 'pending') {
             filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending' && !isObLaunched(c));
           } else if (currentObFilter === 'pitched') {
             filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup') && !isObLaunched(c));
@@ -1545,22 +1692,26 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       }
 
       function renderUrgencyClosingSection(c, { hasPhone, isPaid, isPitched, titleName }) {
-        if (isPaid) return ''; // No urgency controls needed once paid
+        if (isPaid) return '';
 
         let daysElapsed = 0;
         let daysText = 'Chưa gửi';
-        if (c.demoSentAt) {
-          daysElapsed = Math.floor((Date.now() - new Date(c.demoSentAt).getTime()) / (1000 * 3600 * 24));
+        const sentTime = c.demoSentAt || c.created;
+        if (sentTime) {
+          daysElapsed = Math.floor((Date.now() - new Date(sentTime).getTime()) / (1000 * 3600 * 24));
           daysText = daysElapsed === 0 ? 'Hôm nay (Ngày 0)' : `Ngày thứ ${daysElapsed}`;
         }
 
+        const isPurged = c.dealStatus === 'purged';
         const isDealActive = c.dealStatus === 'flash_deal' && c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() > Date.now();
-        const isExpired = c.dealStatus === 'expired' || (c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() <= Date.now());
+        const isExpired = c.dealStatus === 'expired' || isPurged || (c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() <= Date.now());
         const expiresTs = c.dealExpiresAt ? new Date(c.dealExpiresAt).getTime() : 0;
 
         let statusBadge = '';
-        if (isExpired) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-stone-900 text-stone-200 border border-stone-700">🔒 DEMO ĐÃ HẾT HẠN (THU HỒI)</span>`;
+        if (isPurged) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-stone-900 text-rose-300 border border-rose-900/60">🗑️ ĐÃ XOÁ SẠCH KHỎI KV</span>`;
+        } else if (isExpired) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-stone-900 text-stone-200 border border-stone-700">🔒 DEMO ĐÃ HẾT HẠN (HTTP 403)</span>`;
         } else if (isDealActive) {
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-xs animate-pulse">⚡ DEAL 50% ($299 AUD) — ĐANG CHẠY</span>`;
         } else {
@@ -1569,13 +1720,37 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
         const photosCount = (c.placesPhotos && Array.isArray(c.placesPhotos)) ? c.placesPhotos.length : 0;
 
+        // Due Action & Visual Alert
+        const due = getClientDueAction(c);
+        let dueBannerHtml = '';
+        if (due) {
+          dueBannerHtml = `
+            <div class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/10 border-2 border-amber-400 text-stone-900 flex items-center justify-between gap-3 shadow-2xs animate-pulse">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🔔</span>
+                <span class="text-xs font-black text-amber-950">HÔM NAY ĐẾN HẠN: ${escapeHtml(due.label)}</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shrink-0">Bấm Xử Lý Ngay</span>
+            </div>
+          `;
+        }
+
+        // Time gates for buttons
+        const isDay3Due = daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && !isDealActive && !isExpired;
+        const isDay3Locked = daysElapsed < 3;
+        const isDay7Due = daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && !isExpired;
+        const isDay9Due = daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning';
+        const isDay10Due = daysElapsed >= 10 && !isExpired;
+
         return `
           <div class="bg-gradient-to-br from-[#fcfbf7] to-[#fbf6ed] rounded-2xl p-3.5 border border-[#e2d9c8] space-y-3 shadow-2xs">
+            ${dueBannerHtml}
+
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs font-extrabold text-stone-900">⚡ 3. Chốt SALE &amp; Thu Hồi Tự Động (10-Day Closing Engine):</span>
                 ${statusBadge}
-                ${c.demoSentAt ? `<span class="px-2 py-0.5 rounded-md bg-stone-200/80 text-stone-700 text-[10px] font-bold">🕒 ${daysText}</span>` : ''}
+                ${sentTime ? `<span class="px-2 py-0.5 rounded-md ${due ? 'bg-amber-300 text-amber-950 font-black' : 'bg-stone-200/80 text-stone-700 font-bold'} text-[10px]">🕒 ${daysText}</span>` : ''}
               </div>
 
               <div class="flex items-center gap-2 flex-wrap">
@@ -1606,15 +1781,26 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 type="button"
                 data-cid="${c.id}"
                 data-template="day3_reminder"
-                ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border ${c.nurtureStep === 'day3_reminder' ? 'border-emerald-300 bg-emerald-50/60' : 'border-[#dcd4c0] bg-white hover:bg-stone-50'} text-stone-800 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
-                title="Gửi SMS Ngày 3: Nhắc nhẹ khách xem website preview"
+                ${(!hasPhone || isDay3Locked) ? 'disabled' : ''}
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                  c.nurtureStep === 'day3_reminder'
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-950'
+                    : isDay3Due
+                      ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
+                      : isDay3Locked
+                        ? 'border-stone-200 bg-stone-50/70 text-stone-400 opacity-60 cursor-not-allowed'
+                        : 'border-[#dcd4c0] bg-white hover:bg-stone-50 text-stone-800'
+                }"
+                title="${isDay3Locked ? `Chưa đến hạn Ngày 3 (Còn ${3 - daysElapsed} ngày nữa)` : 'Gửi SMS Ngày 3: Nhắc nhẹ khách xem website preview'}"
               >
                 <div class="flex items-center justify-between font-bold text-xs">
                   <span>📱 SMS Ngày 3</span>
                   ${c.nurtureStep === 'day3_reminder' ? '<span class="text-emerald-700 text-[10px]">✓ Đã gửi</span>' : ''}
+                  ${isDay3Due ? '<span class="text-amber-800 text-[10px] font-black">● Đến hạn!</span>' : ''}
                 </div>
-                <span class="text-[10px] text-stone-500 truncate">Nhắc nhẹ xem link Demo</span>
+                <span class="text-[10px] truncate ${isDay3Due ? 'text-amber-900 font-black' : 'text-stone-500'}">
+                  ${isDay3Due ? '👉 Bấm gửi SMS Nhắc xem' : isDay3Locked ? `Chưa đến hạn (Còn ${3 - daysElapsed} ngày)` : 'Nhắc nhẹ xem link Demo'}
+                </span>
               </button>
 
               <!-- Day 7 Flash Deal 50% -->
@@ -1622,14 +1808,24 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 type="button"
                 data-cid="${c.id}"
                 data-action="activate_flash_deal"
-                class="btn-trigger-deal px-3 py-2.5 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                ${(isExpired || isPurged) ? 'disabled' : ''}
+                class="btn-trigger-deal px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                  isDealActive
+                    ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950'
+                    : isDay7Due
+                      ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
+                      : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950'
+                }"
                 title="Kích hoạt giảm 50% ($299 AUD) trong 72h + chạy đồng hồ đếm ngược trên web demo"
               >
                 <div class="flex items-center justify-between font-extrabold text-xs">
                   <span>⚡ Deal 50% (72 Giờ)</span>
                   ${isDealActive ? '<span class="text-rose-600 animate-pulse text-[10px]">● Đang chạy</span>' : ''}
+                  ${isDay7Due ? '<span class="text-amber-800 text-[10px] font-black">● Đến hạn!</span>' : ''}
                 </div>
-                <span class="text-[10px] text-amber-800 truncate">Hạ $299 AUD + hiện đồng hồ</span>
+                <span class="text-[10px] truncate ${isDay7Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
+                  ${isDay7Due ? '👉 Bấm Kích Hoạt Deal 50%' : isDealActive ? 'Đang chạy ($299 AUD)' : 'Hạ $299 AUD + hiện đồng hồ'}
+                </span>
               </button>
 
               <!-- Day 9 Warning SMS -->
@@ -1637,39 +1833,74 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 type="button"
                 data-cid="${c.id}"
                 data-template="day9_warning"
-                ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border ${c.nurtureStep === 'day9_warning' ? 'border-rose-300 bg-rose-50/60' : 'border-[#dcd4c0] bg-white hover:bg-rose-50'} text-rose-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${(!hasPhone || (!isDealActive && c.nurtureStep !== 'day9_warning')) ? 'disabled' : ''}
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                  c.nurtureStep === 'day9_warning'
+                    ? 'border-rose-300 bg-rose-50 text-rose-950'
+                    : isDay9Due
+                      ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse'
+                      : (!isDealActive && c.nurtureStep !== 'day9_warning')
+                        ? 'border-stone-200 bg-stone-50/70 text-stone-400 opacity-60 cursor-not-allowed'
+                        : 'border-[#dcd4c0] bg-white hover:bg-rose-50 text-rose-950'
+                }"
                 title="Gửi SMS Ngày 9: Cảnh báo 24 giờ cuối trước khi đóng & thu hồi demo vĩnh viễn"
               >
                 <div class="flex items-center justify-between font-bold text-xs">
                   <span>⏳ SMS Ngày 9 (24h Cuối)</span>
                   ${c.nurtureStep === 'day9_warning' ? '<span class="text-rose-700 text-[10px]">✓ Đã gửi</span>' : ''}
+                  ${isDay9Due ? '<span class="text-rose-700 text-[10px] font-black">● Đến hạn!</span>' : ''}
                 </div>
-                <span class="text-[10px] text-rose-600 truncate">Báo sắp thu hồi demo vĩnh viễn</span>
+                <span class="text-[10px] truncate ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-600'}">
+                  ${isDay9Due ? '👉 Gửi Cảnh Báo 24h Cuối' : c.nurtureStep === 'day9_warning' ? 'Đã cảnh báo thu hồi' : 'Báo sắp thu hồi demo'}
+                </span>
               </button>
 
-              <!-- Day 10 Hard Expire / Restore -->
-              ${isExpired ? `
-                <button
-                  type="button"
-                  data-cid="${c.id}"
-                  data-action="restore_demo"
-                  class="btn-restore-demo px-3 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
-                  title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
-                >
-                  <div class="font-extrabold text-xs text-emerald-900">🔄 Khôi Phục Demo</div>
-                  <span class="text-[10px] text-emerald-700 truncate">Mở khoá link về chuẩn $599</span>
-                </button>
+              <!-- Day 10 Hard Expire / Restore / Purge -->
+              ${isPurged ? `
+                <div class="px-3 py-2.5 rounded-xl border border-stone-200 bg-stone-100 text-stone-500 text-left flex flex-col gap-0.5 shadow-2xs">
+                  <div class="font-extrabold text-xs text-stone-600">🗑️ Đã Dọn Sạch KV</div>
+                  <span class="text-[10px] text-stone-400 truncate">Không tốn dung lượng KV</span>
+                </div>
+              ` : isExpired ? `
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-action="restore_demo"
+                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
+                  >
+                    <div class="font-extrabold text-xs text-emerald-900">🔄 Khôi Phục</div>
+                    <span class="text-[10px] text-emerald-700 truncate">Mở lại $599</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-slug="${c.demoSlug || ''}"
+                    data-name="${escapeHtml(titleName)}"
+                    class="btn-purge-demo px-2.5 py-2.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    title="Xoá vĩnh viễn toàn bộ file website demo khỏi Cloudflare KV để dọn dẹp sạch sẽ"
+                  >
+                    <div class="font-extrabold text-xs text-rose-900">🗑️ Dọn KV</div>
+                    <span class="text-[10px] text-rose-700 truncate">Xoá sạch file</span>
+                  </button>
+                </div>
               ` : `
                 <button
                   type="button"
                   data-cid="${c.id}"
                   data-action="expire_demo"
-                  class="btn-expire-demo px-3 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                  class="btn-expire-demo px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                    isDay10Due
+                      ? 'border-2 border-stone-800 bg-stone-900 text-white font-extrabold animate-pulse'
+                      : 'border-stone-300 bg-white hover:bg-stone-100 text-stone-700'
+                  }"
                   title="Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)"
                 >
-                  <div class="font-bold text-xs text-stone-800">🔒 Khoá / Thu Hồi Demo</div>
-                  <span class="text-[10px] text-stone-500 truncate">Khoá truy cập link demo</span>
+                  <div class="font-bold text-xs ${isDay10Due ? 'text-white' : 'text-stone-800'}">🔒 Khoá / Thu Hồi Demo</div>
+                  <span class="text-[10px] truncate ${isDay10Due ? 'text-stone-300 font-bold' : 'text-stone-500'}">
+                    ${isDay10Due ? '👉 ĐÃ QUÁ 10 NGÀY — BẤM KHOÁ' : 'Khoá truy cập link demo'}
+                  </span>
                 </button>
               `}
             </div>
@@ -2799,6 +3030,29 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               upsertClientInCache(res.client);
               applyFiltersAndRender();
               showToast(`📱 Đã bắn ${tplName} thành công tới ${client.phone}!`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Purge Demo KV Assets
+        document.querySelectorAll('.btn-purge-demo').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const slug = btn.getAttribute('data-slug') || '';
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            if (!confirm(`Xoá vĩnh viễn toàn bộ file website demo của "${biz}" khỏi bộ nhớ Cloudflare KV?\n\n• Toàn bộ mã nguồn và ảnh của demo này trong KV sẽ bị xoá sạch để giải phóng dung lượng.\n• Khách truy cập sẽ nhận màn hình hết hạn và rút lại demo.\n• Dữ liệu trên Stripe CRM vẫn lưu lại để quản lý lịch sử.`)) {
+              return;
+            }
+            const res = await runAdminAction({
+              action: 'purge_demo',
+              customerId: cid,
+              slug: slug
+            }, { busyText: 'Đang dọn dẹp sạch KV...', skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`🗑️ Đã xoá sạch ${res.deletedCount || 0} file trong KV của "${biz}"!`);
             }
           });
         });
@@ -4026,9 +4280,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         tab.addEventListener('click', () => {
           currentObFilter = tab.getAttribute('data-ob-filter') || 'all';
           document.querySelectorAll('.ob-filter-tab').forEach(t => {
-            t.className = 'ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all';
+            const filterType = t.getAttribute('data-ob-filter');
+            if (filterType === 'action_today') {
+              t.className = 'ob-filter-tab bg-gradient-to-br from-rose-50/70 to-amber-50/80 p-4 rounded-2xl border border-rose-300 hover:border-rose-500 text-left transition-all cursor-pointer relative overflow-hidden group';
+            } else {
+              t.className = 'ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer';
+            }
           });
-          tab.className = 'ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all shadow-xs';
+          if (currentObFilter === 'action_today') {
+            tab.className = 'ob-filter-tab bg-gradient-to-br from-rose-100 to-amber-100 p-4 rounded-2xl border-2 border-rose-600 text-left transition-all shadow-xs relative overflow-hidden cursor-pointer';
+          } else {
+            tab.className = 'ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all shadow-xs cursor-pointer';
+          }
           applyFiltersAndRender();
         });
       });
@@ -4147,6 +4410,151 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           ].join('\n');
           navigator.clipboard.writeText(gasCode);
           showToast('Đã copy mã Google Apps Script! Hãy dán vào script.google.com -> Deploy -> Web App.');
+        });
+      }
+
+      // Cloud Autopilot Modal Controls
+      const autopilotModal = document.getElementById('autopilot-modal');
+      const pillAutopilot = document.getElementById('pill-autopilot');
+      const btnCloseAutopilot = document.getElementById('btn-close-autopilot');
+      const btnSaveAutopilot = document.getElementById('btn-save-autopilot');
+      const btnRunAutopilotNow = document.getElementById('btn-run-autopilot-now');
+      const apEnabled = document.getElementById('ap-enabled');
+      const apSms = document.getElementById('ap-sms');
+      const apDeal = document.getElementById('ap-deal');
+      const apExpire = document.getElementById('ap-expire');
+      const apLastRunTime = document.getElementById('ap-last-run-time');
+      const apLastRunSummary = document.getElementById('ap-last-run-summary');
+      const apLastRunLogs = document.getElementById('ap-last-run-logs');
+      const autopilotStatusText = document.getElementById('autopilot-status-text');
+      const autopilotDot = document.getElementById('autopilot-dot');
+
+      async function loadAutopilotSettings() {
+        if (!adminKey) return;
+        try {
+          const res = await fetch('/api/admin/autopilot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+            body: JSON.stringify({ adminKey, action: 'get_settings' })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (data && data.ok) {
+            const s = data.settings || {};
+            if (apEnabled) apEnabled.checked = s.enabled !== false;
+            if (apSms) apSms.checked = s.autoSms !== false;
+            if (apDeal) apDeal.checked = s.autoDeal !== false;
+            if (apExpire) apExpire.checked = s.autoExpire !== false;
+
+            if (autopilotStatusText && autopilotDot) {
+              if (s.enabled !== false) {
+                autopilotStatusText.textContent = '⚡ Cloud Autopilot 24/7: Bật';
+                autopilotDot.className = 'w-2 h-2 rounded-full bg-indigo-500 animate-pulse';
+              } else {
+                autopilotStatusText.textContent = '⏸️ Cloud Autopilot: Tắt';
+                autopilotDot.className = 'w-2 h-2 rounded-full bg-stone-400';
+              }
+            }
+
+            if (data.lastRun) {
+              const lr = data.lastRun;
+              const dateStr = lr.timestamp ? new Date(lr.timestamp).toLocaleString('vi-VN') : 'Gần đây';
+              if (apLastRunTime) apLastRunTime.textContent = dateStr;
+              if (apLastRunSummary) {
+                apLastRunSummary.innerHTML = `
+                  Đã quét <strong>${lr.scannedCount || 0}</strong> tiệm | 
+                  SMS đã gửi: <strong>${lr.smsSentCount || 0}</strong> | 
+                  Deal kích hoạt: <strong>${lr.dealActivatedCount || 0}</strong> | 
+                  Đã khoá 403: <strong>${lr.expiredCount || 0}</strong>
+                `;
+              }
+              if (apLastRunLogs) {
+                if (Array.isArray(lr.reports) && lr.reports.length > 0) {
+                  apLastRunLogs.classList.remove('hidden');
+                  apLastRunLogs.innerHTML = lr.reports.map(r => `<div>&bull; ${escapeHtml(r)}</div>`).join('');
+                } else {
+                  apLastRunLogs.classList.add('hidden');
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (pillAutopilot) {
+        pillAutopilot.addEventListener('click', () => {
+          if (autopilotModal) autopilotModal.classList.remove('hidden');
+          loadAutopilotSettings();
+        });
+      }
+      if (btnCloseAutopilot) {
+        btnCloseAutopilot.addEventListener('click', () => {
+          if (autopilotModal) autopilotModal.classList.add('hidden');
+        });
+      }
+      if (autopilotModal) {
+        autopilotModal.addEventListener('click', (e) => {
+          if (e.target === autopilotModal) autopilotModal.classList.add('hidden');
+        });
+      }
+
+      if (btnSaveAutopilot) {
+        btnSaveAutopilot.addEventListener('click', async () => {
+          const newSettings = {
+            enabled: apEnabled.checked,
+            autoSms: apSms.checked,
+            autoDeal: apDeal.checked,
+            autoExpire: apExpire.checked
+          };
+          btnSaveAutopilot.disabled = true;
+          btnSaveAutopilot.textContent = 'Đang lưu...';
+          try {
+            const res = await fetch('/api/admin/autopilot', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+              body: JSON.stringify({ adminKey, action: 'update_settings', ...newSettings })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data && data.ok) {
+              showToast('⚡ Đã lưu cấu hình Cloud Autopilot 24/7 thành công!');
+              loadAutopilotSettings();
+              if (autopilotModal) autopilotModal.classList.add('hidden');
+            } else {
+              showToast(`Lỗi: ${data.error || 'Không lưu được'}`, true);
+            }
+          } catch (err) {
+            showToast(`Lỗi: ${err.message}`, true);
+          } finally {
+            btnSaveAutopilot.disabled = false;
+            btnSaveAutopilot.textContent = 'Lưu Cài Đặt';
+          }
+        });
+      }
+
+      if (btnRunAutopilotNow) {
+        btnRunAutopilotNow.addEventListener('click', async () => {
+          if (!confirm('Khởi chạy quét toàn bộ khách Outbound trên đám mây ngay bây giờ?')) return;
+          btnRunAutopilotNow.disabled = true;
+          btnRunAutopilotNow.innerHTML = '<span class="inline-block animate-spin">↻</span> Đang quét &amp; chạy Autopilot...';
+          try {
+            const res = await fetch('/api/admin/autopilot', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+              body: JSON.stringify({ adminKey, action: 'run_now' })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data && data.ok) {
+              showToast('🚀 Đã hoàn tất đợt quét Cloud Autopilot thành công!');
+              await loadClients();
+              loadAutopilotSettings();
+            } else {
+              showToast(`Lỗi: ${data.error || 'Quét thất bại'}`, true);
+            }
+          } catch (err) {
+            showToast(`Lỗi: ${err.message}`, true);
+          } finally {
+            btnRunAutopilotNow.disabled = false;
+            btnRunAutopilotNow.innerHTML = '<span>🚀</span><span>Chạy Quét Ngay Bây Giờ</span>';
+          }
         });
       }
 

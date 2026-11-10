@@ -55,6 +55,11 @@ function toGsmSafeAscii(str) {
 }
 
 async function sendClickSendSms(toPhone, bodyText, cfg) {
+  if (typeof toPhone === 'object' && toPhone !== null) {
+    cfg = toPhone.cfg || cfg;
+    bodyText = toPhone.message || toPhone.body || bodyText;
+    toPhone = toPhone.to || toPhone.phone;
+  }
   const formattedTo = normalizeAuPhone(toPhone);
   const safeBody = toGsmSafeAscii(bodyText);
   if (!formattedTo) {
@@ -2097,6 +2102,174 @@ async function findStripeCustomerByEmail(email, stripeSecretKey) {
   if (!res.ok) return null;
   const data = await res.json().catch(() => ({}));
   return data.data && data.data.length > 0 ? data.data[0] : null;
+}
+
+async function runScheduledAutopilot(env, options = {}) {
+  const force = Boolean(options.force);
+  let runtimeCreds = {};
+  if (env && env.WYNN_KV) {
+    runtimeCreds = (await env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => ({}))) || {};
+  }
+  const cfg = getConfig(env, runtimeCreds);
+  if (!cfg.stripeSecretKey) {
+    return { ok: false, error: 'Chưa cấu hình Stripe API Key' };
+  }
+
+  let settings = { enabled: true, autoSms: true, autoDeal: true, autoExpire: true };
+  if (env && env.WYNN_KV) {
+    const saved = await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null);
+    if (saved && typeof saved === 'object') {
+      settings = { ...settings, ...saved };
+    }
+  }
+
+  if (!settings.enabled && !force) {
+    return { ok: true, skipped: true, reason: 'Cloud Autopilot đang tắt' };
+  }
+
+  let allCustomers = [];
+  try {
+    let hasMore = true;
+    let startingAfter = null;
+    while (hasMore && allCustomers.length < 250) {
+      let fetchUrl = 'https://api.stripe.com/v1/customers?limit=100';
+      if (startingAfter) fetchUrl += `&starting_after=${encodeURIComponent(startingAfter)}`;
+      const cRes = await fetch(fetchUrl, {
+        headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+      });
+      if (!cRes.ok) break;
+      const cData = await cRes.json();
+      const list = Array.isArray(cData.data) ? cData.data : [];
+      allCustomers.push(...list);
+      hasMore = cData.has_more && list.length > 0;
+      if (list.length > 0) startingAfter = list[list.length - 1].id;
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to fetch Stripe customers: ${err.message}` };
+  }
+
+  const reports = [];
+  let smsSentCount = 0;
+  let dealActivatedCount = 0;
+  let expiredCount = 0;
+  let scannedCount = 0;
+
+  for (const rawCust of allCustomers) {
+    const c = formatCustomerRecord(rawCust);
+    const isOutbound = c.source === 'admin_lead_hunter' || c.source === 'outbound_admin' || c.outboundPitched || c.isOutboundLead || Boolean(c.demoUrl || c.brandedDemoUrl);
+    const isPaid = c.paymentStatus === 'paid' || c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
+    if (!isOutbound || isPaid) continue;
+
+    const sentTime = c.demoSentAt || c.created;
+    if (!sentTime) continue;
+
+    scannedCount++;
+    const now = Date.now();
+    const daysElapsed = (now - new Date(sentTime).getTime()) / (1000 * 3600 * 24);
+    const biz = c.businessName || c.name || 'Boutique';
+    const demoUrl = c.demoUrl || c.brandedDemoUrl;
+    const claim50Url = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(c.id)}&deal=flash50`;
+
+    // 1. Day 10+ (Hard Expire)
+    if (daysElapsed >= 10 && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      if (settings.autoExpire || force) {
+        const uP = new URLSearchParams();
+        uP.append('metadata[deal_status]', 'expired');
+        uP.append('metadata[deal_expires_at]', new Date(now).toISOString());
+        uP.append('metadata[nurture_step]', 'demo_expired');
+        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: uP.toString()
+        }).catch(() => {});
+        expiredCount++;
+        reports.push(`[Ngày ${Math.floor(daysElapsed)}] Khoá Demo 403: ${biz}`);
+        continue;
+      }
+    }
+
+    // 2. Day 9 (24h Final Warning SMS)
+    if (daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning') {
+      if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
+        const warningMsg = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived and withdrawn tomorrow: ${claim50Url} — WynnPages Studio`;
+        const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
+        const uP = new URLSearchParams();
+        uP.append('metadata[nurture_step]', 'day9_warning');
+        uP.append('metadata[last_sms_log]', `Day 9 Warning: ${smsRes.sent ? 'OK' : smsRes.reason}`);
+        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: uP.toString()
+        }).catch(() => {});
+        if (smsRes.sent) smsSentCount++;
+        reports.push(`[Ngày 9] Gửi SMS Cảnh báo 24h cuối: ${biz}`);
+        continue;
+      }
+    }
+
+    // 3. Day 7-8 (Flash Deal 50% Activation)
+    if (daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      if (settings.autoDeal || force) {
+        const dealExpiresAt = new Date(now + 72 * 3600 * 1000).toISOString();
+        const uP = new URLSearchParams();
+        uP.append('metadata[deal_status]', 'flash_deal');
+        uP.append('metadata[deal_activated_at]', new Date(now).toISOString());
+        uP.append('metadata[deal_expires_at]', dealExpiresAt);
+        uP.append('metadata[nurture_step]', 'day7_deal_active');
+
+        let smsSent = false;
+        if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
+          const dealMsg = `Hi ${biz}, WynnPages Studio has opened a 72-hour Atelier Sponsorship for your salon: 50% OFF ($299 AUD, save $300 AUD). Claim your website before the window closes: ${claim50Url}`;
+          const smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
+          smsSent = Boolean(smsRes && smsRes.sent);
+          uP.append('metadata[last_sms_log]', `Day 7 Deal SMS: ${smsSent ? 'OK' : (smsRes && smsRes.reason)}`);
+          if (smsSent) smsSentCount++;
+        }
+
+        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: uP.toString()
+        }).catch(() => {});
+        dealActivatedCount++;
+        reports.push(`[Ngày 7] Kích hoạt Deal 50% ($299 AUD)${smsSent ? ' + gửi SMS' : ''}: ${biz}`);
+        continue;
+      }
+    }
+
+    // 4. Day 3-6 (Reminder SMS)
+    if (daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
+        const reminderMsg = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your boutique: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
+        const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
+        const uP = new URLSearchParams();
+        uP.append('metadata[nurture_step]', 'day3_reminder');
+        uP.append('metadata[last_sms_log]', `Day 3 Reminder: ${smsRes.sent ? 'OK' : smsRes.reason}`);
+        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: uP.toString()
+        }).catch(() => {});
+        if (smsRes.sent) smsSentCount++;
+        reports.push(`[Ngày 3] Gửi SMS Nhắc xem Demo: ${biz}`);
+        continue;
+      }
+    }
+  }
+
+  const lastRunRecord = {
+    timestamp: new Date().toISOString(),
+    scannedCount,
+    smsSentCount,
+    dealActivatedCount,
+    expiredCount,
+    reports: reports.slice(0, 50)
+  };
+  if (env && env.WYNN_KV) {
+    await env.WYNN_KV.put('studio_autopilot_last_run', JSON.stringify(lastRunRecord)).catch(() => {});
+  }
+
+  return { ok: true, settings, lastRun: lastRunRecord };
 }
 
 export default {
@@ -4169,6 +4342,77 @@ export default {
           return new Response(JSON.stringify({ ok: true, dealStatus: 'standard', client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
+        // Action: Purge Demo KV Assets & Permanent Withdraw (Day 10+ Complete Clean)
+        if (action === 'purge_demo' && customerId) {
+          let slugToClean = (body.slug || '').trim();
+          if (!slugToClean) {
+            try {
+              const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+                headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+              });
+              if (cRes.ok) {
+                const cData = await cRes.json();
+                slugToClean = cData.metadata?.demo_slug || (cData.metadata?.demo_url ? extractCleanHost(cData.metadata.demo_url) : '');
+              }
+            } catch (_) { }
+          }
+
+          const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
+          let deletedCount = 0;
+
+          if (env && env.WYNN_KV && cleanSlug) {
+            const metaKey = `site_meta:${cleanSlug}`;
+            const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+            if (prevMeta && Array.isArray(prevMeta.filesList)) {
+              for (const p of prevMeta.filesList) {
+                await env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => {});
+                deletedCount++;
+              }
+            }
+            await Promise.all([
+              env.WYNN_KV.delete(`sub_${cleanSlug}`).catch(() => {}),
+              env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => {}),
+              env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => {}),
+              env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => {}),
+              env.WYNN_KV.delete(metaKey).catch(() => {})
+            ]);
+            deletedCount += 5;
+          }
+
+          // In background: detach Cloudflare Worker domain if one was created
+          if (cleanSlug) {
+            const detachJob = removeCloudflareWorkerDomain(cleanSlug, env, effectiveCfg.cfApiToken).catch(() => {});
+            if (ctx && typeof ctx.waitUntil === 'function') {
+              ctx.waitUntil(detachJob);
+            } else {
+              await detachJob;
+            }
+          }
+
+          const nowIso = new Date().toISOString();
+          const uP = new URLSearchParams();
+          uP.append('metadata[deal_status]', 'purged');
+          uP.append('metadata[deal_expires_at]', nowIso);
+          uP.append('metadata[nurture_step]', 'demo_purged');
+          uP.append('metadata[purged_at]', nowIso);
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+
+          return new Response(JSON.stringify({ ok: true, dealStatus: 'purged', cleanSlug, deletedCount, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
         // Action: Send Nurture SMS (Day 3 Reminder, Day 7 Deal, Day 9 Final Warning)
         if (action === 'send_nurture_sms' && customerId) {
           let cust = null;
@@ -4712,10 +4956,61 @@ export default {
       }
     }
 
+    // 6b. Admin Autopilot Engine Endpoint (POST /api/admin/autopilot)
+    if (url.pathname === '/api/admin/autopilot' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        }
+
+        const subAction = body.action || 'get_settings';
+        if (subAction === 'get_settings') {
+          let settings = { enabled: true, autoSms: true, autoDeal: true, autoExpire: true };
+          let lastRun = null;
+          if (env && env.WYNN_KV) {
+            settings = (await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null)) || settings;
+            lastRun = await env.WYNN_KV.get('studio_autopilot_last_run', 'json').catch(() => null);
+          }
+          return new Response(JSON.stringify({ ok: true, settings, lastRun }), { status: 200, headers: corsHeaders });
+        }
+
+        if (subAction === 'update_settings') {
+          const newSettings = {
+            enabled: Boolean(body.enabled),
+            autoSms: Boolean(body.autoSms),
+            autoDeal: Boolean(body.autoDeal),
+            autoExpire: Boolean(body.autoExpire)
+          };
+          if (env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_autopilot_settings', JSON.stringify(newSettings)).catch(() => {});
+          }
+          return new Response(JSON.stringify({ ok: true, settings: newSettings }), { status: 200, headers: corsHeaders });
+        }
+
+        if (subAction === 'run_now') {
+          const result = await runScheduledAutopilot(env, { force: true });
+          return new Response(JSON.stringify(result), { status: 200, headers: corsHeaders });
+        }
+
+        return new Response(JSON.stringify({ error: 'Unknown autopilot action' }), { status: 400, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 7. Default static assets fetch
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);
     }
     return fetch(request);
+  },
+  async scheduled(event, env, ctx) {
+    if (ctx && typeof ctx.waitUntil === 'function') {
+      ctx.waitUntil(runScheduledAutopilot(env));
+    } else {
+      await runScheduledAutopilot(env);
+    }
   }
 };
