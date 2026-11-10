@@ -3850,6 +3850,7 @@ export default {
           'places.rating',
           'places.userRatingCount',
           'places.websiteUri',
+          'places.googleMapsUri',
           'places.regularOpeningHours',
           'places.reviews',
           'places.photos',
@@ -4023,6 +4024,7 @@ export default {
 
           const industry = classifyLeadIndustry(rawSelectedIndustry, keyword, name);
           const industryLabel = getLeadIndustryLabel(industry);
+          const googleMapsUri = p.googleMapsUri || (p.id ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${encodeURIComponent(p.id)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' ' + address)}`);
 
           return {
             id: p.id || ('lead_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)),
@@ -4034,6 +4036,7 @@ export default {
             rating,
             userRatingCount,
             website,
+            googleMapsUri,
             leadType,
             statusBadge,
             priorityScore,

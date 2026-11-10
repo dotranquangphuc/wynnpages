@@ -202,19 +202,19 @@
       </div>
 
       <!-- ======================================================== -->
-      <!-- MAIN MODE SWITCHER: TAB 1 (OUTBOUND) vs TAB 2 (INBOUND)  -->
+      <!-- MAIN MODE SWITCHER: TAB 1 (OUTBOUND) vs TAB 2 (INBOUND) vs TAB 3 (LEADS CRM) -->
       <!-- ======================================================== -->
-      <div class="bg-white rounded-3xl p-2 border border-[#e5dec9] shadow-xs grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div class="bg-white rounded-3xl p-2 border border-[#e5dec9] shadow-xs grid grid-cols-1 md:grid-cols-3 gap-2">
         <button
           type="button"
           id="mode-tab-outbound"
-          class="px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md"
+          class="px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md cursor-pointer"
         >
           <div class="flex items-center gap-3">
             <span class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg shrink-0">🎯</span>
             <div>
-              <span class="text-xs sm:text-sm font-extrabold block">TAB 1: Chiến Dịch Outbound (Săn Khách &amp; Gửi Demo Trước)</span>
-              <span class="text-[11px] opacity-85 block">Làm sẵn Demo → Gửi khách xem → Khách bấm Mua $599 → Xác nhận tại /demo-success</span>
+              <span class="text-xs sm:text-sm font-extrabold block">TAB 1: Outbound &amp; Chốt SALE</span>
+              <span class="text-[11px] opacity-85 block">Bám sát 10 ngày &bull; Deal 50% &bull; SMS &bull; Khoá demo</span>
             </div>
           </div>
           <span id="badge-count-outbound" class="px-3 py-1 rounded-full text-xs font-extrabold bg-white text-[#96432b] shrink-0">0</span>
@@ -223,17 +223,54 @@
         <button
           type="button"
           id="mode-tab-inbound"
-          class="px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700"
+          class="px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer"
         >
           <div class="flex items-center gap-3">
             <span class="w-9 h-9 rounded-xl bg-[#ebe3d5] flex items-center justify-center text-lg shrink-0">🌿</span>
             <div>
-              <span class="text-xs sm:text-sm font-extrabold block">TAB 2: Khách Inbound &amp; Bàn Giao (5 Bước Có Điền Brief)</span>
-              <span class="text-[11px] opacity-75 block">Khách tự trả $599 trên web → Điền Wizard 4 Bước → Làm Demo → Lên sóng</span>
+              <span class="text-xs sm:text-sm font-extrabold block">TAB 2: Khách Inbound &amp; Bàn Giao</span>
+              <span class="text-[11px] opacity-75 block">Khách tự trả $599 trên web &rarr; 5 bước brief &rarr; Lên sóng</span>
             </div>
           </div>
           <span id="badge-count-inbound" class="px-3 py-1 rounded-full text-xs font-extrabold bg-stone-200 text-stone-800 shrink-0">0</span>
         </button>
+
+        <button
+          type="button"
+          id="mode-tab-leads"
+          class="px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer relative"
+        >
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-xl bg-[#dfc286]/35 text-amber-900 flex items-center justify-center text-lg shrink-0">💎</span>
+            <div>
+              <span class="text-xs sm:text-sm font-extrabold block">TAB 3: Kho Khách Tiềm Năng (Leads)</span>
+              <span class="text-[11px] opacity-75 block">Google Maps Lead Hunter &bull; Phân ngành &bull; 1-Click Import</span>
+            </div>
+          </div>
+          <span id="badge-count-leads" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-950 border border-amber-300 shrink-0">0</span>
+        </button>
+      </div>
+
+      <!-- Quick Banner on Tab 1 (Linking to Tab 3 or fast scan) -->
+      <div id="tab1-lead-quickbar" class="bg-gradient-to-r from-[#fdfbf7] via-white to-[#fbf6ed] rounded-2xl px-5 py-3.5 border border-[#e5dec9] shadow-2xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center text-base shadow-2xs">💎</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs sm:text-sm font-extrabold text-stone-900">Kho Khách Hàng Tiềm Năng (Google Maps Leads CRM)</span>
+              <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase">Places API New</span>
+            </div>
+            <p class="text-[11px] text-stone-500 mt-0.5">
+              Đang lưu trữ <strong id="quick-bar-lead-count" class="text-stone-900 font-extrabold">0</strong> tiệm (<strong id="quick-bar-hot-count" class="text-rose-700 font-extrabold">0</strong> chưa có web) &bull; Dữ liệu lưu vĩnh viễn, bấm 1-click để đưa sang Tab 1 làm demo.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="switchMainTab('leads')" class="px-4 py-2 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-extrabold text-xs transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer">
+            <span>🚀 Mở Kho Săn Khách (Tab 3)</span>
+            <span>&rarr;</span>
+          </button>
+        </div>
       </div>
 
       <!-- Toast Notification Banner -->
@@ -243,9 +280,9 @@
       </div>
 
       <!-- ======================================================== -->
-      <!-- GOOGLE PLACES LEAD CRM & ACCUMULATIVE HUNTER             -->
+      <!-- GOOGLE PLACES LEAD CRM & ACCUMULATIVE HUNTER (TAB 3)     -->
       <!-- ======================================================== -->
-      <div id="lead-hunter-panel" class="bg-[#fcfbf9] rounded-3xl border-2 border-[#96432b]/30 shadow-sm overflow-hidden transition-all duration-300">
+      <div id="lead-hunter-panel" class="hidden bg-[#fcfbf9] rounded-3xl border-2 border-[#96432b]/30 shadow-sm overflow-hidden transition-all duration-300">
         <!-- Header Banner with Live Badges & Quick Tools -->
         <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fcf9f3] flex flex-wrap items-center justify-between gap-3 border-b border-[#ece4d5]">
           <div class="flex items-center gap-3">
@@ -536,9 +573,13 @@
       <!-- ======================================================== -->
       <div id="outbound-quick-creator" class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#96432b]/25 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <span class="px-2.5 py-0.5 rounded-full bg-[#96432b] text-white text-[10px] font-extrabold uppercase tracking-wider">Bước 1 Outbound</span>
             <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Tạo Nhanh Khách Chào Hàng (Đã Có Link Demo)</h3>
+            <button type="button" onclick="switchMainTab('leads')" class="px-2.5 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 shadow-2xs">
+              <span>💎 Chọn từ Kho Lead</span>
+              <span>&rarr;</span>
+            </button>
           </div>
           <span class="text-[11px] text-stone-500">Không cần điền Brief — Tạo xong có ngay Link Demo gắn nút <strong>"Claim This Website - $599 AUD"</strong>!</span>
         </div>
@@ -634,7 +675,7 @@
       </div>
 
       <!-- Client List Header & Search -->
-      <div class="space-y-4">
+      <div id="clients-section" class="space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">
             <span id="list-heading-title">Danh Sách Chiến Dịch Outbound</span> (<span id="client-count">0</span>)
@@ -1215,6 +1256,12 @@
 
       const modeTabOutbound = document.getElementById('mode-tab-outbound');
       const modeTabInbound = document.getElementById('mode-tab-inbound');
+      const modeTabLeads = document.getElementById('mode-tab-leads');
+      const tab1LeadQuickbar = document.getElementById('tab1-lead-quickbar');
+      const clientsSection = document.getElementById('clients-section');
+      const badgeCountLeads = document.getElementById('badge-count-leads');
+      const quickBarLeadCount = document.getElementById('quick-bar-lead-count');
+      const quickBarHotCount = document.getElementById('quick-bar-hot-count');
       const outboundQuickCreator = document.getElementById('outbound-quick-creator');
       const outboundFilters = document.getElementById('outbound-filters');
       const inboundFilters = document.getElementById('inbound-filters');
@@ -1369,42 +1416,103 @@
       }
 
       function switchMainTab(tabName) {
-        activeMainTab = tabName === 'inbound' ? 'inbound' : 'outbound';
+        if (tabName === 'leads') {
+          activeMainTab = 'leads';
+        } else if (tabName === 'inbound') {
+          activeMainTab = 'inbound';
+        } else {
+          activeMainTab = 'outbound';
+        }
         localStorage.setItem('wynn_active_tab', activeMainTab);
         const btnNewClient = document.getElementById('btn-new-client');
+        const leadHunterPanel = document.getElementById('lead-hunter-panel');
+        const leadHunterBody = document.getElementById('lead-hunter-body');
+
+        const tabActiveCls = 'px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md cursor-pointer';
+        const tabInactiveCls = 'px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer';
 
         if (activeMainTab === 'outbound') {
-          modeTabOutbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md';
-          modeTabInbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700';
-          outboundQuickCreator.classList.remove('hidden');
-          outboundFilters.classList.remove('hidden');
-          outboundFilters.classList.add('grid');
-          inboundFilters.classList.add('hidden');
-          inboundFilters.classList.remove('grid');
+          if (modeTabOutbound) modeTabOutbound.className = tabActiveCls;
+          if (modeTabInbound) modeTabInbound.className = tabInactiveCls;
+          if (modeTabLeads) modeTabLeads.className = tabInactiveCls;
+
+          if (leadHunterPanel) leadHunterPanel.classList.add('hidden');
+          if (tab1LeadQuickbar) tab1LeadQuickbar.classList.remove('hidden');
+          if (outboundQuickCreator) outboundQuickCreator.classList.remove('hidden');
+          if (outboundFilters) {
+            outboundFilters.classList.remove('hidden');
+            outboundFilters.classList.add('grid');
+          }
+          if (inboundFilters) {
+            inboundFilters.classList.add('hidden');
+            inboundFilters.classList.remove('grid');
+          }
+          if (clientsSection) clientsSection.classList.remove('hidden');
+
           if (btnNewClient) {
             btnNewClient.classList.add('hidden');
             btnNewClient.classList.remove('inline-flex');
           }
-          listHeadingTitle.textContent = 'Danh Sách Chiến Dịch Outbound — Gửi Demo Trước';
-        } else {
-          modeTabInbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md';
-          modeTabOutbound.className = 'px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700';
-          outboundQuickCreator.classList.add('hidden');
-          outboundFilters.classList.add('hidden');
-          outboundFilters.classList.remove('grid');
-          inboundFilters.classList.remove('hidden');
-          inboundFilters.classList.add('grid');
+          if (listHeadingTitle) listHeadingTitle.textContent = 'Danh Sách Chiến Dịch Outbound — Gửi Demo Trước';
+          applyFiltersAndRender();
+        } else if (activeMainTab === 'inbound') {
+          if (modeTabInbound) modeTabInbound.className = tabActiveCls;
+          if (modeTabOutbound) modeTabOutbound.className = tabInactiveCls;
+          if (modeTabLeads) modeTabLeads.className = tabInactiveCls;
+
+          if (leadHunterPanel) leadHunterPanel.classList.add('hidden');
+          if (tab1LeadQuickbar) tab1LeadQuickbar.classList.add('hidden');
+          if (outboundQuickCreator) outboundQuickCreator.classList.add('hidden');
+          if (outboundFilters) {
+            outboundFilters.classList.add('hidden');
+            outboundFilters.classList.remove('grid');
+          }
+          if (inboundFilters) {
+            inboundFilters.classList.remove('hidden');
+            inboundFilters.classList.add('grid');
+          }
+          if (clientsSection) clientsSection.classList.remove('hidden');
+
           if (btnNewClient) {
             btnNewClient.classList.remove('hidden');
             btnNewClient.classList.add('inline-flex');
           }
-          listHeadingTitle.textContent = 'Danh Sách Khách Inbound & Bàn Giao 5 Bước';
+          if (listHeadingTitle) listHeadingTitle.textContent = 'Danh Sách Khách Inbound & Bàn Giao 5 Bước';
+          applyFiltersAndRender();
+        } else if (activeMainTab === 'leads') {
+          if (modeTabLeads) modeTabLeads.className = tabActiveCls;
+          if (modeTabOutbound) modeTabOutbound.className = tabInactiveCls;
+          if (modeTabInbound) modeTabInbound.className = tabInactiveCls;
+
+          if (leadHunterPanel) {
+            leadHunterPanel.classList.remove('hidden');
+            if (leadHunterBody) leadHunterBody.classList.remove('hidden');
+          }
+          if (tab1LeadQuickbar) tab1LeadQuickbar.classList.add('hidden');
+          if (outboundQuickCreator) outboundQuickCreator.classList.add('hidden');
+          if (outboundFilters) {
+            outboundFilters.classList.add('hidden');
+            outboundFilters.classList.remove('grid');
+          }
+          if (inboundFilters) {
+            inboundFilters.classList.add('hidden');
+            inboundFilters.classList.remove('grid');
+          }
+          if (clientsSection) clientsSection.classList.add('hidden');
+
+          if (btnNewClient) {
+            btnNewClient.classList.add('hidden');
+            btnNewClient.classList.remove('inline-flex');
+          }
+          if (typeof renderLeadHunterCRM === 'function') {
+            renderLeadHunterCRM();
+          }
         }
-        applyFiltersAndRender();
       }
 
-      modeTabOutbound.addEventListener('click', () => switchMainTab('outbound'));
-      modeTabInbound.addEventListener('click', () => switchMainTab('inbound'));
+      if (modeTabOutbound) modeTabOutbound.addEventListener('click', () => switchMainTab('outbound'));
+      if (modeTabInbound) modeTabInbound.addEventListener('click', () => switchMainTab('inbound'));
+      if (modeTabLeads) modeTabLeads.addEventListener('click', () => switchMainTab('leads'));
 
       const globalTopLoader = document.getElementById('global-top-loader');
       const globalSyncPill = document.getElementById('global-sync-pill');
@@ -3617,10 +3725,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const badgeSocial = document.getElementById('lh-social-badge');
         const badgeImported = document.getElementById('lh-imported-badge');
 
+        const badgeCountLeadsEl = document.getElementById('badge-count-leads');
+        const quickBarLeadCountEl = document.getElementById('quick-bar-lead-count');
+        const quickBarHotCountEl = document.getElementById('quick-bar-hot-count');
+
         if (badgeTotal) badgeTotal.textContent = `${total} tiệm`;
         if (badgeHot) badgeHot.textContent = `${serverStats?.hotNoWeb ?? hot} tiệm`;
         if (badgeSocial) badgeSocial.textContent = `${serverStats?.socialBooking ?? social} tiệm`;
         if (badgeImported) badgeImported.textContent = `${serverStats?.imported ?? imported} tiệm`;
+
+        if (badgeCountLeadsEl) badgeCountLeadsEl.textContent = total;
+        if (quickBarLeadCountEl) quickBarLeadCountEl.textContent = total;
+        const hotCountVal = serverStats?.hotNoWeb ?? hot;
+        if (quickBarHotCountEl) quickBarHotCountEl.textContent = hotCountVal;
 
         const countsToUse = serverIndustryCounts || localIndCounts;
         for (const [key, count] of Object.entries(countsToUse)) {
@@ -3750,27 +3867,25 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             </div>
           ` : '';
 
-          const contactPills = [
-            lead.instagram ? `<a href="${escapeHtml(lead.instagram)}" target="_blank" rel="noopener" class="px-1.5 py-0.5 rounded-md bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-[10px] font-bold inline-flex items-center gap-0.5"><span>📷 IG</span></a>` : '',
-            lead.facebook ? `<a href="${escapeHtml(lead.facebook)}" target="_blank" rel="noopener" class="px-1.5 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold inline-flex items-center gap-0.5"><span>📘 FB</span></a>` : '',
-            lead.email ? `<a href="mailto:${escapeHtml(lead.email)}" class="px-1.5 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold inline-flex items-center gap-0.5 font-mono"><span>✉️ ${escapeHtml(lead.email)}</span></a>` : '',
-            lead.parkingInfo ? `<span class="px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px]" title="${escapeHtml(lead.parkingInfo)}">🅿️ ${escapeHtml(lead.parkingInfo)}</span>` : ''
-          ].filter(Boolean).join('');
+          const googleUrl = lead.googleMapsUri || (lead.placeId ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name)}&query_place_id=${encodeURIComponent(lead.placeId)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || lead.suburb || ''))}`);
 
           return `
             <tr class="border-b border-[#f0eade] hover:bg-[#fcfbf8] transition-colors text-xs">
               <td class="py-3 px-3.5">
                 <div class="space-y-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="font-bold text-stone-900 text-sm">${escapeHtml(lead.name)}</span>
+                    <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" class="font-extrabold text-stone-900 text-sm hover:text-[#96432b] hover:underline inline-flex items-center gap-1 group" title="Mở trang Google Maps của ${escapeHtml(lead.name)} (Click xem trên Google)">
+                      <span>${escapeHtml(lead.name)}</span>
+                      <span class="text-stone-400 group-hover:text-[#96432b] text-xs transition-colors">↗</span>
+                    </a>
                     <span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px] font-semibold">${indLabel}</span>
                     ${lead.leadType === 'hot_lead_no_web' ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Hot Lead Không Có Web"></span>' : ''}
                     ${alreadyImported ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Đã Import</span>' : ''}
                   </div>
                   <p class="text-[11px] text-stone-500 line-clamp-1" title="${escapeHtml(lead.address)}">
                     📍 ${escapeHtml(lead.suburb || lead.address)}
+                    ${lead.parkingInfo ? `<span class="ml-1 text-stone-400">&bull; 🅿️ ${escapeHtml(lead.parkingInfo)}</span>` : ''}
                   </p>
-                  ${contactPills ? `<div class="flex items-center gap-1.5 flex-wrap pt-0.5">${contactPills}</div>` : ''}
                   ${photosStrip}
                   <div class="text-[10.5px] text-stone-400 italic line-clamp-1 pt-0.5">
                     💬 ${reviewSnippet}
@@ -3794,6 +3909,30 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 ` : `<span class="text-stone-300 italic">Chưa có SĐT</span>`}
               </td>
 
+              <!-- Cột Mạng Xã Hội (Facebook & Instagram) -->
+              <td class="py-3 px-3 whitespace-nowrap text-center">
+                <div class="inline-flex items-center justify-center gap-1.5">
+                  ${lead.facebook ? `
+                    <a href="${escapeHtml(lead.facebook)}" target="_blank" rel="noopener noreferrer" class="w-7 h-7 rounded-lg bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white transition-all flex items-center justify-center shadow-2xs hover:scale-110" title="Mở trang Facebook: ${escapeHtml(lead.facebook)}">
+                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    </a>
+                  ` : ''}
+                  ${lead.instagram ? `
+                    <a href="${escapeHtml(lead.instagram)}" target="_blank" rel="noopener noreferrer" class="w-7 h-7 rounded-lg bg-pink-50 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] text-[#e1306c] hover:text-white transition-all flex items-center justify-center shadow-2xs hover:scale-110" title="Mở Instagram: ${escapeHtml(lead.instagram)}">
+                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </a>
+                  ` : ''}
+                  ${lead.email ? `
+                    <a href="mailto:${escapeHtml(lead.email)}" class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white transition-all flex items-center justify-center shadow-2xs hover:scale-110 text-xs" title="Gửi Email: ${escapeHtml(lead.email)}">
+                      ✉️
+                    </a>
+                  ` : ''}
+                  ${(!lead.facebook && !lead.instagram && !lead.email) ? `
+                    <span class="text-stone-300 text-xs font-mono">—</span>
+                  ` : ''}
+                </div>
+              </td>
+
               <td class="py-3 px-3">
                 <div class="space-y-1">
                   <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] border ${badgeClass}">
@@ -3808,24 +3947,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               </td>
 
               <td class="py-3 px-3 whitespace-nowrap text-right">
-                <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
-                    class="btn-copy-art-lead px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold text-xs transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
-                    title="Copy Prompt AI Dịch Ảnh Sang Tranh Sơn Dầu (Cách 2)"
-                  >
-                    <span>🎨 Copy Prompt AI</span>
-                  </button>
+                <div class="flex items-center justify-end gap-1.5">
                   ${alreadyImported ? `
-                    <button type="button" disabled class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold cursor-not-allowed inline-flex items-center gap-1">
-                      <span>✅ Đã Có Trong Pipeline</span>
+                    <button type="button" onclick="switchMainTab('outbound')" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs cursor-pointer" title="Tiệm đã được Import vào Tab 1 — Bấm để chuyển sang Tab 1 xem">
+                      <span>✅ Đã Import</span>
+                      <span class="text-[10px]">↗</span>
                     </button>
                   ` : `
                     <button
                       type="button"
                       data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
-                      class="btn-import-lead px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer"
+                      class="btn-import-lead px-3.5 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-black transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                      title="1-Click Tạo Hồ Sơ Khách Hàng và Dựng Sẵn Demo trong Tab 1"
                     >
                       <span>⚡ Import &amp; Làm Demo</span>
                     </button>
@@ -3853,6 +3986,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     <th class="py-2.5 px-3.5">Tiệm &amp; Đánh Giá Thực Tế</th>
                     <th class="py-2.5 px-3">Rating</th>
                     <th class="py-2.5 px-3">Số Điện Thoại</th>
+                    <th class="py-2.5 px-3 text-center">Mạng Xã Hội (FB &amp; IG)</th>
                     <th class="py-2.5 px-3">Tình Trạng Web</th>
                     <th class="py-2.5 px-3 text-right">Thao Tác</th>
                   </tr>
@@ -3949,23 +4083,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               btn.innerHTML = origHtml;
               showToast(`Lỗi import: ${err.message}`, true);
             }
-          });
-        });
-
-        // Bind Copy Art Prompt buttons (Lead Hunter - Cách 2)
-        lhResultsContainer.querySelectorAll('.btn-copy-art-lead').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const leadId = btn.getAttribute('data-lead-id');
-            const lead = allStoredLeads.find((l) => (l.placeId || l.id) === leadId);
-            if (!lead) return;
-            copyAiFineArtPromptHelper({
-              name: lead.name,
-              suburb: lead.suburb,
-              address: lead.address,
-              industry: lead.industryLabel,
-              palette: '01',
-              photos: lead.photos || []
-            });
           });
         });
 
