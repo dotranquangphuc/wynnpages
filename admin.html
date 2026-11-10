@@ -1914,7 +1914,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs font-extrabold text-stone-900">⚡ 3. Chốt SALE &amp; Thu Hồi Tự Động (10-Day Closing Engine):</span>
                 ${statusBadge}
-                ${sentTime ? `<span class="px-2 py-0.5 rounded-md ${due ? 'bg-amber-300 text-amber-950 font-black' : 'bg-stone-200/80 text-stone-700 font-bold'} text-[10px]">🕒 ${daysText}</span>` : ''}
+                ${pitchTime ? `<span class="px-2 py-0.5 rounded-md ${due ? 'bg-amber-300 text-amber-950 font-black' : 'bg-stone-200/80 text-stone-700 font-bold'} text-[10px]">🕒 ${daysText}</span>` : ''}
               </div>
 
               <div class="flex items-center gap-2 flex-wrap">
@@ -3370,6 +3370,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
             if (res && res.ok) {
               removeClientFromCache(cid);
+              if (existing) {
+                const pId = existing.googlePlaceId;
+                const matchLead = allStoredLeads.find(l => (pId && l.placeId === pId) || (existing.businessName && l.name && l.name.toLowerCase() === existing.businessName.toLowerCase()));
+                if (matchLead) {
+                  matchLead.imported = false;
+                  delete matchLead.importedAt;
+                }
+              }
+              updateLeadHunterCounters(allStoredLeads);
+              if (typeof renderLeadHunterCRM === 'function') renderLeadHunterCRM();
               showToast(`Đã xoá hồ sơ "${name}" và tên miền liên quan.`);
             } else {
               setCardBusy(cid, false);
@@ -3782,7 +3792,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       });
 
       function isLeadAlreadyInSystem(lead) {
-        if (lead.imported) return true;
         if (!clientsCache || !clientsCache.length) return false;
         const leadPhoneClean = normalizePhone(lead.phone);
         const leadNameClean = (lead.name || '').trim().toLowerCase();
@@ -4053,9 +4062,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               <td class="py-3 px-3 whitespace-nowrap text-right">
                 <div class="flex items-center justify-end gap-1.5">
                   ${alreadyImported ? `
-                    <button type="button" onclick="switchMainTab('outbound')" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs cursor-pointer" title="Tiệm đã được Import vào Tab 1 — Bấm để chuyển sang Tab 1 xem">
+                    <button type="button" onclick="switchMainTab('outbound')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs cursor-pointer" title="Tiệm đã được Import vào Tab 1 — Bấm để chuyển sang Tab 1 xem">
                       <span>✅ Đã Import</span>
                       <span class="text-[10px]">↗</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
+                      class="btn-import-lead px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 border border-stone-300 text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer"
+                      title="Bấm để Import Lại tiệm này vào Tab 1 hoặc làm lại Demo mới"
+                    >
+                      <span>🔄 Import Lại</span>
                     </button>
                   ` : `
                     <button
