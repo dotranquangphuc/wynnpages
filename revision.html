@@ -123,7 +123,7 @@
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-20 sm:pb-16 space-y-8">
 
     <!-- Loading State -->
     <div id="loading-state" class="text-center py-24 space-y-4">
@@ -150,8 +150,8 @@
     <div id="portal-content" class="hidden space-y-8">
 
       <!-- Salon Title Hero & Status -->
-      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div class="space-y-1">
+      <div class="bg-white rounded-3xl p-5 sm:p-8 border border-[#e5dec9] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-1.5 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-950 border border-amber-300">
               Interactive Revision Portal
@@ -160,16 +160,16 @@
               Round 1 of 1 Active
             </span>
           </div>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight leading-snug">
             Refine &amp; Finalize <span id="display-biz-name" class="font-editorial italic font-normal text-[#96432b]">Your Salon</span>
           </h1>
-          <p class="text-xs text-stone-500 max-w-2xl">
+          <p class="text-xs text-stone-500 max-w-2xl leading-relaxed">
             Compare what is currently running on your demo on the left, and submit your desired updates on the right.
           </p>
         </div>
 
-        <div class="flex items-center gap-2">
-          <a id="btn-open-demo-top" href="#" target="_blank" class="px-4 py-2.5 rounded-xl bg-[#fcf9f3] hover:bg-[#efe7d8] border border-[#d8cca6] text-xs font-bold text-[#96432b] inline-flex items-center gap-1.5 shadow-2xs">
+        <div class="w-full sm:w-auto pt-1 sm:pt-0 shrink-0">
+          <a id="btn-open-demo-top" href="#" target="_blank" class="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-2xl bg-gradient-to-r from-[#faf5ec] to-[#f4ebe0] hover:from-[#efe5d5] hover:to-[#e8dbca] border border-[#d8cca6] text-xs font-extrabold text-[#96432b] shadow-2xs hover:shadow-xs active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2 text-center">
             <span>🌐 Open Current Demo in New Tab</span>
             <span class="text-stone-400">↗</span>
           </a>
@@ -216,15 +216,18 @@
         <!-- BLOCK 1: CORE CONTACT & SHOP DETAILS                    -->
         <!-- ======================================================== -->
         <div class="bg-white rounded-3xl border border-[#e5dec9] shadow-xs overflow-hidden">
-          <div class="px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs">1</span>
-              <div>
-                <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Core Contact &amp; Shop Details</h3>
-                <p class="text-[11px] text-stone-500">Business Name, Phone, Physical Address, Trading Hours &amp; Booking Link</p>
+          <div class="px-5 sm:px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs shrink-0">1</span>
+              <div class="min-w-0">
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900 truncate">Core Contact &amp; Shop Details</h3>
+                <p class="text-[11px] text-stone-500 truncate">Business Name, Phone, Address, Hours &amp; Booking Link</p>
               </div>
             </div>
-            <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Side-by-Side View</span>
+            <div class="shrink-0">
+              <span class="hidden md:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap">Side-by-Side View</span>
+              <span class="md:hidden px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-black uppercase tracking-wider text-stone-600 whitespace-nowrap">Step 1 of 4</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -299,15 +302,18 @@
         <!-- BLOCK 2: HEADLINES & ABOUT STORY                        -->
         <!-- ======================================================== -->
         <div class="bg-white rounded-3xl border border-[#e5dec9] shadow-xs overflow-hidden">
-          <div class="px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs">2</span>
-              <div>
-                <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Headlines, Slogans &amp; About Story</h3>
-                <p class="text-[11px] text-stone-500">Hero banner headline, badge subtitle &amp; your craftsmanship introduction</p>
+          <div class="px-5 sm:px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs shrink-0">2</span>
+              <div class="min-w-0">
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900 truncate">Headlines, Slogans &amp; About Story</h3>
+                <p class="text-[11px] text-stone-500 truncate">Hero banner headline, badge subtitle &amp; your craftsmanship introduction</p>
               </div>
             </div>
-            <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Side-by-Side View</span>
+            <div class="shrink-0">
+              <span class="hidden md:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap">Side-by-Side View</span>
+              <span class="md:hidden px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-black uppercase tracking-wider text-stone-600 whitespace-nowrap">Step 2 of 4</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -355,15 +361,18 @@
         <!-- BLOCK 3: SERVICES & PRICING MENU                        -->
         <!-- ======================================================== -->
         <div class="bg-white rounded-3xl border border-[#e5dec9] shadow-xs overflow-hidden">
-          <div class="px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs">3</span>
-              <div>
-                <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Services &amp; Pricing Menu</h3>
-                <p class="text-[11px] text-stone-500">Review demo services or upload a photo of your printed in-salon price list</p>
+          <div class="px-5 sm:px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs shrink-0">3</span>
+              <div class="min-w-0">
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900 truncate">Services &amp; Pricing Menu</h3>
+                <p class="text-[11px] text-stone-500 truncate">Review demo services or upload a photo of your printed in-salon price list</p>
               </div>
             </div>
-            <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Side-by-Side View</span>
+            <div class="shrink-0">
+              <span class="hidden md:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap">Side-by-Side View</span>
+              <span class="md:hidden px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-black uppercase tracking-wider text-stone-600 whitespace-nowrap">Step 3 of 4</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -401,14 +410,20 @@
               <!-- Option B: Upload Real Menu Photo / PDF -->
               <div class="space-y-2 text-xs">
                 <label class="block font-bold text-stone-700">Method B: Upload Photo / PDF of Your Real Salon Menu</label>
-                <div id="menu-upload-zone" class="upload-box rounded-2xl p-5 text-center cursor-pointer">
+                <div id="menu-upload-zone" class="upload-box rounded-2xl p-5 text-center cursor-pointer transition-all hover:border-[#96432b]">
                   <input type="file" id="menu-file-input" name="menuFile" accept="image/*,.pdf" class="hidden">
-                  <span class="text-2xl block mb-1">📸</span>
-                  <p class="font-bold text-stone-800 text-xs">Drop your menu photo / PDF here, or <span class="text-[#96432b] underline">browse</span></p>
-                  <p class="text-[10.5px] text-stone-400 mt-0.5">JPG, PNG, PDF up to 15MB. Our AI engine and studio team will extract and format all services to match your exact in-salon prices.</p>
-                  <div id="menu-file-preview" class="hidden mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs font-semibold flex items-center justify-between">
-                    <span id="menu-file-name" class="truncate max-w-[240px]">menu.jpg</span>
-                    <button type="button" id="btn-remove-menu-file" class="text-emerald-700 hover:text-red-600 font-bold ml-2">✕ Remove</button>
+                  <span class="text-3xl block mb-1">📸</span>
+                  <p class="font-bold text-stone-800 text-xs sm:text-sm">Chạm để chọn ảnh bảng giá / PDF tiệm</p>
+                  <p class="text-[10.5px] text-stone-400 mt-1 max-w-sm mx-auto">Chụp ảnh bảng giá thật tại salon hoặc tải file PDF/JPG. Hệ thống sẽ trích xuất và cập nhật đầy đủ bảng giá thật.</p>
+                  <div class="mt-2.5 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold shadow-xs pointer-events-none">
+                    <span>📁 Chọn File / Chụp Ảnh Menu</span>
+                  </div>
+                  <div id="menu-file-preview" class="hidden mt-3 p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs font-semibold flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0 flex-1 text-left">
+                      <span class="text-base shrink-0">📄</span>
+                      <span id="menu-file-name" class="truncate font-mono text-[11px]">menu.jpg</span>
+                    </div>
+                    <button type="button" id="btn-remove-menu-file" class="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold shrink-0 shadow-2xs">✕ Xoá</button>
                   </div>
                 </div>
               </div>
@@ -420,15 +435,18 @@
         <!-- BLOCK 4: PHOTO SWAPS & FINAL DIRECTIVES                 -->
         <!-- ======================================================== -->
         <div class="bg-white rounded-3xl border border-[#e5dec9] shadow-xs overflow-hidden">
-          <div class="px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs">4</span>
-              <div>
-                <h3 class="text-sm sm:text-base font-extrabold text-stone-900">Real Photo Swaps &amp; Final Launch Directives</h3>
-                <p class="text-[11px] text-stone-500">Replace demo oil paintings with your real salon photos &amp; add final requests</p>
+          <div class="px-5 sm:px-6 py-4 bg-[#fcf9f3] border-b border-[#e5dec9] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-[#96432b] text-white flex items-center justify-center font-bold text-xs shrink-0">4</span>
+              <div class="min-w-0">
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900 truncate">Real Photo Swaps &amp; Final Launch Directives</h3>
+                <p class="text-[11px] text-stone-500 truncate">Replace demo oil paintings with your real salon photos &amp; add final requests</p>
               </div>
             </div>
-            <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Side-by-Side View</span>
+            <div class="shrink-0">
+              <span class="hidden md:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap">Side-by-Side View</span>
+              <span class="md:hidden px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-black uppercase tracking-wider text-stone-600 whitespace-nowrap">Step 4 of 4</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -449,14 +467,20 @@
 
               <div class="space-y-2 text-xs">
                 <label class="block font-bold text-stone-700">Upload Your Real Photos (Optional)</label>
-                <div id="photos-upload-zone" class="upload-box rounded-2xl p-5 text-center cursor-pointer">
+                <div id="photos-upload-zone" class="upload-box rounded-2xl p-5 text-center cursor-pointer transition-all hover:border-[#96432b]">
                   <input type="file" id="photos-file-input" name="photosFile" accept="image/*" multiple class="hidden">
-                  <span class="text-2xl block mb-1">🖼️</span>
-                  <p class="font-bold text-stone-800 text-xs">Drop salon or manicure photos here, or <span class="text-[#96432b] underline">browse</span></p>
-                  <p class="text-[10.5px] text-stone-400 mt-0.5">Up to 6 photos (JPG/PNG). We will colour-grade them to match your website palette.</p>
-                  <div id="photos-file-preview" class="hidden mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs font-semibold flex items-center justify-between">
-                    <span id="photos-file-name" class="truncate max-w-[240px]">photos.zip</span>
-                    <button type="button" id="btn-remove-photos-file" class="text-emerald-700 hover:text-red-600 font-bold ml-2">✕ Remove</button>
+                  <span class="text-3xl block mb-1">🖼️</span>
+                  <p class="font-bold text-stone-800 text-xs sm:text-sm">Chạm để chọn ảnh salon (Tối đa 6 ảnh)</p>
+                  <p class="text-[10.5px] text-stone-400 mt-1 max-w-sm mx-auto">Tải ảnh tiệm thật, không gian, thợ hoặc mẫu móng của bạn. Kỹ sư đồ hoạ sẽ căn chỉnh màu chuẩn website.</p>
+                  <div class="mt-2.5 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold shadow-xs pointer-events-none">
+                    <span>📷 Chọn Ảnh Thật Từ Thiết Bị</span>
+                  </div>
+                  <div id="photos-file-preview" class="hidden mt-3 p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs font-semibold flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0 flex-1 text-left">
+                      <span class="text-base shrink-0">🖼️</span>
+                      <span id="photos-file-name" class="truncate font-mono text-[11px]">photos.zip</span>
+                    </div>
+                    <button type="button" id="btn-remove-photos-file" class="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold shrink-0 shadow-2xs">✕ Xoá</button>
                   </div>
                 </div>
               </div>
@@ -481,13 +505,13 @@
           </div>
 
           <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-[#f0eade]">
-            <span class="text-[11px] text-stone-400">
+            <span class="text-[11px] text-stone-400 text-center sm:text-left">
               ⚡ Expected live launch: within 24–48 hours upon submission.
             </span>
             <button
               type="submit"
               id="btn-submit-revision"
-              class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#96432b] to-[#b84a30] hover:from-[#7d3520] hover:to-[#96432b] text-white font-extrabold text-sm shadow-md transition-all hover:scale-[1.02] cursor-pointer inline-flex items-center justify-center gap-2"
+              class="w-full sm:w-auto px-8 py-4 sm:py-3.5 rounded-2xl bg-gradient-to-r from-[#96432b] to-[#b84a30] hover:from-[#7d3520] hover:to-[#96432b] text-white font-extrabold text-sm sm:text-base shadow-md transition-all active:scale-[0.98] cursor-pointer inline-flex items-center justify-center gap-2 min-h-[50px]"
             >
               <span>Submit Revision Round &amp; Finalize Launch</span>
               <span>→</span>
@@ -754,7 +778,7 @@
         const removeBtn = document.getElementById(removeBtnId);
 
         zone.addEventListener('click', (e) => {
-          if (e.target !== removeBtn) input.click();
+          if (!removeBtn.contains(e.target)) input.click();
         });
 
         input.addEventListener('change', () => {

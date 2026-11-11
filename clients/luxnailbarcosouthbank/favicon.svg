@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="wax" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FCF9F3"/>
+      <stop offset="60%" stop-color="#F6E7CA"/>
+      <stop offset="100%" stop-color="#E7CD96"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2D07C"/>
+      <stop offset="50%" stop-color="#D49B28"/>
+      <stop offset="100%" stop-color="#9E6814"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Gold Rim -->
+  <circle cx="32" cy="32" r="30" fill="url(#wax)" stroke="url(#gold)" stroke-width="2.2"/>
+  <!-- Inner Hairline Ring -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="url(#gold)" stroke-width="0.9" stroke-opacity="0.8"/>
+  <!-- Elegant Monogram L -->
+  <text x="32" y="42" text-anchor="middle" font-family="'Cormorant Garamond', 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="32" fill="#96432B">L</text>
+</svg>
