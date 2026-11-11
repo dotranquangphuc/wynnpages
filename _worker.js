@@ -1506,13 +1506,13 @@ function buildClaimBarSnippet(client) {
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 880px;
-      background: rgba(26, 23, 21, 0.96);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(229, 222, 201, 0.24);
+      background: rgba(26, 20, 16, 0.74);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(229, 222, 201, 0.28);
       border-radius: 22px;
       padding: 12px 18px 12px 18px;
-      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1524,7 +1524,7 @@ function buildClaimBarSnippet(client) {
     }
     .claim-bar.deal-active {
       border: 1.5px solid rgba(232, 185, 72, 0.75);
-      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(232, 185, 72, 0.35);
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.55), 0 0 28px rgba(232, 185, 72, 0.3);
       padding-top: 16px;
     }
     .claim-deal-floating-seal {
@@ -1578,9 +1578,9 @@ function buildClaimBarSnippet(client) {
         box-shadow: 0 12px 30px rgba(200, 138, 27, 0.75), 0 3px 8px rgba(0,0,0,0.5), 0 0 16px rgba(255, 243, 209, 0.7);
       }
     }
-    .claim-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .claim-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
     .claim-badge {
-      width: 44px; height: 44px; border-radius: 13px;
+      width: 42px; height: 42px; border-radius: 13px;
       background: #96432b;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       text-decoration: none;
@@ -1599,52 +1599,28 @@ function buildClaimBarSnippet(client) {
     .claim-badge-img {
       width: 100%; height: 100%; object-fit: contain; display: block;
     }
-    .claim-meta { min-width: 0; }
+    .claim-meta { min-width: 0; flex: 1; }
     .claim-tag {
-      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      font-size: 9.5px; font-weight: 800; text-transform: uppercase;
       letter-spacing: 0.08em; color: #fbdeb9; display: flex; align-items: center; gap: 6px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+      white-space: nowrap; margin-bottom: 2px;
     }
-    .claim-studio-link {
-      color: #e8b948;
-      text-decoration: none;
-      display: inline-flex; align-items: center; gap: 3px;
-      background: rgba(232, 185, 72, 0.12);
-      border: 1px solid rgba(232, 185, 72, 0.3);
-      padding: 1px 7px;
-      border-radius: 6px;
-      transition: all 0.18s ease;
-      flex-shrink: 0;
-    }
-    .claim-studio-link:hover {
-      background: rgba(232, 185, 72, 0.22);
-      border-color: rgba(232, 185, 72, 0.6);
-      color: #ffffff;
-      transform: translateY(-0.5px);
-    }
-    .claim-deal-badge {
-      background: linear-gradient(135deg, #d49b28 0%, #b87b1c 100%);
-      color: #1c1917;
-      font-weight: 800;
-      padding: 1px 7px;
-      border-radius: 6px;
-      font-size: 9.5px;
-      letter-spacing: 0.04em;
-    }
-    .claim-ext-arrow { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
-    .claim-bullet { color: rgba(251, 222, 185, 0.4); font-size: 8px; flex-shrink: 0; }
-    .claim-tag-text { color: rgba(251, 222, 185, 0.85); font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
     .claim-title {
-      display: flex; align-items: baseline; gap: 6px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: block;
+      white-space: normal;
+      line-height: 1.28;
     }
     .claim-for-text {
-      font-size: 11.5px; font-weight: 600; color: #b8b0a5; letter-spacing: 0.03em; text-transform: uppercase; flex-shrink: 0;
+      font-size: 10.5px; font-weight: 600; color: #c4bbb0; letter-spacing: 0.04em; text-transform: uppercase; display: block; margin-bottom: 1px;
     }
     .claim-biz-highlight {
-      font-size: 16.5px; font-weight: 800; color: #ffffff;
+      font-size: 16px; font-weight: 800; color: #ffffff;
       letter-spacing: -0.01em; text-shadow: 0 1px 4px rgba(0,0,0,0.6);
-      overflow: hidden; text-overflow: ellipsis;
+      display: block;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      word-break: break-word;
     }
     .claim-countdown-wrap {
       display: inline-flex;
@@ -1672,28 +1648,6 @@ function buildClaimBarSnippet(client) {
     .claim-actions {
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
-    .claim-studio-btn {
-      flex-shrink: 0;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(229, 222, 201, 0.22);
-      color: #f6f1e8;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 11px 15px;
-      border-radius: 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.18s ease;
-      white-space: nowrap;
-    }
-    .claim-studio-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(232, 185, 72, 0.5);
-      color: #ffffff;
-      transform: translateY(-1px);
-    }
     .claim-btn {
       position: relative;
       overflow: hidden;
@@ -1701,9 +1655,9 @@ function buildClaimBarSnippet(client) {
       background: linear-gradient(135deg, #96432b 0%, #a84b31 100%);
       color: #ffffff;
       text-decoration: none;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 800;
-      padding: 12px 22px;
+      padding: 12px 24px;
       border-radius: 14px;
       display: inline-flex;
       align-items: center;
@@ -1765,24 +1719,27 @@ function buildClaimBarSnippet(client) {
       .claim-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 14px 14px 10px 14px;
+        padding: 12px 14px 12px 14px;
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px;
         border-radius: 20px;
         width: calc(100% - 20px);
         max-width: 100%;
         overflow: visible;
+        background: rgba(26, 20, 16, 0.78);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
       }
       .claim-bar.deal-active {
-        padding-top: 26px;
+        padding-top: 24px;
       }
       .claim-deal-floating-seal {
-        top: -15px;
+        top: -14px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 11px;
-        padding: 5px 14px;
-        gap: 6px;
+        font-size: 10.5px;
+        padding: 4px 12px;
+        gap: 5px;
       }
       @keyframes seal-float-pulse {
         0%, 100% {
@@ -1798,14 +1755,14 @@ function buildClaimBarSnippet(client) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 6px;
+        gap: 0;
         width: 100%;
       }
       .claim-btn {
         width: 100%;
         justify-content: center;
-        padding: 13px 12px;
-        font-size: 13.5px;
+        padding: 13px 14px;
+        font-size: 14px;
         font-weight: 850;
         white-space: normal;
         text-align: center;
@@ -1818,23 +1775,15 @@ function buildClaimBarSnippet(client) {
         line-height: 1.25;
         word-break: keep-all;
       }
-      .claim-studio-btn {
-        justify-content: center;
-        padding: 5px 10px;
-        font-size: 11px;
-        border: none;
-        background: transparent;
-        color: #b8b0a5;
-        text-decoration: underline;
+      .claim-for-text { font-size: 9.5px; }
+      .claim-biz-highlight {
+        font-size: 15px;
+        line-height: 1.25;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        word-break: break-word;
       }
-      .claim-studio-btn:hover {
-        background: transparent;
-        color: #ffffff;
-      }
-      .claim-tag-text { display: none; }
-      .claim-bullet { display: none; }
-      .claim-for-text { font-size: 10px; }
-      .claim-biz-highlight { font-size: 15px; }
     }
   </style>
   <div class="claim-bar ${isFlashDeal ? 'deal-active' : ''}">
@@ -4475,6 +4424,11 @@ export default {
           menuFileName: body.menuFileName || '',
           menuFileUrl: savedMenuUrl,
           photosFileName: body.photosFileName || '',
+          hasDomain: body.hasDomain || '',
+          existingDomain: body.existingDomain || '',
+          desiredDomains: body.desiredDomains || '',
+          dnsMode: body.dnsMode || '',
+          domainAccessNotes: body.domainAccessNotes || '',
           notes: body.notes || '',
           submittedAt: nowIso
         };
@@ -4487,6 +4441,7 @@ export default {
         // Build summary text for Stripe metadata
         const summaryParts = [];
         if (revPayload.bizName) summaryParts.push(`Name: ${revPayload.bizName}`);
+        if (revPayload.existingDomain || revPayload.desiredDomains) summaryParts.push(`Domain: ${revPayload.existingDomain || revPayload.desiredDomains}`);
         if (revPayload.phone) summaryParts.push(`Phone: ${revPayload.phone}`);
         if (revPayload.address) summaryParts.push(`Addr: ${revPayload.address}`);
         if (revPayload.menuText || revPayload.menuFileName) summaryParts.push(`Menu: ${revPayload.menuFileName || 'Text tweaks'}`);
@@ -4502,6 +4457,18 @@ export default {
           if (revPayload.menuFileName) uP.append('metadata[revision_menu_file_name]', revPayload.menuFileName.slice(0, 200));
           if (savedMenuUrl) uP.append('metadata[revision_menu_file_url]', savedMenuUrl.slice(0, 480));
           if (revPayload.photosFileName) uP.append('metadata[revision_photos_file_name]', revPayload.photosFileName.slice(0, 200));
+          if (revPayload.hasDomain) uP.append('metadata[has_domain]', revPayload.hasDomain.slice(0, 490));
+          if (revPayload.existingDomain) {
+            const cleanEx = revPayload.existingDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+            uP.append('metadata[existing_domain]', cleanEx.slice(0, 490));
+            uP.append('metadata[live_url]', `https://${cleanEx}`);
+          }
+          if (revPayload.desiredDomains) {
+            const cleanDes = revPayload.desiredDomains.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+            uP.append('metadata[desired_domains]', cleanDes.slice(0, 490));
+          }
+          if (revPayload.dnsMode) uP.append('metadata[dns_mode]', revPayload.dnsMode.slice(0, 120));
+          if (revPayload.domainAccessNotes) uP.append('metadata[domain_access_notes]', revPayload.domainAccessNotes.slice(0, 490));
 
           await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
             method: 'POST',
