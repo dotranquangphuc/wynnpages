@@ -94,31 +94,49 @@
 <body class="min-h-screen flex flex-col selection:bg-[#96432b] selection:text-white">
 
   <!-- Header -->
-  <header class="sticky top-0 z-40 bg-[#f6f1e8]/90 backdrop-blur-md border-b border-[#e5dec9] px-4 sm:px-8 py-3.5 transition-all">
-    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <a href="https://wynnpages.com.au" target="_blank" class="w-9 h-9 rounded-xl bg-[#96432b] flex items-center justify-center text-white font-editorial italic font-bold text-lg shadow-sm" title="WynnPages Studio">
+  <header class="sticky top-0 z-40 bg-[#f6f1e8]/92 backdrop-blur-md border-b border-[#e5dec9] px-4 sm:px-8 py-3 transition-all">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+        <a href="https://wynnpages.com.au" target="_blank" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#96432b] to-[#7d3520] ring-1 ring-[#e8b948]/40 shadow-xs flex items-center justify-center text-white font-editorial italic font-bold text-base sm:text-lg shrink-0 hover:opacity-90 hover:scale-[1.02] transition-all" title="WynnPages Studio">
           W
         </a>
-        <div>
-          <span class="font-editorial text-lg sm:text-xl font-bold tracking-tight block text-stone-900 leading-tight">
-            WynnPages <span class="accent-italic font-normal text-stone-600">Digital Atelier</span>
-          </span>
-          <span class="text-[10.5px] uppercase tracking-[0.16em] text-stone-500 font-semibold block">
-            Post-Payment Revision Portal • Australian Web Engineering
-          </span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 leading-none">
+            <span class="font-editorial text-base sm:text-lg font-bold tracking-tight text-stone-900">
+              WynnPages
+            </span>
+            <span class="accent-italic font-normal text-stone-600 text-sm sm:text-base">
+              Digital Atelier
+            </span>
+          </div>
+          <div class="text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.16em] text-stone-500 font-semibold mt-1 truncate">
+            <span>Bespoke Revision Studio</span>
+            <span class="hidden md:inline text-stone-400 font-light"> • Australian Web Engineering</span>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <a id="header-demo-link" href="#" target="_blank" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#fcf9f3] hover:bg-[#efe7d8] border border-[#d8cca6] text-[#96432b] transition-colors">
+      <!-- Right Actions & Haute Couture Trust Capsule -->
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <a id="header-demo-link" href="#" target="_blank" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/80 hover:bg-white border border-[#ded4c3] text-[#96432b] shadow-2xs hover:shadow-xs transition-all">
           <span>👁️ View Live Demo</span>
-          <span class="text-[10px]">↗</span>
+          <span class="text-[10px] opacity-70">↗</span>
         </a>
-        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-          ● $599 AUD Secured
-        </span>
+
+        <!-- Luxury Trust Badge (Horizontal, Non-wrapping, Refined Alabaster Capsule) -->
+        <div class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#e2d7c5] shadow-2xs whitespace-nowrap shrink-0">
+          <span class="relative flex h-2 w-2 shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+          </span>
+          <span id="header-price-tag" class="text-xs sm:text-[13px] font-bold text-stone-900 tracking-tight">$599 AUD</span>
+          <span class="h-2.5 w-[1px] bg-stone-200"></span>
+          <span class="text-[9.5px] sm:text-[10px] uppercase tracking-wider text-emerald-800 font-bold">Secured</span>
+        </div>
       </div>
+
     </div>
   </header>
 
@@ -607,6 +625,11 @@
 
         const bizName = c.businessName || c.name || 'Your Business';
         displayBizName.textContent = bizName;
+
+        const priceTag = document.getElementById('header-price-tag');
+        if (priceTag && (c.dealStatus === 'flash_deal' || c.dealType === 'flash_deal_50')) {
+          priceTag.textContent = '$299 AUD';
+        }
 
         const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
         if (headerDemoLink) headerDemoLink.href = demoUrl;
