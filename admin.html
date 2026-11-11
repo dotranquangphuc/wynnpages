@@ -2,9 +2,16 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>WynnPages — Studio Command Center (/admin)</title>
   <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#96432b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WynnStudio">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="apple-touch-startup-image" href="/assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,11 +19,17 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: #f6f1e8;
       color: #231f1a;
       -webkit-font-smoothing: antialiased;
+      padding-top: var(--sat);
+      padding-bottom: var(--sab);
     }
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
@@ -128,6 +141,13 @@
       </div>
 
       <div id="header-actions" class="hidden items-center gap-2 flex-wrap">
+        <button id="btn-open-activity" type="button" class="relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 hover:border-amber-400 text-xs font-bold text-amber-950 transition-all shadow-2xs cursor-pointer" title="Xem 20 hoạt động mới nhất của khách">
+          <span class="relative flex h-2 w-2">
+            <span id="activity-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 hidden"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+          </span>
+          <span>🔔 Hoạt Động (<span id="activity-badge-count">0</span>)</span>
+        </button>
         <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs cursor-pointer">
           <span>🔑</span>
           <span>Cấu hình API &amp; Google Drive</span>
@@ -755,6 +775,46 @@
             <input type="password" id="cfg-gemini-key" placeholder="AIzaSy... (Tuỳ chọn - dùng chung Google Key)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
+
+        <!-- Section 7: Telegram Bot Alerts (Instant iOS Push) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-sky-50/90 to-blue-50/60 border border-sky-200 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📱</span>
+              <p class="font-extrabold text-sky-950">7. Báo Động iPhone Qua Telegram Bot (Khuyên Dùng Cho iOS)</p>
+            </div>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-200 text-sky-900 uppercase">iOS 0s Delay</span>
+          </div>
+          <p class="text-[11px] text-sky-900 leading-relaxed">
+            Nhận thông báo đẩy có chuông &amp; rung ngay trên màn hình khoá iPhone mỗi khi:
+            <br>• 👀 <strong>Khách mở xem Demo</strong> (báo tên tiệm &amp; thiết bị)
+            <br>• 💰 <strong>Khách thanh toán $599 AUD</strong> qua Stripe
+            <br>• 📝 <strong>Khách gửi form chỉnh sửa 1 vòng</strong> (sẵn sàng bấm AI sửa web)
+            <br>• 🌐 <strong>Khách cập nhật tên miền chính thức</strong>
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <div>
+              <label class="block text-[11px] font-bold text-sky-950 mb-1">Telegram Bot Token</label>
+              <input type="password" id="cfg-telegram-bot-token" placeholder="123456789:ABCdefGhI..." class="atelier-input w-full rounded-xl px-3.5 py-2 text-xs font-mono">
+              <span class="text-[10px] text-sky-700 block mt-0.5">Tạo bot miễn phí bằng cách chat với <strong>@BotFather</strong> trên Telegram</span>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-sky-950 mb-1">Telegram Chat ID Của Bạn</label>
+              <input type="text" id="cfg-telegram-chat-id" placeholder="987654321" class="atelier-input w-full rounded-xl px-3.5 py-2 text-xs font-mono">
+              <span class="text-[10px] text-sky-700 block mt-0.5">Lấy Chat ID bằng cách chat với <strong>@userinfobot</strong></span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <button type="button" id="btn-test-telegram-notify" class="px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-2xs cursor-pointer">
+              <span>🔔 Gửi Thử Thông Báo Đến iPhone</span>
+            </button>
+            <button type="button" id="btn-enable-web-push" class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 font-bold text-xs inline-flex items-center gap-1.5 shadow-2xs cursor-pointer">
+              <span>📲 Bật Thêm Web Push Trên Safari</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
@@ -1352,6 +1412,45 @@
             <span>✅ Đã Gửi Qua Facebook</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer: Live Activity Feed (Nhật ký hoạt động khách hàng) -->
+  <div id="modal-activity-feed" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end transition-opacity">
+    <div class="bg-white w-full max-w-md h-full shadow-2xl border-l border-[#e5dec9] flex flex-col p-5 sm:p-6 space-y-4 overflow-hidden">
+      <div class="flex items-center justify-between border-b border-[#f0eade] pb-3.5">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center text-lg font-bold">🔔</span>
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-stone-900">Nhật Ký Hoạt Động (Live Feed)</h3>
+            <p class="text-[11px] text-stone-500">20 sự kiện khách hàng mới nhất</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-clear-activity-feed" class="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-600 cursor-pointer">
+            Xoá
+          </button>
+          <button type="button" id="btn-close-activity-feed" class="text-stone-400 hover:text-stone-800 text-lg font-bold p-1 cursor-pointer">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Feed Container -->
+      <div id="activity-feed-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
+        <div class="text-center py-12 text-stone-400">
+          <span class="text-3xl block mb-2">📭</span>
+          <span>Chưa có hoạt động mới nào</span>
+        </div>
+      </div>
+
+      <!-- Footer Action -->
+      <div class="pt-3 border-t border-[#f0eade] flex items-center justify-between text-xs text-stone-500">
+        <span>⚡ Tự động cập nhật mỗi 30s</span>
+        <button type="button" id="btn-refresh-feed" class="text-[#96432b] font-bold hover:underline cursor-pointer">
+          ↻ Làm mới ngay
+        </button>
       </div>
     </div>
   </div>
@@ -4917,6 +5016,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (cfgGooglePlacesKey) cfgGooglePlacesKey.value = localCreds.googlePlacesApiKey || '';
         const cfgGeminiKey = document.getElementById('cfg-gemini-key');
         if (cfgGeminiKey) cfgGeminiKey.value = localCreds.geminiApiKey || '';
+
+        const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
+        const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
+        if (cfgTgToken) cfgTgToken.value = localCreds.telegramBotToken || '';
+        if (cfgTgChat) cfgTgChat.value = localCreds.telegramChatId || '';
+        fetch('/api/telegram-config?key=' + encodeURIComponent(adminKey)).then(r => r.json()).then(d => {
+          if (d && d.ok) {
+            if (cfgTgToken && !cfgTgToken.value) cfgTgToken.value = d.botToken || '';
+            if (cfgTgChat && !cfgTgChat.value) cfgTgChat.value = d.chatId || '';
+          }
+        }).catch(() => {});
+
         settingsModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
@@ -4928,6 +5039,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           saveBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang lưu...</span>';
         }
         const cfgGemKey = document.getElementById('cfg-gemini-key');
+        const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
+        const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
+
         localCreds = {
           clicksendUsername: cfgClicksendUser.value.trim(),
           clicksendApiKey: cfgClicksendKey.value.trim(),
@@ -4937,10 +5051,21 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : '',
           cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : '',
           googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : '',
-          geminiApiKey: cfgGemKey ? cfgGemKey.value.trim() : ''
+          geminiApiKey: cfgGemKey ? cfgGemKey.value.trim() : '',
+          telegramBotToken: cfgTgToken ? cfgTgToken.value.trim() : '',
+          telegramChatId: cfgTgChat ? cfgTgChat.value.trim() : ''
         };
         localStorage.setItem('wynn_messaging_creds', JSON.stringify(localCreds));
         if (typeof updateLeadKeyIndicator === 'function') updateLeadKeyIndicator();
+
+        if (localCreds.telegramBotToken || localCreds.telegramChatId) {
+          fetch('/api/telegram-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ botToken: localCreds.telegramBotToken, chatId: localCreds.telegramChatId })
+          }).catch(() => {});
+        }
+
         await runAdminAction({ action: 'save_creds', cfToken: localCreds.cfApiToken, credentials: localCreds }, { skipReload: true }).catch(() => {});
         if (saveBtn) {
           saveBtn.disabled = false;
@@ -4948,8 +5073,73 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         }
         settingsModal.classList.add('hidden');
         loadClients();
-        showToast('Đã lưu cấu hình ClickSend, Resend, Google Drive & Google Places Key!');
+        showToast('Đã lưu cấu hình ClickSend, Resend, Telegram Bot & Google Keys!');
       });
+
+      // Test Telegram Notifications
+      const btnTestTg = document.getElementById('btn-test-telegram-notify');
+      if (btnTestTg) {
+        btnTestTg.addEventListener('click', async () => {
+          const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
+          const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
+          const botToken = cfgTgToken ? cfgTgToken.value.trim() : '';
+          const chatId = cfgTgChat ? cfgTgChat.value.trim() : '';
+          if (!botToken || !chatId) {
+            showToast('Vui lòng nhập Telegram Bot Token và Chat ID trước!', true);
+            return;
+          }
+          btnTestTg.disabled = true;
+          btnTestTg.innerHTML = '<span class="wynn-spin"></span><span>Đang gửi thử...</span>';
+          try {
+            await fetch('/api/telegram-config', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ botToken, chatId })
+            });
+            const res = await fetch('/api/test-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: '🔔 Thử nghiệm thông báo WynnPages Studio PWA thành công trên iPhone của bạn!' })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              showToast('🎉 Đã gửi thông báo thử nghiệm! Hãy kiểm tra Telegram trên iPhone.');
+              if (typeof fetchActivityFeed === 'function') fetchActivityFeed();
+            } else {
+              showToast('Gửi thông báo thất bại: ' + (data.error || 'Lỗi server'), true);
+            }
+          } catch (err) {
+            showToast('Lỗi: ' + err.message, true);
+          } finally {
+            btnTestTg.disabled = false;
+            btnTestTg.innerHTML = '<span>🔔 Gửi Thử Thông Báo Đến iPhone</span>';
+          }
+        });
+      }
+
+      const btnEnableWebPush = document.getElementById('btn-enable-web-push');
+      if (btnEnableWebPush) {
+        btnEnableWebPush.addEventListener('click', async () => {
+          if (!('Notification' in window)) {
+            showToast('Trình duyệt này không hỗ trợ Web Push.', true);
+            return;
+          }
+          try {
+            const perm = await Notification.requestPermission();
+            if (perm === 'granted') {
+              showToast('✅ Đã cấp quyền thông báo Web Push trên trình duyệt!');
+              new Notification('WynnPages Studio Alert', {
+                body: 'Thông báo đẩy đã sẵn sàng hoạt động trên thiết bị của bạn!',
+                icon: '/assets/icon-192.png'
+              });
+            } else {
+              showToast('Bạn đã từ chối quyền thông báo trên trình duyệt.', true);
+            }
+          } catch (err) {
+            showToast('Lỗi cấp quyền: ' + err.message, true);
+          }
+        });
+      }
 
       const btnCopyGas = document.getElementById('btn-copy-gas-script');
       if (btnCopyGas) {
@@ -6678,6 +6868,143 @@ https://wynnpages.com.au`;
           el.textContent = text;
         });
       }, 1000);
+
+      // ================================================================
+      // ACTIVITY FEED DRAWER & LIVE CLIENT NOTIFICATIONS
+      // ================================================================
+      const btnOpenActivity = document.getElementById('btn-open-activity');
+      const modalActivityFeed = document.getElementById('modal-activity-feed');
+      const btnCloseActivityFeed = document.getElementById('btn-close-activity-feed');
+      const btnClearActivityFeed = document.getElementById('btn-clear-activity-feed');
+      const btnRefreshFeed = document.getElementById('btn-refresh-feed');
+      const activityFeedList = document.getElementById('activity-feed-list');
+      const activityBadgeCount = document.getElementById('activity-badge-count');
+      const activityPing = document.getElementById('activity-ping');
+
+      function formatTimeAgo(isoString) {
+        if (!isoString) return '';
+        const diffMs = Date.now() - new Date(isoString).getTime();
+        const mins = Math.floor(diffMs / 60000);
+        if (mins < 1) return 'Vừa xong';
+        if (mins < 60) return `${mins} phút trước`;
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return `${hours} giờ trước`;
+        return new Date(isoString).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+
+      async function fetchActivityFeed() {
+        try {
+          const res = await fetch('/api/activity-feed');
+          if (!res.ok) return;
+          const data = await res.json();
+          const events = data.events || [];
+          if (activityBadgeCount) activityBadgeCount.textContent = events.length;
+          if (activityPing) {
+            if (events.length > 0) activityPing.classList.remove('hidden');
+            else activityPing.classList.add('hidden');
+          }
+
+          if (!activityFeedList) return;
+          if (!events.length) {
+            activityFeedList.innerHTML = `
+              <div class="text-center py-12 text-stone-400">
+                <span class="text-3xl block mb-2">📭</span>
+                <span>Chưa có hoạt động mới nào</span>
+              </div>
+            `;
+            return;
+          }
+
+          activityFeedList.innerHTML = events.map(evt => {
+            const timeAgo = formatTimeAgo(evt.timestamp);
+            let borderCls = 'border-amber-200 bg-amber-50/40';
+            if (evt.type === 'payment_received') borderCls = 'border-emerald-300 bg-emerald-50/60';
+            else if (evt.type === 'revision_submitted') borderCls = 'border-purple-200 bg-purple-50/50';
+            else if (evt.type === 'domain_updated') borderCls = 'border-blue-200 bg-blue-50/50';
+
+            return `
+              <div class="p-3 rounded-2xl border ${borderCls} space-y-1.5 transition-all hover:shadow-xs cursor-pointer group" data-feed-slug="${escapeHtml(evt.slug || '')}" data-feed-name="${escapeHtml(evt.clientName || '')}">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-base">${evt.icon || '🔔'}</span>
+                    <strong class="text-stone-900 font-extrabold truncate text-xs">${escapeHtml(evt.title)}</strong>
+                  </div>
+                  <span class="text-[10px] text-stone-400 font-mono shrink-0">${timeAgo}</span>
+                </div>
+                <p class="text-[11.5px] text-stone-700 leading-snug break-words">${escapeHtml(evt.message)}</p>
+                ${evt.clientName ? `
+                  <div class="pt-0.5 flex items-center justify-between text-[10.5px]">
+                    <span class="text-[#96432b] font-bold group-hover:underline">Tiệm: ${escapeHtml(evt.clientName)}</span>
+                    <span class="text-stone-400">Chạm để mở xem ➔</span>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('');
+
+          // Click on activity item -> jump to card
+          activityFeedList.querySelectorAll('[data-feed-name]').forEach(el => {
+            el.addEventListener('click', () => {
+              const name = el.getAttribute('data-feed-name');
+              const slug = el.getAttribute('data-feed-slug');
+              if (modalActivityFeed) modalActivityFeed.classList.add('hidden');
+              if (searchInput && (name || slug)) {
+                searchInput.value = name || slug;
+                searchQuery = searchInput.value;
+                applyFiltersAndRender();
+                setTimeout(() => {
+                  const targetCard = document.querySelector(`[data-card-cid]`);
+                  if (targetCard) targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 150);
+              }
+            });
+          });
+        } catch (_) {}
+      }
+
+      if (btnOpenActivity && modalActivityFeed) {
+        btnOpenActivity.addEventListener('click', () => {
+          modalActivityFeed.classList.remove('hidden');
+          fetchActivityFeed();
+        });
+      }
+      if (btnCloseActivityFeed && modalActivityFeed) {
+        btnCloseActivityFeed.addEventListener('click', () => {
+          modalActivityFeed.classList.add('hidden');
+        });
+      }
+      if (modalActivityFeed) {
+        modalActivityFeed.addEventListener('click', (e) => {
+          if (e.target === modalActivityFeed) modalActivityFeed.classList.add('hidden');
+        });
+      }
+      if (btnRefreshFeed) {
+        btnRefreshFeed.addEventListener('click', () => fetchActivityFeed());
+      }
+      if (btnClearActivityFeed) {
+        btnClearActivityFeed.addEventListener('click', async () => {
+          await fetch('/api/activity-feed/clear', { method: 'POST' }).catch(() => {});
+          fetchActivityFeed();
+          showToast('Đã xoá toàn bộ nhật ký hoạt động.');
+        });
+      }
+
+      // Initial feed load & 30s background poll
+      fetchActivityFeed();
+      setInterval(fetchActivityFeed, 30000);
+
+      // Register PWA Service Worker for iOS & Desktop
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => {
+              console.log('WynnStudio PWA ServiceWorker active:', reg.scope);
+            })
+            .catch(err => {
+              console.log('SW registration error:', err);
+            });
+        });
+      }
 
       // Auto-login on load if key is saved in localStorage
       if (adminKey) {

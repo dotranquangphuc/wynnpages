@@ -1506,13 +1506,13 @@ function buildClaimBarSnippet(client) {
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 880px;
-      background: rgba(26, 20, 16, 0.74);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(229, 222, 201, 0.28);
+      background: rgba(26, 23, 21, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(229, 222, 201, 0.24);
       border-radius: 22px;
       padding: 12px 18px 12px 18px;
-      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.55);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1524,7 +1524,7 @@ function buildClaimBarSnippet(client) {
     }
     .claim-bar.deal-active {
       border: 1.5px solid rgba(232, 185, 72, 0.75);
-      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.55), 0 0 28px rgba(232, 185, 72, 0.3);
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(232, 185, 72, 0.35);
       padding-top: 16px;
     }
     .claim-deal-floating-seal {
@@ -1578,9 +1578,9 @@ function buildClaimBarSnippet(client) {
         box-shadow: 0 12px 30px rgba(200, 138, 27, 0.75), 0 3px 8px rgba(0,0,0,0.5), 0 0 16px rgba(255, 243, 209, 0.7);
       }
     }
-    .claim-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+    .claim-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .claim-badge {
-      width: 42px; height: 42px; border-radius: 13px;
+      width: 44px; height: 44px; border-radius: 13px;
       background: #96432b;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       text-decoration: none;
@@ -1599,28 +1599,52 @@ function buildClaimBarSnippet(client) {
     .claim-badge-img {
       width: 100%; height: 100%; object-fit: contain; display: block;
     }
-    .claim-meta { min-width: 0; flex: 1; }
+    .claim-meta { min-width: 0; }
     .claim-tag {
-      font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
       letter-spacing: 0.08em; color: #fbdeb9; display: flex; align-items: center; gap: 6px;
-      white-space: nowrap; margin-bottom: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
     }
+    .claim-studio-link {
+      color: #e8b948;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 3px;
+      background: rgba(232, 185, 72, 0.12);
+      border: 1px solid rgba(232, 185, 72, 0.3);
+      padding: 1px 7px;
+      border-radius: 6px;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
+    }
+    .claim-studio-link:hover {
+      background: rgba(232, 185, 72, 0.22);
+      border-color: rgba(232, 185, 72, 0.6);
+      color: #ffffff;
+      transform: translateY(-0.5px);
+    }
+    .claim-deal-badge {
+      background: linear-gradient(135deg, #d49b28 0%, #b87b1c 100%);
+      color: #1c1917;
+      font-weight: 800;
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-size: 9.5px;
+      letter-spacing: 0.04em;
+    }
+    .claim-ext-arrow { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
+    .claim-bullet { color: rgba(251, 222, 185, 0.4); font-size: 8px; flex-shrink: 0; }
+    .claim-tag-text { color: rgba(251, 222, 185, 0.85); font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
     .claim-title {
-      display: block;
-      white-space: normal;
-      line-height: 1.28;
+      display: flex; align-items: baseline; gap: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .claim-for-text {
-      font-size: 10.5px; font-weight: 600; color: #c4bbb0; letter-spacing: 0.04em; text-transform: uppercase; display: block; margin-bottom: 1px;
+      font-size: 11.5px; font-weight: 600; color: #b8b0a5; letter-spacing: 0.03em; text-transform: uppercase; flex-shrink: 0;
     }
     .claim-biz-highlight {
-      font-size: 16px; font-weight: 800; color: #ffffff;
+      font-size: 16.5px; font-weight: 800; color: #ffffff;
       letter-spacing: -0.01em; text-shadow: 0 1px 4px rgba(0,0,0,0.6);
-      display: block;
-      white-space: normal;
-      overflow: visible;
-      text-overflow: clip;
-      word-break: break-word;
+      overflow: hidden; text-overflow: ellipsis;
     }
     .claim-countdown-wrap {
       display: inline-flex;
@@ -1648,6 +1672,28 @@ function buildClaimBarSnippet(client) {
     .claim-actions {
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
+    .claim-studio-btn {
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(229, 222, 201, 0.22);
+      color: #f6f1e8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 11px 15px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .claim-studio-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(232, 185, 72, 0.5);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
     .claim-btn {
       position: relative;
       overflow: hidden;
@@ -1655,9 +1701,9 @@ function buildClaimBarSnippet(client) {
       background: linear-gradient(135deg, #96432b 0%, #a84b31 100%);
       color: #ffffff;
       text-decoration: none;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 800;
-      padding: 12px 24px;
+      padding: 12px 22px;
       border-radius: 14px;
       display: inline-flex;
       align-items: center;
@@ -1719,27 +1765,24 @@ function buildClaimBarSnippet(client) {
       .claim-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 12px 14px 12px 14px;
+        padding: 14px 14px 10px 14px;
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px;
         border-radius: 20px;
         width: calc(100% - 20px);
         max-width: 100%;
         overflow: visible;
-        background: rgba(26, 20, 16, 0.78);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
       }
       .claim-bar.deal-active {
-        padding-top: 24px;
+        padding-top: 26px;
       }
       .claim-deal-floating-seal {
-        top: -14px;
+        top: -15px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 10.5px;
-        padding: 4px 12px;
-        gap: 5px;
+        font-size: 11px;
+        padding: 5px 14px;
+        gap: 6px;
       }
       @keyframes seal-float-pulse {
         0%, 100% {
@@ -1755,14 +1798,14 @@ function buildClaimBarSnippet(client) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 0;
+        gap: 6px;
         width: 100%;
       }
       .claim-btn {
         width: 100%;
         justify-content: center;
-        padding: 13px 14px;
-        font-size: 14px;
+        padding: 13px 12px;
+        font-size: 13.5px;
         font-weight: 850;
         white-space: normal;
         text-align: center;
@@ -1775,15 +1818,23 @@ function buildClaimBarSnippet(client) {
         line-height: 1.25;
         word-break: keep-all;
       }
-      .claim-for-text { font-size: 9.5px; }
-      .claim-biz-highlight {
-        font-size: 15px;
-        line-height: 1.25;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-        word-break: break-word;
+      .claim-studio-btn {
+        justify-content: center;
+        padding: 5px 10px;
+        font-size: 11px;
+        border: none;
+        background: transparent;
+        color: #b8b0a5;
+        text-decoration: underline;
       }
+      .claim-studio-btn:hover {
+        background: transparent;
+        color: #ffffff;
+      }
+      .claim-tag-text { display: none; }
+      .claim-bullet { display: none; }
+      .claim-for-text { font-size: 10px; }
+      .claim-biz-highlight { font-size: 15px; }
     }
   </style>
   <div class="claim-bar ${isFlashDeal ? 'deal-active' : ''}">
@@ -1894,6 +1945,11 @@ function injectClaimBarIntoHtml(rawHtml, client) {
         if (!s) return;
         var q = window.location.search || '';
         if (q.indexOf('admin=') !== -1 || q.indexOf('preview=') !== -1 || q.indexOf('bar=1') !== -1) return;
+        if (window.localStorage && window.localStorage.getItem('wynn_admin_key')) return;
+        var now = Date.now();
+        var last = window.localStorage ? window.localStorage.getItem('wynn_dv_' + s) : null;
+        if (last && (now - parseInt(last, 10)) < 30 * 60 * 1000) return;
+        if (window.localStorage) window.localStorage.setItem('wynn_dv_' + s, now);
         fetch('/api/track-view?slug=' + encodeURIComponent(s), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2093,12 +2149,75 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
   return html;
 }
 
+// Record in-app activity feed event in KV and broadcast instant push (Telegram Bot + Web Push)
+async function recordActivityAndNotify({ type, title, message, clientName, slug, env, ctx }) {
+  if (!env || !env.WYNN_KV) return;
+  const nowIso = new Date().toISOString();
+  const eventId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+
+  let icon = '🔔';
+  if (type === 'demo_viewed') icon = '👀';
+  else if (type === 'payment_received') icon = '💰';
+  else if (type === 'revision_submitted') icon = '📝';
+  else if (type === 'domain_updated') icon = '🌐';
+
+  const newEvent = {
+    id: eventId,
+    type,
+    icon,
+    title,
+    message,
+    clientName: clientName || '',
+    slug: slug || '',
+    timestamp: nowIso
+  };
+
+  // 1. Prepend to in-app activity feed in KV (keep last 30 events)
+  try {
+    const existingEvents = (await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || [];
+    const updatedEvents = [newEvent, ...existingEvents.filter(e => e.id !== eventId)].slice(0, 30);
+    await env.WYNN_KV.put('activity_events', JSON.stringify(updatedEvents)).catch(() => {});
+  } catch (_) {}
+
+  // 2. Dispatch Telegram Bot Alert (Instant Native iOS Push)
+  const sendTelegram = async () => {
+    try {
+      const tgConfig = await env.WYNN_KV.get('telegram_config', 'json').catch(() => null);
+      const botToken = (tgConfig && tgConfig.botToken) || env.TELEGRAM_BOT_TOKEN;
+      const chatId = (tgConfig && tgConfig.chatId) || env.TELEGRAM_CHAT_ID;
+      if (botToken && chatId) {
+        const text = `${icon} *${title}*\n\n${message}\n\n👉 [Mở Studio Command](https://wynnpages.com.au/admin.html)`;
+        await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: false
+          })
+        }).catch(() => {});
+      }
+    } catch (_) {}
+  };
+
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(sendTelegram());
+  } else {
+    sendTelegram().catch(() => {});
+  }
+}
+
 // Track client viewing their bespoke demo website (0ms real-time in KV + async Stripe sync)
 async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx }) {
   if (!slug || !env || !env.WYNN_KV) return null;
   try {
     const url = request ? new URL(request.url) : null;
+    const cookieHeader = (request && request.headers.get('cookie')) || '';
     if (url && (url.searchParams.get('admin') || url.searchParams.get('preview') || url.searchParams.get('bar') === '1')) {
+      return null;
+    }
+    if (cookieHeader.includes('wynn_admin_key') || cookieHeader.includes('wynn_admin_session')) {
       return null;
     }
     const cleanSlug = slugifyName(slug);
@@ -2119,6 +2238,23 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
       lastDevice: device
     };
     await env.WYNN_KV.put(kvKey, JSON.stringify(updateObj)).catch(() => {});
+
+    // Real-Time Event & Push Notification (Rate-limited to 1 alert per 30 minutes per client)
+    const lockKey = `demo_notify_lock:${cleanSlug}`;
+    const isLocked = await env.WYNN_KV.get(lockKey).catch(() => null);
+    if (!isLocked) {
+      await env.WYNN_KV.put(lockKey, '1', { expirationTtl: 1800 }).catch(() => {});
+      const bizName = (client && (client.businessName || client.name)) || cleanSlug;
+      recordActivityAndNotify({
+        type: 'demo_viewed',
+        title: '👀 Khách Đang Xem Demo!',
+        message: `"${bizName}" vừa mở xem bản Demo của bạn! (${device})`,
+        clientName: bizName,
+        slug: cleanSlug,
+        env,
+        ctx
+      });
+    }
 
     // Asynchronously update Stripe customer metadata if customer record is known (or search by slug)
     const targetId = (client && client.id) || null;
@@ -3866,9 +4002,20 @@ export default {
         }
 
         // Notify studio admin via Resend
+        const customerLabel = bizName || (cust && (cust.metadata && cust.metadata.business_name || cust.name)) || 'A client';
+        const domainLabel = cleanHost || (cust && cust.metadata && cust.metadata.live_url) || rawDomain || 'TBD';
+
+        recordActivityAndNotify({
+          type: 'domain_updated',
+          title: '🌐 Tên Miền Đã Cập Nhật!',
+          message: `${customerLabel} đã cập nhật thông tin tên miền ${domainLabel}. Sẵn sàng trỏ DNS!`,
+          clientName: customerLabel,
+          slug: domainLabel,
+          env,
+          ctx
+        });
+
         if (cfg.resendApiKey) {
-          const customerLabel = bizName || (cust && (cust.metadata && cust.metadata.business_name || cust.name)) || 'A client';
-          const domainLabel = cleanHost || (cust && cust.metadata && cust.metadata.live_url) || rawDomain || 'TBD';
           const emailHtml = `
             <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#fcf9f3;border:1px solid #e5dec9;border-radius:18px;">
               <h2 style="color:#96432b;margin-top:0;font-size:20px;">🎉 Client Completed Domain Setup!</h2>
@@ -3900,6 +4047,54 @@ export default {
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
+    }
+
+    // 4b-activity. Activity Feed & Real-Time Push Notification Engine
+    if (url.pathname === '/api/activity-feed' && request.method === 'GET') {
+      const events = (env && env.WYNN_KV ? await env.WYNN_KV.get('activity_events', 'json').catch(() => null) : []) || [];
+      return new Response(JSON.stringify({ ok: true, events: events.slice(0, 20) }), { status: 200, headers: corsHeaders });
+    }
+
+    if (url.pathname === '/api/activity-feed/clear' && request.method === 'POST') {
+      if (env && env.WYNN_KV) {
+        await env.WYNN_KV.put('activity_events', JSON.stringify([])).catch(() => {});
+      }
+      return new Response(JSON.stringify({ ok: true, events: [] }), { status: 200, headers: corsHeaders });
+    }
+
+    if (url.pathname === '/api/telegram-config' && request.method === 'GET') {
+      const conf = (env && env.WYNN_KV ? await env.WYNN_KV.get('telegram_config', 'json').catch(() => null) : null) || {};
+      return new Response(JSON.stringify({
+        ok: true,
+        botToken: conf.botToken || env.TELEGRAM_BOT_TOKEN || '',
+        chatId: conf.chatId || env.TELEGRAM_CHAT_ID || '',
+        hasBot: Boolean(conf.botToken || env.TELEGRAM_BOT_TOKEN)
+      }), { status: 200, headers: corsHeaders });
+    }
+
+    if (url.pathname === '/api/telegram-config' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const botToken = (body.botToken || '').trim();
+      const chatId = (body.chatId || '').trim();
+      if (env && env.WYNN_KV) {
+        await env.WYNN_KV.put('telegram_config', JSON.stringify({ botToken, chatId, updatedAt: new Date().toISOString() })).catch(() => {});
+      }
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+    }
+
+    if (url.pathname === '/api/test-notify' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const customMsg = (body.message || '').trim() || 'Đây là thông báo thử nghiệm từ WynnPages Studio PWA đến iPhone của bạn!';
+      await recordActivityAndNotify({
+        type: 'payment_received',
+        title: '🔔 Thử Nghiệm Thông Báo PWA iOS',
+        message: customMsg,
+        clientName: 'WynnPages Studio Test',
+        slug: 'test',
+        env,
+        ctx
+      });
+      return new Response(JSON.stringify({ ok: true, message: 'Đã phát tín hiệu thông báo thử nghiệm!' }), { status: 200, headers: corsHeaders });
     }
 
     // 4c. Upload Demo Bundle to Cloudflare KV Native Hosting (POST /api/upload-demo-bundle)
@@ -4303,6 +4498,17 @@ export default {
             cust.metadata.payment_status = 'paid';
             cust.metadata.stage = 'outbound_paid';
             cust.metadata.checkout_session_id = sessionId;
+
+            const paidBiz = (cust.metadata && cust.metadata.business_name) || cust.name || 'Khách hàng';
+            recordActivityAndNotify({
+              type: 'payment_received',
+              title: '💰 Đã Nhận Thanh Toán $599 AUD!',
+              message: `${paidBiz} vừa thanh toán $599 AUD qua Stripe!`,
+              clientName: paidBiz,
+              slug: cleanSlug,
+              env,
+              ctx
+            });
           }
         }
 
@@ -4424,11 +4630,6 @@ export default {
           menuFileName: body.menuFileName || '',
           menuFileUrl: savedMenuUrl,
           photosFileName: body.photosFileName || '',
-          hasDomain: body.hasDomain || '',
-          existingDomain: body.existingDomain || '',
-          desiredDomains: body.desiredDomains || '',
-          dnsMode: body.dnsMode || '',
-          domainAccessNotes: body.domainAccessNotes || '',
           notes: body.notes || '',
           submittedAt: nowIso
         };
@@ -4441,7 +4642,6 @@ export default {
         // Build summary text for Stripe metadata
         const summaryParts = [];
         if (revPayload.bizName) summaryParts.push(`Name: ${revPayload.bizName}`);
-        if (revPayload.existingDomain || revPayload.desiredDomains) summaryParts.push(`Domain: ${revPayload.existingDomain || revPayload.desiredDomains}`);
         if (revPayload.phone) summaryParts.push(`Phone: ${revPayload.phone}`);
         if (revPayload.address) summaryParts.push(`Addr: ${revPayload.address}`);
         if (revPayload.menuText || revPayload.menuFileName) summaryParts.push(`Menu: ${revPayload.menuFileName || 'Text tweaks'}`);
@@ -4457,18 +4657,6 @@ export default {
           if (revPayload.menuFileName) uP.append('metadata[revision_menu_file_name]', revPayload.menuFileName.slice(0, 200));
           if (savedMenuUrl) uP.append('metadata[revision_menu_file_url]', savedMenuUrl.slice(0, 480));
           if (revPayload.photosFileName) uP.append('metadata[revision_photos_file_name]', revPayload.photosFileName.slice(0, 200));
-          if (revPayload.hasDomain) uP.append('metadata[has_domain]', revPayload.hasDomain.slice(0, 490));
-          if (revPayload.existingDomain) {
-            const cleanEx = revPayload.existingDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-            uP.append('metadata[existing_domain]', cleanEx.slice(0, 490));
-            uP.append('metadata[live_url]', `https://${cleanEx}`);
-          }
-          if (revPayload.desiredDomains) {
-            const cleanDes = revPayload.desiredDomains.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-            uP.append('metadata[desired_domains]', cleanDes.slice(0, 490));
-          }
-          if (revPayload.dnsMode) uP.append('metadata[dns_mode]', revPayload.dnsMode.slice(0, 120));
-          if (revPayload.domainAccessNotes) uP.append('metadata[domain_access_notes]', revPayload.domainAccessNotes.slice(0, 490));
 
           await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
             method: 'POST',
@@ -4481,6 +4669,17 @@ export default {
         }
 
         // Notify Studio Admin via Email
+        const notifyBizName = revPayload.bizName || clientRecord.businessName || 'Khách hàng';
+        recordActivityAndNotify({
+          type: 'revision_submitted',
+          title: '📝 Khách Đã Gửi Sửa Web (1 Vòng)!',
+          message: `${notifyBizName} đã gửi thông tin chỉnh sửa web. Mở app để chạy AI!`,
+          clientName: notifyBizName,
+          slug: cleanSlug,
+          env,
+          ctx
+        });
+
         if (cfg.resendApiKey) {
           const bizLabel = revPayload.bizName || clientRecord.businessName || 'Client';
           const emailHtml = `
@@ -4730,6 +4929,16 @@ export default {
                   },
                   body: healP.toString()
                 }).catch(() => {});
+
+                recordActivityAndNotify({
+                  type: 'payment_received',
+                  title: '💰 Đã Nhận Thanh Toán $599 AUD!',
+                  message: `${c.businessName || c.name} vừa thanh toán $599 AUD qua Stripe!`,
+                  clientName: c.businessName || c.name,
+                  slug: c.demoSlug,
+                  env,
+                  ctx
+                });
               }
             }
           }
