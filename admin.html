@@ -2294,7 +2294,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           return;
         }
 
-        clientsContainer.innerHTML = list.map((c) => {
+        clientsContainer.innerHTML = list.map((c, index) => {
           const hasPhone = Boolean(c.phone && c.phone.trim());
           const hasValidDemo = Boolean(isValidUrl(c.demoUrl) || c.demoSlug || c.demoFilesCount);
           const resolvedLiveUrl = (c.liveUrl || '').trim();

@@ -1410,11 +1410,8 @@ function buildDealTopRibbonHtml(client) {
     .wynn-deal-top-cta:hover {
       transform: translateY(-1px);
     }
-    @media (max-width: 640px) {
-      .wynn-deal-top-bar { padding: 8px 12px; font-size: 11px; }
-      .wynn-deal-top-container { justify-content: center; text-align: center; gap: 6px; }
-      .wynn-deal-top-left { justify-content: center; }
-      .wynn-deal-top-cta { display: none; }
+    @media (max-width: 768px) {
+      .wynn-deal-top-bar { display: none !important; }
     }
   </style>
   <aside class="wynn-deal-top-bar" id="wynn-deal-top-bar" aria-label="Special Sponsorship Offer">
@@ -1724,8 +1721,8 @@ function buildClaimBarSnippet(client) {
       .claim-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 12px 14px 10px 14px;
-        bottom: 12px;
+        padding: 14px 14px 10px 14px;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px;
         border-radius: 20px;
         width: calc(100% - 20px);
@@ -1733,15 +1730,15 @@ function buildClaimBarSnippet(client) {
         overflow: visible;
       }
       .claim-bar.deal-active {
-        padding-top: 22px;
+        padding-top: 26px;
       }
       .claim-deal-floating-seal {
-        top: -14px;
+        top: -15px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 10px;
-        padding: 4px 12px;
-        gap: 5px;
+        font-size: 11px;
+        padding: 5px 14px;
+        gap: 6px;
       }
       @keyframes seal-float-pulse {
         0%, 100% {
@@ -1764,16 +1761,18 @@ function buildClaimBarSnippet(client) {
         width: 100%;
         justify-content: center;
         padding: 13px 12px;
-        font-size: 13px;
-        font-weight: 800;
+        font-size: 13.5px;
+        font-weight: 850;
         white-space: normal;
         text-align: center;
         box-sizing: border-box;
         border-radius: 14px;
+        letter-spacing: 0.01em;
       }
       .claim-btn span {
         white-space: normal;
         line-height: 1.25;
+        word-break: keep-all;
       }
       .claim-studio-btn {
         justify-content: center;
@@ -1893,10 +1892,11 @@ function injectClaimBarIntoHtml(rawHtml, client) {
     }
   }
 
-  const spacer = `<style>.wynn-claim-clearance{height:108px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:160px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
+  const spacer = `<style>.wynn-claim-clearance{height:108px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:180px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
   const snippet = spacer + buildClaimBarSnippet(client);
   let html = rawHtml;
 
+  // On desktop screens only (>= 768px), keep top ribbon as a secondary subtle luxury header bar; on mobile, completely remove top bar to eliminate duplicate clutter
   if (isFlashDeal) {
     const topBarHtml = buildDealTopRibbonHtml(client);
     if (html.includes('<body')) {
@@ -5231,11 +5231,37 @@ export default {
           const dealExpiresAt = new Date(now + hours * 3600 * 1000).toISOString();
           const dealActivatedAt = new Date(now).toISOString();
 
+          let notifyRes = null;
+          let logMsg = '';
           const uP = new URLSearchParams();
           uP.append('metadata[deal_status]', 'flash_deal');
           uP.append('metadata[deal_activated_at]', dealActivatedAt);
           uP.append('metadata[deal_expires_at]', dealExpiresAt);
           uP.append('metadata[nurture_step]', 'day7_deal_active');
+
+          // Send SMS first if notify requested, so we can save last_sms_log in the same customer update!
+          if (body.notify) {
+            let custToNotify = null;
+            const preRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+            });
+            if (preRes.ok) custToNotify = formatCustomerRecord(await preRes.json());
+
+            if (custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
+              const biz = custToNotify.businessName || custToNotify.name || 'Boutique';
+              const demoLink = custToNotify.demoUrl || custToNotify.brandedDemoUrl || (custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${custToNotify.id}.wynnpages.com.au`);
+              const niche = getIndustryNicheTerms(custToNotify.industry);
+              const text = `Hi ${biz}, WynnPages Studio has opened a 72h ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
+              notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
+              if (notifyRes) {
+                const nowIso = new Date().toISOString();
+                logMsg = notifyRes.sent
+                  ? `OK (${notifyRes.to || custToNotify.phone}) [deal_50_active] @ ${nowIso}`
+                  : `ERR: ${(notifyRes && notifyRes.reason) || 'Failed'} [deal_50_active]`;
+                uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+              }
+            }
+          }
 
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
@@ -5250,31 +5276,8 @@ export default {
           if (patchRes.ok) {
             updatedCust = formatCustomerRecord(await patchRes.json());
           }
-
-          let notifyRes = null;
-          if (body.notify && updatedCust && updatedCust.phone && effectiveCfg.clicksendApiKey) {
-            const biz = updatedCust.businessName || updatedCust.name || 'Boutique';
-            const demoLink = updatedCust.demoUrl || updatedCust.brandedDemoUrl || (updatedCust.demoSlug ? `https://${updatedCust.demoSlug}.wynnpages.com.au` : `https://${updatedCust.id}.wynnpages.com.au`);
-            const niche = getIndustryNicheTerms(updatedCust.industry);
-            const text = `Hi ${biz}, WynnPages Studio has opened a 72h ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
-            notifyRes = await sendClickSendSms({ to: updatedCust.phone, message: text, cfg: effectiveCfg });
-            if (notifyRes) {
-              const nowIso = new Date().toISOString();
-              const logMsg = notifyRes.sent
-                ? `OK (${notifyRes.to || updatedCust.phone}) [deal_50_active] @ ${nowIso}`
-                : `ERR: ${(notifyRes && notifyRes.reason) || 'Failed'}`;
-              const uPLog = new URLSearchParams();
-              uPLog.append('metadata[last_sms_log]', logMsg.slice(0, 480));
-              await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: uPLog.toString()
-              }).catch(() => {});
-              if (updatedCust) updatedCust.lastSmsLog = logMsg;
-            }
+          if (updatedCust && logMsg) {
+            updatedCust.lastSmsLog = logMsg;
           }
 
           return new Response(JSON.stringify({ ok: true, dealStatus: 'flash_deal', dealExpiresAt, client: updatedCust, notifyRes }), { status: 200, headers: corsHeaders });
