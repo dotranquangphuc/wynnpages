@@ -256,6 +256,21 @@ async function sendResendEmail({ to, subject, html, cfg }) {
   }
 }
 
+function buildDomainGuideUrl({ origin, client = {}, tab = '', ns = '' }) {
+  const rawDom = String(client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
+  const cleanDom = (rawDom && rawDom.toUpperCase() !== 'TBD') ? rawDom : '';
+  const resolvedTab = tab || ((client.existingDomain || client.liveUrl) ? 'existing' : 'new');
+  const params = new URLSearchParams();
+  if (cleanDom) params.set('domain', cleanDom);
+  const displayName = String(client.businessName || client.name || '').trim();
+  if (displayName) params.set('name', displayName);
+  if (client.email) params.set('email', String(client.email).trim());
+  if (client.id) params.set('cid', String(client.id).trim());
+  params.set('tab', resolvedTab);
+  if (ns) params.set('ns', ns);
+  return `${origin}/domain-guide?${params.toString()}`;
+}
+
 async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   const firstName = (client.name || 'mate').split(' ')[0];
   const email = client.email || '';
@@ -290,8 +305,12 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const hasExisting = Boolean(client.existingDomain);
     const isSelfNs = hasExisting && client.dnsMode === 'self_ns' && Boolean(client.cfNameservers);
     const isAlreadyDelegated = Boolean(client.domainDelegated);
-    const nsParam = isSelfNs ? `&ns=${encodeURIComponent(client.cfNameservers || '')}` : '';
-    const domainGuideUrl = `${origin}/domain-guide?domain=${encodeURIComponent(domainInfo)}&name=${encodeURIComponent(client.businessName || client.name || '')}&email=${encodeURIComponent(client.email || '')}&cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}${nsParam}`;
+    const domainGuideUrl = buildDomainGuideUrl({
+      origin,
+      client,
+      tab: hasExisting ? 'existing' : 'new',
+      ns: isSelfNs ? (client.cfNameservers || '') : ''
+    });
 
     if (isAlreadyDelegated) {
       smsText = `Hi ${firstName}, thank you! We received your WynnPages details and domain access for ${domainInfo}. Our Australian engineers are connecting SSL & high-speed DNS for you - we will notify you as soon as ${domainInfo} is officially live! Warm regards, Wynn`;
@@ -465,20 +484,51 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'outbound_paid_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
-    const demoSuccessUrl = `${origin}/revision.html?email=${encodeURIComponent(email)}&cid=${encodeURIComponent(client.id || '')}`;
-    smsText = `Hi ${firstName}, congratulations! Your payment of $599 AUD for ${bizLabel} is confirmed. Please finalize your website revisions here so we can launch: ${demoSuccessUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
-    emailSubject = `Payment Secured! Please Review Your 1-Round Revisions to Go Live`;
+    const revisionUrl = `${origin}/revision.html?email=${encodeURIComponent(email)}&cid=${encodeURIComponent(client.id || '')}`;
+    smsText = `Hi ${firstName}, congratulations! Your payment for ${bizLabel} is confirmed. Please submit your 1-round revisions here so we can prepare your launch: ${revisionUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
+    emailSubject = `Payment Secured! Submit Your 1-Round Revisions to Launch`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Payment Secured • Final Step to Go Live',
+      preheader: 'Payment Secured • 1-Round Revision Portal Ready',
       heading: `Payment Secured for ${bizLabel}!`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
-        <p>Thank you for choosing <strong>WynnPages Studio</strong>! Your payment of $599 AUD is confirmed, and your bespoke website is officially yours.</p>
-        <p>To help us connect your domain and launch your website as quickly as possible, please complete the quick 60-second domain confirmation page below:</p>
+        <p>Thank you for choosing <strong>WynnPages Studio</strong>! Your payment is confirmed, and your bespoke website is officially yours.</p>
+        <p>Use your interactive <strong>1-Round Revision Portal</strong> below to compare your demo side-by-side and submit any final menu, pricing, photo, or shop detail updates (your personalised domain connection guide follows right after):</p>
       `,
       primaryCta: {
-        label: 'Confirm Your Domain & Finalise Launch →',
-        url: demoSuccessUrl
+        label: 'Open 1-Round Revision Portal',
+        url: revisionUrl
+      }
+    });
+  } else if (stage === 'outbound_revision_submitted') {
+    const bizLabel = client.businessName || client.name || 'your business';
+    const hasExisting = Boolean(client.existingDomain || client.liveUrl);
+    const rawDomainLabel = String(client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
+    const domainLabel = (rawDomainLabel && rawDomainLabel.toUpperCase() !== 'TBD') ? rawDomainLabel : '';
+    const guideNewUrl = buildDomainGuideUrl({ origin, client, tab: 'new' });
+    const guideExistingUrl = buildDomainGuideUrl({ origin, client, tab: 'existing' });
+    const defaultGuideUrl = hasExisting ? guideExistingUrl : guideNewUrl;
+
+    smsText = `Hi ${firstName}, thank you! We received your revision updates for ${bizLabel} (ready in 24-48h). Next step: register or connect your domain in your own name using your 2-min visual guide: ${defaultGuideUrl} - Warm regards, Wynn`;
+    emailSubject = `Revisions Received! Next Step: Connect Your Domain (${bizLabel})`;
+    emailHtml = buildAtelierEmailHtml({
+      preheader: 'Revisions Locked • 2-Minute Domain Ownership Guide Inside',
+      heading: `We are polishing ${bizLabel}, ${firstName}!`,
+      bodyHtml: `
+        <p>Thank you for submitting your comprehensive revision round! Our Australian studio team has locked in your updates and is preparing your bespoke website for launch within <strong>24–48 hours</strong>.</p>
+        <p><strong>Final step while we craft your site — connect your domain${domainLabel ? ` (<strong>${domainLabel}</strong>)` : ''}:</strong> with WynnPages, you always register and own your domain <strong>100% directly in your own name</strong> with transparent annual renewals (~$15–$20 AUD/year) and zero middleman markups.</p>
+        <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:13px;line-height:1.7;">
+          <div style="margin-bottom:8px;"><strong>Option A — Need a new .com.au or .com domain? (~2 mins)</strong><br>Follow our step-by-step visual guide to register directly on <strong>VentraIP Australia</strong> and invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> (no passwords required — our Australian engineers handle all SSL &amp; DNS setup for free).</div>
+          <div><strong>Option B — Already own a domain? (~60 secs)</strong><br>Select <em>"I Already Own a Domain"</em> in the guide to delegate access or share temporary registrar login details so we can take your site live seamlessly.</div>
+        </div>
+      `,
+      primaryCta: {
+        label: hasExisting ? 'Connect My Existing Domain' : 'Buy New Domain on VentraIP (Guide)',
+        url: defaultGuideUrl
+      },
+      secondaryCta: {
+        label: hasExisting ? 'Need a New Domain? View VentraIP Guide →' : 'Already Own a Domain? Connect Here →',
+        url: hasExisting ? guideNewUrl : guideExistingUrl
       }
     });
   } else if (stage === 'outbound_followup') {
@@ -4540,6 +4590,12 @@ export default {
 
         const clientResp = {
           id: cust.id,
+          email: clientRecord.email || '',
+          dealStatus: clientRecord.dealStatus || 'standard',
+          liveUrl: clientRecord.liveUrl || '',
+          existingDomain: clientRecord.existingDomain || '',
+          desiredDomains: clientRecord.desiredDomains || '',
+          domainDelegated: Boolean(clientRecord.domainDelegated),
           businessName: (demoConfig && demoConfig.salonName) || clientRecord.businessName || clientRecord.name,
           displayPhone: (demoConfig && demoConfig.displayPhone) || clientRecord.displayPhone || clientRecord.phone,
           phone: clientRecord.phone || (demoConfig && demoConfig.smsPhone),
@@ -4648,27 +4704,7 @@ export default {
         if (revPayload.notes) summaryParts.push(`Notes: ${revPayload.notes}`);
         const revSummary = summaryParts.join(' • ') || 'Comprehensive 1-round revisions submitted';
 
-        // Update Stripe Customer metadata
-        if (cfg.stripeSecretKey) {
-          const uP = new URLSearchParams();
-          uP.append('metadata[revision_status]', 'submitted');
-          uP.append('metadata[revision_submitted_at]', nowIso);
-          uP.append('metadata[revision_summary]', revSummary.slice(0, 480));
-          if (revPayload.menuFileName) uP.append('metadata[revision_menu_file_name]', revPayload.menuFileName.slice(0, 200));
-          if (savedMenuUrl) uP.append('metadata[revision_menu_file_url]', savedMenuUrl.slice(0, 480));
-          if (revPayload.photosFileName) uP.append('metadata[revision_photos_file_name]', revPayload.photosFileName.slice(0, 200));
-
-          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: uP.toString()
-          }).catch(() => {});
-        }
-
-        // Notify Studio Admin via Email
+        // Notify Studio Admin (App/Telegram) immediately
         const notifyBizName = revPayload.bizName || clientRecord.businessName || 'Khách hàng';
         recordActivityAndNotify({
           type: 'revision_submitted',
@@ -4680,6 +4716,27 @@ export default {
           ctx
         });
 
+        // Concurrently notify Admin via Email AND send Domain Guide Email + SMS to Client
+        const shouldSendGuide = !clientRecord.domainDelegated && !(cust.metadata && cust.metadata.domain_guide_sent === 'true');
+        const clientNotifyTask = shouldSendGuide
+          ? triggerLifecycleNotification({
+              stage: 'outbound_revision_submitted',
+              client: {
+                id: cust.id,
+                name: clientRecord.name || revPayload.bizName || '',
+                businessName: revPayload.bizName || clientRecord.businessName || clientRecord.name || '',
+                email: cust.email || email || clientRecord.email || '',
+                phone: clientRecord.phone || clientRecord.displayPhone || revPayload.phone || '',
+                liveUrl: clientRecord.liveUrl || '',
+                existingDomain: clientRecord.existingDomain || '',
+                desiredDomains: clientRecord.desiredDomains || ''
+              },
+              origin: url.origin,
+              cfg
+            }).catch((err) => ({ error: err.message }))
+          : Promise.resolve(null);
+
+        let adminEmailTask = Promise.resolve(null);
         if (cfg.resendApiKey) {
           const bizLabel = revPayload.bizName || clientRecord.businessName || 'Client';
           const emailHtml = `
@@ -4696,15 +4753,64 @@ export default {
               <p style="margin-top:20px;"><a href="https://wynnpages.com.au/admin" style="display:inline-block;background:#96432b;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 22px;border-radius:12px;">Open Admin &amp; Run 1-Click AI Auto-Edit →</a></p>
             </div>
           `;
-          await sendResendEmail({
+          adminEmailTask = sendResendEmail({
             to: 'hello@wynnpages.com.au',
             subject: `⚡ [1-ROUND REVISION] ${bizLabel} submitted updates!`,
             html: emailHtml,
             cfg
+          }).catch(() => null);
+        }
+
+        const [clientNotifyRes] = await Promise.all([clientNotifyTask, adminEmailTask]);
+        const domainGuideDelivered = Boolean(
+          clientNotifyRes && (
+            (clientNotifyRes.emailResult && clientNotifyRes.emailResult.sent) ||
+            (clientNotifyRes.smsResult && clientNotifyRes.smsResult.sent)
+          )
+        );
+
+        // Update Stripe Customer metadata (revision lock + domain guide delivery logs)
+        if (cfg.stripeSecretKey) {
+          const uP = new URLSearchParams();
+          uP.append('metadata[revision_status]', 'submitted');
+          uP.append('metadata[revision_submitted_at]', nowIso);
+          uP.append('metadata[revision_summary]', revSummary.slice(0, 480));
+          if (revPayload.menuFileName) uP.append('metadata[revision_menu_file_name]', revPayload.menuFileName.slice(0, 200));
+          if (savedMenuUrl) uP.append('metadata[revision_menu_file_url]', savedMenuUrl.slice(0, 480));
+          if (revPayload.photosFileName) uP.append('metadata[revision_photos_file_name]', revPayload.photosFileName.slice(0, 200));
+          if (domainGuideDelivered) {
+            uP.append('metadata[domain_guide_sent]', 'true');
+            uP.append('metadata[domain_guide_sent_at]', nowIso);
+          }
+          if (clientNotifyRes && clientNotifyRes.smsResult) {
+            const smsSummary = clientNotifyRes.smsResult.sent
+              ? `OK (${clientNotifyRes.smsResult.to}) [outbound_revision_submitted] @ ${nowIso}`
+              : `ERR: ${clientNotifyRes.smsResult.reason || 'Skipped'} [outbound_revision_submitted]`;
+            uP.append('metadata[last_sms_log]', smsSummary.slice(0, 480));
+          }
+          if (clientNotifyRes && clientNotifyRes.emailResult) {
+            const emailSummary = clientNotifyRes.emailResult.sent
+              ? `OK (${clientNotifyRes.emailResult.to}) [outbound_revision_submitted] @ ${nowIso}`
+              : `ERR: ${clientNotifyRes.emailResult.reason || 'Skipped'} [outbound_revision_submitted]`;
+            uP.append('metadata[last_email_log]', emailSummary.slice(0, 480));
+          }
+
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
           }).catch(() => {});
         }
 
-        return new Response(JSON.stringify({ ok: true, message: 'Revisions locked and submitted successfully.' }), {
+        return new Response(JSON.stringify({
+          ok: true,
+          message: 'Revisions locked and submitted successfully.',
+          domainGuideSent: domainGuideDelivered,
+          notification: clientNotifyRes
+        }), {
           status: 200,
           headers: corsHeaders
         });
@@ -6199,7 +6305,12 @@ export default {
           if (!nsToSend) {
             return new Response(JSON.stringify({ error: 'Tên miền này chưa được đăng ký trên hệ thống tên miền quốc tế (WHOIS) nên chưa sinh được cặp Nameservers. Hãy đợi khách mua tên miền trên VentraIP trước!' }), { status: 400, headers: corsHeaders });
           }
-          const guideUrl = `${url.origin}/domain-guide?domain=${encodeURIComponent(formatted.liveUrl)}&name=${encodeURIComponent(formatted.businessName || formatted.name)}&email=${encodeURIComponent(formatted.email)}&cid=${encodeURIComponent(formatted.id)}&tab=existing&ns=${encodeURIComponent(nsToSend)}`;
+          const guideUrl = buildDomainGuideUrl({
+            origin: url.origin,
+            client: formatted,
+            tab: 'existing',
+            ns: nsToSend
+          });
           const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
           const parts = nsToSend.split(',').map(s => s.trim());
 

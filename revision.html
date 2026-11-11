@@ -222,10 +222,11 @@
               Revision Round Submitted &amp; Form Locked
             </h3>
             <p class="text-xs text-emerald-900 leading-relaxed">
-              We received your single complimentary revision round on <strong id="locked-date">recently</strong>. Our team and AI auto-editor are applying these specifications to your official code. Your website will be prepared for final launch within 24–48 hours. This form is now in <strong>Read-Only</strong> mode.
+              We received your single complimentary revision round on <strong id="locked-date">recently</strong>. Our studio team is applying these specifications to your official website, which will be ready to launch within 24–48 hours. This form is now in <strong>Read-Only</strong> mode.
             </p>
           </div>
         </div>
+        <div id="locked-domain-slot"></div>
       </div>
 
       <form id="revision-form" class="space-y-8">
@@ -772,12 +773,83 @@
           }
         }
 
-        // Hide submission card
+        const domainNextStepHtml = buildDomainNextStepHtml(clientData);
+        const lockedDomainSlot = document.getElementById('locked-domain-slot');
+        if (lockedDomainSlot) lockedDomainSlot.innerHTML = domainNextStepHtml;
+
+        // Replace submission card with launch confirmation + domain guide step
         submissionCard.innerHTML = `
-          <div class="text-center py-4 space-y-1">
+          <div class="text-center py-2 space-y-1">
             <span class="text-2xl block">🎉</span>
             <p class="font-extrabold text-stone-900 text-sm">Your Revision Round is Under Preparation</p>
             <p class="text-xs text-stone-500">Need an urgent change or extra round? Email us at <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-bold underline">hello@wynnpages.com.au</a></p>
+          </div>
+          ${domainNextStepHtml}
+        `;
+      }
+
+      function buildDomainNextStepHtml(c) {
+        const resolvedCid = (c && c.id) || cid || '';
+        const resolvedEmail = (c && c.email) || email || '';
+        const resolvedBiz = (c && (c.businessName || c.name)) || '';
+        const resolvedDom = (c && (c.liveUrl || c.existingDomain || c.desiredDomains)) || '';
+
+        const makeGuideHref = (tab) => {
+          const p = new URLSearchParams();
+          if (resolvedCid) p.set('cid', resolvedCid);
+          if (resolvedEmail) p.set('email', resolvedEmail);
+          if (resolvedBiz) p.set('name', resolvedBiz);
+          if (resolvedDom && resolvedDom.toUpperCase() !== 'TBD') p.set('domain', resolvedDom);
+          p.set('tab', tab);
+          return `/domain-guide?${p.toString()}`;
+        };
+
+        if (c && c.domainDelegated) {
+          return `
+            <div class="mt-4 rounded-2xl bg-white/95 border border-emerald-300 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+              <div class="space-y-0.5 text-xs text-emerald-950">
+                <p class="font-extrabold">✓ Domain Connection Received${resolvedDom ? ` (${escapeHtml(resolvedDom)})` : ''}</p>
+                <p class="text-emerald-800 leading-relaxed">Our Australian engineers already have your domain access and will take your website live seamlessly once revisions are complete.</p>
+              </div>
+              <a href="${escapeHtml(makeGuideHref(resolvedDom ? 'existing' : 'new'))}" target="_blank" rel="noopener" class="shrink-0 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-[11px] font-bold text-emerald-900 text-center transition-colors">
+                Update Domain Details ↗
+              </a>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="mt-4 rounded-2xl bg-white border border-[#dfd5c3] p-4 sm:p-5 shadow-xs space-y-3.5 text-left">
+            <div class="space-y-1">
+              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#fbdeb9]/70 text-[#96432b] border border-[#96432b]/20">
+                Final Step to Go Live • 100% Client Ownership
+              </span>
+              <h4 class="text-sm sm:text-base font-extrabold text-stone-900">
+                Connect Your Official Web Address (~2 Mins)
+              </h4>
+            </div>
+            <p class="text-xs text-stone-600 leading-relaxed">
+              While our Australian engineers prepare your revised website for launch (24–48 hours), follow our visual concierge guide to register a new domain directly in your own name (~$15–$20 AUD/year) or connect a domain you already own — zero technical knowledge required.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <a href="${escapeHtml(makeGuideHref('new'))}" target="_blank" rel="noopener" class="p-3.5 rounded-xl bg-gradient-to-r from-[#96432b] to-[#b84a30] hover:from-[#7d3520] hover:to-[#96432b] text-white shadow-xs transition-all flex flex-col justify-between gap-1 group">
+                <span class="text-xs font-extrabold flex items-center justify-between gap-2">
+                  <span>1. Buy a New Domain (.com.au / .com)</span>
+                  <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                </span>
+                <span class="text-[11px] text-white/85 leading-snug">Register directly on VentraIP Australia in your name &amp; invite hello@wynnpages.com.au (~2 mins)</span>
+              </a>
+              <a href="${escapeHtml(makeGuideHref('existing'))}" target="_blank" rel="noopener" class="p-3.5 rounded-xl bg-[#faf6ef] hover:bg-[#f2e9da] border border-[#d8cbb4] text-stone-900 transition-all flex flex-col justify-between gap-1 group">
+                <span class="text-xs font-extrabold flex items-center justify-between gap-2 text-[#96432b]">
+                  <span>2. I Already Own a Domain</span>
+                  <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                </span>
+                <span class="text-[11px] text-stone-600 leading-snug">Invite hello@wynnpages.com.au or share registrar details (GoDaddy, VentraIP, CrazyDomains...)</span>
+              </a>
+            </div>
+            <p class="text-[11px] text-stone-500">
+              ✓ We have also sent your personalised domain guide to your email${resolvedEmail ? ` (<strong>${escapeHtml(resolvedEmail)}</strong>)` : ''} and mobile via SMS so you can finish anytime.
+            </p>
           </div>
         `;
       }
