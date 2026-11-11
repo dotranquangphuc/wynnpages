@@ -1882,7 +1882,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Chuẩn $599 AUD</span>`;
         }
 
-        const photosCount = (c.placesPhotos && Array.isArray(c.placesPhotos)) ? c.placesPhotos.length : 0;
+        let photos = (c.placesPhotos && Array.isArray(c.placesPhotos)) ? c.placesPhotos : [];
+        if (!photos.length && typeof allStoredLeads !== 'undefined' && Array.isArray(allStoredLeads)) {
+          const matchL = allStoredLeads.find(l => (c.googlePlaceId && (l.placeId || l.id) === c.googlePlaceId) || (l.name && l.name.toLowerCase() === (c.businessName || c.name || '').toLowerCase()));
+          if (matchL && Array.isArray(matchL.photos) && matchL.photos.length) {
+            photos = matchL.photos;
+            c.placesPhotos = photos;
+          }
+        }
+        const photosCount = photos.length;
 
         // Due Action & Visual Alert
         const due = getClientDueAction(c);
@@ -1936,7 +1944,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               </div>
             </div>
 
-            ${renderClientPhotosStrip(c.placesPhotos)}
+            ${renderClientPhotosStrip(photos)}
 
             <!-- 4 Automated Urgency Triggers -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
@@ -3282,13 +3290,20 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const cid = btn.getAttribute('data-cid');
             const client = clientsCache.find(x => x.id === cid);
             if (!client) return;
+            let ph = (client.placesPhotos && Array.isArray(client.placesPhotos)) ? client.placesPhotos : [];
+            if (!ph.length && typeof allStoredLeads !== 'undefined' && Array.isArray(allStoredLeads)) {
+              const matchL = allStoredLeads.find(l => (client.googlePlaceId && (l.placeId || l.id) === client.googlePlaceId) || (l.name && l.name.toLowerCase() === (client.businessName || client.name || '').toLowerCase()));
+              if (matchL && Array.isArray(matchL.photos) && matchL.photos.length) {
+                ph = matchL.photos;
+              }
+            }
             copyAiFineArtPromptHelper({
               name: client.businessName || client.name,
               suburb: client.businessAddress,
               address: client.businessAddress,
               industry: client.industry,
               palette: client.demoPalette,
-              photos: client.placesPhotos || []
+              photos: ph
             });
           });
         });

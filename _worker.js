@@ -656,9 +656,11 @@ function formatCustomerRecord(cust) {
     placesPhotos: (() => {
       try {
         if (!m.places_photos) return [];
-        return typeof m.places_photos === 'string' ? JSON.parse(m.places_photos) : m.places_photos;
+        const parsed = typeof m.places_photos === 'string' ? JSON.parse(m.places_photos) : m.places_photos;
+        return Array.isArray(parsed) ? parsed : [];
       } catch (_) {
-        return [];
+        const matches = String(m.places_photos || '').match(/places\/[^",\s\]]+/g);
+        return matches || [];
       }
     })(),
     parkingInfo: m.parking_info || '',
@@ -1096,6 +1098,123 @@ function buildExpiredDemoHtml(client) {
 </html>`;
 }
 
+function buildDealTopRibbonHtml(client) {
+  const bizName = (client && (client.businessName || client.name)) || 'Your Business';
+  const cid = (client && client.id) || '';
+  const email = (client && client.email) || '';
+  const claimHref = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+
+  return `
+  <style>
+    .wynn-deal-top-bar {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999990;
+      background: linear-gradient(90deg, #181512 0%, #2f1912 50%, #181512 100%);
+      border-bottom: 1.5px solid rgba(232, 185, 72, 0.85);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 18px rgba(232, 185, 72, 0.3);
+      color: #f6f1e8;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 9px 16px;
+      font-size: 12px;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    .wynn-deal-top-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .wynn-deal-top-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .wynn-deal-top-badge {
+      background: linear-gradient(135deg, #e8b948 0%, #d49b28 100%);
+      color: #1c1917;
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(232, 185, 72, 0.35);
+    }
+    .wynn-deal-top-text {
+      color: #f6f1e8;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .wynn-deal-top-text strong {
+      color: #fbdeb9;
+      font-weight: 800;
+    }
+    .wynn-deal-top-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .wynn-deal-top-cd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 11px;
+      color: #fbdeb9;
+      background: rgba(232, 185, 72, 0.14);
+      border: 1px solid rgba(232, 185, 72, 0.4);
+      padding: 3px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .wynn-deal-top-cd strong {
+      color: #ffffff;
+      font-weight: 800;
+    }
+    .wynn-deal-top-cta {
+      background: linear-gradient(135deg, #b83a24 0%, #d4452a 100%);
+      color: #ffffff;
+      padding: 5px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 11px;
+      border: 1px solid rgba(232, 185, 72, 0.55);
+      white-space: nowrap;
+      transition: transform 0.15s ease;
+    }
+    .wynn-deal-top-cta:hover {
+      transform: translateY(-1px);
+    }
+    @media (max-width: 640px) {
+      .wynn-deal-top-bar { padding: 8px 12px; font-size: 11px; }
+      .wynn-deal-top-container { justify-content: center; text-align: center; gap: 6px; }
+      .wynn-deal-top-left { justify-content: center; }
+      .wynn-deal-top-cta { display: none; }
+    }
+  </style>
+  <aside class="wynn-deal-top-bar" id="wynn-deal-top-bar" aria-label="Special Sponsorship Offer">
+    <div class="wynn-deal-top-container">
+      <div class="wynn-deal-top-left">
+        <span class="wynn-deal-top-badge">⚡ 50% OFF FLASH DEAL</span>
+        <span class="wynn-deal-top-text">Exclusive Sponsorship for <strong>${bizName}</strong>: <strong>$299 AUD</strong> (Save $300 AUD)</span>
+      </div>
+      <div class="wynn-deal-top-right">
+        <span class="wynn-deal-top-cd">⏳ Ends in: <strong id="top-bar-cd-display">--:--:--</strong></span>
+        <a href="${claimHref}" class="wynn-deal-top-cta">Claim 50% Deal &rarr;</a>
+      </div>
+    </div>
+  </aside>
+  `;
+}
+
 function buildClaimBarSnippet(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const cid = (client && client.id) || '';
@@ -1116,7 +1235,7 @@ function buildClaimBarSnippet(client) {
     : `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
 
   const btnLabel = isFlashDeal
-    ? `Claim Website — $299 AUD (50% OFF)`
+    ? `Claim Website — $299 AUD (Save 50%)`
     : `Claim This Website — $599 AUD`;
 
   return `
@@ -1283,6 +1402,7 @@ function buildClaimBarSnippet(client) {
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
       animation: claim-glow 3.8s ease-in-out infinite;
+      box-sizing: border-box;
     }
     .claim-btn.claim-deal-btn {
       background: linear-gradient(135deg, #b83a24 0%, #d4452a 100%);
@@ -1331,13 +1451,54 @@ function buildClaimBarSnippet(client) {
       }
     }
     @media (max-width: 640px) {
-      .claim-bar { flex-direction: column; align-items: stretch; padding: 12px 14px; bottom: 12px; gap: 10px; border-radius: 18px; }
-      .claim-actions { display: grid; grid-template-columns: auto 1fr; gap: 8px; width: 100%; }
-      .claim-studio-btn { justify-content: center; padding: 11px 12px; font-size: 11.5px; }
-      .claim-btn { justify-content: center; padding: 11px 14px; font-size: 12px; }
+      .claim-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px 14px 10px 14px;
+        bottom: 12px;
+        gap: 10px;
+        border-radius: 20px;
+        width: calc(100% - 20px);
+        max-width: 100%;
+      }
+      .claim-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        width: 100%;
+      }
+      .claim-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 13px 12px;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: normal;
+        text-align: center;
+        box-sizing: border-box;
+        border-radius: 14px;
+      }
+      .claim-btn span {
+        white-space: normal;
+        line-height: 1.25;
+      }
+      .claim-studio-btn {
+        justify-content: center;
+        padding: 5px 10px;
+        font-size: 11px;
+        border: none;
+        background: transparent;
+        color: #b8b0a5;
+        text-decoration: underline;
+      }
+      .claim-studio-btn:hover {
+        background: transparent;
+        color: #ffffff;
+      }
       .claim-tag-text { display: none; }
       .claim-bullet { display: none; }
-      .claim-for-text { font-size: 10.5px; }
+      .claim-for-text { font-size: 10px; }
       .claim-biz-highlight { font-size: 15px; }
     }
   </style>
@@ -1378,15 +1539,15 @@ function buildClaimBarSnippet(client) {
       </div>
     </div>
     <div class="claim-actions">
+      <a href="${claimHref}" class="claim-btn ${isFlashDeal ? 'claim-deal-btn' : ''}">
+        <span>${btnLabel}</span>
+        <span class="claim-arrow">&rarr;</span>
+      </a>
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-btn" title="Explore WynnPages Web Atelier">
         <span>About Studio</span>
         <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
         </svg>
-      </a>
-      <a href="${claimHref}" class="claim-btn ${isFlashDeal ? 'claim-deal-btn' : ''}">
-        <span>${btnLabel}</span>
-        <span class="claim-arrow">&rarr;</span>
       </a>
     </div>
   </div>
@@ -1398,8 +1559,10 @@ function buildClaimBarSnippet(client) {
       function updateCd() {
         var diff = exp - Date.now();
         var el = document.getElementById('claim-cd-display');
+        var elTop = document.getElementById('top-bar-cd-display');
         if (diff <= 0) {
           if (el) el.textContent = '00:00:00 (Expired)';
+          if (elTop) elTop.textContent = 'Expired';
           setTimeout(function(){ window.location.reload(); }, 2500);
           return;
         }
@@ -1412,6 +1575,7 @@ function buildClaimBarSnippet(client) {
                   (mins < 10 ? '0' : '') + mins + 'm : ' +
                   (secs < 10 ? '0' : '') + secs + 's';
         if (el) el.textContent = str;
+        if (elTop) elTop.textContent = str;
       }
       updateCd();
       setInterval(updateCd, 1000);
@@ -1421,12 +1585,30 @@ function buildClaimBarSnippet(client) {
 }
 
 function injectClaimBarIntoHtml(rawHtml, client) {
-  const spacer = `<style>.wynn-claim-clearance{height:108px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:142px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
-  const snippet = spacer + buildClaimBarSnippet(client);
-  if (rawHtml.includes('</body>')) {
-    return rawHtml.replace('</body>', `${snippet}</body>`);
+  let isFlashDeal = false;
+  if (client && client.dealStatus === 'flash_deal' && client.dealExpiresAt) {
+    if (new Date(client.dealExpiresAt).getTime() > Date.now()) {
+      isFlashDeal = true;
+    }
   }
-  return rawHtml + snippet;
+
+  const spacer = `<style>.wynn-claim-clearance{height:108px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:160px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
+  const snippet = spacer + buildClaimBarSnippet(client);
+  let html = rawHtml;
+
+  if (isFlashDeal) {
+    const topBarHtml = buildDealTopRibbonHtml(client);
+    if (html.includes('<body')) {
+      html = html.replace(/(<body[^>]*>)/i, `$1${topBarHtml}`);
+    } else {
+      html = topBarHtml + html;
+    }
+  }
+
+  if (html.includes('</body>')) {
+    return html.replace('</body>', `${snippet}</body>`);
+  }
+  return html + snippet;
 }
 
 function buildBrandedPreviewHtml(client, options = {}) {
@@ -2167,6 +2349,26 @@ async function findStripeCustomerByEmail(email, stripeSecretKey) {
   return data.data && data.data.length > 0 ? data.data[0] : null;
 }
 
+function getIndustryNicheTerms(industry) {
+  const ind = (industry || '').toLowerCase();
+  if (/(nail|beauty|hair|barber|lash|spa|massage|skin|wellness)/.test(ind)) {
+    return { noun: 'salon', sponsorship: 'Atelier Sponsorship' };
+  }
+  if (/(cafe|coffee|restaurant|bakery|bar|bistro|dining|eatery|pizza)/.test(ind)) {
+    return { noun: 'venue', sponsorship: 'Studio Sponsorship' };
+  }
+  if (/(plumb|electr|tradie|builder|paint|carpenter|roof|cleaning|solar|hvac|landscap)/.test(ind)) {
+    return { noun: 'business', sponsorship: 'Studio Sponsorship' };
+  }
+  if (/(clinic|dental|chiro|physio|health|medical|doctor|vet)/.test(ind)) {
+    return { noun: 'practice', sponsorship: 'Studio Sponsorship' };
+  }
+  if (/(boutique|fashion|retail|store|shop|florist)/.test(ind)) {
+    return { noun: 'boutique', sponsorship: 'Studio Sponsorship' };
+  }
+  return { noun: 'business', sponsorship: 'Studio Sponsorship' };
+}
+
 async function runScheduledAutopilot(env, options = {}) {
   const force = Boolean(options.force);
   let runtimeCreds = {};
@@ -2233,8 +2435,8 @@ async function runScheduledAutopilot(env, options = {}) {
     if (!sentTimeMs || isNaN(sentTimeMs)) continue;
     const daysElapsed = (now - sentTimeMs) / (1000 * 3600 * 24);
     const biz = c.businessName || c.name || 'Boutique';
-    const demoUrl = c.demoUrl || c.brandedDemoUrl;
-    const claim50Url = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(c.id)}&deal=flash50`;
+    const demoUrl = c.demoUrl || c.brandedDemoUrl || (c.demoSlug ? `https://${c.demoSlug}.wynnpages.com.au` : `https://${c.id}.wynnpages.com.au`);
+    const niche = getIndustryNicheTerms(c.industry);
 
     // 1. Day 10+ (Hard Expire)
     if (daysElapsed >= 10 && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
@@ -2257,7 +2459,7 @@ async function runScheduledAutopilot(env, options = {}) {
     // 2. Day 9 (24h Final Warning SMS)
     if (daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning') {
       if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
-        const warningMsg = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived and withdrawn tomorrow: ${claim50Url} — WynnPages Studio`;
+        const warningMsg = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived tomorrow. View & claim here: ${demoUrl} — WynnPages Studio`;
         const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day9_warning');
@@ -2285,7 +2487,7 @@ async function runScheduledAutopilot(env, options = {}) {
 
         let smsSent = false;
         if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
-          const dealMsg = `Hi ${biz}, WynnPages Studio has opened a 72-hour Atelier Sponsorship for your salon: 50% OFF ($299 AUD, save $300 AUD). Claim your website before the window closes: ${claim50Url}`;
+          const dealMsg = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
           const smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
           smsSent = Boolean(smsRes && smsRes.sent);
           uP.append('metadata[last_sms_log]', `Day 7 Deal SMS: ${smsSent ? 'OK' : (smsRes && smsRes.reason)}`);
@@ -2306,7 +2508,7 @@ async function runScheduledAutopilot(env, options = {}) {
     // 4. Day 3-6 (Reminder SMS)
     if (daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
       if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
-        const reminderMsg = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your boutique: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
+        const reminderMsg = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
         const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day3_reminder');
@@ -4368,8 +4570,9 @@ export default {
           let notifyRes = null;
           if (body.notify && updatedCust && updatedCust.phone && effectiveCfg.clicksendApiKey) {
             const biz = updatedCust.businessName || updatedCust.name || 'Boutique';
-            const claimUrl = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(updatedCust.id)}&deal=flash50`;
-            const text = `Hi ${biz}, WynnPages Studio has opened a 72h Atelier Sponsorship for your salon: 50% OFF ($299 AUD, save $300 AUD). Claim your website before the window closes: ${claimUrl}`;
+            const demoLink = updatedCust.demoUrl || updatedCust.brandedDemoUrl || (updatedCust.demoSlug ? `https://${updatedCust.demoSlug}.wynnpages.com.au` : `https://${updatedCust.id}.wynnpages.com.au`);
+            const niche = getIndustryNicheTerms(updatedCust.industry);
+            const text = `Hi ${biz}, WynnPages Studio has opened a 72h ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
             notifyRes = await sendClickSendSms({ to: updatedCust.phone, message: text, cfg: effectiveCfg });
           }
 
@@ -4508,16 +4711,16 @@ export default {
 
           const templateKey = body.templateKey || 'day3_reminder';
           const biz = formatted.businessName || formatted.name || 'Boutique';
-          const demoUrl = formatted.demoUrl || formatted.brandedDemoUrl;
-          const claim50Url = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(formatted.id)}&deal=flash50`;
+          const demoUrl = formatted.demoUrl || formatted.brandedDemoUrl || (formatted.demoSlug ? `https://${formatted.demoSlug}.wynnpages.com.au` : `https://${formatted.id}.wynnpages.com.au`);
+          const niche = getIndustryNicheTerms(formatted.industry);
           let smsText = '';
 
           if (templateKey === 'day3_reminder') {
-            smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your boutique: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
+            smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
           } else if (templateKey === 'day7_deal') {
-            smsText = `Hi ${biz}, WynnPages Studio has opened a 72-hour Atelier Sponsorship for your salon: 50% OFF ($299 AUD, save $300 AUD). Claim your website before the window closes: ${claim50Url}`;
+            smsText = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
           } else if (templateKey === 'day9_warning') {
-            smsText = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived and withdrawn tomorrow: ${claim50Url} — WynnPages Studio`;
+            smsText = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived tomorrow. View & claim here: ${demoUrl} — WynnPages Studio`;
           } else {
             smsText = (body.customMessage || '').trim();
           }
