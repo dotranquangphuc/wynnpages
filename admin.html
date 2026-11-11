@@ -2384,11 +2384,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-teal-600 text-white shadow-xs">🟢 ĐÃ MUA $599 (CHỜ LÊN SÓNG)</span>`
                 : `<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">🟡 Đang chào hàng (Chưa trả $599)</span>`);
 
-          const domainInfo = c.existingDomain
-            ? `<span class="text-emerald-800 font-bold">Đã có domain: ${escapeHtml(c.existingDomain)}</span>`
-            : (c.desiredDomains
-                ? `<span class="text-amber-900 font-bold">Muốn đăng ký: ${escapeHtml(c.desiredDomains)}</span>`
-                : `<span class="text-stone-400 italic">Khách sẽ điền tại /demo-success sau khi trả $599</span>`);
 
           const previewOverlayUrl = c.brandedDemoUrl || `https://${encodeURIComponent(c.demoSlug || c.id)}.wynnpages.com.au`;
 
@@ -2555,23 +2550,36 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               </div>
               ` : ''}
 
-              <!-- Post-Payment Confirmation Info (Shown prominently once Paid or if domain/files exist) -->
-              <div class="bg-[#fcf9f3] rounded-2xl px-4 py-3 border border-[#ece4d5] flex flex-wrap items-center justify-between gap-4 text-xs">
-                <div class="flex flex-wrap items-center gap-5">
-                  <span>
-                    <strong class="text-stone-500">Tên miền khách chọn:</strong>
-                    <span class="ml-1">${domainInfo}</span>
-                    ${c.domainAccessNotes ? `<span class="ml-2 px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-semibold text-[11px]">🔑 Ghi chú TK/ABN: ${escapeHtml(c.domainAccessNotes)}</span>` : ''}
-                  </span>
-                  <span class="inline-flex flex-wrap items-center gap-1">
-                    <strong class="text-stone-500">File / Ghi chú cập nhật (/demo-success):</strong>
-                    ${renderAssetBadge(c, 'menu', c.menuFileName, c.menuFileId, c.menuDriveUrl, 'Giữ nguyên theo Demo')}
-                  </span>
+              <!-- Revision Portal Status Banner (Active 1-Round Submitted or Applied) -->
+              ${c.revisionStatus === 'submitted' ? `
+              <div class="bg-amber-50 rounded-2xl px-4 py-3 border border-amber-300 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-lg">🔔</span>
+                  <div>
+                    <strong class="text-amber-950 font-extrabold">Khách đã nộp yêu cầu chỉnh sửa (1 Vòng duy nhất):</strong>
+                    <span class="text-amber-900 ml-1">Đã sẵn sàng chạy AI sửa code tự động hoặc xem chi tiết.</span>
+                  </div>
                 </div>
-                <a href="/demo-success?email=${encodeURIComponent(c.email || '')}&amp;cid=${encodeURIComponent(c.id)}" target="_blank" class="text-[#96432b] font-bold hover:underline text-[11px]">
-                  Xem trang /demo-success của khách ↗
+                <div class="flex items-center gap-2">
+                  <button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs shadow-xs cursor-pointer inline-flex items-center gap-1.5">
+                    <span>🤖 Xem &amp; Chạy AI Sửa Code</span>
+                  </button>
+                  <a href="/revision?cid=${encodeURIComponent(c.id)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-white border border-[#d8cca6] text-[#96432b] font-bold text-xs hover:bg-[#fbf9f4] inline-flex items-center gap-1">
+                    <span>Mở Portal /revision ↗</span>
+                  </a>
+                </div>
+              </div>
+              ` : (c.revisionStatus === 'applied' ? `
+              <div class="bg-teal-50 rounded-2xl px-4 py-3 border border-teal-300 flex flex-wrap items-center justify-between gap-3 text-xs text-teal-950">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">✓</span>
+                  <span><strong class="text-teal-900">Yêu cầu chỉnh sửa 1 vòng:</strong> Đã được AI cập nhật vào mã nguồn web live.</span>
+                </div>
+                <a href="/revision?cid=${encodeURIComponent(c.id)}" target="_blank" class="text-teal-800 font-bold hover:underline text-xs">
+                  Xem lại Portal /revision ↗
                 </a>
               </div>
+              ` : '')}
 
               <!-- Outbound Demo Link & Live Domain + Streamlined Actions -->
               <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
@@ -3408,7 +3416,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // Outbound Sales: Copy Pre-configured Stripe Checkout Link ($599 -> redirects to /demo-success)
+        // Outbound Sales: Copy Pre-configured Stripe Checkout Link ($599 -> redirects to /revision)
         document.querySelectorAll('.btn-copy-claim').forEach((btn) => {
           btn.addEventListener('click', () => {
             const cid = btn.getAttribute('data-cid');

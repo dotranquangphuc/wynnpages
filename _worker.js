@@ -3112,6 +3112,15 @@ export default {
       }
     }
 
+    // 1-redirect. Permanent 301 Redirect deprecated /demo-success to modern Haute Couture /revision portal
+    if (url.pathname === '/demo-success' || url.pathname === '/demo-success.html') {
+      const cid = url.searchParams.get('cid') || '';
+      const email = url.searchParams.get('email') || '';
+      const sessionId = url.searchParams.get('session_id') || '';
+      const target = `/revision?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&session_id=${encodeURIComponent(sessionId)}`;
+      return Response.redirect(new URL(target, url.origin).toString(), 301);
+    }
+
     // 1a-track. Public Demo View Tracking Beacon (POST /api/track-view?slug=...)
     if (url.pathname === '/api/track-view' && (request.method === 'POST' || request.method === 'GET' || request.method === 'OPTIONS')) {
       if (request.method === 'OPTIONS') {
