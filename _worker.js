@@ -133,6 +133,50 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
   }
 }
 
+// Persist full SMS message history in Cloudflare KV + sync latest status with Stripe metadata
+async function recordSmsHistory({ customerId, env, stripeSecretKey, type, to, text, status, reason }) {
+  if (!customerId) return null;
+  const nowIso = new Date().toISOString();
+  const entry = {
+    id: 'sms_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+    timestamp: nowIso,
+    type: type || 'sms',
+    to: to || '',
+    text: text || '',
+    status: status === true || status === 'OK' || status === 'sent' ? 'OK' : 'ERR',
+    reason: reason || ''
+  };
+
+  let list = [];
+  if (env && env.WYNN_KV) {
+    const kvKey = `sms_history:${customerId}`;
+    const raw = await env.WYNN_KV.get(kvKey, 'json').catch(() => null);
+    if (Array.isArray(raw)) list = raw;
+    list.push(entry);
+    if (list.length > 50) list = list.slice(-50); // Keep last 50 messages
+    await env.WYNN_KV.put(kvKey, JSON.stringify(list)).catch(() => {});
+  }
+
+  // Update Stripe metadata last_sms_log (capped at 480 chars for Stripe 500-char limit)
+  if (stripeSecretKey) {
+    const summary = entry.status === 'OK'
+      ? `OK (${entry.to || ''}) [${entry.type}] @ ${nowIso}`
+      : `ERR: ${entry.reason || 'Failed'} [${entry.type}] @ ${nowIso}`;
+    const uP = new URLSearchParams();
+    uP.append('metadata[last_sms_log]', summary.slice(0, 480));
+    await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: uP.toString()
+    }).catch(() => {});
+  }
+
+  return { entry, totalCount: list.length };
+}
+
 function buildAtelierEmailHtml({ preheader, heading, bodyHtml, primaryCta, secondaryCta }) {
   const primaryBtn = primaryCta
     ? `<div style="margin-top:24px;margin-bottom:12px;">
@@ -1914,10 +1958,7 @@ function injectClaimBarIntoHtml(rawHtml, client) {
 
 function buildBrandedPreviewHtml(client, options = {}) {
   const isPaid = client && (client.paymentStatus === 'paid' || client.stage === 'launched');
-  const isDealExpired = client && (
-    client.dealStatus === 'expired' ||
-    (client.dealExpiresAt && Date.now() > new Date(client.dealExpiresAt).getTime())
-  );
+  const isDealExpired = client && (client.dealStatus === 'expired' || client.dealStatus === 'purged');
   if (!isPaid && isDealExpired && !options.bypass) {
     return buildExpiredDemoHtml(client);
   }
@@ -2153,10 +2194,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
       }
       const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
       const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
-      const isDealExpired = resolvedClient && (
-        resolvedClient.dealStatus === 'expired' ||
-        (resolvedClient.dealExpiresAt && Date.now() > new Date(resolvedClient.dealExpiresAt).getTime())
-      );
+      const isDealExpired = resolvedClient && (resolvedClient.dealStatus === 'expired' || resolvedClient.dealStatus === 'purged');
       if (!isLiveDomain && !isPaid && isDealExpired && !bypass) {
         return new Response(buildExpiredDemoHtml(resolvedClient), {
           status: 403,
@@ -2764,12 +2802,21 @@ async function runScheduledAutopilot(env, options = {}) {
         const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day9_warning');
-        uP.append('metadata[last_sms_log]', `Day 9 Warning: ${smsRes.sent ? 'OK' : smsRes.reason}`);
         await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
           body: uP.toString()
         }).catch(() => {});
+        await recordSmsHistory({
+          customerId: c.id,
+          env,
+          stripeSecretKey: cfg.stripeSecretKey,
+          type: 'day9_warning',
+          to: c.phone,
+          text: warningMsg,
+          status: smsRes.sent,
+          reason: smsRes.reason
+        });
         if (smsRes.sent) smsSentCount++;
         reports.push(`[Ngày 9] Gửi SMS Cảnh báo 24h cuối: ${biz}`);
         continue;
@@ -2787,11 +2834,12 @@ async function runScheduledAutopilot(env, options = {}) {
         uP.append('metadata[nurture_step]', 'day7_deal_active');
 
         let smsSent = false;
+        let dealMsg = '';
+        let smsRes = null;
         if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
-          const dealMsg = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
-          const smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
+          dealMsg = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
+          smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
           smsSent = Boolean(smsRes && smsRes.sent);
-          uP.append('metadata[last_sms_log]', `Day 7 Deal SMS: ${smsSent ? 'OK' : (smsRes && smsRes.reason)}`);
           if (smsSent) smsSentCount++;
         }
 
@@ -2800,6 +2848,20 @@ async function runScheduledAutopilot(env, options = {}) {
           headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
           body: uP.toString()
         }).catch(() => {});
+
+        if (smsRes) {
+          await recordSmsHistory({
+            customerId: c.id,
+            env,
+            stripeSecretKey: cfg.stripeSecretKey,
+            type: 'day7_deal',
+            to: c.phone,
+            text: dealMsg,
+            status: smsRes.sent,
+            reason: smsRes.reason
+          });
+        }
+
         dealActivatedCount++;
         reports.push(`[Ngày 7] Kích hoạt Deal 50% ($299 AUD)${smsSent ? ' + gửi SMS' : ''}: ${biz}`);
         continue;
@@ -2813,12 +2875,21 @@ async function runScheduledAutopilot(env, options = {}) {
         const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day3_reminder');
-        uP.append('metadata[last_sms_log]', `Day 3 Reminder: ${smsRes.sent ? 'OK' : smsRes.reason}`);
         await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
           body: uP.toString()
         }).catch(() => {});
+        await recordSmsHistory({
+          customerId: c.id,
+          env,
+          stripeSecretKey: cfg.stripeSecretKey,
+          type: 'day3_reminder',
+          to: c.phone,
+          text: reminderMsg,
+          status: smsRes.sent,
+          reason: smsRes.reason
+        });
         if (smsRes.sent) smsSentCount++;
         reports.push(`[Ngày 3] Gửi SMS Nhắc xem Demo: ${biz}`);
         continue;
@@ -2955,7 +3026,7 @@ export default {
           }
           const isPaid = (client.paymentStatus === 'paid' || client.stage === 'launched');
           const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
-          const isDealExpired = (client.dealStatus === 'expired' || (client.dealExpiresAt && Date.now() > new Date(client.dealExpiresAt).getTime()));
+          const isDealExpired = (client.dealStatus === 'expired' || client.dealStatus === 'purged');
           if (!isPaid && isDealExpired && !bypass) {
             return new Response(buildExpiredDemoHtml(client), {
               status: 403,
@@ -4527,6 +4598,22 @@ export default {
               c.revisionData = rData;
               if (!c.revisionStatus || c.revisionStatus === 'none') c.revisionStatus = 'submitted';
             }
+            const hist = await env.WYNN_KV.get(`sms_history:${c.id}`, 'json').catch(() => null);
+            if (Array.isArray(hist) && hist.length) {
+              c.smsHistory = hist;
+            } else if (c.lastSmsLog) {
+              c.smsHistory = [{
+                id: 'sms_fallback',
+                timestamp: c.submittedAt || new Date().toISOString(),
+                type: 'log',
+                to: c.phone || '',
+                text: c.lastSmsLog,
+                status: c.lastSmsLog.startsWith('OK') ? 'OK' : 'ERR',
+                reason: ''
+              }];
+            } else {
+              c.smsHistory = [];
+            }
           }
         }));
       }
@@ -5259,6 +5346,16 @@ export default {
                   ? `OK (${notifyRes.to || custToNotify.phone}) [deal_50_active] @ ${nowIso}`
                   : `ERR: ${(notifyRes && notifyRes.reason) || 'Failed'} [deal_50_active]`;
                 uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+                await recordSmsHistory({
+                  customerId,
+                  env,
+                  stripeSecretKey: effectiveCfg.stripeSecretKey,
+                  type: 'deal_50_active',
+                  to: custToNotify.phone,
+                  text,
+                  status: notifyRes.sent,
+                  reason: notifyRes.reason
+                });
               }
             }
           }
@@ -5447,6 +5544,17 @@ export default {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: uP.toString()
+          });
+
+          await recordSmsHistory({
+            customerId,
+            env,
+            stripeSecretKey: effectiveCfg.stripeSecretKey,
+            type: templateKey,
+            to: formatted.phone,
+            text: smsText,
+            status: smsRes && smsRes.sent,
+            reason: smsRes && smsRes.reason
           });
 
           let updatedCust = formatted;
@@ -5950,6 +6058,19 @@ export default {
             if (logRes.ok) {
               updatedCust = await logRes.json();
               formatted = formatCustomerRecord(updatedCust);
+            }
+
+            if (notifyRes && notifyRes.smsResult) {
+              await recordSmsHistory({
+                customerId: formatted.id,
+                env,
+                stripeSecretKey: effectiveCfg.stripeSecretKey,
+                type: `stage_${stage}`,
+                to: notifyRes.smsResult.to,
+                text: notifyRes.smsText || (notifyRes.smsResult && notifyRes.smsResult.text) || '',
+                status: notifyRes.smsResult.sent,
+                reason: notifyRes.smsResult.reason
+              });
             }
           }
 

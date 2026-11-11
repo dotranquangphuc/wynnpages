@@ -1236,6 +1236,33 @@
     </div>
   </div>
 
+  <!-- Modal: Full SMS History Viewer -->
+  <div id="modal-sms-history" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-start justify-between border-b border-[#f0eade] pb-3 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg">📱</span>
+          <div>
+            <h3 class="text-base font-extrabold text-stone-900" id="sms-hist-title">Toàn Bộ Lịch Sử Tin Nhắn SMS</h3>
+            <p class="text-xs text-stone-500 mt-0.5" id="sms-hist-subtitle">Ghi nhận mọi lượt gửi SMS chào hàng, deal 50% &amp; nhắc hẹn</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-sms-history" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1 cursor-pointer">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="sms-hist-list">
+        <!-- Rendered SMS history messages -->
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-[#f0eade] shrink-0 text-xs">
+        <span class="text-stone-500 font-mono" id="sms-hist-count">0 tin nhắn</span>
+        <button type="button" id="btn-done-sms-history" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold cursor-pointer">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Mac iMessage / SMS Fallback -->
   <div id="modal-mac-sms" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4">
@@ -1341,6 +1368,7 @@
       let currentObFilter = 'all';
       let currentIbFilter = 'all';
       let searchQuery = '';
+      const expandedCardIds = new Set();
 
       const authGate = document.getElementById('auth-gate');
       const authForm = document.getElementById('auth-form');
@@ -2411,12 +2439,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </div>
                 </div>
 
-                <!-- Right Utility Buttons -->
+                <!-- Right Utility Buttons & Expand/Collapse Toggle -->
                 <div class="flex items-center gap-2 flex-wrap">
+                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1" title="Mở trang Demo trên tab mới">
+                    <span>Mở Demo ↗</span>
+                  </a>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
+                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
                   >
                     <span>✏️ Sửa</span>
                   </button>
@@ -2425,13 +2456,23 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
                   >
                     🗑️
+                  </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-toggle-client-card px-3 py-1.5 rounded-xl border border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-bold text-stone-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    title="Bấm để mở/thu gọn khung quản lý chi tiết"
+                  >
+                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết & Thao tác ▾"}</span>
                   </button>
                 </div>
               </div>
 
+              <!-- Collapsible Details Container -->
+              <div id="card-details-${c.id}" class="card-details-section ${expandedCardIds.has(c.id) ? "" : "hidden"} space-y-4 pt-2">
               <!-- 4-Step Outbound Progress Bar -->
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 ${obSteps.map(s => `
@@ -2645,11 +2686,22 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </div>
 
                 <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                  <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                      title="Mở toàn bộ chuỗi tin nhắn SMS đã gửi cho khách này"
+                    >
+                      <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
+                    </button>
+                  </div>
                   <span>👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
                   <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
                 </div>
               </div>
+              </div><!-- /card-details-${c.id} -->
             </div>
           `;
         }).join('');
@@ -2835,29 +2887,41 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </div>
                 </div>
 
-                <!-- Right Utility Buttons -->
+                <!-- Right Utility Buttons & Expand/Collapse Toggle -->
                 <div class="flex items-center gap-2 flex-wrap">
+                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1" title="Mở trang Demo trên tab mới">
+                    <span>Mở Demo ↗</span>
+                  </a>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
+                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
                   >
-                    <span>✏️</span>
-                    <span>Sửa hồ sơ</span>
+                    <span>✏️ Sửa</span>
                   </button>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
                     title="Xoá khách hàng này"
                   >
                     🗑️
                   </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-toggle-client-card px-3 py-1.5 rounded-xl border border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-bold text-stone-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    title="Bấm để mở/thu gọn khung quản lý chi tiết"
+                  >
+                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết & Thao tác ▾"}</span>
+                  </button>
                 </div>
               </div>
 
+              <!-- Collapsible Details Container -->
+              <div id="card-details-${c.id}" class="card-details-section ${expandedCardIds.has(c.id) ? "" : "hidden"} space-y-4 pt-2">
               <!-- 5-Step Progress Pipeline -->
               ${renderStepper(c)}
 
@@ -3097,11 +3161,22 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </div>
 
                 <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                  <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                    <button
+                      type="button"
+                      data-cid="${c.id}"
+                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                      title="Mở toàn bộ chuỗi tin nhắn SMS đã gửi cho khách này"
+                    >
+                      <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
+                    </button>
+                  </div>
                   <span>👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
                   <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
                 </div>
               </div>
+              </div><!-- /card-details-${c.id} -->
             </div>
           `;
         }).join('');
@@ -3739,6 +3814,40 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const client = clientsCache.find(x => x.id === cid);
             if (client) {
               openAiRevisionModal(client);
+            }
+          });
+        });
+
+        // Toggle Expand / Collapse Client Card
+        document.querySelectorAll('.btn-toggle-client-card').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const cid = btn.getAttribute('data-cid');
+            const detailsEl = document.getElementById(`card-details-${cid}`);
+            if (!detailsEl) return;
+            const isCurrentlyExpanded = !detailsEl.classList.contains('hidden');
+            if (isCurrentlyExpanded) {
+              detailsEl.classList.add('hidden');
+              expandedCardIds.delete(cid);
+              const label = btn.querySelector('.toggle-card-label');
+              if (label) label.textContent = 'Chi tiết & Thao tác ▾';
+            } else {
+              detailsEl.classList.remove('hidden');
+              expandedCardIds.add(cid);
+              const label = btn.querySelector('.toggle-card-label');
+              if (label) label.textContent = 'Thu gọn ▲';
+            }
+          });
+        });
+
+        // View Full SMS History Modal
+        document.querySelectorAll('.btn-view-sms-history').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            if (client) {
+              openSmsHistoryModal(client);
             }
           });
         });
@@ -6365,6 +6474,94 @@ https://wynnpages.com.au`;
           endGlobalBusy();
         }
       });
+
+      // Full SMS History Modal Helpers
+      function openSmsHistoryModal(client) {
+        if (!client) return;
+        const modal = document.getElementById("modal-sms-history");
+        const titleEl = document.getElementById("sms-hist-title");
+        const subEl = document.getElementById("sms-hist-subtitle");
+        const listEl = document.getElementById("sms-hist-list");
+        const countEl = document.getElementById("sms-hist-count");
+
+        const bizName = client.businessName || client.name || "Khách hàng";
+        titleEl.textContent = `Lịch Sử SMS: ${bizName}`;
+        subEl.textContent = `SĐT: ${client.phone || "Chưa có"} • Subdomain: ${client.demoSlug || "demo"}.wynnpages.com.au`;
+
+        let history = Array.isArray(client.smsHistory) ? client.smsHistory : [];
+        if (!history.length && client.lastSmsLog) {
+          history = [{
+            id: "sms_last",
+            timestamp: client.submittedAt || new Date().toISOString(),
+            type: "log",
+            to: client.phone || "",
+            text: client.lastSmsLog,
+            status: client.lastSmsLog.startsWith("OK") ? "OK" : "ERR",
+            reason: ""
+          }];
+        }
+
+        countEl.textContent = `Tổng cộng: ${history.length} tin nhắn`;
+
+        if (!history.length) {
+          listEl.innerHTML = `
+            <div class="p-8 text-center text-xs text-stone-500 bg-[#fcfbf9] rounded-2xl border border-[#ece4d5] space-y-1">
+              <p class="font-bold text-stone-700 text-sm">Chưa có tin nhắn SMS nào được gửi cho ${escapeHtml(bizName)}.</p>
+              <p>Mọi tin nhắn gửi qua ClickSend (chào hàng, nhắc xem, kích hoạt Deal 50%, lên sóng) sẽ tự động lưu vào đây.</p>
+            </div>
+          `;
+        } else {
+          listEl.innerHTML = history.slice().reverse().map((msg, i) => {
+            const isOk = msg.status === "OK";
+            const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleString("vi-VN") : "N/A";
+            const typeLabel = msg.type === "deal_50_active" || msg.type === "day7_deal"
+              ? "⚡ Deal 50% ($299 AUD)"
+              : (msg.type === "day9_warning"
+                  ? "⚠️ Cảnh Báo 24h Cuối"
+                  : (msg.type === "day3_reminder"
+                      ? "⏰ Nhắc Xem Demo"
+                      : (msg.type === "stage_outbound_pitch" || msg.type === "stage_demo_sent"
+                          ? "📩 Chào Hàng Demo"
+                          : (msg.type === "stage_site_launched" ? "🚀 Báo Lên Sóng Live" : msg.type))));
+
+            return `
+              <div class="p-3.5 rounded-2xl border ${isOk ? "bg-emerald-50/50 border-emerald-200" : "bg-rose-50/50 border-rose-200"} space-y-1.5 shadow-2xs">
+                <div class="flex items-center justify-between gap-2 text-xs">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black ${isOk ? "bg-emerald-700 text-white" : "bg-rose-600 text-white"}" tracking-wide uppercase">
+                      ${isOk ? "✓ Đã Gửi" : "✕ Thất Bại"}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-md bg-stone-200 text-stone-800 text-[10px] font-bold">
+                      ${escapeHtml(typeLabel)}
+                    </span>
+                    <span class="font-mono text-[11px] text-stone-600 font-semibold">Tới: ${escapeHtml(msg.to || client.phone || "N/A")}</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-stone-500">${timeStr}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-[#e8dfcf] text-xs font-sans text-stone-800 leading-relaxed break-words whitespace-pre-wrap">
+                  ${escapeHtml(msg.text || "(Nội dung trống)")}
+                </div>
+                ${msg.reason ? `<p class="text-[10px] font-mono text-rose-700">Lý do: ${escapeHtml(msg.reason)}</p>` : ""}
+              </div>
+            `;
+          }).join("");
+        }
+
+        modal.classList.remove("hidden");
+      }
+
+      const btnCloseSmsHist = document.getElementById("btn-close-sms-history");
+      const btnDoneSmsHist = document.getElementById("btn-done-sms-history");
+      if (btnCloseSmsHist) {
+        btnCloseSmsHist.addEventListener("click", () => {
+          document.getElementById("modal-sms-history").classList.add("hidden");
+        });
+      }
+      if (btnDoneSmsHist) {
+        btnDoneSmsHist.addEventListener("click", () => {
+          document.getElementById("modal-sms-history").classList.add("hidden");
+        });
+      }
 
       // Mac SMS Fallback modal helpers
       function openMacSmsModal({ phone, text, reason }) {
