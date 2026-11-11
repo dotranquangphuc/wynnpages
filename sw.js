@@ -1,11 +1,12 @@
 // WynnPages Studio — Service Worker for iOS PWA & Push Notifications
-const CACHE_NAME = 'wynn-studio-pwa-v1';
+const CACHE_NAME = 'wynn-studio-pwa-v3';
 const PRECACHE_ASSETS = [
   '/admin.html',
   '/manifest.json',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png',
-  '/assets/apple-touch-icon.png',
+  '/assets/favicon.png',
+  '/assets/icon-192.png?v=3',
+  '/assets/icon-512.png?v=3',
+  '/assets/apple-touch-icon.png?v=3',
   '/assets/fonts.css'
 ];
 
@@ -102,3 +103,4 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+

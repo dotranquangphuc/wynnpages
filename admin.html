@@ -10,8 +10,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="WynnStudio">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="apple-touch-startup-image" href="/assets/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="apple-touch-startup-image" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=3">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,14 +23,55 @@
     :root {
       --sat: env(safe-area-inset-top, 0px);
       --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+    }
+    html, body {
+      max-width: 100%;
+      overflow-x: clip;
+      overscroll-behavior-x: none;
     }
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: #f6f1e8;
       color: #231f1a;
       -webkit-font-smoothing: antialiased;
-      padding-top: var(--sat);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: pan-y;
       padding-bottom: var(--sab);
+      padding-left: var(--sal);
+      padding-right: var(--sar);
+    }
+    .atelier-sticky-header {
+      padding-top: var(--sat);
+    }
+    #header-actions:not(.hidden) {
+      display: flex;
+    }
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      overscroll-behavior-x: contain;
+    }
+    .wrap-anywhere {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    @media (max-width: 639px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
+    }
+    @media (pointer: coarse) {
+      .touch-close {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
@@ -123,44 +165,47 @@
 
   <!-- Global Instant Activity Bar & Floating Spinner Pill -->
   <div id="global-top-loader" class="wynn-top-loader hidden"></div>
-  <div id="global-sync-pill" class="hidden fixed bottom-5 right-5 z-[100] bg-stone-900/95 backdrop-blur-md text-[#fcf9f3] px-4 py-2.5 rounded-2xl shadow-2xl border border-[#e8b948]/40 flex items-center gap-2.5 text-xs font-bold">
+  <div id="global-sync-pill" class="hidden fixed bottom-[max(1.25rem,var(--sab))] right-4 sm:right-5 z-[100] bg-stone-900/95 backdrop-blur-md text-[#fcf9f3] px-4 py-2.5 rounded-2xl shadow-2xl border border-[#e8b948]/40 flex items-center gap-2.5 text-xs font-bold max-w-[calc(100vw-2rem)]">
     <span class="wynn-spin-gold"></span>
-    <span id="global-sync-text">Đang xử lý lệnh...</span>
+    <span id="global-sync-text" class="truncate">Đang xử lý lệnh...</span>
   </div>
 
   <!-- Top Header -->
-  <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/95 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-5 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <a href="/" class="font-editorial text-2xl font-bold tracking-tight text-stone-900 hover:text-[#96432b] transition-colors">
-          WynnPages
-        </a>
-        <span class="text-[11px] uppercase tracking-widest text-white font-bold bg-[#96432b] px-2.5 py-0.5 rounded-full">
-          Studio Admin
-        </span>
+  <header class="atelier-sticky-header w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/95 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5 sm:gap-4">
+      <div class="flex items-center justify-between sm:justify-start gap-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <img src="/assets/apple-touch-icon.png?v=3" alt="WynnPages" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-[#e2d9c8] shadow-2xs shrink-0 object-cover">
+          <a href="/" class="font-editorial text-xl sm:text-2xl font-bold tracking-tight text-stone-900 hover:text-[#96432b] transition-colors truncate">
+            WynnPages
+          </a>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-widest text-white font-bold bg-[#96432b] px-2 sm:px-2.5 py-0.5 rounded-full shrink-0">
+            Studio Admin
+          </span>
+        </div>
       </div>
 
-      <div id="header-actions" class="hidden items-center gap-2 flex-wrap">
-        <button id="btn-open-activity" type="button" class="relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 hover:border-amber-400 text-xs font-bold text-amber-950 transition-all shadow-2xs cursor-pointer" title="Xem 20 hoạt động mới nhất của khách">
-          <span class="relative flex h-2 w-2">
+      <div id="header-actions" class="hidden w-full sm:w-auto items-center gap-2 flex-wrap">
+        <button id="btn-open-activity" type="button" class="relative w-[calc(50%-0.25rem)] sm:w-auto inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 hover:border-amber-400 text-[11px] sm:text-xs font-bold text-amber-950 transition-all shadow-2xs cursor-pointer min-h-[38px]" title="Xem 20 hoạt động mới nhất của khách">
+          <span class="relative flex h-2 w-2 shrink-0">
             <span id="activity-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 hidden"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
           </span>
           <span>🔔 Hoạt Động (<span id="activity-badge-count">0</span>)</span>
         </button>
-        <button id="btn-open-settings" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-xs font-semibold text-stone-700 transition-colors shadow-xs cursor-pointer">
+        <button id="btn-open-settings" type="button" class="w-[calc(50%-0.25rem)] sm:w-auto inline-flex items-center justify-center gap-1 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:border-[#96432b] text-[11px] sm:text-xs font-semibold text-stone-700 transition-colors shadow-xs cursor-pointer min-h-[38px]">
           <span>🔑</span>
-          <span>Cấu hình API &amp; Google Drive</span>
+          <span>Cấu hình <span class="hidden sm:inline">API &amp; Google Drive</span><span class="sm:hidden">API &amp; Push</span></span>
         </button>
-        <button id="btn-new-client" type="button" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors shadow-xs cursor-pointer">
+        <button id="btn-new-client" type="button" class="hidden w-full sm:w-auto items-center justify-center gap-1 px-2.5 sm:px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-[11px] sm:text-xs font-semibold text-white transition-colors shadow-xs cursor-pointer min-h-[38px]">
           <span>＋</span>
           <span>Thêm Hồ Sơ Inbound</span>
         </button>
-        <button id="btn-refresh" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors cursor-pointer">
+        <button id="btn-refresh" type="button" class="w-[calc(50%-0.25rem)] sm:w-auto inline-flex items-center justify-center gap-1 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white border border-[#dfd5c3] hover:bg-stone-50 text-[11px] sm:text-xs font-semibold text-stone-700 transition-colors cursor-pointer min-h-[38px]">
           <span id="refresh-icon" class="inline-block transition-transform">↻</span>
           <span id="refresh-label">Làm mới</span>
         </button>
-        <button id="btn-logout" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-700 border border-stone-200 text-xs font-semibold transition-colors cursor-pointer" title="Khoá bảng điều khiển">
+        <button id="btn-logout" type="button" class="w-[calc(50%-0.25rem)] sm:w-auto inline-flex items-center justify-center gap-1 px-2.5 sm:px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-700 border border-stone-200 text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer min-h-[38px]" title="Khoá bảng điều khiển">
           <span>🔒</span>
           <span>Đăng xuất</span>
         </button>
@@ -169,10 +214,10 @@
   </header>
 
   <!-- Main Content -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-6 py-7 space-y-6">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-7 space-y-4 sm:space-y-6">
 
     <!-- Login Gate -->
-    <div id="auth-gate" class="max-w-md mx-auto my-12 bg-white rounded-3xl p-8 shadow-xl border border-[#e5dec9] text-center space-y-5">
+    <div id="auth-gate" class="max-w-md mx-auto my-6 sm:my-12 bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xl border border-[#e5dec9] text-center space-y-5">
       <div class="w-12 h-12 rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] flex items-center justify-center mx-auto font-editorial text-2xl font-bold text-[#96432b]">
         W
       </div>
@@ -196,78 +241,78 @@
     </div>
 
     <!-- Dashboard Workspace -->
-    <div id="dashboard-content" class="hidden space-y-6">
+    <div id="dashboard-content" class="hidden space-y-4 sm:space-y-6">
 
       <!-- Top Row: Compact Integration Status Strip -->
-      <div class="bg-white rounded-2xl px-5 py-3.5 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 mr-1">Trạng thái hệ thống:</span>
-          <div class="flex flex-wrap gap-2" id="integration-pills">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+      <div class="bg-white rounded-2xl px-3.5 sm:px-5 py-3 sm:py-3.5 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
+        <div class="flex flex-wrap items-center gap-2 min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400 mr-0.5">Trạng thái hệ thống:</span>
+          <div class="flex flex-wrap gap-1.5 sm:gap-2" id="integration-pills">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Stripe DB
             </span>
-            <span id="pill-clicksend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+            <span id="pill-clicksend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
               <span class="w-2 h-2 rounded-full bg-stone-400"></span> ClickSend SMS
             </span>
-            <span id="pill-resend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+            <span id="pill-resend" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
               <span class="w-2 h-2 rounded-full bg-stone-400"></span> Resend Email
             </span>
-            <button id="pill-autopilot" type="button" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition-colors shadow-2xs cursor-pointer" title="Cấu hình lịch trình chạy tự động 24/7 trên Cloudflare">
+            <button id="pill-autopilot" type="button" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition-colors shadow-2xs cursor-pointer" title="Cấu hình lịch trình chạy tự động 24/7 trên Cloudflare">
               <span id="autopilot-dot" class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
               <span id="autopilot-status-text">⚡ Cloud Autopilot 24/7: Bật</span>
             </button>
           </div>
         </div>
-        <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="text-xs font-semibold text-[#96432b] hover:underline cursor-pointer">Cài đặt Key ⚙️</button>
+        <button type="button" onclick="document.getElementById('btn-open-settings').click()" class="text-xs font-semibold text-[#96432b] hover:underline cursor-pointer shrink-0">Cài đặt Key ⚙️</button>
       </div>
 
       <!-- ======================================================== -->
       <!-- MAIN MODE SWITCHER: TAB 1 (OUTBOUND) vs TAB 2 (INBOUND) vs TAB 3 (LEADS CRM) -->
       <!-- ======================================================== -->
-      <div class="bg-white rounded-3xl p-2 border border-[#e5dec9] shadow-xs grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 border border-[#e5dec9] shadow-xs grid grid-cols-1 md:grid-cols-3 gap-1.5 sm:gap-2">
         <button
           type="button"
           id="mode-tab-outbound"
-          class="px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#96432b] text-white shadow-md cursor-pointer"
+          class="px-3.5 sm:px-5 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl text-left transition-all flex items-center justify-between gap-2.5 sm:gap-3 bg-[#96432b] text-white shadow-md cursor-pointer min-w-0"
         >
-          <div class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg shrink-0">🎯</span>
-            <div>
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/15 flex items-center justify-center text-base sm:text-lg shrink-0">🎯</span>
+            <div class="min-w-0">
               <span class="text-xs sm:text-sm font-extrabold block">TAB 1: Outbound &amp; Chốt SALE</span>
-              <span class="text-[11px] opacity-85 block">Bám sát 10 ngày &bull; Deal 50% &bull; SMS &bull; Khoá demo</span>
+              <span class="text-[11px] opacity-85 block leading-snug">Bám sát 10 ngày &bull; Deal 50% &bull; SMS &bull; Khoá demo</span>
             </div>
           </div>
-          <span id="badge-count-outbound" class="px-3 py-1 rounded-full text-xs font-extrabold bg-white text-[#96432b] shrink-0">0</span>
+          <span id="badge-count-outbound" class="px-2.5 sm:px-3 py-1 rounded-full text-xs font-extrabold bg-white text-[#96432b] shrink-0">0</span>
         </button>
 
         <button
           type="button"
           id="mode-tab-inbound"
-          class="px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer"
+          class="px-3.5 sm:px-5 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl text-left transition-all flex items-center justify-between gap-2.5 sm:gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer min-w-0"
         >
-          <div class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-xl bg-[#ebe3d5] flex items-center justify-center text-lg shrink-0">🌿</span>
-            <div>
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#ebe3d5] flex items-center justify-center text-base sm:text-lg shrink-0">🌿</span>
+            <div class="min-w-0">
               <span class="text-xs sm:text-sm font-extrabold block">TAB 2: Khách Inbound &amp; Bàn Giao</span>
-              <span class="text-[11px] opacity-75 block">Khách tự trả $599 trên web &rarr; 5 bước brief &rarr; Lên sóng</span>
+              <span class="text-[11px] opacity-75 block leading-snug">Khách tự trả $599 trên web &rarr; 5 bước brief &rarr; Lên sóng</span>
             </div>
           </div>
-          <span id="badge-count-inbound" class="px-3 py-1 rounded-full text-xs font-extrabold bg-stone-200 text-stone-800 shrink-0">0</span>
+          <span id="badge-count-inbound" class="px-2.5 sm:px-3 py-1 rounded-full text-xs font-extrabold bg-stone-200 text-stone-800 shrink-0">0</span>
         </button>
 
         <button
           type="button"
           id="mode-tab-leads"
-          class="px-4 sm:px-5 py-3.5 rounded-2xl text-left transition-all flex items-center justify-between gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer relative"
+          class="px-3.5 sm:px-5 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl text-left transition-all flex items-center justify-between gap-2.5 sm:gap-3 bg-[#fcf9f3] hover:bg-[#f3ede2] text-stone-700 cursor-pointer relative min-w-0"
         >
-          <div class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-xl bg-[#dfc286]/35 text-amber-900 flex items-center justify-center text-lg shrink-0">💎</span>
-            <div>
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#dfc286]/35 text-amber-900 flex items-center justify-center text-base sm:text-lg shrink-0">💎</span>
+            <div class="min-w-0">
               <span class="text-xs sm:text-sm font-extrabold block">TAB 3: Kho Khách Tiềm Năng (Leads)</span>
-              <span class="text-[11px] opacity-75 block">Google Maps Lead Hunter &bull; Phân ngành &bull; 1-Click Import</span>
+              <span class="text-[11px] opacity-75 block leading-snug">Google Maps Lead Hunter &bull; Phân ngành &bull; 1-Click Import</span>
             </div>
           </div>
-          <span id="badge-count-leads" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-950 border border-amber-300 shrink-0">0</span>
+          <span id="badge-count-leads" class="px-2.5 sm:px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-950 border border-amber-300 shrink-0">0</span>
         </button>
       </div>
 
@@ -280,37 +325,37 @@
       <!-- ======================================================== -->
       <!-- GOOGLE PLACES LEAD CRM & ACCUMULATIVE HUNTER (TAB 3)     -->
       <!-- ======================================================== -->
-      <div id="lead-hunter-panel" class="hidden bg-[#fcfbf9] rounded-3xl border-2 border-[#96432b]/30 shadow-sm overflow-hidden transition-all duration-300">
+      <div id="lead-hunter-panel" class="hidden bg-[#fcfbf9] rounded-2xl sm:rounded-3xl border-2 border-[#96432b]/30 shadow-sm overflow-hidden transition-all duration-300">
         <!-- Header Banner with Live Badges & Quick Tools -->
-        <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fcf9f3] flex flex-wrap items-center justify-between gap-3 border-b border-[#ece4d5]">
-          <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#96432b] to-[#d49b28] text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+        <div class="px-3.5 sm:px-6 py-3.5 sm:py-4 bg-gradient-to-r from-[#fdfbf7] via-white to-[#fcf9f3] flex flex-wrap items-center justify-between gap-3 border-b border-[#ece4d5]">
+          <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#96432b] to-[#d49b28] text-white flex items-center justify-center text-lg sm:text-xl shadow-xs shrink-0">
               💎
             </span>
-            <div>
+            <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-sm sm:text-base font-extrabold text-stone-900">
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900 leading-snug">
                   Kho Dữ Liệu Khách Hàng Tiềm Năng (Google Maps Leads CRM)
                 </h3>
-                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase tracking-wider shrink-0">
                   Places API New
                 </span>
-                <span id="lead-hunter-key-indicator" class="hidden px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                <span id="lead-hunter-key-indicator" class="hidden px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold shrink-0">
                   ● Key Sẵn Sàng
                 </span>
               </div>
-              <p class="text-xs text-stone-500 mt-0.5">
+              <p class="text-[11px] sm:text-xs text-stone-500 mt-0.5 leading-snug">
                 Quét &amp; cộng dồn không mất dữ liệu • Tách riêng từng ngành nghề • 1-Click Import &amp; Dựng Web Demo
               </p>
             </div>
           </div>
 
           <!-- Quick Actions & Toggle -->
-          <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <button
               type="button"
               id="btn-export-leads-csv"
-              class="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1.5 cursor-pointer"
+              class="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-all shadow-2xs inline-flex items-center justify-center gap-1.5 cursor-pointer"
               title="Xuất file CSV danh sách khách hàng đang hiển thị"
             >
               <span>📥 Xuất CSV / Excel</span>
@@ -318,7 +363,7 @@
             <button
               type="button"
               id="btn-toggle-lead-hunter"
-              class="px-3 py-1.5 rounded-xl bg-[#f5ede0] hover:bg-[#ebdcc8] text-[#96432b] text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
+              class="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 rounded-xl bg-[#f5ede0] hover:bg-[#ebdcc8] text-[#96432b] text-xs font-bold transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span id="lead-hunter-toggle-label">Thu Gọn</span>
               <span id="lead-hunter-toggle-icon" class="text-sm">▲</span>
@@ -327,41 +372,41 @@
         </div>
 
         <!-- Body Content -->
-        <div id="lead-hunter-body" class="px-5 sm:px-6 pb-6 pt-4 space-y-4">
+        <div id="lead-hunter-body" class="px-3.5 sm:px-6 pb-5 sm:pb-6 pt-3.5 sm:pt-4 space-y-3.5 sm:space-y-4">
           <!-- Live KPI Badges -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-            <div class="bg-white p-3 rounded-2xl border border-[#e5dec9] shadow-2xs flex items-center gap-2.5">
-              <span class="text-xl">🗂️</span>
-              <div>
-                <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Kho Đã Lưu Trữ</span>
-                <span id="lh-total-stored-badge" class="text-lg font-black text-stone-900 block leading-tight">0 tiệm</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 text-xs">
+            <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-[#e5dec9] shadow-2xs flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <span class="text-lg sm:text-xl shrink-0">🗂️</span>
+              <div class="min-w-0">
+                <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider leading-tight">Kho Đã Lưu Trữ</span>
+                <span id="lh-total-stored-badge" class="text-base sm:text-lg font-black text-stone-900 block leading-tight">0 tiệm</span>
               </div>
             </div>
-            <div class="bg-white p-3 rounded-2xl border border-red-200 shadow-2xs flex items-center gap-2.5">
-              <span class="text-xl">🔥</span>
-              <div>
-                <span class="text-[10px] uppercase font-bold text-red-700 block tracking-wider">Chưa Có Website</span>
-                <span id="lh-hot-badge" class="text-lg font-black text-red-800 block leading-tight">0 tiệm</span>
+            <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-red-200 shadow-2xs flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <span class="text-lg sm:text-xl shrink-0">🔥</span>
+              <div class="min-w-0">
+                <span class="text-[10px] uppercase font-bold text-red-700 block tracking-wider leading-tight">Chưa Có Website</span>
+                <span id="lh-hot-badge" class="text-base sm:text-lg font-black text-red-800 block leading-tight">0 tiệm</span>
               </div>
             </div>
-            <div class="bg-white p-3 rounded-2xl border border-amber-200 shadow-2xs flex items-center gap-2.5">
-              <span class="text-xl">🟡</span>
-              <div>
-                <span class="text-[10px] uppercase font-bold text-amber-700 block tracking-wider">Chỉ Dùng MXH / Booking</span>
-                <span id="lh-social-badge" class="text-lg font-black text-amber-800 block leading-tight">0 tiệm</span>
+            <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-amber-200 shadow-2xs flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <span class="text-lg sm:text-xl shrink-0">🟡</span>
+              <div class="min-w-0">
+                <span class="text-[10px] uppercase font-bold text-amber-700 block tracking-wider leading-tight">Chỉ Dùng MXH / Booking</span>
+                <span id="lh-social-badge" class="text-base sm:text-lg font-black text-amber-800 block leading-tight">0 tiệm</span>
               </div>
             </div>
-            <div class="bg-white p-3 rounded-2xl border border-emerald-200 shadow-2xs flex items-center gap-2.5">
-              <span class="text-xl">✅</span>
-              <div>
-                <span class="text-[10px] uppercase font-bold text-emerald-700 block tracking-wider">Đã Import Outbound</span>
-                <span id="lh-imported-badge" class="text-lg font-black text-emerald-800 block leading-tight">0 tiệm</span>
+            <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-emerald-200 shadow-2xs flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <span class="text-lg sm:text-xl shrink-0">✅</span>
+              <div class="min-w-0">
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block tracking-wider leading-tight">Đã Import Outbound</span>
+                <span id="lh-imported-badge" class="text-base sm:text-lg font-black text-emerald-800 block leading-tight">0 tiệm</span>
               </div>
             </div>
           </div>
 
           <!-- Scanner Controls (Quét Mới & Tự Động Cộng Dồn) -->
-          <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#e5dec9] shadow-xs space-y-3.5">
+          <div class="bg-white rounded-2xl p-3.5 sm:p-5 border border-[#e5dec9] shadow-xs space-y-3.5">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <span class="text-xs font-black uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
                 <span>🚀 Quét Mới Google Maps &amp; Tự Động Cộng Dồn</span>
@@ -398,9 +443,9 @@
                     id="lh-keyword"
                     value="Nail Salon"
                     placeholder="VD: Nail Salon, Hair Salon..."
-                    class="atelier-input w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-semibold"
+                    class="atelier-input w-full rounded-xl pl-9 pr-3 py-2.5 text-xs font-semibold"
                   >
-                  <span id="lh-keyword-icon" class="absolute left-2.5 top-2.5 text-xs text-stone-400">💅</span>
+                  <span id="lh-keyword-icon" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">💅</span>
                 </div>
               </div>
 
@@ -415,9 +460,9 @@
                     id="lh-location"
                     value="Brisbane QLD"
                     placeholder="VD: Brisbane QLD, Ipswich QLD..."
-                    class="atelier-input w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-semibold"
+                    class="atelier-input w-full rounded-xl pl-9 pr-3 py-2.5 text-xs font-semibold"
                   >
-                  <span class="absolute left-2.5 top-2.5 text-xs text-stone-400">📍</span>
+                  <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">📍</span>
                 </div>
               </div>
 
@@ -461,8 +506,8 @@
           </div>
 
           <!-- INDUSTRY TABS (PHÂN TÁCH CÁC NGÀNH NGHỀ) -->
-          <div class="bg-white rounded-2xl p-2 border border-[#e5dec9] shadow-2xs">
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="lh-industry-tabs">
+          <div class="min-w-0 bg-white rounded-2xl p-2 border border-[#e5dec9] shadow-2xs">
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs min-w-0" id="lh-industry-tabs">
               <button
                 type="button"
                 data-industry-tab="all"
@@ -529,16 +574,16 @@
           </div>
 
           <!-- In-Database Search & Status Filter Chips -->
-          <div class="bg-white rounded-2xl px-4 py-3 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="bg-white rounded-2xl px-3.5 sm:px-4 py-3 border border-[#e5dec9] shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
             <!-- Search in stored data -->
             <div class="relative w-full sm:w-72">
               <input
                 type="text"
                 id="lh-search-input"
-                placeholder="🔍 Tìm nhanh tên tiệm, số ĐT, suburb..."
-                class="atelier-input w-full rounded-xl pl-8 pr-3 py-2 text-xs font-medium"
+                placeholder="Tìm nhanh tên tiệm, số ĐT, suburb..."
+                class="atelier-input w-full rounded-xl pl-9 pr-3 py-2 text-xs font-medium"
               >
-              <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔎</span>
+              <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">🔎</span>
             </div>
 
             <!-- Status Chips -->
@@ -569,7 +614,7 @@
       <!-- ======================================================== -->
       <!-- OUTBOUND ONLY: QUICK 1-ROW PROSPECT CREATOR              -->
       <!-- ======================================================== -->
-      <div id="outbound-quick-creator" class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#96432b]/25 shadow-sm space-y-4">
+      <div id="outbound-quick-creator" class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border-2 border-[#96432b]/25 shadow-sm space-y-3.5 sm:space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="px-2.5 py-0.5 rounded-full bg-[#96432b] text-white text-[10px] font-extrabold uppercase tracking-wider">Bước 1 Outbound</span>
@@ -603,7 +648,7 @@
             </select>
           </div>
           <div class="lg:col-span-2 flex items-end">
-            <button type="submit" id="qo-submit-btn" class="w-full py-2.5 px-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-60 text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+            <button type="submit" id="qo-submit-btn" class="w-full py-3 sm:py-2.5 px-3 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-60 text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
               <span>＋ Tạo &amp; Dựng Web</span>
             </button>
           </div>
@@ -614,77 +659,77 @@
       <!-- SUB-FILTER METRICS BAR (Dynamic per Tab)                 -->
       <!-- ======================================================== -->
       <!-- Outbound Sub-Filters -->
-      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-6 gap-3">
-        <button type="button" data-ob-filter="all" class="ob-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all cursor-pointer">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả Outbound</span>
-          <span id="stat-ob-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
+      <div id="outbound-filters" class="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3">
+        <button type="button" data-ob-filter="all" class="ob-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-[#96432b] text-left transition-all cursor-pointer min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400 block leading-snug">Tất cả Outbound</span>
+          <span id="stat-ob-all" class="text-xl sm:text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="action_today" class="ob-filter-tab bg-gradient-to-br from-rose-50/70 to-amber-50/80 p-4 rounded-2xl border border-rose-300 hover:border-rose-500 text-left transition-all cursor-pointer relative overflow-hidden group">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-extrabold uppercase tracking-wider text-rose-800 block">🔔 Cần Xử Lý Hôm Nay</span>
-            <span id="ping-ob-action-today" class="w-2 h-2 rounded-full bg-rose-500 hidden animate-ping"></span>
+        <button type="button" data-ob-filter="action_today" class="ob-filter-tab bg-gradient-to-br from-rose-50/70 to-amber-50/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-rose-300 hover:border-rose-500 text-left transition-all cursor-pointer relative overflow-hidden group min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10.5px] sm:text-[11px] font-extrabold uppercase tracking-wider text-rose-800 block leading-snug">🔔 Cần Xử Lý Hôm Nay</span>
+            <span id="ping-ob-action-today" class="w-2 h-2 rounded-full bg-rose-500 hidden animate-ping shrink-0"></span>
           </div>
-          <span id="stat-ob-action-today" class="text-2xl font-black text-rose-900 mt-1 block">0</span>
+          <span id="stat-ob-action-today" class="text-xl sm:text-2xl font-black text-rose-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="pending" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">1. Mới tạo Demo</span>
-          <span id="stat-ob-pending" class="text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
+        <button type="button" data-ob-filter="pending" class="ob-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-700 block leading-snug">1. Mới tạo Demo</span>
+          <span id="stat-ob-pending" class="text-xl sm:text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="pitched" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block">2. Đã gửi chào hàng</span>
-          <span id="stat-ob-pitched" class="text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
+        <button type="button" data-ob-filter="pitched" class="ob-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-purple-700 block leading-snug">2. Đã gửi chào hàng</span>
+          <span id="stat-ob-pitched" class="text-xl sm:text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="paid" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-teal-700 block">3. Đã Mua $599 (Chờ Lên Sóng)</span>
-          <span id="stat-ob-paid" class="text-2xl font-extrabold text-teal-900 mt-1 block">0</span>
+        <button type="button" data-ob-filter="paid" class="ob-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-teal-700 block leading-snug">3. Đã Mua $599 (Chờ Lên Sóng)</span>
+          <span id="stat-ob-paid" class="text-xl sm:text-2xl font-extrabold text-teal-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ob-filter="launched" class="ob-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">4. Đã Lên Sóng (Live)</span>
-          <span id="stat-ob-launched" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
+        <button type="button" data-ob-filter="launched" class="ob-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all cursor-pointer min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 block leading-snug">4. Đã Lên Sóng (Live)</span>
+          <span id="stat-ob-launched" class="text-xl sm:text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
         </button>
       </div>
 
       <!-- Inbound Sub-Filters -->
-      <div id="inbound-filters" class="hidden grid-cols-2 sm:grid-cols-5 gap-3">
-        <button type="button" data-ib-filter="all" class="ib-filter-tab bg-white p-4 rounded-2xl border-2 border-[#96432b] text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Tất cả Inbound</span>
-          <span id="stat-ib-all" class="text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
+      <div id="inbound-filters" class="hidden grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+        <button type="button" data-ib-filter="all" class="ib-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-[#96432b] text-left transition-all min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400 block leading-snug">Tất cả Inbound</span>
+          <span id="stat-ib-all" class="text-xl sm:text-2xl font-extrabold text-stone-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ib-filter="paid" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700 block">1. Chờ điền Brief</span>
-          <span id="stat-ib-paid" class="text-2xl font-extrabold text-blue-900 mt-1 block">0</span>
+        <button type="button" data-ib-filter="paid" class="ib-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-700 block leading-snug">1. Chờ điền Brief</span>
+          <span id="stat-ib-paid" class="text-xl sm:text-2xl font-extrabold text-blue-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ib-filter="brief_completed" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">2. Cần làm Demo</span>
-          <span id="stat-ib-brief" class="text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
+        <button type="button" data-ib-filter="brief_completed" class="ib-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-700 block leading-snug">2. Cần làm Demo</span>
+          <span id="stat-ib-brief" class="text-xl sm:text-2xl font-extrabold text-amber-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ib-filter="demo_waiting" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block">3-4. Chờ duyệt Demo</span>
-          <span id="stat-ib-demo" class="text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
+        <button type="button" data-ib-filter="demo_waiting" class="ib-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-purple-700 block leading-snug">3-4. Chờ duyệt Demo</span>
+          <span id="stat-ib-demo" class="text-xl sm:text-2xl font-extrabold text-purple-900 mt-1 block">0</span>
         </button>
-        <button type="button" data-ib-filter="launched" class="ib-filter-tab bg-white p-4 rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">5. Đã lên sóng</span>
-          <span id="stat-ib-launched" class="text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
+        <button type="button" data-ib-filter="launched" class="ib-filter-tab bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#e5dec9] hover:border-stone-400 text-left transition-all col-span-2 sm:col-span-1 min-w-0">
+          <span class="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 block leading-snug">5. Đã lên sóng</span>
+          <span id="stat-ib-launched" class="text-xl sm:text-2xl font-extrabold text-emerald-900 mt-1 block">0</span>
         </button>
       </div>
 
       <!-- Client List Header & Search -->
       <div id="clients-section" class="space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+          <h2 class="text-lg sm:text-2xl font-extrabold tracking-tight text-stone-900">
             <span id="list-heading-title">Danh Sách Chiến Dịch Outbound</span> (<span id="client-count">0</span>)
           </h2>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 w-full sm:w-auto">
             <input 
               type="search" 
               id="search-input" 
               placeholder="Tìm tên tiệm, email, SĐT..." 
-              class="atelier-input rounded-xl px-3.5 py-2 text-xs w-64"
+              class="atelier-input rounded-xl px-3.5 py-2 text-xs w-full sm:w-64"
             >
           </div>
         </div>
 
-        <div id="clients-container" class="space-y-5">
+        <div id="clients-container" class="space-y-4 sm:space-y-5">
           <div class="bg-white rounded-2xl p-8 text-center text-sm text-stone-500 border border-[#e5dec9]">
             Đang tải danh sách khách hàng từ Stripe...
           </div>
@@ -695,14 +740,14 @@
   </main>
 
   <!-- Modal: ClickSend & Resend Credentials -->
-  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-xl font-extrabold text-stone-900">Cấu Hình ClickSend SMS &amp; Resend Email</h3>
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-4 sm:space-y-5 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 leading-snug">Cấu Hình API &amp; Push Thông Báo</h3>
           <p class="text-xs text-stone-500 mt-0.5">Ghi đè hoặc nhập nhanh API Key ngay trên trình duyệt.</p>
         </div>
-        <button type="button" id="btn-close-settings" class="text-stone-400 hover:text-stone-800 font-bold">✕</button>
+        <button type="button" id="btn-close-settings" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
 
       <div class="space-y-4 text-xs">
@@ -725,10 +770,10 @@
           </div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
-          <div class="flex items-center justify-between gap-2">
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <p class="font-bold text-stone-900">3. Tự Động Lưu File Lên Google Drive Của Bạn</p>
-            <button type="button" id="btn-copy-gas-script" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] shrink-0">
+            <button type="button" id="btn-copy-gas-script" class="px-2.5 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] shrink-0 cursor-pointer">
               📋 Copy Mã Google Apps Script
             </button>
           </div>
@@ -777,13 +822,13 @@
         </div>
 
         <!-- Section 7: Telegram Bot Alerts (Instant iOS Push) -->
-        <div class="p-4 rounded-2xl bg-gradient-to-br from-sky-50/90 to-blue-50/60 border border-sky-200 space-y-3">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">📱</span>
-              <p class="font-extrabold text-sky-950">7. Báo Động iPhone Qua Telegram Bot (Khuyên Dùng Cho iOS)</p>
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-sky-50/90 to-blue-50/60 border border-sky-200 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-lg shrink-0">📱</span>
+              <p class="font-extrabold text-sky-950 leading-snug">7. Báo Động iPhone Qua Telegram Bot (Khuyên Dùng Cho iOS)</p>
             </div>
-            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-200 text-sky-900 uppercase">iOS 0s Delay</span>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-200 text-sky-900 uppercase shrink-0">iOS 0s Delay</span>
           </div>
           <p class="text-[11px] text-sky-900 leading-relaxed">
             Nhận thông báo đẩy có chuông &amp; rung ngay trên màn hình khoá iPhone mỗi khi:
@@ -826,17 +871,17 @@
   </div>
 
   <!-- Modal: AI Revision Review & Auto-Editor -->
-  <div id="ai-revision-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-[#f0eade] pb-3">
-        <div class="flex items-center gap-2.5">
-          <span class="w-9 h-9 rounded-2xl bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center text-lg">🤖</span>
-          <div>
-            <h3 class="text-xl font-extrabold text-stone-900">Gemini AI Auto-Editor</h3>
-            <p class="text-xs text-stone-500 mt-0.5">Yêu cầu chỉnh sửa 1 vòng của <strong id="ai-rev-biz-name" class="text-stone-800">Tiệm</strong></p>
+  <div id="ai-revision-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-4 sm:space-y-5 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2 border-b border-[#f0eade] pb-3">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-2xl bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center text-lg shrink-0">🤖</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 leading-snug">Gemini AI Auto-Editor</h3>
+            <p class="text-xs text-stone-500 mt-0.5 wrap-anywhere">Yêu cầu chỉnh sửa 1 vòng của <strong id="ai-rev-biz-name" class="text-stone-800">Tiệm</strong></p>
           </div>
         </div>
-        <button type="button" id="btn-close-ai-rev" class="text-stone-400 hover:text-stone-800 font-bold cursor-pointer text-lg">✕</button>
+        <button type="button" id="btn-close-ai-rev" class="touch-close text-stone-400 hover:text-stone-800 font-bold cursor-pointer text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
 
       <!-- Revision Details Grid -->
@@ -845,12 +890,12 @@
       </div>
 
       <!-- AI Action Bar -->
-      <div class="p-4 rounded-2xl bg-gradient-to-r from-[#fdfbf7] via-amber-50/50 to-[#faf6ee] border border-amber-300/80 space-y-3">
-        <div class="flex items-center justify-between">
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-[#fdfbf7] via-amber-50/50 to-[#faf6ee] border border-amber-300/80 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="font-extrabold text-stone-900 text-xs flex items-center gap-1.5">
             <span>⚡ Tự Động Sửa Code Bằng Gemini AI:</span>
           </span>
-          <span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
+          <span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded shrink-0">
             Multimodal OCR Vision
           </span>
         </div>
@@ -860,12 +905,12 @@
 
         <div id="ai-rev-status-box" class="hidden p-3 rounded-xl bg-white border border-amber-300 text-xs font-semibold text-stone-800 flex items-center gap-2">
           <div class="w-4 h-4 rounded-full border-2 border-[#96432b] border-t-transparent animate-spin shrink-0"></div>
-          <span id="ai-rev-status-text">Đang kết nối Gemini AI và cập nhật code website...</span>
+          <span id="ai-rev-status-text" class="wrap-anywhere">Đang kết nối Gemini AI và cập nhật code website...</span>
         </div>
 
-        <div id="ai-rev-result-box" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-bold text-emerald-900 flex items-center justify-between gap-3">
-          <span id="ai-rev-result-text">✓ Đã cập nhật thành công!</span>
-          <a id="ai-rev-preview-btn" href="#" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1">
+        <div id="ai-rev-result-box" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-bold text-emerald-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <span id="ai-rev-result-text" class="wrap-anywhere">✓ Đã cập nhật thành công!</span>
+          <a id="ai-rev-preview-btn" href="#" target="_blank" class="px-3 py-2 rounded-lg bg-emerald-700 text-white font-bold text-xs inline-flex items-center justify-center gap-1 shrink-0">
             <span>👁️ Mở Xem Demo Ngay</span>
             <span>↗</span>
           </a>
@@ -875,7 +920,7 @@
           <button
             type="button"
             id="btn-run-ai-revision"
-            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-[#96432b] hover:from-amber-700 hover:to-[#7d3520] text-white font-extrabold text-xs shadow-md transition-all hover:scale-[1.01] cursor-pointer inline-flex items-center justify-center gap-2"
+            class="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-[#96432b] hover:from-amber-700 hover:to-[#7d3520] text-white font-extrabold text-xs shadow-md transition-all hover:scale-[1.01] cursor-pointer inline-flex items-center justify-center gap-2"
           >
             <span>🤖 Bấm 1-Click: Gemini AI Cập Nhật Web Demo</span>
             <span>→</span>
@@ -886,17 +931,17 @@
   </div>
 
   <!-- Modal: Cloud Autopilot 24/7 Engine -->
-  <div id="autopilot-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center text-lg">⚡</span>
-          <div>
-            <h3 class="text-xl font-extrabold text-stone-900">Cloud Autopilot 24/7 Engine</h3>
+  <div id="autopilot-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-4 sm:space-y-5 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center text-lg shrink-0">⚡</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 leading-snug">Cloud Autopilot 24/7 Engine</h3>
             <p class="text-xs text-stone-500 mt-0.5">Tự động săn sóc, kích hoạt deal và thu hồi demo trên Cloudflare Edge.</p>
           </div>
         </div>
-        <button type="button" id="btn-close-autopilot" class="text-stone-400 hover:text-stone-800 font-bold cursor-pointer">✕</button>
+        <button type="button" id="btn-close-autopilot" class="touch-close text-stone-400 hover:text-stone-800 font-bold cursor-pointer p-1 text-lg shrink-0 rounded-xl">✕</button>
       </div>
 
       <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-purple-50/50 border border-indigo-100 text-xs text-indigo-950 space-y-2">
@@ -957,11 +1002,11 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between gap-3 pt-2">
+      <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2">
         <button
           type="button"
           id="btn-run-autopilot-now"
-          class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+          class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
         >
           <span>🚀</span>
           <span>Chạy Quét Ngay Bây Giờ</span>
@@ -970,7 +1015,7 @@
           <button
             type="button"
             id="btn-save-autopilot"
-            class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
           >
             Lưu Cài Đặt
           </button>
@@ -980,11 +1025,11 @@
   </div>
 
   <!-- Modal: Add / Edit Client -->
-  <div id="client-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[92vh] overflow-y-auto">
-      <div class="flex items-center justify-between">
-        <h3 id="client-modal-title" class="text-xl font-extrabold text-stone-900">Thêm / Chỉnh Sửa Hồ Sơ Khách Hàng</h3>
-        <button type="button" id="btn-close-client-modal" class="text-stone-400 hover:text-stone-800 font-bold">✕</button>
+  <div id="client-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-4 sm:space-y-5 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2">
+        <h3 id="client-modal-title" class="text-lg sm:text-xl font-extrabold text-stone-900 leading-snug">Thêm / Chỉnh Sửa Hồ Sơ Khách Hàng</h3>
+        <button type="button" id="btn-close-client-modal" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
       <form id="client-form" class="space-y-3.5 text-xs">
         <input type="hidden" id="edit-cid" value="">
@@ -1087,11 +1132,11 @@
             <input type="text" id="edit-desired-domains" placeholder="wynnbakery.com.au" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" id="btn-cancel-client-modal" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs cursor-pointer">
+        <div class="pt-2 flex flex-col-reverse sm:flex-row justify-end gap-2">
+          <button type="button" id="btn-cancel-client-modal" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs cursor-pointer">
             Huỷ
           </button>
-          <button type="submit" id="btn-submit-client-form" class="px-6 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-60 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
+          <button type="submit" id="btn-submit-client-form" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-60 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer">
             <span>Lưu Hồ Sơ Khách Hàng</span>
           </button>
         </div>
@@ -1100,20 +1145,20 @@
   </div>
 
   <!-- Modal: Upload Demo Source Code & 1-Click Nails Atelier Generator -->
-  <div id="modal-upload-demo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[92vh] overflow-y-auto">
-      <div class="flex items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
-        <div>
-          <h3 class="text-xl font-extrabold text-stone-900 flex items-center gap-2 flex-wrap">
+  <div id="modal-upload-demo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-4 sm:space-y-5 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2.5 border-b border-[#f0eade] pb-3.5 sm:pb-4">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 flex items-center gap-2 flex-wrap">
             <span>🎨 Dựng Khung Nails Atelier / Tải Source Code</span>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#fbdeb9] text-[#96432b]">KV Native Edge</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#fbdeb9] text-[#96432b] shrink-0">KV Native Edge</span>
           </h3>
-          <p class="text-xs text-stone-500 mt-1">
+          <p class="text-xs text-stone-500 mt-1 wrap-anywhere">
             Tiệm: <strong class="text-stone-900 text-sm" id="up-biz-name">—</strong>
-            • Subdomain: <code class="font-mono font-bold text-[#96432b]" id="up-slug-display">—</code>
+            • Subdomain: <code class="font-mono font-bold text-[#96432b] break-all" id="up-slug-display">—</code>
           </p>
         </div>
-        <button type="button" id="btn-close-upload-modal" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1">✕</button>
+        <button type="button" id="btn-close-upload-modal" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
 
       <div class="space-y-4 text-xs">
@@ -1258,17 +1303,17 @@
 
         <!-- Selected File & Extracted Files Info -->
         <div id="demo-bundle-preview" class="hidden space-y-3">
-          <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-semibold">
-            <div class="flex items-center gap-2 truncate">
-              <span class="text-base" id="demo-file-icon">📄</span>
-              <span class="truncate" id="demo-file-name">filename.zip</span>
-              <span class="text-[11px] text-emerald-700 font-mono" id="demo-file-size">(0 KB)</span>
+          <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-semibold min-w-0">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <span class="text-base shrink-0" id="demo-file-icon">📄</span>
+              <span class="truncate min-w-0" id="demo-file-name">filename.zip</span>
+              <span class="text-[11px] text-emerald-700 font-mono shrink-0" id="demo-file-size">(0 KB)</span>
             </div>
-            <button type="button" id="btn-remove-bundle" class="text-stone-400 hover:text-red-700 font-bold text-xs shrink-0 ml-2">✕ Xóa file</button>
+            <button type="button" id="btn-remove-bundle" class="text-stone-400 hover:text-red-700 font-bold text-xs shrink-0">✕ Xóa file</button>
           </div>
 
           <!-- Files breakdown inside zip -->
-          <div id="demo-files-breakdown" class="max-h-48 overflow-y-auto rounded-xl border border-stone-200 bg-white p-2.5 font-mono text-[11px] text-stone-700 space-y-1">
+          <div id="demo-files-breakdown" class="max-h-48 overflow-y-auto rounded-xl border border-stone-200 bg-white p-2.5 font-mono text-[11px] text-stone-700 space-y-1 wrap-anywhere">
             <!-- Render list of extracted files here -->
           </div>
         </div>
@@ -1285,11 +1330,11 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#f0eade]">
-        <button type="button" id="btn-cancel-upload" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors">
+      <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-[#f0eade]">
+        <button type="button" id="btn-cancel-upload" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors">
           Đóng
         </button>
-        <button type="button" id="btn-submit-bundle" disabled class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-2">
+        <button type="button" id="btn-submit-bundle" disabled class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-2">
           <span>🚀 Lưu &amp; Kích Hoạt File Đã Chọn</span>
         </button>
       </div>
@@ -1297,20 +1342,20 @@
   </div>
 
   <!-- Modal: Full SMS History Viewer -->
-  <div id="modal-sms-history" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[85vh] flex flex-col">
-      <div class="flex items-start justify-between border-b border-[#f0eade] pb-3 shrink-0">
-        <div class="flex items-center gap-2.5">
-          <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg">📱</span>
-          <div>
-            <h3 class="text-base font-extrabold text-stone-900" id="sms-hist-title">Toàn Bộ Lịch Sử Tin Nhắn SMS</h3>
+  <div id="modal-sms-history" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[88dvh] flex flex-col">
+      <div class="flex items-start justify-between gap-2 border-b border-[#f0eade] pb-3 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg shrink-0">📱</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-extrabold text-stone-900 leading-snug" id="sms-hist-title">Toàn Bộ Lịch Sử Tin Nhắn SMS</h3>
             <p class="text-xs text-stone-500 mt-0.5" id="sms-hist-subtitle">Ghi nhận mọi lượt gửi SMS chào hàng, deal 50% &amp; nhắc hẹn</p>
           </div>
         </div>
-        <button type="button" id="btn-close-sms-history" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1 cursor-pointer">✕</button>
+        <button type="button" id="btn-close-sms-history" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 cursor-pointer shrink-0 rounded-xl">✕</button>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="sms-hist-list">
+      <div class="flex-1 overflow-y-auto overscroll-contain space-y-3 pr-1 wrap-anywhere" id="sms-hist-list">
         <!-- Rendered SMS history messages -->
       </div>
 
@@ -1324,22 +1369,22 @@
   </div>
 
   <!-- Modal: Mac iMessage / SMS Fallback -->
-  <div id="modal-mac-sms" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4">
-      <div class="flex items-start justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="text-2xl">💬</span>
-          <div>
-            <h3 class="text-base font-extrabold text-stone-900">Gửi SMS Qua Ứng Dụng Mac (iMessage)</h3>
+  <div id="modal-mac-sms" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="text-2xl shrink-0">💬</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-extrabold text-stone-900 leading-snug">Gửi SMS Qua Ứng Dụng Mac (iMessage)</h3>
             <p class="text-xs text-stone-500 mt-0.5">Sử dụng SIM điện thoại iPhone miễn phí khi ClickSend hết số dư</p>
           </div>
         </div>
-        <button type="button" id="btn-close-mac-sms" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1">✕</button>
+        <button type="button" id="btn-close-mac-sms" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
 
       <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
         <p class="font-bold">⚠️ Trạng thái ClickSend:</p>
-        <p id="mac-sms-reason" class="text-[11px] font-mono text-amber-800 break-words"></p>
+        <p id="mac-sms-reason" class="text-[11px] font-mono text-amber-800 wrap-anywhere"></p>
       </div>
 
       <div class="space-y-2 text-xs">
@@ -1365,50 +1410,50 @@
   </div>
 
   <!-- Modal: Facebook Messenger Outbound Pitch -->
-  <div id="modal-facebook-pitch" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#e5dec9] space-y-4">
-      <div class="flex items-start justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="w-9 h-9 rounded-xl bg-[#1877f2]/10 text-[#1877f2] flex items-center justify-center text-lg">💬</span>
-          <div>
-            <h3 class="text-base font-extrabold text-stone-900">Chào Hàng Qua Facebook Messenger</h3>
-            <p id="fb-modal-subtitle" class="text-xs text-stone-500 mt-0.5">Tiếp cận trực tiếp trang Facebook của chủ tiệm</p>
+  <div id="modal-facebook-pitch" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-xl bg-[#1877f2]/10 text-[#1877f2] flex items-center justify-center text-lg shrink-0">💬</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-extrabold text-stone-900 leading-snug">Chào Hàng Qua Facebook Messenger</h3>
+            <p id="fb-modal-subtitle" class="text-xs text-stone-500 mt-0.5 wrap-anywhere">Tiếp cận trực tiếp trang Facebook của chủ tiệm</p>
           </div>
         </div>
-        <button type="button" id="btn-close-fb-modal" class="text-stone-400 hover:text-stone-800 font-bold text-lg p-1">✕</button>
+        <button type="button" id="btn-close-fb-modal" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
 
       <div class="space-y-3 text-xs">
         <div>
           <label class="text-[11px] font-bold text-stone-700 block mb-1">Link Trang Facebook hoặc Messenger của tiệm:</label>
-          <div class="flex items-center gap-2">
-            <input type="url" id="fb-modal-url" placeholder="VD: https://facebook.com/tiemnails hoặc https://m.me/tiemnails" class="w-full atelier-input rounded-xl px-3.5 py-2 text-xs font-mono bg-stone-50">
-            <a id="btn-visit-fb-page" href="#" target="_blank" class="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1877f2] font-bold text-xs shrink-0 transition-colors inline-flex items-center gap-1">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <input type="url" id="fb-modal-url" placeholder="VD: https://facebook.com/tiemnails hoặc https://m.me/tiemnails" class="w-full sm:flex-1 min-w-0 atelier-input rounded-xl px-3.5 py-2 text-xs font-mono bg-stone-50">
+            <a id="btn-visit-fb-page" href="#" target="_blank" class="px-3 py-2.5 sm:py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1877f2] font-bold text-xs shrink-0 transition-colors inline-flex items-center justify-center gap-1">
               <span>Mở FB ↗</span>
             </a>
           </div>
         </div>
 
         <div>
-          <div class="flex items-center justify-between mb-1">
+          <div class="flex flex-wrap items-center justify-between gap-1 mb-1">
             <label class="text-[11px] font-bold text-stone-700 block">Nội dung tin nhắn Facebook (Chuẩn Australian English &amp; Không áp lực):</label>
             <span class="text-[10px] text-stone-400 font-mono" id="fb-modal-char-count"></span>
           </div>
-          <textarea id="fb-modal-body" rows="9" class="w-full atelier-input rounded-xl p-3 text-xs font-sans leading-relaxed bg-[#fcfbf9] text-stone-800 border border-[#dfd5c3]"></textarea>
+          <textarea id="fb-modal-body" rows="7" class="w-full atelier-input rounded-xl p-3 text-xs font-sans leading-relaxed bg-[#fcfbf9] text-stone-800 border border-[#dfd5c3]"></textarea>
         </div>
       </div>
 
       <div class="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-[11px] text-blue-950 flex items-start gap-2">
-        <span>💡</span>
+        <span class="shrink-0">💡</span>
         <span>Mẹo: Bấm <strong>"Copy Lời Chào"</strong>, sau đó bấm <strong>"Mở FB ↗"</strong> để dán trực tiếp vào khung chat Facebook/Messenger và gửi ngay!</span>
       </div>
 
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-[#f0eade]">
-        <button type="button" id="btn-copy-fb-body" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+        <button type="button" id="btn-copy-fb-body" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
           <span>📋 Copy Lời Chào</span>
         </button>
         <div class="flex items-center gap-2">
-          <button type="button" id="btn-mark-fb-sent" class="px-4 py-2.5 rounded-xl bg-[#1877f2] hover:bg-[#1565c0] text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer">
+          <button type="button" id="btn-mark-fb-sent" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1877f2] hover:bg-[#1565c0] text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer">
             <span>✅ Đã Gửi Qua Facebook</span>
           </button>
         </div>
@@ -1418,27 +1463,27 @@
 
   <!-- Drawer: Live Activity Feed (Nhật ký hoạt động khách hàng) -->
   <div id="modal-activity-feed" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end transition-opacity">
-    <div class="bg-white w-full max-w-md h-full shadow-2xl border-l border-[#e5dec9] flex flex-col p-5 sm:p-6 space-y-4 overflow-hidden">
-      <div class="flex items-center justify-between border-b border-[#f0eade] pb-3.5">
-        <div class="flex items-center gap-2.5">
-          <span class="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center text-lg font-bold">🔔</span>
-          <div>
-            <h3 class="text-base sm:text-lg font-extrabold text-stone-900">Nhật Ký Hoạt Động (Live Feed)</h3>
+    <div class="bg-white w-full max-w-md h-[100dvh] max-h-[100dvh] shadow-2xl border-l border-[#e5dec9] flex flex-col px-4 sm:px-6 pt-[max(1rem,var(--sat))] pb-[max(1rem,var(--sab))] space-y-3.5 sm:space-y-4 overflow-hidden">
+      <div class="flex items-start justify-between gap-2 border-b border-[#f0eade] pb-3">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center text-lg font-bold shrink-0">🔔</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base sm:text-lg font-extrabold text-stone-900 leading-snug">Nhật Ký Hoạt Động (Live Feed)</h3>
             <p class="text-[11px] text-stone-500">20 sự kiện khách hàng mới nhất</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button type="button" id="btn-clear-activity-feed" class="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-600 cursor-pointer">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button type="button" id="btn-clear-activity-feed" class="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-600 cursor-pointer">
             Xoá
           </button>
-          <button type="button" id="btn-close-activity-feed" class="text-stone-400 hover:text-stone-800 text-lg font-bold p-1 cursor-pointer">
+          <button type="button" id="btn-close-activity-feed" class="touch-close text-stone-400 hover:text-stone-800 text-lg font-bold p-1 cursor-pointer rounded-xl">
             ✕
           </button>
         </div>
       </div>
 
       <!-- Feed Container -->
-      <div id="activity-feed-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
+      <div id="activity-feed-list" class="flex-1 overflow-y-auto overscroll-contain space-y-2.5 pr-1 text-xs wrap-anywhere">
         <div class="text-center py-12 text-stone-400">
           <span class="text-3xl block mb-2">📭</span>
           <span>Chưa có hoạt động mới nào</span>
@@ -1446,7 +1491,7 @@
       </div>
 
       <!-- Footer Action -->
-      <div class="pt-3 border-t border-[#f0eade] flex items-center justify-between text-xs text-stone-500">
+      <div class="pt-3 border-t border-[#f0eade] flex items-center justify-between text-xs text-stone-500 shrink-0">
         <span>⚡ Tự động cập nhật mỗi 30s</span>
         <button type="button" id="btn-refresh-feed" class="text-[#96432b] font-bold hover:underline cursor-pointer">
           ↻ Làm mới ngay
@@ -2139,10 +2184,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         let dueBannerHtml = '';
         if (due) {
           dueBannerHtml = `
-            <div class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/10 border-2 border-amber-400 text-stone-900 flex items-center justify-between gap-3 shadow-2xs animate-pulse">
-              <div class="flex items-center gap-2">
-                <span class="text-base">🔔</span>
-                <span class="text-xs font-black text-amber-950">HÔM NAY ĐẾN HẠN: ${escapeHtml(due.label)}</span>
+            <div class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/10 border-2 border-amber-400 text-stone-900 flex flex-wrap items-center justify-between gap-2 shadow-2xs animate-pulse">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🔔</span>
+                <span class="text-xs font-black text-amber-950 leading-snug">HÔM NAY ĐẾN HẠN: ${escapeHtml(due.label)}</span>
               </div>
               <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shrink-0">Bấm Xử Lý Ngay</span>
             </div>
@@ -2329,15 +2374,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
         let statusBadge = '';
         if (isDnsActive) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">🟢 DNS Đã Thông (Active)</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 max-w-full whitespace-normal text-left leading-snug">🟢 DNS Đã Thông (Active)</span>`;
         } else if (c.domainDelegated) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white">🎉 Khách đã cấp quyền — Admin gắn NS</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white max-w-full whitespace-normal text-left leading-snug">🎉 Khách đã cấp quyền — Admin gắn NS</span>`;
         } else if (c.dnsMode === 'self_ns') {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-900 border border-sky-200">⚡ Khách/IT tự trỏ NS — Chờ DNS</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-900 border border-sky-200 max-w-full whitespace-normal text-left leading-snug">⚡ Khách/IT tự trỏ NS — Chờ DNS</span>`;
         } else if (needsVentraIpPurchase) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">⏳ Chờ khách mua trên VentraIP &amp; mời hello@wynnpages.com.au</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 max-w-full whitespace-normal text-left leading-snug">⏳ Chờ khách mua trên VentraIP &amp; mời hello@wynnpages.com.au</span>`;
         } else if (resolvedLiveUrl) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">⏳ Chờ khách cấp quyền / trỏ DNS</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 max-w-full whitespace-normal text-left leading-snug">⏳ Chờ khách cấp quyền / trỏ DNS</span>`;
         }
 
         const guideTab = c.existingDomain ? 'existing' : 'new';
@@ -2345,9 +2390,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const guideHref = `/domain-guide?domain=${encodeURIComponent(resolvedLiveUrl || c.existingDomain || c.desiredDomains || '')}&amp;name=${encodeURIComponent(titleName)}&amp;email=${encodeURIComponent(c.email || '')}&amp;cid=${encodeURIComponent(c.id)}&amp;tab=${guideTab}${guideNsParam}`;
 
         return `
-          <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
+          <div class="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs min-w-0">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-2 flex-wrap min-w-0">
                 <span class="text-xs font-extrabold text-emerald-950">🌐 3. Tên Miền Chính Thức:</span>
                 ${statusBadge}
               </div>
@@ -2388,7 +2433,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <input 
                 type="text" 
                 id="live-url-${c.id}" 
@@ -2396,12 +2441,12 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-paid="${isPaid ? '1' : '0'}"
                 value="${escapeHtml(resolvedLiveUrl)}" 
                 placeholder="${isPaid ? 'Nhập tên miền chính thức (VD: lushnailsbar.com.au) rồi bấm Lưu & Kết Nối...' : 'Sau khi khách thanh toán $599 & chọn tên miền, tên miền sẽ tự điền vào đây...'}" 
-                class="live-url-input atelier-input flex-1 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
+                class="live-url-input atelier-input w-full sm:flex-1 min-w-0 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
               >
               <button 
                 type="button"
                 data-cid="${c.id}"
-                class="btn-save-demo px-3.5 py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                class="btn-save-demo w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
               >
                 Lưu &amp; Kết Nối
               </button>
@@ -2411,11 +2456,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               <div class="px-3 py-2 rounded-xl bg-[#f7faf8] border border-emerald-200/90 text-[11px] flex flex-wrap items-center justify-between gap-2">
                 <div class="flex flex-wrap items-center gap-2 min-w-0">
                   <span class="font-bold text-stone-600">🔧 NS kỹ thuật (Admin dán vào VentraIP/GoDaddy của khách):</span>
-                  <code class="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-200 select-all">${escapeHtml(c.cfNameservers)}</code>
+                  <code class="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-200 select-all break-all">${escapeHtml(c.cfNameservers)}</code>
                   <button 
                     type="button" 
                     data-ns="${escapeHtml(c.cfNameservers)}"
-                    class="btn-copy-ns font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                    class="btn-copy-ns font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md transition-colors cursor-pointer shrink-0"
                   >
                     📋 Copy NS
                   </button>
@@ -2437,14 +2482,78 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 ` : ''}
               </div>
             ` : (resolvedLiveUrl && isUnregistered ? `
-              <div class="text-[11px] text-amber-900 bg-amber-50/80 border border-amber-200 rounded-xl px-3 py-2">
+              <div class="text-[11px] text-amber-900 bg-amber-50/80 border border-amber-200 rounded-xl px-3 py-2 wrap-anywhere">
                 ℹ️ Tên miền <strong>${escapeHtml(resolvedLiveUrl)}</strong> hiện chưa được mua trên hệ thống quốc tế. Sau khi khách đăng ký trên VentraIP &amp; mời <code>hello@wynnpages.com.au</code>, bấm <strong>"🔄 Kiểm Tra DNS"</strong> để sinh cặp NS và gắn lên sóng!
               </div>
             ` : (resolvedLiveUrl ? `
-              <div class="text-[11px] text-stone-600 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2">
+              <div class="text-[11px] text-stone-600 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 wrap-anywhere">
                 💡 Khi khách đã mua/cấp quyền tên miền <strong>${escapeHtml(resolvedLiveUrl)}</strong>, bấm <strong>"🔄 Kiểm Tra DNS"</strong> (hoặc <strong>"Lưu &amp; Kết Nối"</strong>) để lấy cặp NS gắn cho khách.
               </div>
             ` : ''))}
+          </div>
+        `;
+      }
+
+      // Shared utility action bar rendered in both Outbound & Inbound card headers
+      function renderCardActionButtons(c, titleName, previewOverlayUrl, deleteTitle) {
+        return `
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto sm:shrink-0 pt-1 sm:pt-0 sm:ml-auto">
+            <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center justify-center gap-1 shrink-0 min-h-[38px] sm:min-h-0" title="Mở trang Demo trên tab mới">
+              <span>Mở Demo ↗</span>
+            </a>
+            <button
+              type="button"
+              data-cid="${c.id}"
+              class="btn-edit-client inline-flex items-center justify-center gap-1 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0 min-h-[38px] sm:min-h-0"
+              title="Chỉnh sửa hồ sơ"
+            >
+              <span>✏️ Sửa</span>
+            </button>
+            <button
+              type="button"
+              data-cid="${c.id}"
+              data-slug="${escapeHtml(c.demoSlug || '')}"
+              data-name="${escapeHtml(titleName)}"
+              class="btn-delete-client inline-flex items-center justify-center px-2.5 sm:px-2 py-2 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0 min-h-[38px] min-w-[38px] sm:min-h-0 sm:min-w-0"
+              title="${escapeHtml(deleteTitle)}"
+            >
+              🗑️
+            </button>
+            <button
+              type="button"
+              data-cid="${c.id}"
+              class="btn-toggle-client-card ml-auto sm:ml-0 px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all inline-flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0 min-h-[38px] sm:min-h-0"
+              title="Bấm để mở/thu gọn khung quản lý chi tiết"
+            >
+              <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết ▾"}</span>
+            </button>
+          </div>
+        `;
+      }
+
+      // Shared Domain Delegation Ready Alert rendered in both Outbound & Inbound cards
+      function renderDomainDelegatedBanner(c) {
+        if (!c || !c.domainDelegated) return '';
+        return `
+          <div class="p-3 sm:p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/70 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 text-xs text-emerald-950">
+            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+              <span class="text-xl shrink-0 leading-none mt-0.5">🎉</span>
+              <div class="min-w-0 flex-1 wrap-anywhere">
+                <p class="font-extrabold text-emerald-900 text-xs sm:text-sm flex items-center gap-2 flex-wrap leading-snug">
+                  <span>KHÁCH VỪA BÁO ĐÃ HOÀN TẤT KẾT NỐI TÊN MIỀN!</span>
+                  <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider shrink-0">Domain Ready</span>
+                </p>
+                <p class="text-emerald-800 text-[11px] mt-1 leading-relaxed">
+                  Nhà cung cấp: <strong>${escapeHtml(c.domainProvider || 'VentraIP Australia')}</strong>
+                  ${c.domainDelegatedAt ? ` • Báo lúc: <strong>${new Date(c.domainDelegatedAt).toLocaleString('vi-VN')}</strong>` : ''}
+                  ${c.liveUrl ? ` • Live URL: <code class="font-bold text-stone-900 bg-white px-2 py-0.5 rounded border border-emerald-300 font-mono break-all">${escapeHtml(c.liveUrl)}</code>` : ''}
+                  ${c.domainAccessNotes ? ` • Ghi chú: <em>"${escapeHtml(c.domainAccessNotes)}"</em>` : ''}
+                </p>
+              </div>
+            </div>
+            <span class="w-full sm:w-auto text-center px-3 py-2 sm:py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-[11px] sm:text-xs shadow-xs shrink-0">
+              Sẵn sàng bấm Nút 3: Giao Web Live 🚀
+            </span>
           </div>
         `;
       }
@@ -2478,10 +2587,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             : (c.name || 'Tiệm chưa đặt tên');
 
           const paymentBadge = isLaunched
-            ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">🚀 ĐÃ LÊN SÓNG (LIVE)</span>`
+            ? `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 leading-snug max-w-full">🚀 ĐÃ LÊN SÓNG (LIVE)</span>`
             : (isPaid
-                ? `<span class="px-3 py-1 rounded-full text-xs font-extrabold bg-teal-600 text-white shadow-xs">🟢 ĐÃ MUA $599 (CHỜ LÊN SÓNG)</span>`
-                : `<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">🟡 Đang chào hàng (Chưa trả $599)</span>`);
+                ? `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-teal-600 text-white shadow-xs leading-snug max-w-full">🟢 ĐÃ MUA $599 (CHỜ LÊN SÓNG)</span>`
+                : `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 leading-snug max-w-full">🟡 Đang chào hàng (Chưa trả $599)</span>`);
 
 
           const previewOverlayUrl = c.brandedDemoUrl || `https://${encodeURIComponent(c.demoSlug || c.id)}.wynnpages.com.au`;
@@ -2522,18 +2631,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const cardBgCls = isEven ? 'bg-white border-[#e5dec9]' : 'bg-[#faf6ee] border-[#d8ccb8] shadow-2xs';
 
           return `
-            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : ''} shadow-xs space-y-4 transition-all duration-200">
+            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-2xl sm:rounded-3xl p-4 sm:p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : ''} shadow-xs space-y-3.5 sm:space-y-4 transition-all duration-200">
               <!-- Top Header -->
-              <div class="flex items-start justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
-                <div class="min-w-0 flex-1 space-y-1.5 pr-2">
-                  <div class="flex items-center gap-2.5 flex-wrap">
-                    <a href="${c.googleMapsUri || (c.businessAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName + ' ' + c.businessAddress)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName)}`)}" target="_blank" rel="noopener noreferrer" class="text-lg sm:text-xl font-extrabold text-stone-900 hover:text-[#96432b] hover:underline inline-flex items-center gap-1 group" title="Mở trang Google Maps của ${escapeHtml(titleName)} (Click xem trên Google Maps)">
-                      <span class="break-words">${escapeHtml(titleName)}</span>
+              <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
+                <div class="min-w-0 flex-1 space-y-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <a href="${c.googleMapsUri || (c.businessAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName + ' ' + c.businessAddress)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName)}`)}" target="_blank" rel="noopener noreferrer" class="text-base sm:text-xl font-extrabold text-stone-900 hover:text-[#96432b] hover:underline inline-flex items-center gap-1 group max-w-full" title="Mở trang Google Maps của ${escapeHtml(titleName)} (Click xem trên Google Maps)">
+                      <span class="wrap-anywhere">${escapeHtml(titleName)}</span>
                       <span class="text-stone-400 group-hover:text-[#96432b] text-sm shrink-0">↗</span>
                     </a>
                     ${paymentBadge}
                     ${c.revisionStatus === 'submitted'
-                      ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
+                      ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse max-w-full text-left leading-snug" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
                            <span>🔔 Khách Đã Nộp Yêu Cầu Sửa (1 Vòng)</span>
                          </button>`
                       : (c.revisionStatus === 'applied'
@@ -2543,30 +2652,30 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                           : '')
                     }
                     ${c.demoViewCount > 0
-                      ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs" title="Lần đầu xem: ${new Date(c.demoFirstViewedAt).toLocaleString('vi-VN')} (${c.demoViewerDevice || 'Mobile'})">
+                      ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300 inline-flex items-center gap-1.5 shadow-2xs leading-snug" title="Lần đầu xem: ${new Date(c.demoFirstViewedAt).toLocaleString('vi-VN')} (${c.demoViewerDevice || 'Mobile'})">
                            <span>👀 Khách ĐÃ XEM DEMO</span>
-                           <span class="px-1.5 py-0.2 rounded-full bg-emerald-700 text-white text-[10px] font-extrabold">${c.demoViewCount} lần</span>
+                           <span class="px-1.5 py-0.5 rounded-full bg-emerald-700 text-white text-[10px] font-extrabold shrink-0">${c.demoViewCount} lần</span>
                          </span>`
-                      : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-500 border border-stone-200 inline-flex items-center gap-1">
+                      : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-500 border border-stone-200 inline-flex items-center gap-1 leading-snug">
                            <span>⏳ Khách CHƯA XEM DEMO</span>
                          </span>`
                     }
-                    <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
+                    <span class="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded wrap-anywhere">${escapeHtml(c.id)}</span>
                   </div>
-                  <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
-                    <span class="font-mono">${c.email ? `📧 ${escapeHtml(c.email)}` : `<span class="text-stone-400 italic">📧 Chưa có email (Khách tự điền khi Claim $599)</span>`}</span>
+                  <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-stone-600 min-w-0">
+                    <span class="font-mono wrap-anywhere">${c.email ? `📧 ${escapeHtml(c.email)}` : `<span class="text-stone-400 italic">📧 Chưa có email (Khách tự điền khi Claim $599)</span>`}</span>
                     ${hasPhone
-                      ? `<span class="font-mono text-emerald-800 font-semibold">📱 SMS: ${escapeHtml(c.phone)}</span>`
+                      ? `<span class="font-mono text-emerald-800 font-semibold whitespace-nowrap">📱 SMS: ${escapeHtml(c.phone)}</span>`
                       : `<span class="text-amber-700 font-semibold">📱 Chưa có SĐT (Bấm "✏️ Sửa" để thêm SĐT bắn SMS)</span>`
                     }
                     ${c.facebookUrl ? `
-                      <a href="${escapeHtml(c.facebookUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#1877F2] font-semibold hover:underline" title="Mở Facebook của tiệm">
+                      <a href="${escapeHtml(c.facebookUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#1877F2] font-semibold hover:underline shrink-0" title="Mở Facebook của tiệm">
                         <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         <span>Facebook</span>
                       </a>
                     ` : ''}
                     ${c.instagramUrl ? `
-                      <a href="${escapeHtml(c.instagramUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#e1306c] font-semibold hover:underline" title="Mở Instagram của tiệm">
+                      <a href="${escapeHtml(c.instagramUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#e1306c] font-semibold hover:underline shrink-0" title="Mở Instagram của tiệm">
                         <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                         <span>Instagram</span>
                       </a>
@@ -2575,38 +2684,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </div>
                 </div>
 
-                <!-- Right Utility Buttons & Expand/Collapse Toggle (Always pinned to top-right) -->
-                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
-                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1 shrink-0" title="Mở trang Demo trên tab mới">
-                    <span>Mở Demo ↗</span>
-                  </a>
-                  <button 
-                    type="button" 
-                    data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0"
-                    title="Chỉnh sửa hồ sơ"
-                  >
-                    <span>✏️ Sửa</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    data-cid="${c.id}"
-                    data-slug="${escapeHtml(c.demoSlug || '')}"
-                    data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0"
-                    title="Xoá khách này"
-                  >
-                    🗑️
-                  </button>
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    class="btn-toggle-client-card px-3 sm:px-3.5 py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-                    title="Bấm để mở/thu gọn khung quản lý chi tiết"
-                  >
-                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết ▾"}</span>
-                  </button>
-                </div>
+                <!-- Right Utility Buttons & Expand/Collapse Toggle -->
+                ${renderCardActionButtons(c, titleName, previewOverlayUrl, 'Xoá khách này')}
               </div>
 
               <!-- Collapsible Details Container -->
@@ -2625,45 +2704,23 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 `).join('')}
               </div>
 
-              ${c.domainDelegated ? `
-              <!-- Client Domain Delegation Alert -->
-              <div class="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/70 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-xl">🎉</span>
-                  <div>
-                    <p class="font-extrabold text-emerald-900 text-sm flex items-center gap-2">
-                      <span>KHÁCH VỪA BÁO ĐÃ HOÀN TẤT KẾT NỐI TÊN MIỀN!</span>
-                      <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider">Domain Ready</span>
-                    </p>
-                    <p class="text-emerald-800 text-[11px] mt-0.5">
-                      Nhà cung cấp: <strong>${escapeHtml(c.domainProvider || 'VentraIP Australia')}</strong>
-                      ${c.domainDelegatedAt ? ` • Báo lúc: <strong>${new Date(c.domainDelegatedAt).toLocaleString('vi-VN')}</strong>` : ''}
-                      ${c.liveUrl ? ` • Live URL: <code class="font-bold text-stone-900 bg-white px-2 py-0.5 rounded border border-emerald-300 font-mono">${escapeHtml(c.liveUrl)}</code>` : ''}
-                      ${c.domainAccessNotes ? ` • Ghi chú: <em>"${escapeHtml(c.domainAccessNotes)}"</em>` : ''}
-                    </p>
-                  </div>
-                </div>
-                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-xs">
-                  Sẵn sàng bấm Nút 3: Giao Web Live 🚀
-                </span>
-              </div>
-              ` : ''}
+              ${renderDomainDelegatedBanner(c)}
 
               <!-- Revision Portal Status Banner (Active 1-Round Submitted or Applied) -->
               ${c.revisionStatus === 'submitted' ? `
-              <div class="bg-amber-50 rounded-2xl px-4 py-3 border border-amber-300 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-lg">🔔</span>
-                  <div>
+              <div class="bg-amber-50 rounded-2xl p-3 sm:px-4 sm:py-3 border border-amber-300 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 text-xs">
+                <div class="flex items-start sm:items-center gap-2.5 min-w-0">
+                  <span class="text-lg shrink-0">🔔</span>
+                  <div class="min-w-0">
                     <strong class="text-amber-950 font-extrabold">Khách đã nộp yêu cầu chỉnh sửa (1 Vòng duy nhất):</strong>
                     <span class="text-amber-900 ml-1">Đã sẵn sàng chạy AI sửa code tự động hoặc xem chi tiết.</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs shadow-xs cursor-pointer inline-flex items-center gap-1.5">
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
+                  <button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal flex-1 sm:flex-none px-3 py-2 sm:py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white font-bold text-xs shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5">
                     <span>🤖 Xem &amp; Chạy AI Sửa Code</span>
                   </button>
-                  <a href="/revision?cid=${encodeURIComponent(c.id)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-white border border-[#d8cca6] text-[#96432b] font-bold text-xs hover:bg-[#fbf9f4] inline-flex items-center gap-1">
+                  <a href="/revision?cid=${encodeURIComponent(c.id)}" target="_blank" class="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 rounded-xl bg-white border border-[#d8cca6] text-[#96432b] font-bold text-xs hover:bg-[#fbf9f4] inline-flex items-center justify-center gap-1">
                     <span>Mở Portal /revision ↗</span>
                   </a>
                 </div>
@@ -2681,11 +2738,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               ` : '')}
 
               <!-- Outbound Demo Link & Live Domain + Streamlined Actions -->
-              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
+              <div class="bg-[#faf6ee] rounded-2xl p-3 sm:p-4 border border-[#e5dec9] space-y-3.5">
                 <!-- Section 1: Web Demo & Source Code -->
-                <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
+                <div class="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs min-w-0">
                   <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 flex-wrap min-w-0">
                       <span class="text-xs font-extrabold text-stone-900">🔗 1. Web Demo &amp; Mã Nguồn:</span>
                       ${c.demoSourceType === 'kv'
                         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
@@ -2694,17 +2751,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <a
                         href="${escapeHtml(previewOverlayUrl)}"
                         target="_blank"
-                        class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] hover:bg-[#f5ebd9] px-2.5 py-1 rounded-xl border border-[#e2d9c8] hover:border-[#96432b] transition-colors inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                        class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] hover:bg-[#f5ebd9] px-2.5 py-1 rounded-xl border border-[#e2d9c8] hover:border-[#96432b] transition-colors inline-flex items-center gap-1 underline-offset-2 hover:underline max-w-full min-w-0"
                         title="Click để mở xem trang Demo trên tab mới"
                       >
-                        <span>${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</span>
-                        <span class="text-[10px]">↗</span>
+                        <span class="break-all">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</span>
+                        <span class="text-[10px] shrink-0">↗</span>
                       </a>
                       <button
                         type="button"
                         data-cid="${c.id}"
                         data-slug="${escapeHtml(c.demoSlug || '')}"
-                        class="btn-edit-subdomain px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        class="btn-edit-subdomain px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 inline-flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                         title="Đổi Subdomain Cloudflare cho khách này"
                       >
                         <span>✏️ Sửa</span>
@@ -2837,19 +2894,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </div>
 
                 <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                  <div class="flex items-center gap-2 flex-wrap min-w-0">
+                    <span class="wrap-anywhere">📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
                     <button
                       type="button"
                       data-cid="${c.id}"
-                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer shrink-0"
                       title="Mở toàn bộ chuỗi tin nhắn SMS đã gửi cho khách này"
                     >
                       <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
                     </button>
                   </div>
-                  <span>👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
-                  <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
+                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
+                  <span class="wrap-anywhere">📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
                 </div>
               </div>
               </div><!-- /card-details-${c.id} -->
@@ -2925,8 +2982,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         ];
 
         return `
-          <div class="grid grid-cols-5 gap-2 pt-2 pb-1">
-            ${steps.map(s => {
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-2 pt-2 pb-1">
+            ${steps.map((s, idx) => {
               const isCurrent = s.num === currentStep && c.stage !== 'launched';
               let barColor = 'bg-stone-200';
               let textColor = 'text-stone-400';
@@ -2938,11 +2995,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 textColor = 'text-amber-800';
               }
               return `
-                <div class="space-y-1">
+                <div class="space-y-1 min-w-0 ${idx === 4 ? 'col-span-2 sm:col-span-1' : ''}">
                   <div class="h-1.5 w-full rounded-full ${barColor}"></div>
-                  <div class="flex items-center justify-between text-[11px] font-bold ${textColor}">
-                    <span>${s.num}. ${s.title}</span>
-                    ${s.done ? '<span>✓</span>' : (s.warn ? '<span>!</span>' : '')}
+                  <div class="flex items-center justify-between gap-1 text-[11px] font-bold ${textColor}">
+                    <span class="truncate">${s.num}. ${s.title}</span>
+                    ${s.done ? '<span class="shrink-0">✓</span>' : (s.warn ? '<span class="shrink-0">!</span>' : '')}
                   </div>
                   <span class="block text-[10px] text-stone-500 truncate">${s.sub}</span>
                 </div>
@@ -3007,15 +3064,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             : (c.name || 'Khách chưa đặt tên');
 
           return `
-            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-3xl p-6 border shadow-xs space-y-5 transition-all duration-200" id="card-${c.id}">
+            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-2xl sm:rounded-3xl p-4 sm:p-6 border shadow-xs space-y-4 sm:space-y-5 transition-all duration-200" id="card-${c.id}">
               <!-- Header Row -->
-              <div class="flex items-start justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
-                <div class="min-w-0 flex-1 space-y-1.5 pr-2">
-                  <div class="flex items-center gap-2.5 flex-wrap">
-                    <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 break-words">${escapeHtml(titleName)}</h3>
+              <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
+                <div class="min-w-0 flex-1 space-y-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-base sm:text-xl font-extrabold text-stone-900 wrap-anywhere">${escapeHtml(titleName)}</h3>
                     ${computeDeadlineBadge(c)}
                     ${c.revisionStatus === 'submitted'
-                      ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
+                      ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse max-w-full text-left leading-snug" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
                            <span>🔔 Khách Đã Nộp Yêu Cầu Sửa (1 Vòng)</span>
                          </button>`
                       : (c.revisionStatus === 'applied'
@@ -3024,52 +3081,22 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                              </span>`
                           : '')
                     }
-                    <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
+                    <span class="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded wrap-anywhere">${escapeHtml(c.id)}</span>
                   </div>
-                  <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
-                    <span class="font-mono">📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
+                  <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-stone-600 min-w-0">
+                    <span class="font-mono wrap-anywhere">📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
                     ${hasPhone
-                      ? `<span class="font-mono text-emerald-800 font-semibold">📱 SMS: ${escapeHtml(c.phone)}</span>`
+                      ? `<span class="font-mono text-emerald-800 font-semibold whitespace-nowrap">📱 SMS: ${escapeHtml(c.phone)}</span>`
                       : `<span class="text-red-600 font-bold">⚠️ Chưa có SĐT (Bấm "✏️ Sửa hồ sơ" để thêm SĐT nhận SMS)</span>`
                     }
-                    ${c.displayPhone && c.displayPhone !== c.phone ? `<span class="font-mono text-stone-600">☎️ Web: ${escapeHtml(c.displayPhone)}</span>` : ''}
-                    ${c.businessAddress ? `<span>📍 ${escapeHtml(c.businessAddress)}</span>` : ''}
+                    ${c.displayPhone && c.displayPhone !== c.phone ? `<span class="font-mono text-stone-600 whitespace-nowrap">☎️ Web: ${escapeHtml(c.displayPhone)}</span>` : ''}
+                    ${c.businessAddress ? `<span class="wrap-anywhere">📍 ${escapeHtml(c.businessAddress)}</span>` : ''}
                     <span class="text-stone-400">🕒 ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
                   </div>
                 </div>
 
-                <!-- Right Utility Buttons & Expand/Collapse Toggle (Always pinned to top-right) -->
-                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
-                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1 shrink-0" title="Mở trang Demo trên tab mới">
-                    <span>Mở Demo ↗</span>
-                  </a>
-                  <button 
-                    type="button" 
-                    data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0"
-                    title="Chỉnh sửa hồ sơ"
-                  >
-                    <span>✏️ Sửa</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    data-cid="${c.id}"
-                    data-slug="${escapeHtml(c.demoSlug || '')}"
-                    data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0"
-                    title="Xoá khách hàng này"
-                  >
-                    🗑️
-                  </button>
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    class="btn-toggle-client-card px-3 sm:px-3.5 py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-                    title="Bấm để mở/thu gọn khung quản lý chi tiết"
-                  >
-                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết ▾"}</span>
-                  </button>
-                </div>
+                <!-- Right Utility Buttons & Expand/Collapse Toggle -->
+                ${renderCardActionButtons(c, titleName, previewOverlayUrl, 'Xoá khách hàng này')}
               </div>
 
               <!-- Collapsible Details Container -->
@@ -3078,26 +3105,26 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               ${renderStepper(c)}
 
               <!-- Detailed Specifications Grid -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs bg-[#fcf9f3] p-4 rounded-2xl border border-[#ece4d5]">
-                <div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 text-xs bg-[#fcf9f3] p-3.5 sm:p-4 rounded-2xl border border-[#ece4d5]">
+                <div class="min-w-0">
                   <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">1. Tên thương hiệu / Ngành nghề</span>
-                  <span class="font-bold text-stone-900 mt-1 block">${c.businessName || c.industry ? escapeHtml(c.businessName || c.industry) : '<span class="text-stone-400 italic font-normal">Chưa điền</span>'}</span>
+                  <span class="font-bold text-stone-900 mt-1 block wrap-anywhere">${c.businessName || c.industry ? escapeHtml(c.businessName || c.industry) : '<span class="text-stone-400 italic font-normal">Chưa điền</span>'}</span>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">2. Bảng màu (Brand Colors)</span>
-                  <span class="font-bold text-stone-900 mt-1 block">${c.brandColors ? escapeHtml(c.brandColors) : '<span class="text-stone-400 italic font-normal">Chưa điền</span>'}</span>
+                  <span class="font-bold text-stone-900 mt-1 block wrap-anywhere">${c.brandColors ? escapeHtml(c.brandColors) : '<span class="text-stone-400 italic font-normal">Chưa điền</span>'}</span>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">3. Web mẫu (Vibe Links)</span>
-                  <div class="mt-1">${vibeDisplay}</div>
+                  <div class="mt-1 wrap-anywhere">${vibeDisplay}</div>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <span class="text-stone-400 block font-bold uppercase text-[10px] tracking-wider">4. Tên miền (Domain)</span>
-                  <div class="mt-1">${domainDisplay}</div>
+                  <div class="mt-1 wrap-anywhere">${domainDisplay}</div>
                 </div>
 
                 ${c.socialLinks ? `
-                <div class="sm:col-span-2 lg:col-span-4 pt-2 border-t border-[#e5dec9] text-[11px]">
+                <div class="sm:col-span-2 lg:col-span-4 pt-2 border-t border-[#e5dec9] text-[11px] wrap-anywhere">
                   <strong class="text-stone-500">Mạng xã hội &amp; Link Booking:</strong>
                   <span class="text-stone-800 font-semibold ml-1">${escapeHtml(c.socialLinks)}</span>
                 </div>
@@ -3127,36 +3154,14 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </div>
               </div>
 
-              ${c.domainDelegated ? `
-              <!-- Client Domain Delegation Alert -->
-              <div class="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/70 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-xl">🎉</span>
-                  <div>
-                    <p class="font-extrabold text-emerald-900 text-sm flex items-center gap-2">
-                      <span>KHÁCH VỪA BÁO ĐÃ HOÀN TẤT KẾT NỐI TÊN MIỀN!</span>
-                      <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider">Domain Ready</span>
-                    </p>
-                    <p class="text-emerald-800 text-[11px] mt-0.5">
-                      Nhà cung cấp: <strong>${escapeHtml(c.domainProvider || 'VentraIP Australia')}</strong>
-                      ${c.domainDelegatedAt ? ` • Báo lúc: <strong>${new Date(c.domainDelegatedAt).toLocaleString('vi-VN')}</strong>` : ''}
-                      ${c.liveUrl ? ` • Live URL: <code class="font-bold text-stone-900 bg-white px-2 py-0.5 rounded border border-emerald-300 font-mono">${escapeHtml(c.liveUrl)}</code>` : ''}
-                      ${c.domainAccessNotes ? ` • Ghi chú: <em>"${escapeHtml(c.domainAccessNotes)}"</em>` : ''}
-                    </p>
-                  </div>
-                </div>
-                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-xs">
-                  Sẵn sàng bấm Nút 3: Giao Web Live 🚀
-                </span>
-              </div>
-              ` : ''}
+              ${renderDomainDelegatedBanner(c)}
 
               <!-- Demo Link Input & Official Live Domain & Smart Stage Action Buttons -->
-              <div class="bg-[#faf6ee] rounded-2xl p-4 border border-[#e5dec9] space-y-3.5">
+              <div class="bg-[#faf6ee] rounded-2xl p-3 sm:p-4 border border-[#e5dec9] space-y-3.5">
                 <!-- Row 1: Web Demo & Mã Nguồn -->
                 <div class="space-y-2.5">
                   <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-[#e5dec9]">
-                    <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 flex-wrap min-w-0">
                       <span class="text-xs font-extrabold text-stone-800 shrink-0">🔗 1. Web Demo &amp; Mã Nguồn:</span>
                       ${c.demoFilesCount
                         ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">⚡ Cloudflare KV Native (${c.demoFilesCount || 1} files)</span>`
@@ -3165,17 +3170,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <a
                         href="${escapeHtml(previewOverlayUrl)}"
                         target="_blank"
-                        class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] hover:bg-[#f5ebd9] px-2.5 py-1 rounded-xl border border-[#e2d9c8] hover:border-[#96432b] transition-colors inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                        class="text-[11px] font-mono font-bold text-[#96432b] bg-[#fcf9f3] hover:bg-[#f5ebd9] px-2.5 py-1 rounded-xl border border-[#e2d9c8] hover:border-[#96432b] transition-colors inline-flex items-center gap-1 underline-offset-2 hover:underline max-w-full min-w-0"
                         title="Click để mở xem trang Demo trên tab mới"
                       >
-                        <span>${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</span>
-                        <span class="text-[10px]">↗</span>
+                        <span class="break-all">${escapeHtml(c.demoSlug || 'demo')}.wynnpages.com.au</span>
+                        <span class="text-[10px] shrink-0">↗</span>
                       </a>
                       <button
                         type="button"
                         data-cid="${c.id}"
                         data-slug="${escapeHtml(c.demoSlug || '')}"
-                        class="btn-edit-subdomain px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        class="btn-edit-subdomain px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[11px] font-bold text-stone-700 inline-flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                         title="Đổi Subdomain Cloudflare cho khách này"
                       >
                         <span>✏️ Sửa</span>
@@ -3313,19 +3318,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </div>
 
                 <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                  <div class="flex items-center gap-2 flex-wrap min-w-0">
+                    <span class="wrap-anywhere">📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
                     <button
                       type="button"
                       data-cid="${c.id}"
-                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer shrink-0"
                       title="Mở toàn bộ chuỗi tin nhắn SMS đã gửi cho khách này"
                     >
                       <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
                     </button>
                   </div>
-                  <span>👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
-                  <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
+                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
+                  <span class="wrap-anywhere">📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
                 </div>
               </div>
               </div><!-- /card-details-${c.id} -->
@@ -4367,9 +4372,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           return;
         }
 
-        // Render rows
-        const rowsHtml = filtered.map((lead, idx) => {
+        // Render both Mobile Card View (md:hidden) and Desktop Table Rows (hidden md:block) from one pass
+        const mobileCardsHtmlParts = [];
+        const tableRowsHtmlParts = [];
+
+        filtered.forEach((lead, idx) => {
           const alreadyImported = isLeadAlreadyInSystem(lead);
+          const leadIdAttr = escapeHtml(lead.placeId || lead.id);
           let badgeClass = 'bg-stone-100 text-stone-600 border-stone-200';
           let badgeText = '⚪ Đã có Web riêng';
           if (lead.leadType === 'hot_lead_no_web') {
@@ -4400,7 +4409,111 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
           const googleUrl = lead.googleMapsUri || (lead.placeId ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name)}&query_place_id=${encodeURIComponent(lead.placeId)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || lead.suburb || ''))}`);
 
-          return `
+          const actionButtonsHtml = (isMobile) => `
+            ${alreadyImported ? `
+              <button type="button" onclick="switchMainTab('outbound')" class="px-2.5 py-2 sm:py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer ${isMobile ? 'flex-1' : ''}" title="Tiệm đã được Import vào Tab 1 — Bấm để chuyển sang Tab 1 xem">
+                <span>✅ Đã Import</span>
+                <span class="text-[10px]">↗</span>
+              </button>
+              <button
+                type="button"
+                data-lead-id="${leadIdAttr}"
+                class="btn-import-lead px-2.5 py-2 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 border border-stone-300 text-xs font-bold transition-all shadow-2xs inline-flex items-center justify-center gap-1 cursor-pointer ${isMobile ? 'flex-1' : ''}"
+                title="Bấm để Import Lại tiệm này vào Tab 1 hoặc làm lại Demo mới"
+              >
+                <span>🔄 Import Lại</span>
+              </button>
+            ` : `
+              <button
+                type="button"
+                data-lead-id="${leadIdAttr}"
+                class="btn-import-lead px-3.5 py-2 sm:py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-black transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer ${isMobile ? 'flex-1' : ''}"
+                title="1-Click Tạo Hồ Sơ Khách Hàng và Dựng Sẵn Demo trong Tab 1"
+              >
+                <span>⚡ Import &amp; Làm Demo</span>
+              </button>
+            `}
+            <button
+              type="button"
+              data-del-id="${leadIdAttr}"
+              class="btn-delete-lead px-2.5 py-2 sm:p-1.5 rounded-xl sm:rounded-lg bg-stone-100 sm:bg-transparent hover:bg-red-50 text-stone-400 hover:text-red-700 transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center"
+              title="Xoá tiệm này khỏi kho dữ liệu"
+            >
+              🗑️
+            </button>
+          `;
+
+          const socialsHtml = `
+            ${lead.facebook ? `
+              <a href="${escapeHtml(lead.facebook)}" target="_blank" rel="noopener noreferrer" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white transition-all inline-flex items-center justify-center shadow-2xs" title="Mở trang Facebook: ${escapeHtml(lead.facebook)}">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+            ` : ''}
+            ${lead.instagram ? `
+              <a href="${escapeHtml(lead.instagram)}" target="_blank" rel="noopener noreferrer" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-pink-50 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] text-[#e1306c] hover:text-white transition-all inline-flex items-center justify-center shadow-2xs" title="Mở Instagram: ${escapeHtml(lead.instagram)}">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+            ` : ''}
+            ${lead.email ? `
+              <a href="mailto:${escapeHtml(lead.email)}" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white transition-all inline-flex items-center justify-center shadow-2xs text-xs" title="Gửi Email: ${escapeHtml(lead.email)}">
+                ✉️
+              </a>
+            ` : ''}
+          `;
+
+          mobileCardsHtmlParts.push(`
+            <div class="rounded-2xl border border-[#e5dec9] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#faf6ee]'} p-3.5 space-y-2.5 text-xs shadow-2xs">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1 space-y-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" class="font-extrabold text-stone-900 text-sm hover:text-[#96432b] hover:underline inline-flex items-center gap-1 wrap-anywhere">
+                      <span>${escapeHtml(lead.name)}</span>
+                      <span class="text-stone-400 text-xs shrink-0">↗</span>
+                    </a>
+                    <span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px] font-semibold">${indLabel}</span>
+                    ${alreadyImported ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Đã Import</span>' : ''}
+                  </div>
+                  <p class="text-[11px] text-stone-500 wrap-anywhere">📍 ${escapeHtml(lead.suburb || lead.address || 'Chưa rõ khu vực')}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="text-amber-600 font-bold text-xs block">★ ${lead.rating ? lead.rating.toFixed(1) : 'N/A'}</span>
+                  <span class="text-[10px] text-stone-400">(${lead.userRatingCount || 0})</span>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] border ${badgeClass}">
+                  ${badgeText}
+                </span>
+                ${lead.website ? `
+                  <a href="${escapeHtml(lead.website)}" target="_blank" rel="noopener noreferrer" class="text-[10px] text-[#96432b] hover:underline font-mono break-all">
+                    🔗 ${escapeHtml(lead.website.replace(/^https?:\/\/(www\.)?/, ''))}
+                  </a>
+                ` : ''}
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                <div class="font-mono text-xs">
+                  ${lead.phone ? `
+                    <a href="tel:${escapeHtml(lead.phone)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                      <span>📱</span>
+                      <span>${escapeHtml(lead.phone)}</span>
+                    </a>
+                  ` : `<span class="text-stone-400 italic text-[11px]">Chưa có SĐT</span>`}
+                </div>
+                <div class="flex items-center gap-1.5">${socialsHtml}</div>
+              </div>
+
+              ${photosStrip}
+              <div class="text-[10.5px] text-stone-400 italic line-clamp-2 wrap-anywhere">💬 ${reviewSnippet}</div>
+
+              <div class="flex items-center gap-2 pt-1.5 border-t border-[#efe7d8]">
+                ${actionButtonsHtml(true)}
+              </div>
+            </div>
+          `);
+
+          tableRowsHtmlParts.push(`
             <tr class="border-b border-[#f0eade] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#faf6ee]'} hover:bg-[#f6efe2] transition-colors text-xs">
               <td class="py-3 px-3.5">
                 <div class="space-y-1">
@@ -4443,24 +4556,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               <!-- Cột Mạng Xã Hội (Facebook & Instagram) -->
               <td class="py-3 px-3 whitespace-nowrap text-center">
                 <div class="inline-flex items-center justify-center gap-1.5">
-                  ${lead.facebook ? `
-                    <a href="${escapeHtml(lead.facebook)}" target="_blank" rel="noopener noreferrer" class="w-7 h-7 rounded-lg bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white transition-all flex items-center justify-center shadow-2xs hover:scale-110" title="Mở trang Facebook: ${escapeHtml(lead.facebook)}">
-                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                    </a>
-                  ` : ''}
-                  ${lead.instagram ? `
-                    <a href="${escapeHtml(lead.instagram)}" target="_blank" rel="noopener noreferrer" class="w-7 h-7 rounded-lg bg-pink-50 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] text-[#e1306c] hover:text-white transition-all flex items-center justify-center shadow-2xs hover:scale-110" title="Mở Instagram: ${escapeHtml(lead.instagram)}">
-                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                    </a>
-                  ` : ''}
-                  ${lead.email ? `
-                    <a href="mailto:${escapeHtml(lead.email)}" class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white transition-all flex items-center justify-center shadow-2xs hover:scale-110 text-xs" title="Gửi Email: ${escapeHtml(lead.email)}">
-                      ✉️
-                    </a>
-                  ` : ''}
-                  ${(!lead.facebook && !lead.instagram && !lead.email) ? `
-                    <span class="text-stone-300 text-xs font-mono">—</span>
-                  ` : ''}
+                  ${socialsHtml || `<span class="text-stone-300 text-xs font-mono">—</span>`}
                 </div>
               </td>
 
@@ -4479,45 +4575,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
               <td class="py-3 px-3 whitespace-nowrap text-right">
                 <div class="flex items-center justify-end gap-1.5">
-                  ${alreadyImported ? `
-                    <button type="button" onclick="switchMainTab('outbound')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs cursor-pointer" title="Tiệm đã được Import vào Tab 1 — Bấm để chuyển sang Tab 1 xem">
-                      <span>✅ Đã Import</span>
-                      <span class="text-[10px]">↗</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
-                      class="btn-import-lead px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 border border-stone-300 text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer"
-                      title="Bấm để Import Lại tiệm này vào Tab 1 hoặc làm lại Demo mới"
-                    >
-                      <span>🔄 Import Lại</span>
-                    </button>
-                  ` : `
-                    <button
-                      type="button"
-                      data-lead-id="${escapeHtml(lead.placeId || lead.id)}"
-                      class="btn-import-lead px-3.5 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] active:scale-95 text-white text-xs font-black transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
-                      title="1-Click Tạo Hồ Sơ Khách Hàng và Dựng Sẵn Demo trong Tab 1"
-                    >
-                      <span>⚡ Import &amp; Làm Demo</span>
-                    </button>
-                  `}
-                  <button
-                    type="button"
-                    data-del-id="${escapeHtml(lead.placeId || lead.id)}"
-                    class="btn-delete-lead p-1.5 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-700 transition-colors cursor-pointer"
-                    title="Xoá tiệm này khỏi kho dữ liệu"
-                  >
-                    🗑️
-                  </button>
+                  ${actionButtonsHtml(false)}
                 </div>
               </td>
             </tr>
-          `;
-        }).join('');
+          `);
+        });
 
         lhResultsContainer.innerHTML = `
-          <div class="bg-white rounded-2xl border border-[#e5dec9] shadow-xs overflow-hidden">
+          <div class="md:hidden space-y-2.5">
+            ${mobileCardsHtmlParts.join('')}
+          </div>
+          <div class="hidden md:block bg-white rounded-2xl border border-[#e5dec9] shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
@@ -4531,7 +4600,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </tr>
                 </thead>
                 <tbody>
-                  ${rowsHtml}
+                  ${tableRowsHtmlParts.join('')}
                 </tbody>
               </table>
             </div>
@@ -6340,12 +6409,12 @@ https://wynnpages.com.au`;
           aiRevDetailsBody.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <!-- Block 1: Thông tin cơ bản -->
-              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
-                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2 min-w-0">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between gap-2">
                   <span>📍 Block 1: Thông Tin Tiệm</span>
-                  <span class="text-[10px] text-stone-400">Core Info</span>
+                  <span class="text-[10px] text-stone-400 shrink-0">Core Info</span>
                 </div>
-                <div class="space-y-1">
+                <div class="space-y-1 wrap-anywhere">
                   <div><strong class="text-stone-700">Tên tiệm:</strong> ${bName}</div>
                   <div><strong class="text-stone-700">SĐT:</strong> ${bPhone}</div>
                   <div><strong class="text-stone-700">Địa chỉ:</strong> ${bAddress}</div>
@@ -6355,12 +6424,12 @@ https://wynnpages.com.au`;
               </div>
 
               <!-- Block 2: Tiêu đề & Giới thiệu -->
-              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
-                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2 min-w-0">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between gap-2">
                   <span>✨ Block 2: Tiêu Đề &amp; Câu Chuyện</span>
-                  <span class="text-[10px] text-stone-400">Hero &amp; About</span>
+                  <span class="text-[10px] text-stone-400 shrink-0">Hero &amp; About</span>
                 </div>
-                <div class="space-y-1.5">
+                <div class="space-y-1.5 wrap-anywhere">
                   <div>
                     <strong class="text-stone-700">Slogan / Hero H1:</strong>
                     <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5">${bHero}</div>
@@ -6373,45 +6442,45 @@ https://wynnpages.com.au`;
               </div>
 
               <!-- Block 3: Dịch vụ & Menu giá -->
-              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
-                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2 min-w-0">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between gap-2">
                   <span>💅 Block 3: Bảng Giá &amp; Dịch Vụ</span>
-                  <span class="text-[10px] text-stone-400">Price Menu</span>
+                  <span class="text-[10px] text-stone-400 shrink-0">Price Menu</span>
                 </div>
                 <div>
                   <strong class="text-stone-700">Ghi chú giá / dịch vụ:</strong>
-                  <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap">${bMenuNotes}</div>
+                  <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap wrap-anywhere">${bMenuNotes}</div>
                 </div>
                 ${hasMenuFile ? `
-                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
-                    <span class="font-bold flex items-center gap-1.5"><span>📷</span> <span>Menu Upload:</span> <em>${escapeHtml(rev.menuFileName)}</em></span>
-                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=menu" target="_blank" class="text-[11px] font-bold text-emerald-700 underline">Xem Ảnh ↗</a>
+                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-bold flex items-center gap-1.5 min-w-0 wrap-anywhere"><span>📷</span> <span>Menu Upload:</span> <em>${escapeHtml(rev.menuFileName)}</em></span>
+                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=menu" target="_blank" class="text-[11px] font-bold text-emerald-700 underline shrink-0">Xem Ảnh ↗</a>
                   </div>
                 ` : '<div class="text-[11px] text-stone-400 italic">Không đính kèm file ảnh menu</div>'}
               </div>
 
               <!-- Block 4: Hình ảnh thật & Ghi chú -->
-              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
-                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2 min-w-0">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between gap-2">
                   <span>🖼️ Block 4: Hình Ảnh Thật &amp; Ghi Chú</span>
-                  <span class="text-[10px] text-stone-400">Photos &amp; Notes</span>
+                  <span class="text-[10px] text-stone-400 shrink-0">Photos &amp; Notes</span>
                 </div>
                 ${hasPhotoFiles ? `
-                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
-                    <span class="font-bold flex items-center gap-1.5"><span>📸</span> <span>Ảnh tiệm:</span> <em>${escapeHtml(rev.photosFileName)}</em></span>
-                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=photos" target="_blank" class="text-[11px] font-bold text-emerald-700 underline">Xem Ảnh ↗</a>
+                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-bold flex items-center gap-1.5 min-w-0 wrap-anywhere"><span>📸</span> <span>Ảnh tiệm:</span> <em>${escapeHtml(rev.photosFileName)}</em></span>
+                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=photos" target="_blank" class="text-[11px] font-bold text-emerald-700 underline shrink-0">Xem Ảnh ↗</a>
                   </div>
                 ` : '<div class="text-[11px] text-stone-400 italic">Giữ nguyên tranh sơn dầu nghệ thuật của Demo</div>'}
                 <div>
                   <strong class="text-stone-700">Chỉ đạo cuối cùng:</strong>
-                  <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap">${bFinalNotes}</div>
+                  <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap wrap-anywhere">${bFinalNotes}</div>
                 </div>
               </div>
             </div>
 
-            <div class="flex items-center justify-between text-[11px] text-stone-500 pt-1">
+            <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-500 pt-1">
               <span>Trạng thái: <strong class="text-stone-800">${client.revisionStatus === 'applied' ? '✅ Đã Áp Dụng Sửa Đổi' : (client.revisionStatus === 'submitted' ? '🔔 Khách đã nộp (Chờ duyệt & áp dụng)' : 'Chưa nộp')}</strong></span>
-              <a href="/revision.html?cid=${encodeURIComponent(client.id)}" target="_blank" class="text-amber-800 font-bold hover:underline inline-flex items-center gap-1">
+              <a href="/revision.html?cid=${encodeURIComponent(client.id)}" target="_blank" class="text-amber-800 font-bold hover:underline inline-flex items-center gap-1 shrink-0">
                 <span>Xem giao diện Portal Khách</span> ↗
               </a>
             </div>
@@ -6770,17 +6839,17 @@ https://wynnpages.com.au`;
 
             return `
               <div class="p-3.5 rounded-2xl border ${isOk ? "bg-emerald-50/50 border-emerald-200" : "bg-rose-50/50 border-rose-200"} space-y-1.5 shadow-2xs">
-                <div class="flex items-center justify-between gap-2 text-xs">
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black ${isOk ? "bg-emerald-700 text-white" : "bg-rose-600 text-white"}" tracking-wide uppercase">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide uppercase ${isOk ? "bg-emerald-700 text-white" : "bg-rose-600 text-white"}">
                       ${isOk ? "✓ Đã Gửi" : "✕ Thất Bại"}
                     </span>
                     <span class="px-2 py-0.5 rounded-md bg-stone-200 text-stone-800 text-[10px] font-bold">
                       ${escapeHtml(typeLabel)}
                     </span>
-                    <span class="font-mono text-[11px] text-stone-600 font-semibold">Tới: ${escapeHtml(msg.to || client.phone || "N/A")}</span>
+                    <span class="font-mono text-[11px] text-stone-600 font-semibold wrap-anywhere">Tới: ${escapeHtml(msg.to || client.phone || "N/A")}</span>
                   </div>
-                  <span class="text-[10px] font-mono text-stone-500">${timeStr}</span>
+                  <span class="text-[10px] font-mono text-stone-500 shrink-0 whitespace-nowrap">${timeStr}</span>
                 </div>
                 <div class="p-2.5 rounded-xl bg-white border border-[#e8dfcf] text-xs font-sans text-stone-800 leading-relaxed break-words whitespace-pre-wrap">
                   ${escapeHtml(msg.text || "(Nội dung trống)")}
