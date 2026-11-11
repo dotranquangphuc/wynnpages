@@ -4292,16 +4292,19 @@ export default {
         if (cid && cid.startsWith('cus_') && cfg.stripeSecretKey) {
           cust = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
         }
-        if (!cust && sessionId && sessionId.startsWith('cs_') && cfg.stripeSecretKey) {
+        let checkoutSessionObj = null;
+        if (sessionId && sessionId.startsWith('cs_') && cfg.stripeSecretKey) {
           const sessionRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
             headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
           }).catch(() => null);
           if (sessionRes && sessionRes.ok) {
-            const sess = await sessionRes.json();
-            const custId = typeof sess.customer === 'string' ? sess.customer : null;
-            if (custId) cust = await findCustomerBySlugOrId(custId, cfg.stripeSecretKey);
-            if (!cust && sess.customer_email) {
-              cust = await findStripeCustomerByEmail(sess.customer_email, cfg.stripeSecretKey);
+            checkoutSessionObj = await sessionRes.json().catch(() => null);
+            if (!cust && checkoutSessionObj) {
+              const custId = typeof checkoutSessionObj.customer === 'string' ? checkoutSessionObj.customer : null;
+              if (custId) cust = await findCustomerBySlugOrId(custId, cfg.stripeSecretKey);
+              if (!cust && checkoutSessionObj.customer_email) {
+                cust = await findStripeCustomerByEmail(checkoutSessionObj.customer_email, cfg.stripeSecretKey);
+              }
             }
           }
         }
@@ -4314,6 +4317,44 @@ export default {
             status: 404,
             headers: corsHeaders
           });
+        }
+
+        // Auto-reconcile payment if checkoutSessionObj is paid
+        if (checkoutSessionObj && (checkoutSessionObj.payment_status === 'paid' || checkoutSessionObj.status === 'complete')) {
+          if (!cust.metadata || cust.metadata.payment_status !== 'paid' || cust.metadata.stage !== 'outbound_paid') {
+            const uParams = new URLSearchParams();
+            uParams.append('metadata[payment_status]', 'paid');
+            uParams.append('metadata[stage]', 'outbound_paid');
+            uParams.append('metadata[checkout_session_id]', sessionId);
+            if (cust.metadata && cust.metadata.welcome_sent !== 'true') {
+              uParams.append('metadata[welcome_sent]', 'true');
+              triggerLifecycleNotification({
+                stage: 'outbound_paid_confirmed',
+                client: {
+                  id: cust.id,
+                  name: cust.name || '',
+                  email: cust.email || checkoutSessionObj.customer_email || '',
+                  phone: cust.phone || (cust.metadata && cust.metadata.customer_phone) || '',
+                  businessName: (cust.metadata && cust.metadata.business_name) || cust.name || '',
+                  demoUrl: (cust.metadata && cust.metadata.demo_url) || ''
+                },
+                origin: url.origin,
+                cfg
+              }).catch(() => {});
+            }
+            fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uParams.toString()
+            }).catch(() => {});
+            if (!cust.metadata) cust.metadata = {};
+            cust.metadata.payment_status = 'paid';
+            cust.metadata.stage = 'outbound_paid';
+            cust.metadata.checkout_session_id = sessionId;
+          }
         }
 
         const clientRecord = formatCustomerRecord(cust);
@@ -4682,6 +4723,51 @@ export default {
       const rawList = data.data || [];
 
       const clients = rawList.map(formatCustomerRecord);
+
+      // Real-time Stripe Checkout Session & Charge Auto-Reconciliation
+      // If a client completed checkout (e.g. on live demo link), auto-sync their status to 'paid'
+      try {
+        const unpaidClients = clients.filter(c => c.paymentStatus === 'unpaid');
+        if (unpaidClients.length > 0 && cfg.stripeSecretKey) {
+          const sessionsRes = await fetch('https://api.stripe.com/v1/checkout/sessions?limit=30', {
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          }).catch(() => null);
+          if (sessionsRes && sessionsRes.ok) {
+            const sessData = await sessionsRes.json().catch(() => ({}));
+            const paidSessions = (sessData.data || []).filter(s => s.payment_status === 'paid' || s.status === 'complete');
+
+            for (const c of unpaidClients) {
+              const matchedSession = paidSessions.find(s => {
+                const sCust = typeof s.customer === 'string' ? s.customer : '';
+                const sMetaCust = s.metadata && (s.metadata.customer_id || s.metadata.cid);
+                const sEmail = (s.customer_details && s.customer_details.email) || s.customer_email || (s.metadata && s.metadata.customer_email);
+                return (sCust && sCust.toLowerCase() === c.id.toLowerCase()) ||
+                       (sMetaCust && sMetaCust.toLowerCase() === c.id.toLowerCase()) ||
+                       (c.email && sEmail && sEmail.toLowerCase() === c.email.toLowerCase());
+              });
+
+              if (matchedSession) {
+                c.paymentStatus = 'paid';
+                c.stage = 'outbound_paid';
+                c.checkoutSessionId = matchedSession.id;
+
+                const healP = new URLSearchParams();
+                healP.append('metadata[payment_status]', 'paid');
+                healP.append('metadata[stage]', 'outbound_paid');
+                healP.append('metadata[checkout_session_id]', matchedSession.id);
+                fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  body: healP.toString()
+                }).catch(() => {});
+              }
+            }
+          }
+        }
+      } catch (_) {}
 
       if (env && env.WYNN_KV) {
         await Promise.all(clients.map(async (c) => {
