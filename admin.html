@@ -1423,6 +1423,48 @@
       const editDemoUrl = document.getElementById('edit-demo-url');
       const editLiveUrl = document.getElementById('edit-live-url');
 
+      function flashCopySuccess(btn, successHtml = '✓ Đã Copy!', timeoutMs = 2000) {
+        if (!btn) return;
+        if (btn._copyResetTimer) clearTimeout(btn._copyResetTimer);
+        const originalHtml = btn._originalHtml || btn.innerHTML;
+        btn._originalHtml = originalHtml;
+        const originalBg = btn.style.backgroundColor || '';
+        const originalColor = btn.style.color || '';
+        const originalBorder = btn.style.borderColor || '';
+        
+        btn.innerHTML = `<span class="inline-flex items-center gap-1 font-extrabold text-emerald-900 animate-pulse">✓ ${successHtml.replace(/^✓\s*/, '')}</span>`;
+        btn.style.backgroundColor = '#d1fae5';
+        btn.style.color = '#065f46';
+        btn.style.borderColor = '#6ee7b7';
+        btn.classList.add('ring-2', 'ring-emerald-400/40');
+
+        btn._copyResetTimer = setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.style.backgroundColor = originalBg;
+          btn.style.color = originalColor;
+          btn.style.borderColor = originalBorder;
+          btn.classList.remove('ring-2', 'ring-emerald-400/40');
+          delete btn._originalHtml;
+          delete btn._copyResetTimer;
+        }, timeoutMs);
+      }
+
+      function copyToClipboard(text, toastMsg = 'Đã copy!') {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(() => {});
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          ta.remove();
+        }
+        if (toastMsg) showToast(toastMsg);
+      }
+
       function showToast(msg, isError = false) {
         toastMessage.textContent = msg;
         toastBanner.className = `rounded-2xl p-4 border text-xs font-bold flex items-center justify-between gap-4 shadow-sm ${
@@ -2021,7 +2063,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-stone-900">⚡ 3. Chốt SALE &amp; Thu Hồi Tự Động (10-Day Closing Engine):</span>
+                <span class="text-xs font-extrabold text-stone-900">⚡ 2. Chốt SALE &amp; Thu Hồi Tự Động (10-Day Closing Engine):</span>
                 ${statusBadge}
                 ${pitchTime ? `<span class="px-2 py-0.5 rounded-md ${due ? 'bg-amber-300 text-amber-950 font-black' : 'bg-stone-200/80 text-stone-700 font-bold'} text-[10px]">🕒 ${daysText}</span>` : ''}
               </div>
@@ -2207,7 +2249,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           <div class="bg-white rounded-2xl p-3.5 border border-[#e2d9c8] space-y-2.5 shadow-2xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-emerald-950">🌐 2. Tên Miền Chính Thức:</span>
+                <span class="text-xs font-extrabold text-emerald-950">🌐 3. Tên Miền Chính Thức:</span>
                 ${statusBadge}
               </div>
 
@@ -2440,14 +2482,14 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </div>
 
                 <!-- Right Utility Buttons & Expand/Collapse Toggle -->
-                <div class="flex items-center gap-2 flex-wrap">
-                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1" title="Mở trang Demo trên tab mới">
+                <div class="flex items-center gap-2 shrink-0">
+                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1 shrink-0" title="Mở trang Demo trên tab mới">
                     <span>Mở Demo ↗</span>
                   </a>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
+                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0"
                   >
                     <span>✏️ Sửa</span>
                   </button>
@@ -2456,17 +2498,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
+                    class="btn-delete-client inline-flex items-center px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                    title="Xoá khách này"
                   >
                     🗑️
                   </button>
                   <button
                     type="button"
                     data-cid="${c.id}"
-                    class="btn-toggle-client-card px-3 py-1.5 rounded-xl border border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-bold text-stone-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    class="btn-toggle-client-card px-3.5 py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
                     title="Bấm để mở/thu gọn khung quản lý chi tiết"
                   >
-                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết & Thao tác ▾"}</span>
+                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết ▾"}</span>
                   </button>
                 </div>
               </div>
@@ -2608,11 +2651,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   ${renderPaletteSwatchBar(c)}
                 </div>
 
-                <!-- Section 2: Official Live Domain (Unified Smart Concierge Flow) -->
-                ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
-
-                <!-- Section 3: Urgency & Closing Engine (10-Day Automated Pipeline) -->
+                <!-- Section 2: Urgency & Closing Engine (10-Day Automated Pipeline) -->
                 ${renderUrgencyClosingSection(c, { hasPhone, isPaid, isPitched, titleName })}
+
+                <!-- Section 3: Official Live Domain (Unified Smart Concierge Flow) -->
+                ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
 
                 <!-- 4 Outbound Automated Action Buttons (SMS, Facebook Messenger, Follow-up, Launch) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
@@ -3293,8 +3336,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const slug = (client && client.demoSlug) || btn.getAttribute('data-slug') || cid;
             const biz = (client && (client.businessName || client.name)) || slug;
             const cmd = `Kéo dự án "${biz}" về máy bằng lệnh \`node scripts/atelier-sync.mjs pull ${slug}\`, đọc \`clients/${slug}/ATELIER_MANIFEST.md\` và chỉnh sửa theo đúng chuẩn WynnPages Atelier như sau: `;
-            navigator.clipboard.writeText(cmd);
-            showToast(`Đã copy lệnh kéo dự án "${slug}"! Hãy mở + New Chat trên Antigravity và dán vào.`);
+            copyToClipboard(cmd, `Đã copy lệnh kéo dự án "${slug}"! Hãy mở + New Chat trên Antigravity và dán vào.`);
+            flashCopySuccess(btn, 'Đã Copy Lệnh!');
           });
         });
 
@@ -3369,8 +3412,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const cid = btn.getAttribute('data-cid');
             const name = btn.getAttribute('data-name') || 'khách';
             const claimUrl = `${window.location.origin}/api/claim?cid=${encodeURIComponent(cid)}`;
-            navigator.clipboard.writeText(claimUrl);
-            showToast(`Đã copy Link Thanh Toán Stripe $599 riêng cho "${name}"!`);
+            copyToClipboard(claimUrl, `Đã copy Link Thanh Toán Stripe $599 riêng cho "${name}"!`);
+            flashCopySuccess(btn, 'Đã Copy Link $599!');
           });
         });
 
@@ -3510,6 +3553,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               palette: client.demoPalette,
               photos: ph
             });
+            flashCopySuccess(btn, 'Đã Copy Prompt!');
           });
         });
 
@@ -3535,8 +3579,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               ? `Hi ${biz}! Your bespoke website is ready to launch.\n\nTo retain 100% legal ownership and direct annual renewals in your own name, please register ${dom} on VentraIP Australia and invite hello@wynnpages.com.au following our 2-minute visual guide:\n👉 ${guideUrl}\n\n(Our Australian engineers will handle all SSL & DNS setup for free!)\n\n— WynnPages Australia`
               : `Hi ${biz}! Your bespoke website is ready to go live on ${dom}.\n\nTo connect your domain with zero technical hassle, simply invite hello@wynnpages.com.au (VentraIP/GoDaddy) or submit your registrar access via your personalised 60-second guide:\n👉 ${guideUrl}\n\n— WynnPages Australia`;
 
-            navigator.clipboard.writeText(msg);
-            showToast(`Đã copy tin nhắn nhắc cấp quyền tên miền riêng cho "${biz}"!`);
+            copyToClipboard(msg, `Đã copy tin nhắn nhắc cấp quyền tên miền riêng cho "${biz}"!`);
+            flashCopySuccess(btn, 'Đã Copy Hướng Dẫn!');
           });
         });
 
@@ -3830,7 +3874,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               detailsEl.classList.add('hidden');
               expandedCardIds.delete(cid);
               const label = btn.querySelector('.toggle-card-label');
-              if (label) label.textContent = 'Chi tiết & Thao tác ▾';
+              if (label) label.textContent = 'Chi tiết ▾';
             } else {
               detailsEl.classList.remove('hidden');
               expandedCardIds.add(cid);
@@ -5230,8 +5274,8 @@ https://wynnpages.com.au`;
       if (btnCopyFbBody) {
         btnCopyFbBody.addEventListener('click', () => {
           if (fbModalBody) {
-            navigator.clipboard.writeText(fbModalBody.value);
-            showToast('📋 Đã copy lời chào Facebook! Giờ bấm "Mở FB ↗" để dán gửi cho tiệm.');
+            copyToClipboard(fbModalBody.value, '📋 Đã copy lời chào Facebook! Giờ bấm "Mở FB ↗" để dán gửi cho tiệm.');
+            flashCopySuccess(btnCopyFbBody, 'Đã Copy Lời Chào!');
           }
         });
       }
@@ -5674,7 +5718,7 @@ https://wynnpages.com.au`;
             }
             if (parsedR.length) {
               const rJson = JSON.stringify(parsedR.slice(0, 4), null, 8).trim();
-              html = html.replace(/reviews:\s*\[[\s\S]*?\n\s*\],/, `reviews: ${rJson},`);
+              html = html.replace(/reviews:\s*\[[\s\S]*?\n\s*\](?:\s*,)?/, `reviews: ${rJson}`);
             }
           }
         }
@@ -6586,9 +6630,10 @@ https://wynnpages.com.au`;
       });
 
       document.getElementById('btn-copy-mac-sms').addEventListener('click', () => {
+        const btn = document.getElementById('btn-copy-mac-sms');
         const bodyTextarea = document.getElementById('mac-sms-body');
-        navigator.clipboard.writeText(bodyTextarea.value);
-        showToast('Đã copy nội dung tin nhắn SMS!');
+        copyToClipboard(bodyTextarea.value, 'Đã copy nội dung tin nhắn SMS!');
+        flashCopySuccess(btn, 'Đã Copy Tin Nhắn!');
       });
 
       function escapeHtml(str) {

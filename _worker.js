@@ -2197,10 +2197,11 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
       const isDealExpired = resolvedClient && (resolvedClient.dealStatus === 'expired' || resolvedClient.dealStatus === 'purged');
       if (!isLiveDomain && !isPaid && isDealExpired && !bypass) {
         return new Response(buildExpiredDemoHtml(resolvedClient), {
-          status: 403,
+          status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'X-Robots-Tag': 'noindex, nofollow'
           }
         });
       }
@@ -3029,8 +3030,12 @@ export default {
           const isDealExpired = (client.dealStatus === 'expired' || client.dealStatus === 'purged');
           if (!isPaid && isDealExpired && !bypass) {
             return new Response(buildExpiredDemoHtml(client), {
-              status: 403,
-              headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-Robots-Tag': 'noindex, nofollow'
+              }
             });
           }
           const html = (client.stage === 'launched' && !forceBar)
