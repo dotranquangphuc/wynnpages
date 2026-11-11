@@ -742,12 +742,85 @@
             <input type="password" id="cfg-google-places-key" placeholder="AIzaSy..." class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
+
+        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-bold text-stone-900">6. Google Gemini API Key (1-Click AI Auto-Editor)</p>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 uppercase">Gemini 2.0 Flash</span>
+          </div>
+          <p class="text-stone-500 leading-relaxed">
+            Dùng để đọc ảnh Menu thật và tự động sửa code web theo 1 vòng chỉnh sửa của khách. Nếu bỏ trống, hệ thống sẽ tự động dùng chung key với mục 5 (Google Cloud).
+          </p>
+          <div class="space-y-2 pt-1">
+            <input type="password" id="cfg-gemini-key" placeholder="AIzaSy... (Tuỳ chọn - dùng chung Google Key)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
         <button type="button" id="btn-save-settings" class="px-5 py-2.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold">
           Lưu Cấu Hình
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: AI Revision Review & Auto-Editor -->
+  <div id="ai-revision-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-[#e5dec9] space-y-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-[#f0eade] pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-2xl bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center text-lg">🤖</span>
+          <div>
+            <h3 class="text-xl font-extrabold text-stone-900">Gemini AI Auto-Editor</h3>
+            <p class="text-xs text-stone-500 mt-0.5">Yêu cầu chỉnh sửa 1 vòng của <strong id="ai-rev-biz-name" class="text-stone-800">Tiệm</strong></p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-ai-rev" class="text-stone-400 hover:text-stone-800 font-bold cursor-pointer text-lg">✕</button>
+      </div>
+
+      <!-- Revision Details Grid -->
+      <div id="ai-rev-details-body" class="space-y-3.5 text-xs">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- AI Action Bar -->
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-[#fdfbf7] via-amber-50/50 to-[#faf6ee] border border-amber-300/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="font-extrabold text-stone-900 text-xs flex items-center gap-1.5">
+            <span>⚡ Tự Động Sửa Code Bằng Gemini AI:</span>
+          </span>
+          <span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
+            Multimodal OCR Vision
+          </span>
+        </div>
+        <p class="text-[11px] text-stone-600 leading-relaxed">
+          Gemini sẽ phân tích các trường chỉnh sửa của khách, đọc hình ảnh Menu thật nếu có, cập nhật đúng giá AUD và bảo tồn 100% giao diện Haute Couture của website.
+        </p>
+
+        <div id="ai-rev-status-box" class="hidden p-3 rounded-xl bg-white border border-amber-300 text-xs font-semibold text-stone-800 flex items-center gap-2">
+          <div class="w-4 h-4 rounded-full border-2 border-[#96432b] border-t-transparent animate-spin shrink-0"></div>
+          <span id="ai-rev-status-text">Đang kết nối Gemini AI và cập nhật code website...</span>
+        </div>
+
+        <div id="ai-rev-result-box" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-bold text-emerald-900 flex items-center justify-between gap-3">
+          <span id="ai-rev-result-text">✓ Đã cập nhật thành công!</span>
+          <a id="ai-rev-preview-btn" href="#" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1">
+            <span>👁️ Mở Xem Demo Ngay</span>
+            <span>↗</span>
+          </a>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button
+            type="button"
+            id="btn-run-ai-revision"
+            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-[#96432b] hover:from-amber-700 hover:to-[#7d3520] text-white font-extrabold text-xs shadow-md transition-all hover:scale-[1.01] cursor-pointer inline-flex items-center justify-center gap-2"
+          >
+            <span>🤖 Bấm 1-Click: Gemini AI Cập Nhật Web Demo</span>
+            <span>→</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2281,8 +2354,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             }
           ];
 
+          const isEven = index % 2 === 0;
+          const cardBgCls = isEven ? 'bg-white border-[#e5dec9]' : 'bg-[#faf6ee] border-[#d8ccb8] shadow-2xs';
+
           return `
-            <div data-card-cid="${c.id}" class="bg-white rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : 'border-[#e5dec9]'} shadow-xs space-y-4 transition-all duration-200">
+            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : ''} shadow-xs space-y-4 transition-all duration-200">
               <!-- Top Header -->
               <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
                 <div class="space-y-1.5">
@@ -2292,6 +2368,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <span class="text-stone-400 group-hover:text-[#96432b] text-sm">↗</span>
                     </a>
                     ${paymentBadge}
+                    ${c.revisionStatus === 'submitted'
+                      ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
+                           <span>🔔 Khách Đã Nộp Yêu Cầu Sửa (1 Vòng)</span>
+                         </button>`
+                      : (c.revisionStatus === 'applied'
+                          ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-100 text-teal-950 border border-teal-300 inline-flex items-center gap-1">
+                               <span>✓ Đã Sửa Bằng AI</span>
+                             </span>`
+                          : '')
+                    }
                     ${c.demoViewCount > 0
                       ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs" title="Lần đầu xem: ${new Date(c.demoFirstViewedAt).toLocaleString('vi-VN')} (${c.demoViewerDevice || 'Mobile'})">
                            <span>👀 Khách ĐÃ XEM DEMO</span>
@@ -2459,6 +2545,23 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                           <span>👁️ Mở Demo ↗</span>
                         </a>
                       ` : ''}
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl ${c.revisionStatus === 'submitted' ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse' : 'bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300'} text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                        title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
+                      >
+                        <span>🤖 ${c.revisionStatus === 'submitted' ? 'AI Sửa Theo Yêu Cầu (1 Vòng)' : 'AI Sửa Web'}</span>
+                      </button>
+                      <a
+                        href="/revision.html?cid=${encodeURIComponent(c.id)}&email=${encodeURIComponent(c.email || '')}"
+                        target="_blank"
+                        class="px-2 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-colors inline-flex items-center gap-1"
+                        title="Mở cổng Revision Portal của khách"
+                      >
+                        <span>📝 Portal Sửa</span>
+                        <span class="text-[10px]">↗</span>
+                      </a>
                     </div>
                   </div>
                   ${renderPaletteSwatchBar(c)}
@@ -2541,12 +2644,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </button>
                 </div>
 
-                ${(c.lastSmsLog || c.lastEmailLog) ? `
-                  <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
-                    <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
-                  </div>
-                ` : ''}
+                <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
+                  <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                  <span>👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
+                  <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
+                </div>
               </div>
             </div>
           `;
@@ -2671,7 +2773,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           return;
         }
 
-        clientsContainer.innerHTML = list.map((c) => {
+        clientsContainer.innerHTML = list.map((c, index) => {
+          const isEven = index % 2 === 0;
+          const cardBgCls = isEven ? 'bg-white border-[#e5dec9]' : 'bg-[#faf6ee] border-[#d8ccb8] shadow-2xs';
           const hasPhone = Boolean(c.phone && c.phone.trim());
           const bStats = getBriefStats(c);
           const hasValidDemo = Boolean(isValidUrl(c.demoUrl) || c.demoSlug || c.demoFilesCount);
@@ -2700,13 +2804,23 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             : (c.name || 'Khách chưa đặt tên');
 
           return `
-            <div data-card-cid="${c.id}" class="bg-white rounded-3xl p-6 border border-[#e5dec9] shadow-xs space-y-5 transition-all duration-200" id="card-${c.id}">
+            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-3xl p-6 border shadow-xs space-y-5 transition-all duration-200" id="card-${c.id}">
               <!-- Header Row -->
               <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2.5 flex-wrap">
                     <h3 class="text-xl font-extrabold text-stone-900">${escapeHtml(titleName)}</h3>
                     ${computeDeadlineBadge(c)}
+                    ${c.revisionStatus === 'submitted'
+                      ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
+                           <span>🔔 Khách Đã Nộp Yêu Cầu Sửa (1 Vòng)</span>
+                         </button>`
+                      : (c.revisionStatus === 'applied'
+                          ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-100 text-teal-950 border border-teal-300 inline-flex items-center gap-1">
+                               <span>✓ Đã Sửa Bằng AI</span>
+                             </span>`
+                          : '')
+                    }
                     <span class="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-4 text-xs text-stone-600">
@@ -2874,6 +2988,23 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <a href="${escapeHtml(c.demoUrl || c.brandedDemoUrl || ('https://' + (c.demoSlug || c.id) + '.wynnpages.com.au'))}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-200/80 hover:bg-stone-300/80 text-xs font-bold text-stone-800 inline-flex items-center gap-1">
                         <span>👁️ Mở Demo ↗</span>
                       </a>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
+                        class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl ${c.revisionStatus === 'submitted' ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse' : 'bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300'} text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                        title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
+                      >
+                        <span>🤖 ${c.revisionStatus === 'submitted' ? 'AI Sửa Theo Yêu Cầu (1 Vòng)' : 'AI Sửa Web'}</span>
+                      </button>
+                      <a
+                        href="/revision.html?cid=${encodeURIComponent(c.id)}&email=${encodeURIComponent(c.email || '')}"
+                        target="_blank"
+                        class="px-2 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-colors inline-flex items-center gap-1"
+                        title="Mở cổng Revision Portal của khách"
+                      >
+                        <span>📝 Portal Sửa</span>
+                        <span class="text-[10px]">↗</span>
+                      </a>
                     </div>
                   </div>
                   ${renderPaletteSwatchBar(c)}
@@ -2965,12 +3096,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </button>
                 </div>
 
-                ${(c.lastSmsLog || c.lastEmailLog) ? `
-                  <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                    <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
-                    <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
-                  </div>
-                ` : ''}
+                <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
+                  <span>📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
+                  <span>👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
+                  <span>📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
+                </div>
               </div>
             </div>
           `;
@@ -3601,6 +3731,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             }
           });
         });
+
+        // Open AI Revision Review & Auto-Editor Modal
+        document.querySelectorAll('.btn-open-ai-rev-modal').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            if (client) {
+              openAiRevisionModal(client);
+            }
+          });
+        });
       }
 
       async function runAdminAction(payload, opts = {}) {
@@ -3998,7 +4139,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const googleUrl = lead.googleMapsUri || (lead.placeId ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name)}&query_place_id=${encodeURIComponent(lead.placeId)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || lead.suburb || ''))}`);
 
           return `
-            <tr class="border-b border-[#f0eade] hover:bg-[#fcfbf8] transition-colors text-xs">
+            <tr class="border-b border-[#f0eade] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#faf6ee]'} hover:bg-[#f6efe2] transition-colors text-xs">
               <td class="py-3 px-3.5">
                 <div class="space-y-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
@@ -4611,6 +4752,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (cfgGdriveWebhook) cfgGdriveWebhook.value = localCreds.googleDriveWebhookUrl || '';
         if (cfgCfToken) cfgCfToken.value = localCreds.cfApiToken || '';
         if (cfgGooglePlacesKey) cfgGooglePlacesKey.value = localCreds.googlePlacesApiKey || '';
+        const cfgGeminiKey = document.getElementById('cfg-gemini-key');
+        if (cfgGeminiKey) cfgGeminiKey.value = localCreds.geminiApiKey || '';
         settingsModal.classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
@@ -4621,6 +4764,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           saveBtn.disabled = true;
           saveBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang lưu...</span>';
         }
+        const cfgGemKey = document.getElementById('cfg-gemini-key');
         localCreds = {
           clicksendUsername: cfgClicksendUser.value.trim(),
           clicksendApiKey: cfgClicksendKey.value.trim(),
@@ -4629,7 +4773,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           resendFromEmail: cfgResendFrom.value.trim(),
           googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : '',
           cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : '',
-          googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : ''
+          googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : '',
+          geminiApiKey: cfgGemKey ? cfgGemKey.value.trim() : ''
         };
         localStorage.setItem('wynn_messaging_creds', JSON.stringify(localCreds));
         if (typeof updateLeadKeyIndicator === 'function') updateLeadKeyIndicator();
@@ -5033,6 +5178,19 @@ https://wynnpages.com.au`;
       const btnSubmitBundle = document.getElementById('btn-submit-bundle');
       const btnCloseUploadModal = document.getElementById('btn-close-upload-modal');
       const btnCancelUpload = document.getElementById('btn-cancel-upload');
+
+      // AI Revision Review & Auto-Editor Modal Elements
+      const aiRevModal = document.getElementById('ai-revision-modal');
+      const aiRevBizName = document.getElementById('ai-rev-biz-name');
+      const aiRevDetailsBody = document.getElementById('ai-rev-details-body');
+      const aiRevStatusBox = document.getElementById('ai-rev-status-box');
+      const aiRevStatusText = document.getElementById('ai-rev-status-text');
+      const aiRevResultBox = document.getElementById('ai-rev-result-box');
+      const aiRevResultText = document.getElementById('ai-rev-result-text');
+      const aiRevPreviewBtn = document.getElementById('ai-rev-preview-btn');
+      const btnRunAiRevision = document.getElementById('btn-run-ai-revision');
+      const btnCloseAiRev = document.getElementById('btn-close-ai-rev');
+      let currentAiRevClient = null;
 
       let currentUploadClient = null;
       let preparedBundleFiles = []; // [{ path: '/index.html', type: '...', text?: '...', base64?: '...' }]
@@ -5755,6 +5913,227 @@ https://wynnpages.com.au`;
 
       btnCloseUploadModal.addEventListener('click', closeUploadModal);
       btnCancelUpload.addEventListener('click', closeUploadModal);
+
+      // AI Revision Modal logic
+      function closeAiRevisionModal() {
+        if (aiRevModal) aiRevModal.classList.add('hidden');
+        currentAiRevClient = null;
+        if (aiRevStatusBox) aiRevStatusBox.classList.add('hidden');
+        if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
+        if (btnRunAiRevision) {
+          btnRunAiRevision.disabled = false;
+          btnRunAiRevision.innerHTML = '<span>🤖 Bấm 1-Click: Gemini AI Cập Nhật Web Demo</span><span>→</span>';
+        }
+      }
+
+      if (btnCloseAiRev) {
+        btnCloseAiRev.addEventListener('click', closeAiRevisionModal);
+      }
+
+      async function openAiRevisionModal(client) {
+        currentAiRevClient = client;
+        const bizName = client.businessName || client.name || client.demoSlug || 'Tiệm';
+        if (aiRevBizName) aiRevBizName.textContent = bizName;
+
+        if (aiRevStatusBox) aiRevStatusBox.classList.add('hidden');
+        if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
+        if (btnRunAiRevision) {
+          btnRunAiRevision.disabled = false;
+          btnRunAiRevision.innerHTML = '<span>🤖 Bấm 1-Click: Gemini AI Cập Nhật Web Demo</span><span>→</span>';
+        }
+
+        if (aiRevDetailsBody) {
+          aiRevDetailsBody.innerHTML = `
+            <div class="p-6 text-center text-stone-400">
+              <span class="inline-block animate-spin mr-1">↻</span> Đang tải yêu cầu chỉnh sửa của khách...
+            </div>
+          `;
+        }
+        if (aiRevModal) aiRevModal.classList.remove('hidden');
+
+        try {
+          const res = await fetch(`/api/revision/get-demo-data?cid=${encodeURIComponent(client.id)}`);
+          const data = await res.json().catch(() => ({}));
+          const rev = data.revisionData || null;
+
+          if (!rev && client.revisionStatus !== 'submitted' && client.revisionStatus !== 'applied') {
+            aiRevDetailsBody.innerHTML = `
+              <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-stone-700 leading-relaxed">
+                <div class="font-bold text-amber-900 mb-1">ℹ️ Khách Chưa Nộp Yêu Cầu Chỉnh Sửa</div>
+                Khách hàng chưa submit biểu mẫu tại Portal Sửa Đổi. Bạn có thể gửi link trực tiếp cho khách hoặc mở portal để điền giúp khách:
+                <div class="mt-2.5">
+                  <a href="/revision.html?cid=${encodeURIComponent(client.id)}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 text-white font-bold text-xs hover:bg-stone-800">
+                    <span>Mở Revision Portal Khách Hàng</span> ↗
+                  </a>
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          const bName = (rev && rev.bizName) ? escapeHtml(rev.bizName) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bPhone = (rev && rev.phone) ? escapeHtml(rev.phone) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bAddress = (rev && rev.address) ? escapeHtml(rev.address) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bHours = (rev && rev.hours) ? escapeHtml(rev.hours) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bBooking = (rev && rev.bookingLink) ? escapeHtml(rev.bookingLink) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bHero = (rev && rev.heroHeadline) ? escapeHtml(rev.heroHeadline) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bAbout = (rev && rev.aboutStory) ? escapeHtml(rev.aboutStory) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bMenuNotes = (rev && rev.menuNotes) ? escapeHtml(rev.menuNotes) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bFinalNotes = (rev && rev.finalNotes) ? escapeHtml(rev.finalNotes) : '<span class="text-stone-400 italic">(Không có)</span>';
+
+          const hasMenuFile = rev && rev.menuFileName;
+          const hasPhotoFiles = rev && rev.photosFileName;
+
+          aiRevDetailsBody.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <!-- Block 1: Thông tin cơ bản -->
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+                  <span>📍 Block 1: Thông Tin Tiệm</span>
+                  <span class="text-[10px] text-stone-400">Core Info</span>
+                </div>
+                <div class="space-y-1">
+                  <div><strong class="text-stone-700">Tên tiệm:</strong> ${bName}</div>
+                  <div><strong class="text-stone-700">SĐT:</strong> ${bPhone}</div>
+                  <div><strong class="text-stone-700">Địa chỉ:</strong> ${bAddress}</div>
+                  <div><strong class="text-stone-700">Giờ mở cửa:</strong> ${bHours}</div>
+                  <div><strong class="text-stone-700">Link đặt lịch:</strong> ${bBooking}</div>
+                </div>
+              </div>
+
+              <!-- Block 2: Tiêu đề & Giới thiệu -->
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+                  <span>✨ Block 2: Tiêu Đề &amp; Câu Chuyện</span>
+                  <span class="text-[10px] text-stone-400">Hero &amp; About</span>
+                </div>
+                <div class="space-y-1.5">
+                  <div>
+                    <strong class="text-stone-700">Slogan / Hero H1:</strong>
+                    <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5">${bHero}</div>
+                  </div>
+                  <div>
+                    <strong class="text-stone-700">Câu chuyện / About:</strong>
+                    <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 line-clamp-3">${bAbout}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Block 3: Dịch vụ & Menu giá -->
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+                  <span>💅 Block 3: Bảng Giá &amp; Dịch Vụ</span>
+                  <span class="text-[10px] text-stone-400">Price Menu</span>
+                </div>
+                <div>
+                  <strong class="text-stone-700">Ghi chú giá / dịch vụ:</strong>
+                  <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap">${bMenuNotes}</div>
+                </div>
+                ${hasMenuFile ? `
+                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
+                    <span class="font-bold flex items-center gap-1.5"><span>📷</span> <span>Menu Upload:</span> <em>${escapeHtml(rev.menuFileName)}</em></span>
+                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=menu" target="_blank" class="text-[11px] font-bold text-emerald-700 underline">Xem Ảnh ↗</a>
+                  </div>
+                ` : '<div class="text-[11px] text-stone-400 italic">Không đính kèm file ảnh menu</div>'}
+              </div>
+
+              <!-- Block 4: Hình ảnh thật & Ghi chú -->
+              <div class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2">
+                <div class="font-extrabold text-stone-900 border-b border-[#ebdcc4] pb-1 flex items-center justify-between">
+                  <span>🖼️ Block 4: Hình Ảnh Thật &amp; Ghi Chú</span>
+                  <span class="text-[10px] text-stone-400">Photos &amp; Notes</span>
+                </div>
+                ${hasPhotoFiles ? `
+                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
+                    <span class="font-bold flex items-center gap-1.5"><span>📸</span> <span>Ảnh tiệm:</span> <em>${escapeHtml(rev.photosFileName)}</em></span>
+                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=photos" target="_blank" class="text-[11px] font-bold text-emerald-700 underline">Xem Ảnh ↗</a>
+                  </div>
+                ` : '<div class="text-[11px] text-stone-400 italic">Giữ nguyên tranh sơn dầu nghệ thuật của Demo</div>'}
+                <div>
+                  <strong class="text-stone-700">Chỉ đạo cuối cùng:</strong>
+                  <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap">${bFinalNotes}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-stone-500 pt-1">
+              <span>Trạng thái: <strong class="text-stone-800">${client.revisionStatus === 'applied' ? '✅ Đã Áp Dụng Sửa Đổi' : (client.revisionStatus === 'submitted' ? '🔔 Khách đã nộp (Chờ duyệt & áp dụng)' : 'Chưa nộp')}</strong></span>
+              <a href="/revision.html?cid=${encodeURIComponent(client.id)}" target="_blank" class="text-amber-800 font-bold hover:underline inline-flex items-center gap-1">
+                <span>Xem giao diện Portal Khách</span> ↗
+              </a>
+            </div>
+          `;
+        } catch (err) {
+          aiRevDetailsBody.innerHTML = `
+            <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+              Lỗi tải dữ liệu sửa đổi: ${escapeHtml(err.message)}
+            </div>
+          `;
+        }
+      }
+
+      if (btnRunAiRevision) {
+        btnRunAiRevision.addEventListener('click', async () => {
+          if (!currentAiRevClient) return;
+          const target = currentAiRevClient;
+          const bizName = target.businessName || target.name || target.demoSlug || 'Tiệm';
+
+          btnRunAiRevision.disabled = true;
+          btnRunAiRevision.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Đang chạy Gemini Vision OCR & cập nhật website...';
+
+          if (aiRevStatusBox) {
+            aiRevStatusBox.classList.remove('hidden');
+            if (aiRevStatusText) aiRevStatusText.textContent = `Đang gửi yêu cầu và hình ảnh tới Gemini AI để cập nhật website của "${bizName}"...`;
+          }
+          if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
+
+          try {
+            const savedSettings = JSON.parse(localStorage.getItem('wynnpages_admin_settings') || '{}');
+            const gKey = savedSettings.geminiApiKey || '';
+
+            const res = await fetch('/api/admin/apply-ai-revision', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': adminKey
+              },
+              body: JSON.stringify({
+                cid: target.id,
+                geminiApiKey: gKey
+              })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || 'Gemini AI cập nhật không thành công');
+            }
+
+            if (aiRevStatusBox) aiRevStatusBox.classList.add('hidden');
+            if (aiRevResultBox) {
+              aiRevResultBox.classList.remove('hidden');
+              if (aiRevResultText) {
+                aiRevResultText.innerHTML = `✓ Thành công! ${escapeHtml(data.changesSummary || 'Đã cập nhật cấu hình và giá menu.')}`;
+              }
+              if (aiRevPreviewBtn) {
+                aiRevPreviewBtn.href = data.previewUrl || `https://${target.demoSlug}.wynnpages.com.au`;
+              }
+            }
+
+            btnRunAiRevision.disabled = false;
+            btnRunAiRevision.innerHTML = '<span>✓ Đã Áp Dụng Thành Công</span>';
+
+            target.revisionStatus = 'applied';
+            showToast(`🎉 Gemini AI đã cập nhật xong web demo của "${bizName}"!`);
+            applyFiltersAndRender();
+          } catch (err) {
+            if (aiRevStatusBox) aiRevStatusBox.classList.add('hidden');
+            showToast(`Lỗi Gemini AI Auto-Editor: ${err.message}`, true);
+            btnRunAiRevision.disabled = false;
+            btnRunAiRevision.innerHTML = '<span>❌ Thử Lại: Gemini AI Auto-Edit</span>';
+          }
+        });
+      }
 
       demoDropzone.addEventListener('click', () => demoFileInput.click());
       demoDropzone.addEventListener('dragover', (e) => {

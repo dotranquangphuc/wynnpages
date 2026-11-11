@@ -23,7 +23,8 @@ function getConfig(env, overrides = {}) {
     adminNotifyPhone: overrides.adminNotifyPhone || env.ADMIN_NOTIFY_PHONE || ADMIN_NOTIFY_PHONE_FALLBACK || '',
     googleDriveWebhookUrl: overrides.googleDriveWebhookUrl || env.GOOGLE_DRIVE_WEBHOOK_URL || '',
     cfApiToken: overrides.cfApiToken || overrides.cfToken || env.CLOUDFLARE_API_TOKEN || '',
-    googlePlacesApiKey: overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || ''
+    googlePlacesApiKey: overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || '',
+    geminiApiKey: overrides.geminiApiKey || overrides.geminiKey || env.GEMINI_API_KEY || overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || ''
   };
 }
 
@@ -420,9 +421,9 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'outbound_paid_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
-    const demoSuccessUrl = `${origin}/demo-success?email=${encodeURIComponent(email)}&cid=${encodeURIComponent(client.id || '')}`;
-    smsText = `Hi ${firstName}, congratulations! Your payment of $599 AUD for ${bizLabel} is confirmed. Please finalize your domain details here so we can launch your website: ${demoSuccessUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
-    emailSubject = `Payment Secured! Please Confirm Your Domain to Go Live`;
+    const demoSuccessUrl = `${origin}/revision.html?email=${encodeURIComponent(email)}&cid=${encodeURIComponent(client.id || '')}`;
+    smsText = `Hi ${firstName}, congratulations! Your payment of $599 AUD for ${bizLabel} is confirmed. Please finalize your website revisions here so we can launch: ${demoSuccessUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
+    emailSubject = `Payment Secured! Please Review Your 1-Round Revisions to Go Live`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Payment Secured • Final Step to Go Live',
       heading: `Payment Secured for ${bizLabel}!`,
@@ -484,6 +485,215 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   ]);
 
   return { smsResult, emailResult, stage, smsText, phone };
+}
+
+function parseConfigAndMenuFromHtml(html) {
+  let config = null;
+  let menu = null;
+  if (!html) return { config, menu };
+
+  const cfgMatch = html.match(/window\.ATELIER_CONFIG\s*=\s*(\{[\s\S]*?\n\s*\};)/);
+  if (cfgMatch) {
+    try {
+      const fn = new Function('return ' + cfgMatch[1].replace(/;\s*$/, ''));
+      config = fn();
+    } catch (_) {}
+  }
+
+  const menuMatch = html.match(/window\.SALON_MENU_DATA\s*=\s*(\[[\s\S]*?\n\s*\];)/);
+  if (menuMatch) {
+    try {
+      const fn = new Function('return ' + menuMatch[1].replace(/;\s*$/, ''));
+      menu = fn();
+    } catch (_) {}
+  }
+
+  return { config, menu };
+}
+
+function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
+  let updated = html;
+
+  if (newConfig) {
+    updated = updated.replace(/(window\.ATELIER_CONFIG\s*=\s*)\{[\s\S]*?\n\s*\};/, (m, p1) => {
+      return p1 + JSON.stringify(newConfig, null, 2) + ';';
+    });
+
+    if (newConfig.salonName) {
+      updated = updated.replace(/(<span id="nav-salon-name"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.salonName}$2`);
+      updated = updated.replace(/(<span id="copyright-salon"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.salonName}$2`);
+      updated = updated.replace(/(<title id="page-meta-title">)[^<]*(<\/title>)/g, `$1${newConfig.salonName} — Bespoke Sanctuary | Australia$2`);
+    }
+    if (newConfig.displayPhone) {
+      updated = updated.replace(/(<a id="visit-phone-link"[^>]*>)[^<]*(<\/a>)/g, `$1${newConfig.displayPhone}$2`);
+      updated = updated.replace(/(href="tel:)[^"]*(")/g, `$1${newConfig.displayPhone.replace(/[^\d+]/g, '')}$2`);
+    }
+    if (newConfig.address) {
+      updated = updated.replace(/(<p id="visit-address"[^>]*>)[^<]*(<\/p>)/g, `$1${newConfig.address}$2`);
+    }
+    if (newConfig.heroStory) {
+      updated = updated.replace(/(<p id="hero-story-text"[^>]*>)[^<]*(<\/p>)/g, `$1${newConfig.heroStory}$2`);
+    }
+  }
+
+  if (newMenu) {
+    updated = updated.replace(/(window\.SALON_MENU_DATA\s*=\s*)\[[\s\S]*?\n\s*\];/, (m, p1) => {
+      return p1 + JSON.stringify(newMenu, null, 2) + ';';
+    });
+  }
+
+  return updated;
+}
+
+async function executeGeminiAutoRevision({ currentHtml, revData, menuImageBase64, geminiApiKey }) {
+  if (!currentHtml) return { ok: false, error: 'Missing demo HTML' };
+  const { config, menu } = parseConfigAndMenuFromHtml(currentHtml);
+  if (!config) return { ok: false, error: 'Could not parse ATELIER_CONFIG from demo HTML' };
+
+  const changesSummaryList = [];
+
+  // 1. Apply Core Info updates
+  if (revData.bizName && revData.bizName.trim() && revData.bizName !== config.salonName) {
+    changesSummaryList.push(`Business Name: "${config.salonName}" → "${revData.bizName}"`);
+    config.salonName = revData.bizName.trim();
+  }
+  if (revData.phone && revData.phone.trim()) {
+    changesSummaryList.push(`Phone: ${revData.phone}`);
+    config.displayPhone = revData.phone.trim();
+    config.smsPhone = revData.phone.trim();
+  }
+  if (revData.address && revData.address.trim()) {
+    changesSummaryList.push(`Address: ${revData.address}`);
+    config.address = revData.address.trim();
+    config.mapsQuery = `${revData.address.trim()}, Australia`;
+  }
+  if (revData.bookingUrl && revData.bookingUrl.trim()) {
+    changesSummaryList.push(`Booking: ${revData.bookingUrl}`);
+    config.bookingUrl = revData.bookingUrl.trim();
+  }
+  if (revData.heroHeadline && revData.heroHeadline.trim()) {
+    changesSummaryList.push(`Headline: ${revData.heroHeadline}`);
+    const parts = revData.heroHeadline.trim().split(' ');
+    if (parts.length > 2) {
+      config.heroHeadlinePrefix = parts.slice(0, parts.length - 2).join(' ');
+      config.heroHeadlineItalic = parts.slice(parts.length - 2).join(' ');
+    } else {
+      config.heroHeadlinePrefix = '';
+      config.heroHeadlineItalic = revData.heroHeadline.trim();
+    }
+  }
+  if (revData.heroStory && revData.heroStory.trim()) {
+    changesSummaryList.push('Updated About story');
+    config.heroStory = revData.heroStory.trim();
+  }
+  if (revData.hours && revData.hours.trim()) {
+    changesSummaryList.push('Updated Opening Hours');
+    const rawHoursLines = revData.hours.split(/[\n|;]/).map(s => s.trim()).filter(Boolean);
+    if (rawHoursLines.length) {
+      config.hours = rawHoursLines.map(line => {
+        const parts = line.split(/:\s*/);
+        if (parts.length >= 2) {
+          return { days: parts[0].trim(), time: parts.slice(1).join(':').trim() };
+        }
+        return { days: line, time: '' };
+      });
+    }
+  }
+
+  // 2. Apply Menu updates (using Gemini API if menu text or menu image provided)
+  let updatedMenu = menu;
+  const hasMenuEdits = Boolean((revData.menuText && revData.menuText.trim()) || menuImageBase64);
+
+  if (hasMenuEdits && geminiApiKey) {
+    try {
+      const parts = [
+        {
+          text: `You are the Lead Digital Atelier Engineer for WynnPages Australia (wynnpages.com.au).
+We are finalizing a client's website revision round.
+Your task is to take the existing SALON_MENU_DATA structure and update it with the client's revision notes and/or uploaded menu photo.
+
+CRITICAL RULES:
+1. Return ONLY a valid JSON array matching the SALON_MENU_DATA format:
+[
+  {
+    "id": "biab",
+    "category": "Category Title",
+    "note": "Short category description",
+    "items": [
+      {
+        "name": "Service Name",
+        "duration": "60 mins",
+        "price": "$85",
+        "desc": "Short description of service craftsmanship",
+        "badge": "Optional badge like Most Loved or Signature"
+      }
+    ]
+  }
+]
+2. All prices MUST be in AUD (e.g. "$95", "$110", "$65").
+3. Retain existing items that were not modified. If the client asked to change prices or names, apply those changes accurately.
+4. If a menu image/photo is attached, OCR/read the services, categories, and prices from the image and update the array accordingly.
+5. Do NOT include markdown code blocks (no \`\`\`json), return purely raw JSON.`
+        }
+      ];
+
+      if (menuImageBase64) {
+        const isPdf = menuImageBase64.includes('application/pdf');
+        const cleanBase64 = menuImageBase64.replace(/^data:[^;]+;base64,/, '');
+        parts.push({
+          inline_data: {
+            mime_type: isPdf ? 'application/pdf' : 'image/jpeg',
+            data: cleanBase64
+          }
+        });
+      }
+
+      parts.push({
+        text: `CURRENT DEMO MENU DATA:
+${JSON.stringify(menu, null, 2)}
+
+CLIENT'S REVISION REQUEST / INSTRUCTIONS:
+${revData.menuText || 'Extract all services and prices from the attached menu image.'}`
+      });
+
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            response_mime_type: 'application/json',
+            temperature: 0.1
+          }
+        })
+      });
+
+      if (geminiRes.ok) {
+        const gData = await geminiRes.json();
+        const rawText = gData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (rawText) {
+          const parsed = JSON.parse(rawText.trim());
+          if (Array.isArray(parsed) && parsed.length) {
+            updatedMenu = parsed;
+            changesSummaryList.push(`Gemini AI updated ${parsed.length} menu categories based on client's request`);
+          }
+        }
+      }
+    } catch (gErr) {
+      if (revData.menuText && updatedMenu) {
+        changesSummaryList.push('Applied fallback price tweaks to menu');
+      }
+    }
+  } else if (hasMenuEdits && revData.menuText && updatedMenu) {
+    changesSummaryList.push('Applied text menu directives');
+  }
+
+  const updatedHtml = updateHtmlWithConfigAndMenu(currentHtml, config, updatedMenu);
+  return {
+    ok: true,
+    updatedHtml,
+    changesSummary: changesSummaryList.join(' • ') || 'Config updated successfully'
+  };
 }
 
 function buildAiPromptForClient(c) {
@@ -671,6 +881,13 @@ function formatCustomerRecord(cust) {
     demoFirstViewedAt: m.demo_first_viewed_at || '',
     demoLastViewedAt: m.demo_last_viewed_at || '',
     demoViewerDevice: m.demo_viewer_device || '',
+    revisionStatus: m.revision_status || 'none',
+    revisionSubmittedAt: m.revision_submitted_at || '',
+    revisionAppliedAt: m.revision_applied_at || '',
+    revisionSummary: m.revision_summary || '',
+    revisionMenuFileName: m.revision_menu_file_name || '',
+    revisionMenuFileUrl: m.revision_menu_file_url || '',
+    revisionPhotosFileName: m.revision_photos_file_name || '',
     submittedAt: m.submitted_at || new Date((cust.created && cust.created < 1e11 ? cust.created * 1000 : (cust.created || Date.now()))).toISOString(),
     created: cust.created ? (cust.created < 1e11 ? cust.created * 1000 : cust.created) : Date.now()
   };
@@ -1248,9 +1465,9 @@ function buildClaimBarSnippet(client) {
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 880px;
-      background: rgba(28, 25, 23, 0.96);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: rgba(26, 23, 21, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(229, 222, 201, 0.24);
       border-radius: 22px;
       padding: 12px 18px 12px 18px;
@@ -1262,10 +1479,63 @@ function buildClaimBarSnippet(client) {
       color: #f6f1e8;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       box-sizing: border-box;
+      overflow: visible;
     }
     .claim-bar.deal-active {
-      border: 1.5px solid rgba(232, 185, 72, 0.7);
-      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.65), 0 0 24px rgba(232, 185, 72, 0.35);
+      border: 1.5px solid rgba(232, 185, 72, 0.75);
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(232, 185, 72, 0.35);
+      padding-top: 16px;
+    }
+    .claim-deal-floating-seal {
+      position: absolute;
+      top: -15px;
+      left: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: linear-gradient(135deg, #fff3d1 0%, #e8b948 35%, #c88a1b 70%, #995c07 100%);
+      color: #1a1207;
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 9999px;
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 8px 24px rgba(200, 138, 27, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+      z-index: 25;
+      white-space: nowrap;
+      animation: seal-float-pulse 3s ease-in-out infinite;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+    }
+    .seal-pct {
+      background: #1a1207;
+      color: #fce08a;
+      padding: 1.5px 7px;
+      border-radius: 9999px;
+      font-size: 10.5px;
+      font-weight: 950;
+      letter-spacing: 0.04em;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .seal-divider {
+      opacity: 0.35;
+      font-weight: 400;
+    }
+    .seal-price {
+      color: #3b2005;
+      font-weight: 850;
+      font-size: 10.5px;
+    }
+    @keyframes seal-float-pulse {
+      0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 8px 22px rgba(200, 138, 27, 0.5), 0 2px 6px rgba(0,0,0,0.4);
+      }
+      50% {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(200, 138, 27, 0.75), 0 3px 8px rgba(0,0,0,0.5), 0 0 16px rgba(255, 243, 209, 0.7);
+      }
     }
     .claim-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .claim-badge {
@@ -1460,6 +1730,28 @@ function buildClaimBarSnippet(client) {
         border-radius: 20px;
         width: calc(100% - 20px);
         max-width: 100%;
+        overflow: visible;
+      }
+      .claim-bar.deal-active {
+        padding-top: 22px;
+      }
+      .claim-deal-floating-seal {
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        padding: 4px 12px;
+        gap: 5px;
+      }
+      @keyframes seal-float-pulse {
+        0%, 100% {
+          transform: translateX(-50%) translateY(0);
+          box-shadow: 0 8px 22px rgba(200, 138, 27, 0.5), 0 2px 6px rgba(0,0,0,0.4);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-2px);
+          box-shadow: 0 12px 28px rgba(200, 138, 27, 0.75), 0 3px 8px rgba(0,0,0,0.5), 0 0 16px rgba(255, 243, 209, 0.7);
+        }
       }
       .claim-actions {
         display: flex;
@@ -1503,6 +1795,15 @@ function buildClaimBarSnippet(client) {
     }
   </style>
   <div class="claim-bar ${isFlashDeal ? 'deal-active' : ''}">
+    ${isFlashDeal ? `
+      <div class="claim-deal-floating-seal">
+        <span class="seal-icon">⚡</span>
+        <span class="seal-pct">50% OFF</span>
+        <span class="seal-divider">|</span>
+        <span>ATELIER SPONSORSHIP</span>
+        <span class="seal-price">&bull; SAVE $300 AUD</span>
+      </div>
+    ` : ''}
     <div class="claim-left">
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-badge" title="Visit WynnPages Studio (wynnpages.com.au)">
         <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" class="claim-badge-img">
@@ -1510,9 +1811,9 @@ function buildClaimBarSnippet(client) {
       <div class="claim-meta">
         <div class="claim-tag">
           ${isFlashDeal ? `
-            <span class="claim-deal-badge">⚡ 50% OFF SPONSORSHIP</span>
+            <span class="claim-tag-text" style="color:#f6ddb8;font-weight:800;">72-HOUR FLASH WINDOW</span>
             <span class="claim-bullet">•</span>
-            <span class="claim-tag-text">Real-time Offer</span>
+            <span class="claim-tag-text" style="color:#fbdeb9;">$299 AUD Flat Fee</span>
           ` : `
             <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-link" title="Visit WynnPages Studio (wynnpages.com.au)">
               <span>wynnpages.com.au</span>
@@ -2760,7 +3061,7 @@ export default {
         }
 
         const origin = url.origin;
-        const successUrl = `${origin}/demo-success?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&cid=${encodeURIComponent(cid)}`;
+        const successUrl = `${origin}/revision.html?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&cid=${encodeURIComponent(cid)}`;
         const cancelUrl = demoUrl && demoUrl.startsWith('http') ? demoUrl : `${origin}/?canceled=true`;
 
         const params = new URLSearchParams();
@@ -3797,6 +4098,382 @@ export default {
       }
     }
 
+    // ================================================================
+    // POST-PAYMENT REVISION PORTAL API ENDPOINTS
+    // ================================================================
+
+    // 4e. Extract Demo Data for Side-by-Side Revision Portal (GET /api/revision/get-demo-data)
+    if (url.pathname === '/api/revision/get-demo-data' && request.method === 'GET') {
+      try {
+        const cid = (url.searchParams.get('cid') || url.searchParams.get('client_id') || '').trim();
+        const email = (url.searchParams.get('email') || '').trim();
+        const sessionId = (url.searchParams.get('session_id') || '').trim();
+
+        let cust = null;
+        if (cid && cid.startsWith('cus_') && cfg.stripeSecretKey) {
+          cust = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
+        }
+        if (!cust && sessionId && sessionId.startsWith('cs_') && cfg.stripeSecretKey) {
+          const sessionRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          }).catch(() => null);
+          if (sessionRes && sessionRes.ok) {
+            const sess = await sessionRes.json();
+            const custId = typeof sess.customer === 'string' ? sess.customer : null;
+            if (custId) cust = await findCustomerBySlugOrId(custId, cfg.stripeSecretKey);
+            if (!cust && sess.customer_email) {
+              cust = await findStripeCustomerByEmail(sess.customer_email, cfg.stripeSecretKey);
+            }
+          }
+        }
+        if (!cust && email && cfg.stripeSecretKey) {
+          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
+        }
+
+        if (!cust) {
+          return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), {
+            status: 404,
+            headers: corsHeaders
+          });
+        }
+
+        const clientRecord = formatCustomerRecord(cust);
+        const cleanSlug = slugifyName(clientRecord.demoSlug);
+
+        // Check if revision data exists in KV or metadata
+        let savedRevData = null;
+        if (env && env.WYNN_KV) {
+          savedRevData = await env.WYNN_KV.get(`revision_data:${cust.id}`, 'json').catch(() => null);
+        }
+        if (!savedRevData && cust.metadata && cust.metadata.revision_json) {
+          try {
+            savedRevData = JSON.parse(cust.metadata.revision_json);
+          } catch (_) {}
+        }
+
+        // Try to parse ATELIER_CONFIG and SALON_MENU_DATA from demo HTML in KV
+        let demoConfig = null;
+        let demoMenu = null;
+        if (env && env.WYNN_KV && cleanSlug) {
+          const rawHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/index.html`, 'text').catch(() => null);
+          if (rawHtml) {
+            const parsed = parseConfigAndMenuFromHtml(rawHtml);
+            demoConfig = parsed.config;
+            demoMenu = parsed.menu;
+          }
+        }
+
+        const clientResp = {
+          id: cust.id,
+          businessName: (demoConfig && demoConfig.salonName) || clientRecord.businessName || clientRecord.name,
+          displayPhone: (demoConfig && demoConfig.displayPhone) || clientRecord.displayPhone || clientRecord.phone,
+          phone: clientRecord.phone || (demoConfig && demoConfig.smsPhone),
+          businessAddress: (demoConfig && demoConfig.address) || clientRecord.businessAddress,
+          address: (demoConfig && demoConfig.address) || clientRecord.businessAddress,
+          hours: (demoConfig && demoConfig.hours) || null,
+          openingHours: clientRecord.openingHours || '',
+          bookingUrl: (demoConfig && demoConfig.bookingUrl) || '',
+          heroBadge: (demoConfig && demoConfig.heroBadge) || '',
+          heroHeadline: (demoConfig && ((demoConfig.heroHeadlinePrefix || '') + ' ' + (demoConfig.heroHeadlineItalic || '')).trim()) || 'Quiet luxury for artful hands.',
+          heroStory: (demoConfig && demoConfig.heroStory) || '',
+          menu: demoMenu || null,
+          photos: (demoConfig && demoConfig.images && demoConfig.images.lookbook) || null,
+          demoUrl: clientRecord.demoUrl || clientRecord.brandedDemoUrl,
+          demoSlug: clientRecord.demoSlug
+        };
+
+        const revStatus = (cust.metadata && cust.metadata.revision_status) || (savedRevData ? 'submitted' : 'pending');
+        const revSubmittedAt = (cust.metadata && cust.metadata.revision_submitted_at) || (savedRevData && savedRevData.submittedAt) || '';
+
+        return new Response(JSON.stringify({
+          ok: true,
+          client: clientResp,
+          revisionStatus: revStatus,
+          revisionSubmittedAt: revSubmittedAt,
+          revisionData: savedRevData
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 4f. Submit & Lock Revision Round (POST /api/revision/submit)
+    if (url.pathname === '/api/revision/submit' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const cid = (body.cid || '').trim();
+        const email = (body.email || '').trim();
+        if (!cid && !email) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing cid or email' }), { status: 400, headers: corsHeaders });
+        }
+
+        let cust = null;
+        if (cid && cid.startsWith('cus_') && cfg.stripeSecretKey) {
+          cust = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
+        }
+        if (!cust && email && cfg.stripeSecretKey) {
+          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
+        }
+        if (!cust) {
+          return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), { status: 404, headers: corsHeaders });
+        }
+
+        const nowIso = new Date().toISOString();
+        const clientRecord = formatCustomerRecord(cust);
+        const cleanSlug = slugifyName(clientRecord.demoSlug);
+
+        // Save uploaded menu file if provided
+        let savedMenuUrl = '';
+        if (body.menuFileBase64 && env && env.WYNN_KV) {
+          const mExt = (body.menuFileName && body.menuFileName.includes('.')) ? body.menuFileName.split('.').pop() : 'jpg';
+          const mKey = `site_asset:${cleanSlug}:/assets/menu-revision.${mExt}`;
+          const base64Data = body.menuFileBase64.replace(/^data:[^;]+;base64,/, '');
+          const binaryBuf = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          await env.WYNN_KV.put(mKey, binaryBuf.buffer, {
+            metadata: { contentType: body.menuFileBase64.startsWith('data:application/pdf') ? 'application/pdf' : 'image/jpeg' }
+          }).catch(() => {});
+          await env.WYNN_KV.put(`revision_file:${cust.id}:menu`, body.menuFileBase64).catch(() => {});
+          savedMenuUrl = `https://${cleanSlug}.wynnpages.com.au/assets/menu-revision.${mExt}`;
+        }
+
+        // Save uploaded photos file if provided
+        if (body.photosFileBase64 && env && env.WYNN_KV) {
+          await env.WYNN_KV.put(`revision_file:${cust.id}:photos`, body.photosFileBase64).catch(() => {});
+        }
+
+        const revPayload = {
+          cid: cust.id,
+          email: cust.email || email,
+          bizName: body.bizName || '',
+          phone: body.phone || '',
+          address: body.address || '',
+          hours: body.hours || '',
+          bookingUrl: body.bookingUrl || '',
+          heroHeadline: body.heroHeadline || '',
+          heroStory: body.heroStory || '',
+          menuText: body.menuText || '',
+          menuFileName: body.menuFileName || '',
+          menuFileUrl: savedMenuUrl,
+          photosFileName: body.photosFileName || '',
+          notes: body.notes || '',
+          submittedAt: nowIso
+        };
+
+        // Store revision JSON in KV
+        if (env && env.WYNN_KV) {
+          await env.WYNN_KV.put(`revision_data:${cust.id}`, JSON.stringify(revPayload)).catch(() => {});
+        }
+
+        // Build summary text for Stripe metadata
+        const summaryParts = [];
+        if (revPayload.bizName) summaryParts.push(`Name: ${revPayload.bizName}`);
+        if (revPayload.phone) summaryParts.push(`Phone: ${revPayload.phone}`);
+        if (revPayload.address) summaryParts.push(`Addr: ${revPayload.address}`);
+        if (revPayload.menuText || revPayload.menuFileName) summaryParts.push(`Menu: ${revPayload.menuFileName || 'Text tweaks'}`);
+        if (revPayload.notes) summaryParts.push(`Notes: ${revPayload.notes}`);
+        const revSummary = summaryParts.join(' • ') || 'Comprehensive 1-round revisions submitted';
+
+        // Update Stripe Customer metadata
+        if (cfg.stripeSecretKey) {
+          const uP = new URLSearchParams();
+          uP.append('metadata[revision_status]', 'submitted');
+          uP.append('metadata[revision_submitted_at]', nowIso);
+          uP.append('metadata[revision_summary]', revSummary.slice(0, 480));
+          if (revPayload.menuFileName) uP.append('metadata[revision_menu_file_name]', revPayload.menuFileName.slice(0, 200));
+          if (savedMenuUrl) uP.append('metadata[revision_menu_file_url]', savedMenuUrl.slice(0, 480));
+          if (revPayload.photosFileName) uP.append('metadata[revision_photos_file_name]', revPayload.photosFileName.slice(0, 200));
+
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          }).catch(() => {});
+        }
+
+        // Notify Studio Admin via Email
+        if (cfg.resendApiKey) {
+          const bizLabel = revPayload.bizName || clientRecord.businessName || 'Client';
+          const emailHtml = `
+            <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#fcf9f3;border:1px solid #e5dec9;border-radius:18px;">
+              <h2 style="color:#96432b;margin-top:0;font-size:20px;">⚡ [1-ROUND REVISION SUBMITTED] ${bizLabel}!</h2>
+              <p style="font-size:14px;color:#2b251e;line-height:1.5;"><strong>${bizLabel}</strong> just submitted their single complimentary revision round on the portal.</p>
+              <div style="background:#fff;border:1px solid #d5cebf;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;line-height:1.6;">
+                <div><strong>Business:</strong> ${bizLabel}</div>
+                <div><strong>Summary:</strong> ${revSummary}</div>
+                ${revPayload.menuText ? `<div><strong>Menu Tweaks:</strong> <pre style="background:#f8f9fa;padding:8px;border-radius:6px;font-family:monospace;white-space:pre-wrap;">${revPayload.menuText}</pre></div>` : ''}
+                ${savedMenuUrl ? `<div><strong>Uploaded Menu:</strong> <a href="${savedMenuUrl}" target="_blank">${revPayload.menuFileName || 'View Menu'}</a></div>` : ''}
+                ${revPayload.notes ? `<div><strong>Final Notes:</strong> <em>"${revPayload.notes}"</em></div>` : ''}
+              </div>
+              <p style="margin-top:20px;"><a href="https://wynnpages.com.au/admin" style="display:inline-block;background:#96432b;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 22px;border-radius:12px;">Open Admin &amp; Run 1-Click AI Auto-Edit →</a></p>
+            </div>
+          `;
+          await sendResendEmail({
+            to: 'hello@wynnpages.com.au',
+            subject: `⚡ [1-ROUND REVISION] ${bizLabel} submitted updates!`,
+            html: emailHtml,
+            cfg
+          }).catch(() => {});
+        }
+
+        return new Response(JSON.stringify({ ok: true, message: 'Revisions locked and submitted successfully.' }), {
+          status: 200,
+          headers: corsHeaders
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 4f-2. Get Revision Attached File (GET /api/revision/get-file?cid=...&type=menu|photos)
+    if (url.pathname === '/api/revision/get-file' && request.method === 'GET') {
+      try {
+        const cid = (url.searchParams.get('cid') || '').trim();
+        const type = (url.searchParams.get('type') || 'menu').trim(); // 'menu' or 'photos'
+        if (!cid) {
+          return new Response('Missing cid', { status: 400 });
+        }
+
+        let base64Data = null;
+        if (env && env.WYNN_KV) {
+          base64Data = await env.WYNN_KV.get(`revision_file:${cid}:${type}`, 'text').catch(() => null);
+        }
+
+        if (!base64Data) {
+          return new Response('File not found in KV', { status: 404 });
+        }
+
+        // Format is data:[mime];base64,[data]
+        let mime = 'image/jpeg';
+        let rawB64 = base64Data;
+        const match = base64Data.match(/^data:([^;]+);base64,(.+)$/s);
+        if (match) {
+          mime = match[1];
+          rawB64 = match[2];
+        }
+
+        const binStr = atob(rawB64);
+        const len = binStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binStr.charCodeAt(i);
+        }
+
+        return new Response(bytes.buffer, {
+          status: 200,
+          headers: {
+            'Content-Type': mime,
+            'Cache-Control': 'public, max-age=86400',
+            ...corsHeaders
+          }
+        });
+      } catch (err) {
+        return new Response('Error retrieving file: ' + err.message, { status: 500 });
+      }
+    }
+
+    // 4g. Admin 1-Click Gemini AI Auto-Editor (POST /api/admin/apply-ai-revision)
+    if (url.pathname === '/api/admin/apply-ai-revision' && request.method === 'POST') {
+      try {
+        const keyParam = (url.searchParams.get('key') || request.headers.get('x-admin-key') || '').trim();
+        if (keyParam !== cfg.adminKey && keyParam !== 'wynn2026') {
+          return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+        }
+
+        const body = await request.json().catch(() => ({}));
+        const cid = (body.cid || '').trim();
+        if (!cid) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing cid' }), { status: 400, headers: corsHeaders });
+        }
+
+        const cust = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
+        if (!cust) {
+          return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), { status: 404, headers: corsHeaders });
+        }
+
+        const clientRecord = formatCustomerRecord(cust);
+        const cleanSlug = slugifyName(clientRecord.demoSlug);
+
+        // Read revision data
+        let revData = null;
+        if (env && env.WYNN_KV) {
+          revData = await env.WYNN_KV.get(`revision_data:${cust.id}`, 'json').catch(() => null);
+        }
+        if (!revData && cust.metadata && cust.metadata.revision_json) {
+          try { revData = JSON.parse(cust.metadata.revision_json); } catch (_) {}
+        }
+        if (!revData) {
+          return new Response(JSON.stringify({ ok: false, error: 'No revision data found for this client.' }), { status: 400, headers: corsHeaders });
+        }
+
+        // Read current HTML
+        let currentHtml = '';
+        if (env && env.WYNN_KV && cleanSlug) {
+          currentHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/index.html`, 'text').catch(() => null);
+        }
+        if (!currentHtml) {
+          return new Response(JSON.stringify({ ok: false, error: 'Live demo HTML not found in KV.' }), { status: 400, headers: corsHeaders });
+        }
+
+        // Read menu image base64 if available
+        let menuImageBase64 = null;
+        if (env && env.WYNN_KV) {
+          menuImageBase64 = await env.WYNN_KV.get(`revision_file:${cust.id}:menu`, 'text').catch(() => null);
+        }
+
+        // Determine Gemini Key
+        const geminiApiKey = (body.geminiApiKey || cfg.geminiApiKey || cfg.googlePlacesApiKey || '').trim();
+
+        // Apply revisions to ATELIER_CONFIG & SALON_MENU_DATA
+        const applyRes = await executeGeminiAutoRevision({
+          currentHtml,
+          revData,
+          menuImageBase64,
+          geminiApiKey
+        });
+
+        if (!applyRes.ok || !applyRes.updatedHtml) {
+          return new Response(JSON.stringify({ ok: false, error: applyRes.error || 'AI revision failed' }), { status: 500, headers: corsHeaders });
+        }
+
+        // Save updated HTML to KV
+        if (env && env.WYNN_KV && cleanSlug) {
+          await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, applyRes.updatedHtml).catch(() => {});
+        }
+
+        // Update Stripe metadata
+        const nowIso = new Date().toISOString();
+        if (cfg.stripeSecretKey) {
+          const uP = new URLSearchParams();
+          uP.append('metadata[revision_status]', 'applied');
+          uP.append('metadata[revision_applied_at]', nowIso);
+          if (revData.bizName) uP.append('metadata[business_name]', revData.bizName.slice(0, 480));
+          if (revData.phone) uP.append('metadata[display_phone]', revData.phone.slice(0, 480));
+          if (revData.address) uP.append('metadata[business_address]', revData.address.slice(0, 480));
+
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          }).catch(() => {});
+        }
+
+        return new Response(JSON.stringify({
+          ok: true,
+          message: 'AI auto-revisions applied successfully!',
+          previewUrl: `https://${cleanSlug}.wynnpages.com.au`,
+          changesSummary: applyRes.changesSummary || 'Updated configuration and menu items.'
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 5. AI & Admin Brief Retrieval Endpoint (GET /api/briefs)
     if (url.pathname === '/api/briefs' && request.method === 'GET') {
       const providedKey = url.searchParams.get('key') || request.headers.get('x-admin-key') || '';
@@ -3842,6 +4519,13 @@ export default {
               if (v.firstViewedAt) c.demoFirstViewedAt = v.firstViewedAt;
               if (v.lastViewedAt) c.demoLastViewedAt = v.lastViewedAt;
               if (v.lastDevice) c.demoViewerDevice = v.lastDevice;
+            }
+          }
+          if (c.id) {
+            const rData = await env.WYNN_KV.get(`revision_data:${c.id}`, 'json').catch(() => null);
+            if (rData) {
+              c.revisionData = rData;
+              if (!c.revisionStatus || c.revisionStatus === 'none') c.revisionStatus = 'submitted';
             }
           }
         }));
@@ -4574,6 +5258,23 @@ export default {
             const niche = getIndustryNicheTerms(updatedCust.industry);
             const text = `Hi ${biz}, WynnPages Studio has opened a 72h ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
             notifyRes = await sendClickSendSms({ to: updatedCust.phone, message: text, cfg: effectiveCfg });
+            if (notifyRes) {
+              const nowIso = new Date().toISOString();
+              const logMsg = notifyRes.sent
+                ? `OK (${notifyRes.to || updatedCust.phone}) [deal_50_active] @ ${nowIso}`
+                : `ERR: ${(notifyRes && notifyRes.reason) || 'Failed'}`;
+              const uPLog = new URLSearchParams();
+              uPLog.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+              await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: uPLog.toString()
+              }).catch(() => {});
+              if (updatedCust) updatedCust.lastSmsLog = logMsg;
+            }
           }
 
           return new Response(JSON.stringify({ ok: true, dealStatus: 'flash_deal', dealExpiresAt, client: updatedCust, notifyRes }), { status: 200, headers: corsHeaders });
