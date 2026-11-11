@@ -2430,12 +2430,12 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           return `
             <div data-card-cid="${c.id}" class="${cardBgCls} rounded-3xl p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : ''} shadow-xs space-y-4 transition-all duration-200">
               <!-- Top Header -->
-              <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
-                <div class="space-y-1.5">
+              <div class="flex items-start justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
+                <div class="min-w-0 flex-1 space-y-1.5 pr-2">
                   <div class="flex items-center gap-2.5 flex-wrap">
-                    <a href="${c.googleMapsUri || (c.businessAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName + ' ' + c.businessAddress)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName)}`)}" target="_blank" rel="noopener noreferrer" class="text-xl font-extrabold text-stone-900 hover:text-[#96432b] hover:underline inline-flex items-center gap-1 group" title="Mở trang Google Maps của ${escapeHtml(titleName)} (Click xem trên Google Maps)">
-                      <span>${escapeHtml(titleName)}</span>
-                      <span class="text-stone-400 group-hover:text-[#96432b] text-sm">↗</span>
+                    <a href="${c.googleMapsUri || (c.businessAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName + ' ' + c.businessAddress)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(titleName)}`)}" target="_blank" rel="noopener noreferrer" class="text-lg sm:text-xl font-extrabold text-stone-900 hover:text-[#96432b] hover:underline inline-flex items-center gap-1 group" title="Mở trang Google Maps của ${escapeHtml(titleName)} (Click xem trên Google Maps)">
+                      <span class="break-words">${escapeHtml(titleName)}</span>
+                      <span class="text-stone-400 group-hover:text-[#96432b] text-sm shrink-0">↗</span>
                     </a>
                     ${paymentBadge}
                     ${c.revisionStatus === 'submitted'
@@ -2481,15 +2481,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </div>
                 </div>
 
-                <!-- Right Utility Buttons & Expand/Collapse Toggle -->
-                <div class="flex items-center gap-2 shrink-0">
-                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1 shrink-0" title="Mở trang Demo trên tab mới">
+                <!-- Right Utility Buttons & Expand/Collapse Toggle (Always pinned to top-right) -->
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1 shrink-0" title="Mở trang Demo trên tab mới">
                     <span>Mở Demo ↗</span>
                   </a>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0"
+                    class="btn-edit-client inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0"
+                    title="Chỉnh sửa hồ sơ"
                   >
                     <span>✏️ Sửa</span>
                   </button>
@@ -2498,7 +2499,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                    class="btn-delete-client inline-flex items-center px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0"
                     title="Xoá khách này"
                   >
                     🗑️
@@ -2506,7 +2507,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   <button
                     type="button"
                     data-cid="${c.id}"
-                    class="btn-toggle-client-card px-3.5 py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                    class="btn-toggle-client-card px-3 sm:px-3.5 py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
                     title="Bấm để mở/thu gọn khung quản lý chi tiết"
                   >
                     <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết ▾"}</span>
@@ -2901,10 +2902,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           return `
             <div data-card-cid="${c.id}" class="${cardBgCls} rounded-3xl p-6 border shadow-xs space-y-5 transition-all duration-200" id="card-${c.id}">
               <!-- Header Row -->
-              <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#f0eade] pb-4">
-                <div class="space-y-1.5">
+              <div class="flex items-start justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
+                <div class="min-w-0 flex-1 space-y-1.5 pr-2">
                   <div class="flex items-center gap-2.5 flex-wrap">
-                    <h3 class="text-xl font-extrabold text-stone-900">${escapeHtml(titleName)}</h3>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 break-words">${escapeHtml(titleName)}</h3>
                     ${computeDeadlineBadge(c)}
                     ${c.revisionStatus === 'submitted'
                       ? `<button type="button" data-cid="${c.id}" class="btn-open-ai-rev-modal px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs cursor-pointer animate-pulse" title="Khách đã nộp 1 vòng sửa đổi • Bấm để xem & chạy AI sửa code">
@@ -2930,15 +2931,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   </div>
                 </div>
 
-                <!-- Right Utility Buttons & Expand/Collapse Toggle -->
-                <div class="flex items-center gap-2 flex-wrap">
-                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1" title="Mở trang Demo trên tab mới">
+                <!-- Right Utility Buttons & Expand/Collapse Toggle (Always pinned to top-right) -->
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+                  <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1 shrink-0" title="Mở trang Demo trên tab mới">
                     <span>Mở Demo ↗</span>
                   </a>
                   <button 
                     type="button" 
                     data-cid="${c.id}"
-                    class="btn-edit-client inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer"
+                    class="btn-edit-client inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0"
+                    title="Chỉnh sửa hồ sơ"
                   >
                     <span>✏️ Sửa</span>
                   </button>
@@ -2947,7 +2949,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-cid="${c.id}"
                     data-slug="${escapeHtml(c.demoSlug || '')}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-delete-client inline-flex items-center px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer"
+                    class="btn-delete-client inline-flex items-center px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-700 text-xs font-bold transition-colors cursor-pointer shrink-0"
                     title="Xoá khách hàng này"
                   >
                     🗑️
@@ -2955,10 +2957,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   <button
                     type="button"
                     data-cid="${c.id}"
-                    class="btn-toggle-client-card px-3 py-1.5 rounded-xl border border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-bold text-stone-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    class="btn-toggle-client-card px-3 sm:px-3.5 py-1.5 rounded-xl border-2 border-[#d8ccb8] bg-[#fbf9f4] hover:bg-[#efe7d8] text-xs font-extrabold text-stone-900 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
                     title="Bấm để mở/thu gọn khung quản lý chi tiết"
                   >
-                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết & Thao tác ▾"}</span>
+                    <span class="toggle-card-label">${expandedCardIds.has(c.id) ? "Thu gọn ▲" : "Chi tiết ▾"}</span>
                   </button>
                 </div>
               </div>
