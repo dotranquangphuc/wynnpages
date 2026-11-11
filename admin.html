@@ -2723,7 +2723,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       !isPaid
                         ? '🔒 Chờ khách thanh toán $599 trước'
                         : (!hasValidLive
-                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 2) trước'
+                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 3) trước'
                             : (isLaunched ? '✅ Đã lên sóng (Bấm gửi lại)' : `Gửi link thật: ${escapeHtml(resolvedLiveUrl)}`))
                     }</span>
                   </button>
@@ -3199,7 +3199,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       !isPaid
                         ? '🔒 Chờ khách thanh toán $599'
                         : (!hasValidLive
-                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 2)'
+                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 3)'
                             : (!hasSentDemo ? '🔒 Chờ gửi & duyệt Demo' : (c.stage === 'launched' ? '✅ Đã lên sóng (Gửi lại)' : `Gửi link: ${escapeHtml(resolvedLiveUrl)}`)))
                     }</span>
                   </button>
@@ -3270,7 +3270,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               if (!isPaid) {
                 sub5.textContent = '🔒 Chờ khách thanh toán $599 trước';
               } else if (!validLive) {
-                sub5.textContent = '🔒 Nhập Tên Miền Chính Thức (Mục 2) trước';
+                sub5.textContent = '🔒 Nhập Tên Miền Chính Thức (Mục 3) trước';
               } else {
                 sub5.textContent = `Gửi link thật: ${input.value.trim()}`;
               }
@@ -3802,7 +3802,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 return;
               }
               if (!isValidUrl(liveUrl)) {
-                showToast('Vui lòng nhập Tên Miền Chính Thức (Mục 2) trước khi báo lên sóng!', true);
+                showToast('Vui lòng nhập Tên Miền Chính Thức (Mục 3) trước khi báo lên sóng!', true);
                 if (liveInput) liveInput.focus();
                 return;
               }

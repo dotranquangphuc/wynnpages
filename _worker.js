@@ -1936,8 +1936,26 @@ function injectClaimBarIntoHtml(rawHtml, client) {
     }
   }
 
+  const cleanSlug = slugifyName((client && (client.demoSlug || client.id || client.businessName)) || '');
+  const beaconScript = cleanSlug ? `
+  <script>
+    (function(){
+      try {
+        var s = '${cleanSlug}';
+        if (!s) return;
+        var q = window.location.search || '';
+        if (q.indexOf('admin=') !== -1 || q.indexOf('preview=') !== -1 || q.indexOf('bar=1') !== -1) return;
+        fetch('/api/track-view?slug=' + encodeURIComponent(s), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true
+        }).catch(function(){});
+      } catch(e){}
+    })();
+  </script>` : '';
+
   const spacer = `<style>.wynn-claim-clearance{height:108px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:180px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
-  const snippet = spacer + buildClaimBarSnippet(client);
+  const snippet = spacer + buildClaimBarSnippet(client) + beaconScript;
   let html = rawHtml;
 
   // On desktop screens only (>= 768px), keep top ribbon as a secondary subtle luxury header bar; on mobile, completely remove top bar to eliminate duplicate clutter
@@ -2128,11 +2146,11 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
 
 // Track client viewing their bespoke demo website (0ms real-time in KV + async Stripe sync)
 async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx }) {
-  if (!slug || !env || !env.WYNN_KV) return;
+  if (!slug || !env || !env.WYNN_KV) return null;
   try {
     const url = request ? new URL(request.url) : null;
     if (url && (url.searchParams.get('admin') || url.searchParams.get('preview') || url.searchParams.get('bar') === '1')) {
-      return;
+      return null;
     }
     const cleanSlug = slugifyName(slug);
     const userAgent = (request && request.headers.get('user-agent')) || '';
@@ -2153,23 +2171,31 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
     };
     await env.WYNN_KV.put(kvKey, JSON.stringify(updateObj)).catch(() => {});
 
-    // Asynchronously update Stripe customer metadata if customer record is known
+    // Asynchronously update Stripe customer metadata if customer record is known (or search by slug)
     const targetId = (client && client.id) || null;
-    if (targetId && stripeSecretKey) {
+    if (stripeSecretKey && (targetId || cleanSlug)) {
       const bgStripe = async () => {
-        const body = new URLSearchParams();
-        body.append('metadata[demo_view_count]', String(viewCount));
-        body.append('metadata[demo_first_viewed_at]', firstViewedAt);
-        body.append('metadata[demo_last_viewed_at]', now);
-        body.append('metadata[demo_viewer_device]', device);
-        await fetch(`https://api.stripe.com/v1/customers/${targetId}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${stripeSecretKey}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: body.toString()
-        }).catch(() => {});
+        try {
+          let cid = targetId;
+          if (!cid) {
+            const found = await findCustomerBySlugOrId(cleanSlug, stripeSecretKey);
+            if (found && found.id) cid = found.id;
+          }
+          if (!cid) return;
+          const body = new URLSearchParams();
+          body.append('metadata[demo_view_count]', String(viewCount));
+          body.append('metadata[demo_first_viewed_at]', firstViewedAt);
+          body.append('metadata[demo_last_viewed_at]', now);
+          body.append('metadata[demo_viewer_device]', device);
+          await fetch(`https://api.stripe.com/v1/customers/${cid}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+          }).catch(() => {});
+        } catch (_) {}
       };
       if (ctx && typeof ctx.waitUntil === 'function') {
         ctx.waitUntil(bgStripe());
@@ -2177,7 +2203,10 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
         bgStripe().catch(() => {});
       }
     }
-  } catch (_) {}
+    return updateObj;
+  } catch (_) {
+    return null;
+  }
 }
 
 async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, request, env, ctx, stripeSecretKey, isLiveDomain, isPathDemo, forceBar }) {
@@ -2190,7 +2219,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
     if (rawHtml) {
       const resolvedClient = client || (stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
       if (!isLiveDomain && (reqPath === '/index.html' || reqPath === '/')) {
-        trackDemoView({ slug: cleanSlug, request, env, client: resolvedClient, stripeSecretKey, ctx });
+        await trackDemoView({ slug: cleanSlug, request, env, client: resolvedClient, stripeSecretKey, ctx });
       }
       const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
       const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
@@ -2200,7 +2229,9 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
           status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
             'X-Robots-Tag': 'noindex, nofollow'
           }
         });
@@ -2214,7 +2245,9 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=0, must-revalidate'
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       });
     }
@@ -2981,7 +3014,7 @@ export default {
       }
     }
 
-    if (isSubdomainDemo || isPathDemo) {
+    if ((isSubdomainDemo || isPathDemo) && !url.pathname.startsWith('/api/')) {
       let targetSlug = '';
       let reqPath = url.pathname;
       if (isSubdomainDemo) {
@@ -3020,7 +3053,7 @@ export default {
       if (reqPath === '/index.html' || reqPath === '/') {
         const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
         if (client) {
-          trackDemoView({ slug: targetSlug, request, env, client, stripeSecretKey: cfg.stripeSecretKey, ctx });
+          await trackDemoView({ slug: targetSlug, request, env, client, stripeSecretKey: cfg.stripeSecretKey, ctx });
           if (client.stage === 'launched' && client.liveUrl && !forceBar) {
             const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
             return Response.redirect(cleanLive, 302);
@@ -3033,7 +3066,9 @@ export default {
               status: 200,
               headers: {
                 'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
                 'X-Robots-Tag': 'noindex, nofollow'
               }
             });
@@ -3043,9 +3078,68 @@ export default {
             : buildBrandedPreviewHtml(client);
           return new Response(html, {
             status: 200,
-            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
           });
         }
+      }
+
+      // If this is a subdomain demo, NEVER allow unhandled assets to fall through to env.ASSETS (which triggers Cloudflare 403 Forbidden)
+      if (isSubdomainDemo) {
+        if (reqPath === '/index.html' || reqPath === '/') {
+          return new Response(buildExpiredDemoHtml({ businessName: targetSlug }), {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+              'X-Robots-Tag': 'noindex, nofollow'
+            }
+          });
+        }
+        return new Response('Asset not found', {
+          status: 404,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0'
+          }
+        });
+      }
+    }
+
+    // 1a-track. Public Demo View Tracking Beacon (POST /api/track-view?slug=...)
+    if (url.pathname === '/api/track-view' && (request.method === 'POST' || request.method === 'GET' || request.method === 'OPTIONS')) {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders });
+      }
+      try {
+        let slug = (url.searchParams.get('slug') || '').trim();
+        if (!slug && request.method === 'POST') {
+          const body = await request.json().catch(() => ({}));
+          slug = (body.slug || '').trim();
+        }
+        if (!slug) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing slug' }), { status: 400, headers: corsHeaders });
+        }
+        const viewRes = await trackDemoView({
+          slug,
+          request,
+          env,
+          client: null,
+          stripeSecretKey: cfg.stripeSecretKey,
+          ctx
+        });
+        return new Response(JSON.stringify({ ok: true, slug: slugifyName(slug), viewRes }), {
+          status: 200,
+          headers: corsHeaders
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 
