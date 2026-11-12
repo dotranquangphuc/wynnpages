@@ -822,42 +822,7 @@
       pointer-events: none;
     }
 
-    /* ==========================================================================
-       APPLE FLOATING CALL RECEPTION PILL (DEDICATED & SEPARATE FROM BOOKING)
-       Top sticky header hosts primary "Book Visit", while bottom-right hosts
-       only "Call Salon" so mobile thumbs never confuse Call with Reserve.
-       ========================================================================== */
-    #atelier-float-dock {
-      position: fixed;
-      right: 18px;
-      bottom: 20px;
-      z-index: 38;
-      opacity: 0;
-      transform: translate3d(0, 26px, 0) scale(0.92);
-      pointer-events: none;
-      transition:
-        opacity 0.52s var(--apple-spring),
-        transform 0.52s var(--apple-spring),
-        bottom 0.35s var(--apple-spring);
-    }
-    #atelier-float-dock.is-docked {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
-      pointer-events: auto;
-    }
-    /* Automatically clear the Demo Preview Claim Bar when present */
-    body:has(.claim-bar) #atelier-float-dock {
-      bottom: 108px;
-    }
-    @media (max-width: 640px) {
-      #atelier-float-dock {
-        right: 14px;
-        bottom: 16px;
-      }
-      body:has(.claim-bar) #atelier-float-dock {
-        bottom: 146px;
-      }
-    }
+    /* Floating Call Reception merged into sticky Book Visit header CTA */
 
     /* ==========================================================================
        TOP-LAYER NATIVE <dialog> ENTRY & EXIT ANIMATIONS (@starting-style + overlay)
@@ -1121,6 +1086,9 @@
             </svg>
           </a>
           <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-[11.5px] sm:text-xs font-semibold tracking-wide inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
             <span>Book Visit</span>
             <svg class="w-3.5 h-3.5 hidden min-[370px]:inline" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3.5 8h9M8.5 4l4 4-4 4"></path>
@@ -1844,28 +1812,7 @@
     </div>
   </footer>
 
-  <!-- ========================================================================
-       APPLE FLOATING CALL RECEPTION PILL
-       (Glides up when scrolling down past Hero; tucks away on scroll-up to top or at #visit)
-       Strictly dedicated to phone calls so it can never be mistapped for booking.
-       ======================================================================== -->
-  <div id="atelier-float-dock" aria-label="Call salon reception">
-    <a
-      id="dock-call-link"
-      href="tel:0391234567"
-      aria-label="Call salon reception"
-      title="Call salon reception"
-      class="atelier-card rounded-full h-11 px-4 sm:px-5 inline-flex items-center gap-2.5 shadow-2xl cursor-pointer transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
-      style="background: var(--bg-card-elevated); border-color: var(--foil-gold);"
-    >
-      <span class="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style="background: var(--pill-bg); color: var(--accent-primary);">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-        </svg>
-      </span>
-      <span class="text-xs font-semibold tracking-wide" style="color: var(--ink-primary);">Call Salon</span>
-    </a>
-  </div>
+  <!-- Floating Call Reception pill merged into top Book Visit CTA -->
 
   <!-- ========================================================================
        APPLE PHOTOS-STYLE LOOKBOOK LIGHTBOX (<dialog closedby="any">)

@@ -2793,13 +2793,13 @@ function buildClaimBarSnippet(client) {
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 880px;
-      background: rgba(24, 19, 17, 0.82);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(28, 22, 19, 0.58) !important;
+      backdrop-filter: blur(22px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.22) !important;
       border-radius: 22px;
-      padding: 24px 18px 14px 18px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+      padding: 28px 18px 14px 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -2816,68 +2816,88 @@ function buildClaimBarSnippet(client) {
       pointer-events: none;
     }
     .claim-bar.claimed-active {
-      border: 1.5px solid rgba(52, 211, 153, 0.45);
-      background: rgba(16, 31, 24, 0.84);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 28px rgba(16, 185, 129, 0.18);
+      border: 1.5px solid rgba(52, 211, 153, 0.48) !important;
+      background: rgba(16, 31, 24, 0.62) !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(167, 243, 208, 0.25), 0 0 28px rgba(16, 185, 129, 0.18) !important;
     }
     .claim-collapse-btn {
       position: absolute;
-      top: 4px;
+      top: 6px;
       left: 50%;
       transform: translateX(-50%);
       border: none;
       background: transparent;
-      padding: 3px 18px;
-      color: rgba(255, 255, 255, 0.6);
+      padding: 2px 16px;
+      margin-bottom: 6px;
+      color: #ffffff;
+      opacity: 0.65;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
       cursor: pointer;
-      transition: color 0.18s ease, transform 0.18s ease;
+      transition: opacity 0.18s ease, transform 0.18s ease;
       z-index: 5;
     }
     .claim-collapse-btn:hover {
-      color: rgba(255, 255, 255, 1);
+      opacity: 1;
       transform: translateX(-50%) translateY(1px);
     }
     .claim-restore-tab {
       position: fixed;
       left: 50%;
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
       transform: translateX(-50%) translateY(16px);
       z-index: 999998;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      background: rgba(24, 19, 17, 0.82);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      color: rgba(255, 255, 255, 0.94);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      gap: 7px;
+      background: rgba(28, 22, 19, 0.58) !important;
+      backdrop-filter: blur(22px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
+      color: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.22) !important;
       border-radius: 9999px;
-      padding: 9px 18px;
+      padding: 8px 16px;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.01em;
       white-space: nowrap;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .claim-restore-tab:hover {
-      background: rgba(24, 19, 17, 0.92);
-      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(28, 22, 19, 0.72) !important;
+      border-color: rgba(255, 255, 255, 0.36) !important;
       color: #ffffff;
     }
     .claim-restore-tab.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
       pointer-events: auto;
+    }
+    .claim-restore-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      background: #C85A32;
+      box-shadow: 0 0 8px rgba(200, 90, 50, 0.95);
+      flex-shrink: 0;
+    }
+    .claim-restore-price {
+      color: #f3a683;
+      font-weight: 800;
+    }
+    /* Merged floating Call Salon pill into sticky Book Visit header button to prevent any overlap */
+    #atelier-float-dock {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
     .claim-claimed-btn {
       background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
@@ -3061,7 +3081,8 @@ function buildClaimBarSnippet(client) {
       position: relative;
       overflow: hidden;
       flex-shrink: 0;
-      background: linear-gradient(135deg, #96432b 0%, #a84b31 100%);
+      background: linear-gradient(135deg, #B85332 0%, #96432b 100%) !important;
+      opacity: 1 !important;
       color: #ffffff;
       text-decoration: none;
       font-size: 13px;
@@ -3071,8 +3092,8 @@ function buildClaimBarSnippet(client) {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(251, 222, 185, 0.28);
-      box-shadow: 0 10px 24px rgba(150, 67, 43, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      box-shadow: 0 10px 26px rgba(150, 67, 43, 0.55), 0 4px 12px rgba(0, 0, 0, 0.28);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
       animation: claim-glow 3.8s ease-in-out infinite;
@@ -3128,7 +3149,7 @@ function buildClaimBarSnippet(client) {
       .claim-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 24px 14px 12px 14px;
+        padding: 28px 14px 12px 14px;
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px;
         border-radius: 20px;
@@ -3206,7 +3227,7 @@ function buildClaimBarSnippet(client) {
   </style>
   <div id="wynn-claim-bar" class="claim-bar ${isFlashDeal ? 'deal-active' : ''} ${isPaid ? 'claimed-active' : ''}">
     <button type="button" id="wynn-claim-collapse" class="claim-collapse-btn" title="Minimise bar" aria-label="Minimise bar">
-      <svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
+      <svg width="15" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
     </button>
     ${isFlashDeal ? `
       <div class="claim-deal-floating-seal">
@@ -3284,8 +3305,9 @@ function buildClaimBarSnippet(client) {
     </div>
   </div>
   <button type="button" id="wynn-claim-restore" class="claim-restore-tab" aria-label="Expand website banner">
-    <svg width="14" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg>
-    <span>${isPaid ? 'Next Step &bull; Setup Content' : (isFlashDeal ? 'Claim This Website &mdash; $299' : 'Claim This Website &mdash; $599')}</span>
+    <span class="claim-restore-dot"></span>
+    <svg width="12" height="7" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg>
+    <span>${isPaid ? 'Next Step &bull; Setup Content' : (isFlashDeal ? 'Claim This Website <span class="claim-restore-price">&mdash; $299</span>' : 'Claim This Website <span class="claim-restore-price">&mdash; $599</span>')}</span>
   </button>
   <script>
     (function(){
@@ -3293,15 +3315,21 @@ function buildClaimBarSnippet(client) {
       var collapseBtn = document.getElementById('wynn-claim-collapse');
       var restoreBtn = document.getElementById('wynn-claim-restore');
       if (!bar || !collapseBtn || !restoreBtn) return;
+      document.body.classList.add('wynn-claim-expanded');
+      document.body.classList.remove('wynn-claim-collapsed');
       var manualCollapsedAt = 0;
       function setCollapsed(collapsed) {
         if (collapsed) {
           bar.classList.add('is-collapsed');
           restoreBtn.classList.add('visible');
+          document.body.classList.remove('wynn-claim-expanded');
+          document.body.classList.add('wynn-claim-collapsed');
           manualCollapsedAt = Date.now();
         } else {
           bar.classList.remove('is-collapsed');
           restoreBtn.classList.remove('visible');
+          document.body.classList.add('wynn-claim-expanded');
+          document.body.classList.remove('wynn-claim-collapsed');
         }
       }
       collapseBtn.addEventListener('click', function(ev) {
@@ -3312,6 +3340,17 @@ function buildClaimBarSnippet(client) {
       restoreBtn.addEventListener('click', function() {
         setCollapsed(false);
       });
+      // Merge phone icon into sticky header "Book Visit" button
+      try {
+        var hdrBookBtn = document.querySelector('#atelier-header button[data-open-booking], header button[data-open-booking]');
+        if (hdrBookBtn && !hdrBookBtn.querySelector('.wynn-merged-phone-icon')) {
+          var phoneSpan = document.createElement('span');
+          phoneSpan.className = 'wynn-merged-phone-icon';
+          phoneSpan.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+          phoneSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+          hdrBookBtn.insertBefore(phoneSpan, hdrBookBtn.firstChild);
+        }
+      } catch (_) {}
       window.addEventListener('scroll', function() {
         if (!bar.classList.contains('is-collapsed')) return;
         if (Date.now() - manualCollapsedAt < 1200) return;

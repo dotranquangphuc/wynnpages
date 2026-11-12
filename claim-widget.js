@@ -26,6 +26,13 @@
     `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}&demo=${encodeURIComponent(window.location.href)}`;
   const revisionHref = `https://wynnpages.com.au/revision.html?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
 
+  if (!document.getElementById('wynnpages-claim-glass-style')) {
+    const gStyle = document.createElement('style');
+    gStyle.id = 'wynnpages-claim-glass-style';
+    gStyle.textContent = '#atelier-float-dock{display:none!important;opacity:0!important;pointer-events:none!important;}';
+    (document.head || document.documentElement).appendChild(gStyle);
+  }
+
   const bar = document.createElement('div');
   bar.id = 'wynnpages-claim-bar';
   bar.style.cssText = [
@@ -36,14 +43,14 @@
     'z-index:2147483647',
     'width:calc(100% - 28px)',
     'max-width:760px',
-    'background:rgba(24,19,17,0.82)',
-    'backdrop-filter:blur(16px)',
-    '-webkit-backdrop-filter:blur(16px)',
+    'background:rgba(28,22,19,0.58) !important',
+    'backdrop-filter:blur(22px) saturate(180%) !important',
+    '-webkit-backdrop-filter:blur(22px) saturate(180%) !important',
     'color:#fcf9f3',
-    'border:1px solid rgba(255,255,255,0.14)',
+    'border:1px solid rgba(255,255,255,0.22) !important',
     'border-radius:20px',
-    'padding:24px 18px 12px 18px',
-    'box-shadow:0 20px 50px rgba(0,0,0,0.45)',
+    'padding:28px 18px 14px 18px',
+    'box-shadow:0 20px 50px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.25) !important',
     'display:flex',
     'flex-wrap:wrap',
     'align-items:center',
@@ -58,29 +65,29 @@
   restoreTab.id = 'wynnpages-claim-restore';
   restoreTab.type = 'button';
   restoreTab.setAttribute('aria-label', 'Expand website banner');
-  restoreTab.innerHTML = '<svg width="14" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>Claim This Website &mdash; $599</span>';
+  restoreTab.innerHTML = '<span style="width:6px;height:6px;border-radius:9999px;background:#C85A32;box-shadow:0 0 8px rgba(200,90,50,0.95);flex-shrink:0;"></span><svg width="12" height="7" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>Claim This Website <span style="color:#f3a683;font-weight:800;">&mdash; $599</span></span>';
   restoreTab.style.cssText = [
     'position:fixed',
     'left:50%',
-    'bottom:calc(16px + env(safe-area-inset-bottom,0px))',
+    'bottom:calc(14px + env(safe-area-inset-bottom,0px))',
     'z-index:2147483646',
     'display:inline-flex',
     'align-items:center',
     'justify-content:center',
-    'gap:8px',
-    'background:rgba(24,19,17,0.82)',
-    'backdrop-filter:blur(16px)',
-    '-webkit-backdrop-filter:blur(16px)',
-    'color:rgba(255,255,255,0.94)',
-    'border:1px solid rgba(255,255,255,0.14)',
+    'gap:7px',
+    'background:rgba(28,22,19,0.58) !important',
+    'backdrop-filter:blur(22px) saturate(180%) !important',
+    '-webkit-backdrop-filter:blur(22px) saturate(180%) !important',
+    'color:rgba(255,255,255,0.96)',
+    'border:1px solid rgba(255,255,255,0.22) !important',
     'border-radius:9999px',
-    'padding:9px 18px',
+    'padding:8px 16px',
     'font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","Segoe UI",Roboto,sans-serif',
     'font-size:12px',
     'font-weight:700',
     'letter-spacing:0.01em',
     'white-space:nowrap',
-    'box-shadow:0 20px 50px rgba(0,0,0,0.45)',
+    'box-shadow:0 20px 50px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.25) !important',
     'cursor:pointer',
     'opacity:0',
     'transform:translateX(-50%) translateY(16px)',
@@ -90,16 +97,16 @@
 
   function renderBarHtml(isPaid) {
     const collapseHandleHtml = `
-      <button type="button" id="wynnpages-claim-collapse" title="Minimise bar" aria-label="Minimise bar" style="position:absolute;top:4px;left:50%;transform:translateX(-50%);background:transparent;border:none;padding:3px 18px;color:rgba(255,255,255,0.6);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color 0.2s ease,opacity 0.2s ease;line-height:1;">
-        <svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
+      <button type="button" id="wynnpages-claim-collapse" title="Minimise bar" aria-label="Minimise bar" style="position:absolute;top:6px;left:50%;transform:translateX(-50%);background:transparent;border:none;padding:2px 16px;margin-bottom:6px;color:#ffffff;opacity:0.65;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:opacity 0.2s ease,transform 0.2s ease;line-height:1;">
+        <svg width="15" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
       </button>
     `;
     const isNarrow = window.innerWidth <= 640;
-    bar.style.padding = isNarrow ? '24px 14px 12px 14px' : '22px 18px 14px 18px';
+    bar.style.padding = isNarrow ? '28px 14px 12px 14px' : '28px 18px 14px 18px';
     if (isPaid) {
-      bar.style.background = 'rgba(16,31,24,0.84)';
-      bar.style.border = '1.5px solid rgba(52,211,153,0.45)';
-      restoreTab.innerHTML = '<svg width="14" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>Next Step &bull; Setup Content</span>';
+      bar.style.setProperty('background', 'rgba(16,31,24,0.62)', 'important');
+      bar.style.setProperty('border', '1.5px solid rgba(52,211,153,0.48)', 'important');
+      restoreTab.innerHTML = '<span style="width:6px;height:6px;border-radius:9999px;background:#34d399;box-shadow:0 0 8px rgba(52,211,153,0.9);flex-shrink:0;"></span><svg width="12" height="7" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>Next Step &bull; Setup Content</span>';
       bar.innerHTML = `
         ${collapseHandleHtml}
         <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 240px;">
@@ -142,7 +149,7 @@
           </div>
         </div>
         <div style="display:flex;${isNarrow ? 'flex-direction:column;width:100%;align-items:center;' : 'flex-direction:row;align-items:center;'}gap:8px;flex-shrink:0;">
-          <a id="wynnpages-claim-btn" href="${claimHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#96432b 0%,#a84b31 100%);color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(251,222,185,0.28);box-shadow:0 8px 20px rgba(150,67,43,0.45);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
+          <a id="wynnpages-claim-btn" href="${claimHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#B85332 0%,#96432b 100%) !important;opacity:1 !important;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(255,255,255,0.26);box-shadow:0 10px 26px rgba(150,67,43,0.55),0 4px 12px rgba(0,0,0,0.28);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
             <span>Claim This Website &mdash; $599 AUD</span>
             <span>&rarr;</span>
           </a>
@@ -158,10 +165,10 @@
     const collapseBtn = document.getElementById('wynnpages-claim-collapse');
     if (collapseBtn) {
       collapseBtn.addEventListener('mouseenter', function () {
-        collapseBtn.style.color = 'rgba(255,255,255,1)';
+        collapseBtn.style.opacity = '1';
       });
       collapseBtn.addEventListener('mouseleave', function () {
-        collapseBtn.style.color = 'rgba(255,255,255,0.6)';
+        collapseBtn.style.opacity = '0.65';
       });
       collapseBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
@@ -221,6 +228,17 @@
     renderBarHtml(false);
     document.body.appendChild(bar);
     document.body.appendChild(restoreTab);
+
+    try {
+      var hdrBookBtn = document.querySelector('#atelier-header button[data-open-booking], header button[data-open-booking]');
+      if (hdrBookBtn && !hdrBookBtn.querySelector('.wynn-merged-phone-icon')) {
+        var phoneSpan = document.createElement('span');
+        phoneSpan.className = 'wynn-merged-phone-icon';
+        phoneSpan.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+        phoneSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+        hdrBookBtn.insertBefore(phoneSpan, hdrBookBtn.firstChild);
+      }
+    } catch (_) {}
 
     restoreTab.addEventListener('click', function () {
       setBarCollapsed(false);
