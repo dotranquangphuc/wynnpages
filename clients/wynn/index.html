@@ -1085,13 +1085,13 @@
     <div class="max-w-6xl mx-auto relative">
       <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4" aria-label="Primary Navigation">
         <!-- Brand Identity + Wax Monogram Seal -->
-        <a href="#top" data-smooth-anchor="#top" class="flex items-center gap-2.5 sm:gap-3 group min-w-0 flex-1 lg:flex-initial">
+        <a href="#top" data-smooth-anchor="#top" class="flex items-center gap-2 sm:gap-3 group min-w-0 flex-1 lg:flex-initial overflow-hidden">
           <div id="brand-logo-slot" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-105">
             <span id="nav-monogram" class="font-editorial italic font-bold text-base sm:text-lg" style="color: var(--accent-primary);">M</span>
           </div>
-          <div class="min-w-0">
-            <span id="nav-salon-name" class="font-editorial font-semibold text-lg sm:text-2xl tracking-tight block leading-none truncate">Maison Élan</span>
-            <span id="nav-salon-sub" class="text-[9.5px] sm:text-[10px] uppercase tracking-[0.15em] block mt-0.5 truncate max-w-[135px] sm:max-w-[240px]" style="color: var(--ink-muted);">Armadale, VIC</span>
+          <div class="min-w-0 flex-1 overflow-hidden">
+            <span id="nav-salon-name" class="font-editorial font-semibold text-base min-[390px]:text-lg sm:text-2xl tracking-tight block leading-tight truncate">Maison Élan</span>
+            <span id="nav-salon-sub" class="text-[9.5px] sm:text-[10px] uppercase tracking-[0.15em] block mt-0.5 truncate max-w-full" style="color: var(--ink-muted);">Armadale, VIC</span>
           </div>
         </a>
 
@@ -1120,11 +1120,11 @@
               <path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
             </svg>
           </a>
-          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-[11.5px] sm:text-xs font-semibold tracking-wide inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer">
-            <span>Book Visit</span>
-            <svg class="w-3.5 h-3.5 hidden min-[370px]:inline" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3.5 8h9M8.5 4l4 4-4 4"></path>
+          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5 text-[11.5px] sm:text-xs font-semibold tracking-wide inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 whitespace-nowrap">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
             </svg>
+            <span>Book Visit</span>
           </button>
 
           <!-- Mobile & Tablet Architectural Menu Button -->

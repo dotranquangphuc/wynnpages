@@ -2893,11 +2893,63 @@ function buildClaimBarSnippet(client) {
       color: #f3a683;
       font-weight: 800;
     }
-    /* Merged floating Call Salon pill into sticky Book Visit header button to prevent any overlap */
+    /* Merged floating Call Salon pill into sticky Book Visit header button */
     #atelier-float-dock {
       display: none !important;
       opacity: 0 !important;
       pointer-events: none !important;
+    }
+    /* Header Brand Identity & Book Visit CTA Mobile Responsiveness */
+    #atelier-nav-shell {
+      min-width: 0 !important;
+    }
+    #atelier-nav-shell > a:first-child {
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
+    }
+    #atelier-nav-shell > a:first-child > div:last-child {
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
+    }
+    #nav-salon-name {
+      display: block !important;
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+      font-size: clamp(15px, 4.2vw, 22px) !important;
+      line-height: 1.15 !important;
+    }
+    #nav-salon-sub {
+      display: block !important;
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+    }
+    #atelier-header button[data-open-booking],
+    header button[data-open-booking] {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
+    #atelier-header button[data-open-booking] svg:not(:first-child),
+    header button[data-open-booking] svg:not(:first-child),
+    #atelier-header button[data-open-booking] .wynn-merged-phone-icon ~ svg,
+    header button[data-open-booking] .wynn-merged-phone-icon ~ svg {
+      display: none !important;
+    }
+    #atelier-header #btn-mobile-menu,
+    header #btn-mobile-menu {
+      flex-shrink: 0 !important;
     }
     .claim-claimed-btn {
       background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
@@ -3340,15 +3392,24 @@ function buildClaimBarSnippet(client) {
       restoreBtn.addEventListener('click', function() {
         setCollapsed(false);
       });
-      // Merge phone icon into sticky header "Book Visit" button
+      // Merge phone icon into sticky header "Book Visit" button & remove trailing arrow
       try {
         var hdrBookBtn = document.querySelector('#atelier-header button[data-open-booking], header button[data-open-booking]');
-        if (hdrBookBtn && !hdrBookBtn.querySelector('.wynn-merged-phone-icon')) {
-          var phoneSpan = document.createElement('span');
-          phoneSpan.className = 'wynn-merged-phone-icon';
-          phoneSpan.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
-          phoneSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-          hdrBookBtn.insertBefore(phoneSpan, hdrBookBtn.firstChild);
+        if (hdrBookBtn) {
+          var svgs = hdrBookBtn.querySelectorAll('svg');
+          svgs.forEach(function(s, idx) {
+            if (s.closest('.wynn-merged-phone-icon')) return;
+            if (s.getAttribute('viewBox') === '0 0 16 16' || s.innerHTML.indexOf('M3.5 8h9') !== -1 || idx > 0) {
+              s.remove();
+            }
+          });
+          if (!hdrBookBtn.querySelector('.wynn-merged-phone-icon') && !hdrBookBtn.querySelector('path[d*="22 16.92"]')) {
+            var phoneSpan = document.createElement('span');
+            phoneSpan.className = 'wynn-merged-phone-icon';
+            phoneSpan.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+            phoneSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+            hdrBookBtn.insertBefore(phoneSpan, hdrBookBtn.firstChild);
+          }
         }
       } catch (_) {}
       window.addEventListener('scroll', function() {
