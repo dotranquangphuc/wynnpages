@@ -106,6 +106,16 @@
     .wizard-step-active {
       animation: wizardFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+    html, body {
+      overflow-x: clip;
+    }
+    @media (max-width: 639px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      select,
+      textarea {
+        font-size: max(1rem, 1em) !important;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-[#f6f1e8] text-stone-900">
@@ -236,7 +246,7 @@
         <div id="wizard-step-1" class="space-y-6 wizard-step-active">
           <div class="border-b border-[#ece5d8] pb-2">
             <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Step 1 of 4 • General Details</span>
-            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Your Business Profile</h3>
+            <h3 tabindex="-1" class="step-heading font-editorial text-2xl sm:text-3xl font-bold text-stone-900 focus:outline-none">Your Business Profile</h3>
             <p class="text-xs text-stone-500 mt-0.5">Tell us the essential contact information to display on your new website.</p>
           </div>
 
@@ -322,7 +332,7 @@
         <div id="wizard-step-2" class="hidden space-y-6">
           <div class="border-b border-[#ece5d8] pb-2">
             <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Step 2 of 4 • Brand Assets</span>
-            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Logo, Menu &amp; Photography</h3>
+            <h3 tabindex="-1" class="step-heading font-editorial text-2xl sm:text-3xl font-bold text-stone-900 focus:outline-none">Logo, Menu &amp; Photography</h3>
             <p class="text-xs text-stone-500 mt-0.5">Upload your brand files or let us know if you'd like us to curate studio photography.</p>
           </div>
 
@@ -438,7 +448,7 @@
         <div id="wizard-step-3" class="hidden space-y-6">
           <div class="border-b border-[#ece5d8] pb-2">
             <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Step 3 of 4 • Creative Direction</span>
-            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Brand Colors &amp; Style Vibe</h3>
+            <h3 tabindex="-1" class="step-heading font-editorial text-2xl sm:text-3xl font-bold text-stone-900 focus:outline-none">Brand Colors &amp; Style Vibe</h3>
             <p class="text-xs text-stone-500 mt-0.5">Help our lead artisan designer tailor the aesthetic to your brand.</p>
           </div>
 
@@ -547,7 +557,7 @@
         <div id="wizard-step-4" class="hidden space-y-5">
           <div class="border-b border-[#ece5d8] pb-2">
             <span class="text-[10px] font-bold uppercase tracking-widest text-[#96432b]">Step 4 of 4 • Final Step</span>
-            <h3 class="font-editorial text-2xl sm:text-3xl font-bold text-stone-900">Domain Name Setup <span class="text-[#96432b]">*</span></h3>
+            <h3 tabindex="-1" class="step-heading font-editorial text-2xl sm:text-3xl font-bold text-stone-900 focus:outline-none">Domain Name Setup <span class="text-[#96432b]">*</span></h3>
             <p class="text-xs text-stone-500 mt-0.5">Choose how you'd like to set up your web address. You always retain 100% ownership of your domain.</p>
           </div>
 
@@ -829,8 +839,10 @@
       }
 
       // 3. Wizard Step Renderer
+      let hasUserSteppedWizard = false;
       function goToStep(stepNum) {
         hideError();
+        const prevStep = currentStep;
         currentStep = stepNum;
 
         for (let i = 1; i <= totalSteps; i++) {
@@ -840,18 +852,26 @@
 
           if (i === currentStep) {
             stepEl.classList.remove('hidden');
+            stepEl.removeAttribute('inert');
             stepEl.classList.remove('wizard-step-active');
             void stepEl.offsetWidth; // trigger reflow for smooth fade-in
             stepEl.classList.add('wizard-step-active');
 
             if (dotEl && badgeSpan) {
               dotEl.className = 'text-[#96432b] flex items-center gap-1 font-bold';
+              dotEl.setAttribute('aria-current', 'step');
               badgeSpan.className = 'w-4 h-4 rounded-full bg-[#96432b] text-white text-[10px] flex items-center justify-center';
               badgeSpan.textContent = String(i);
             }
+            if (hasUserSteppedWizard || prevStep !== currentStep) {
+              const heading = stepEl.querySelector('.step-heading');
+              if (heading) heading.focus({ preventScroll: true });
+            }
           } else {
             stepEl.classList.add('hidden');
+            stepEl.setAttribute('inert', '');
             if (dotEl && badgeSpan) {
+              dotEl.removeAttribute('aria-current');
               if (i < currentStep) {
                 dotEl.className = 'text-emerald-800 flex items-center gap-1 font-semibold';
                 badgeSpan.className = 'w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center';
@@ -864,6 +884,7 @@
             }
           }
         }
+        hasUserSteppedWizard = true;
 
         const pct = Math.round((currentStep / totalSteps) * 100);
         wizardStepLabel.textContent = stepTitles[currentStep];
@@ -1112,6 +1133,36 @@
       function hideError() {
         errorBox.classList.add('hidden');
       }
+
+      // Blur validation (only if edited) & immediate reset on input fix
+      [
+        { el: emailInput, check: (v) => v.includes('@') && v.includes('.') },
+        { el: businessNameInput, check: (v) => v.length > 0 },
+        { el: displayPhoneInput, check: (v) => v.length > 0 },
+        { el: existingDomainInput, check: (v) => selectedDomainOption !== 'I already own a domain' || v.includes('.') },
+        { el: desiredDomainsInput, check: (v) => selectedDomainOption !== 'I need to register a new domain' || v.includes('.') }
+      ].forEach(({ el, check }) => {
+        if (!el) return;
+        let touched = false;
+        el.addEventListener('input', () => {
+          touched = true;
+          el.classList.remove('border-red-500');
+          el.removeAttribute('aria-invalid');
+          hideError();
+        });
+        el.addEventListener('blur', () => {
+          if (!touched) return;
+          const val = (el.value || '').trim();
+          const ok = val ? check(val) : false;
+          if (!ok) {
+            el.classList.add('border-red-500');
+            el.setAttribute('aria-invalid', 'true');
+          } else {
+            el.classList.remove('border-red-500');
+            el.removeAttribute('aria-invalid');
+          }
+        });
+      });
 
       // 8. Final Step Form Submission
       form.addEventListener('submit', async (e) => {

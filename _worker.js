@@ -133,6 +133,581 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
   }
 }
 
+const WYNN_SYNCED_SETTING_KEYS = [
+  'stripeSecretKey',
+  'stripeWebhookSecret',
+  'clicksendUsername',
+  'clicksendApiKey',
+  'clicksendFrom',
+  'resendApiKey',
+  'resendFromEmail',
+  'googleDriveWebhookUrl',
+  'cfApiToken',
+  'googlePlacesApiKey',
+  'geminiApiKey',
+  'telegramBotToken',
+  'telegramChatId'
+];
+
+function getD1(env) {
+  return (env && (env.DB || env.wynnpages_db)) || null;
+}
+
+let _d1SchemaPromise = null;
+async function ensureD1Schema(env) {
+  const db = getD1(env);
+  if (!db) return false;
+  if (!_d1SchemaPromise) {
+    _d1SchemaPromise = (async () => {
+      const statements = [
+        `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL)`,
+        `CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, email TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', business_name TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT '', demo_slug TEXT NOT NULL DEFAULT '', demo_url TEXT NOT NULL DEFAULT '', live_url TEXT NOT NULL DEFAULT '', stage TEXT NOT NULL DEFAULT '', payment_status TEXT NOT NULL DEFAULT 'unpaid', flow_type TEXT NOT NULL DEFAULT 'inbound', view_count INTEGER NOT NULL DEFAULT 0, claim_click_count INTEGER NOT NULL DEFAULT 0, last_viewed_at TEXT NOT NULL DEFAULT '', last_clicked_at TEXT NOT NULL DEFAULT '', last_viewer_device TEXT NOT NULL DEFAULT '', metadata_json TEXT NOT NULL DEFAULT '{}', created_at INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL)`,
+        `CREATE INDEX IF NOT EXISTS idx_clients_slug ON clients(demo_slug)`,
+        `CREATE INDEX IF NOT EXISTS idx_clients_live_url ON clients(live_url)`,
+        `CREATE TABLE IF NOT EXISTS activity_events (id TEXT PRIMARY KEY, type TEXT NOT NULL, icon TEXT NOT NULL DEFAULT '🔔', title TEXT NOT NULL, message TEXT NOT NULL, client_name TEXT NOT NULL DEFAULT '', slug TEXT NOT NULL DEFAULT '', timestamp TEXT NOT NULL)`,
+        `CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity_events(timestamp DESC)`,
+        `CREATE TABLE IF NOT EXISTS tracking_events (id TEXT PRIMARY KEY, slug TEXT NOT NULL DEFAULT '', client_id TEXT NOT NULL DEFAULT '', event_type TEXT NOT NULL, device TEXT NOT NULL DEFAULT 'Desktop', user_agent TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)`,
+        `CREATE INDEX IF NOT EXISTS idx_tracking_slug_created ON tracking_events(slug, created_at DESC)`,
+        `CREATE TABLE IF NOT EXISTS scheduled_sms (id TEXT PRIMARY KEY, client_id TEXT NOT NULL DEFAULT '', client_name TEXT NOT NULL DEFAULT '', to_phone TEXT NOT NULL, body_text TEXT NOT NULL, scheduled_for_utc TEXT NOT NULL, scheduled_for_au TEXT NOT NULL, au_timezone TEXT NOT NULL DEFAULT 'Australia/Sydney', status TEXT NOT NULL DEFAULT 'pending', error_reason TEXT NOT NULL DEFAULT '', sent_at TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)`,
+        `CREATE INDEX IF NOT EXISTS idx_scheduled_sms_due ON scheduled_sms(status, scheduled_for_utc)`,
+        `CREATE TABLE IF NOT EXISTS lead_hunter_leads (id TEXT PRIMARY KEY, place_id TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', industry TEXT NOT NULL DEFAULT 'other', lead_type TEXT NOT NULL DEFAULT '', imported INTEGER NOT NULL DEFAULT 0, data_json TEXT NOT NULL DEFAULT '{}', updated_at TEXT NOT NULL)`
+      ];
+      await db.batch(statements.map((sql) => db.prepare(sql)));
+      return true;
+    })().catch((err) => {
+      _d1SchemaPromise = null;
+      console.error('[D1 schema]', err);
+      return false;
+    });
+  }
+  return _d1SchemaPromise;
+}
+
+function runInBg(ctx, promise) {
+  if (!promise) return;
+  const wrapped = Promise.resolve(promise).catch((err) => {
+    console.error('[bg-task error]', err && err.message ? err.message : err);
+  });
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(wrapped);
+    return null;
+  }
+  return wrapped;
+}
+
+async function loadSyncedRuntime(env, overrides = {}) {
+  const db = getD1(env);
+  const kvCreds = (env && env.WYNN_KV)
+    ? ((await env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => null)) || {})
+    : {};
+  const kvTg = (env && env.WYNN_KV)
+    ? ((await env.WYNN_KV.get('telegram_config', 'json').catch(() => null)) || {})
+    : {};
+
+  const d1Settings = {};
+  let d1Count = 0;
+  if (db) {
+    await ensureD1Schema(env);
+    const rowsRes = await db.prepare('SELECT key, value FROM settings').all().catch(() => null);
+    if (rowsRes && Array.isArray(rowsRes.results)) {
+      d1Count = rowsRes.results.length;
+      for (const r of rowsRes.results) {
+        if (r && r.key) d1Settings[r.key] = String(r.value || '');
+      }
+    }
+  }
+
+  const synced = {};
+  for (const key of WYNN_SYNCED_SETTING_KEYS) {
+    let val = '';
+    if (Object.prototype.hasOwnProperty.call(d1Settings, key) && d1Settings[key]) {
+      val = d1Settings[key];
+    } else if (key === 'telegramBotToken') {
+      val = (kvTg && kvTg.botToken) || kvCreds.telegramBotToken || (env && env.TELEGRAM_BOT_TOKEN) || '';
+    } else if (key === 'telegramChatId') {
+      val = (kvTg && kvTg.chatId) || kvCreds.telegramChatId || (env && env.TELEGRAM_CHAT_ID) || '';
+    } else if (kvCreds && kvCreds[key]) {
+      val = String(kvCreds[key]);
+    }
+    synced[key] = val;
+  }
+
+  // One-time backfill from legacy KV into D1 when D1 settings table has no keys yet
+  if (db && d1Count === 0) {
+    const backfillNow = new Date().toISOString();
+    const stmts = [];
+    for (const key of WYNN_SYNCED_SETTING_KEYS) {
+      if (synced[key]) {
+        stmts.push(
+          db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO NOTHING')
+            .bind(key, synced[key], backfillNow)
+        );
+      }
+    }
+    if (stmts.length) {
+      await db.batch(stmts).catch(() => {});
+    }
+  }
+
+  const mergedOverrides = {};
+  for (const key of WYNN_SYNCED_SETTING_KEYS) {
+    if (synced[key]) mergedOverrides[key] = synced[key];
+  }
+  if (overrides && typeof overrides === 'object') {
+    for (const [k, v] of Object.entries(overrides)) {
+      if (v) mergedOverrides[k] = v;
+    }
+  }
+
+  const baseCfg = getConfig(env, mergedOverrides);
+  const cfg = {
+    ...baseCfg,
+    stripeSecretKey: (mergedOverrides.stripeSecretKey || baseCfg.stripeSecretKey || '').trim(),
+    stripeWebhookSecret: (mergedOverrides.stripeWebhookSecret || (env && env.STRIPE_WEBHOOK_SECRET) || '').trim(),
+    clicksendFrom: (mergedOverrides.clicksendFrom || baseCfg.clicksendFrom || '').trim(),
+    telegramBotToken: (mergedOverrides.telegramBotToken || (env && env.TELEGRAM_BOT_TOKEN) || '').trim(),
+    telegramChatId: (mergedOverrides.telegramChatId || (env && env.TELEGRAM_CHAT_ID) || '').trim(),
+    geminiApiKey: (mergedOverrides.geminiApiKey || mergedOverrides.googlePlacesApiKey || baseCfg.geminiApiKey || (env && env.GEMINI_API_KEY) || '').trim()
+  };
+
+  return {
+    settings: synced,
+    cfg,
+    stripeEnvConfigured: Boolean(env && env.STRIPE_SECRET_KEY)
+  };
+}
+
+async function saveSyncedSettings(env, incoming = {}, opts = {}) {
+  const db = getD1(env);
+  const nowIso = new Date().toISOString();
+  const current = await loadSyncedRuntime(env);
+  const next = { ...current.settings };
+
+  for (const key of WYNN_SYNCED_SETTING_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(incoming, key)) {
+      const val = String(incoming[key] || '').trim();
+      if (val || opts.clearEmpty) {
+        next[key] = val;
+      }
+    }
+  }
+
+  if (db) {
+    await ensureD1Schema(env);
+    const stmts = [];
+    for (const key of WYNN_SYNCED_SETTING_KEYS) {
+      stmts.push(
+        db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+          .bind(key, String(next[key] || ''), nowIso)
+      );
+    }
+    if (stmts.length) {
+      await db.batch(stmts);
+    }
+  }
+
+  if (env && env.WYNN_KV) {
+    const kvCreds = {};
+    for (const key of WYNN_SYNCED_SETTING_KEYS) {
+      if (next[key]) kvCreds[key] = next[key];
+    }
+    kvCreds.updatedAt = nowIso;
+    await Promise.all([
+      env.WYNN_KV.put('studio_runtime_creds', JSON.stringify(kvCreds)).catch(() => {}),
+      env.WYNN_KV.put('telegram_config', JSON.stringify({
+        botToken: next.telegramBotToken || '',
+        chatId: next.telegramChatId || '',
+        updatedAt: nowIso
+      })).catch(() => {})
+    ]);
+  }
+
+  return next;
+}
+
+async function upsertD1Client(env, clientObj) {
+  const db = getD1(env);
+  if (!db || !clientObj) return null;
+  await ensureD1Schema(env);
+
+  const cleanSlug = slugifyName(clientObj.demoSlug || clientObj.businessName || clientObj.name || '');
+  const id = String(clientObj.id || (cleanSlug ? `local_${cleanSlug}` : '')).trim();
+  if (!id) return null;
+
+  const nowIso = new Date().toISOString();
+  const viewCount = Number(clientObj.demoViewCount || clientObj.viewCount || 0);
+  const clickCount = Number(clientObj.claimClickCount || 0);
+  const createdMs = Number(clientObj.created || Date.now());
+  const metaJson = JSON.stringify(clientObj).slice(0, 65000);
+
+  await db.prepare(`
+    INSERT INTO clients (
+      id, email, name, business_name, phone, demo_slug, demo_url, live_url,
+      stage, payment_status, flow_type, view_count, claim_click_count,
+      last_viewed_at, last_clicked_at, last_viewer_device, metadata_json,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      email = CASE WHEN excluded.email != '' THEN excluded.email ELSE clients.email END,
+      name = CASE WHEN excluded.name != '' THEN excluded.name ELSE clients.name END,
+      business_name = CASE WHEN excluded.business_name != '' THEN excluded.business_name ELSE clients.business_name END,
+      phone = CASE WHEN excluded.phone != '' THEN excluded.phone ELSE clients.phone END,
+      demo_slug = CASE WHEN excluded.demo_slug != '' THEN excluded.demo_slug ELSE clients.demo_slug END,
+      demo_url = CASE WHEN excluded.demo_url != '' THEN excluded.demo_url ELSE clients.demo_url END,
+      live_url = excluded.live_url,
+      stage = CASE WHEN excluded.stage != '' THEN excluded.stage ELSE clients.stage END,
+      payment_status = CASE WHEN excluded.payment_status != '' THEN excluded.payment_status ELSE clients.payment_status END,
+      flow_type = CASE WHEN excluded.flow_type != '' THEN excluded.flow_type ELSE clients.flow_type END,
+      view_count = MAX(clients.view_count, excluded.view_count),
+      claim_click_count = MAX(clients.claim_click_count, excluded.claim_click_count),
+      last_viewed_at = CASE WHEN excluded.last_viewed_at != '' THEN excluded.last_viewed_at ELSE clients.last_viewed_at END,
+      last_clicked_at = CASE WHEN excluded.last_clicked_at != '' THEN excluded.last_clicked_at ELSE clients.last_clicked_at END,
+      last_viewer_device = CASE WHEN excluded.last_viewer_device != '' THEN excluded.last_viewer_device ELSE clients.last_viewer_device END,
+      metadata_json = excluded.metadata_json,
+      updated_at = excluded.updated_at
+  `).bind(
+    id,
+    String(clientObj.email || ''),
+    String(clientObj.name || ''),
+    String(clientObj.businessName || ''),
+    String(clientObj.phone || ''),
+    cleanSlug,
+    String(clientObj.demoUrl || ''),
+    String(clientObj.liveUrl || ''),
+    String(clientObj.stage || ''),
+    String(clientObj.paymentStatus || 'unpaid'),
+    String(clientObj.flowType || 'inbound'),
+    viewCount,
+    clickCount,
+    String(clientObj.demoLastViewedAt || ''),
+    String(clientObj.demoLastClickedAt || ''),
+    String(clientObj.demoViewerDevice || ''),
+    metaJson,
+    createdMs,
+    nowIso
+  ).run().catch((err) => {
+    console.error('[D1 upsert client]', err);
+  });
+
+  return id;
+}
+
+async function deleteD1Client(env, clientId) {
+  const db = getD1(env);
+  if (!db || !clientId) return;
+  await ensureD1Schema(env);
+  await db.prepare('DELETE FROM clients WHERE id = ?').bind(String(clientId)).run().catch(() => {});
+}
+
+async function getD1ClientsIndex(env) {
+  const db = getD1(env);
+  const byId = new Map();
+  const bySlug = new Map();
+  if (!db) return { byId, bySlug, rows: [] };
+  await ensureD1Schema(env);
+  const res = await db.prepare('SELECT * FROM clients ORDER BY updated_at DESC').all().catch(() => null);
+  const rows = (res && Array.isArray(res.results)) ? res.results : [];
+  for (const row of rows) {
+    if (row.id) byId.set(row.id, row);
+    if (row.demo_slug) bySlug.set(row.demo_slug.toLowerCase(), row);
+  }
+  return { byId, bySlug, rows };
+}
+
+async function recordD1TrackingEvent(env, { slug = '', clientId = '', eventType = 'demo_view', device = 'Desktop', userAgent = '', businessName = '' }) {
+  const db = getD1(env);
+  const nowIso = new Date().toISOString();
+  const cleanSlug = slugifyName(slug);
+  if (!db) {
+    return { viewCount: null, claimClickCount: null, lastViewedAt: nowIso, lastClickedAt: nowIso, clientId, slug: cleanSlug };
+  }
+  await ensureD1Schema(env);
+
+  let targetRow = null;
+  if (clientId) {
+    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name FROM clients WHERE id = ?').bind(String(clientId)).first().catch(() => null);
+  }
+  if (!targetRow && cleanSlug) {
+    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cleanSlug).first().catch(() => null);
+  }
+
+  const effectiveId = (targetRow && targetRow.id) || String(clientId || (cleanSlug ? `local_${cleanSlug}` : `anon_${Date.now()}`));
+  const resolvedSlug = (targetRow && targetRow.demo_slug) || cleanSlug;
+  const resolvedBiz = (targetRow && (targetRow.business_name || targetRow.name)) || businessName || resolvedSlug || 'Boutique';
+
+  if (eventType === 'claim_click') {
+    await db.prepare(`
+      INSERT INTO clients (
+        id, business_name, demo_slug, claim_click_count, last_clicked_at, last_viewer_device, created_at, updated_at
+      ) VALUES (?, ?, ?, 1, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        claim_click_count = clients.claim_click_count + 1,
+        last_clicked_at = excluded.last_clicked_at,
+        last_viewer_device = excluded.last_viewer_device,
+        updated_at = excluded.updated_at
+    `).bind(effectiveId, resolvedBiz, resolvedSlug, nowIso, device, Date.now(), nowIso).run();
+  } else {
+    await db.prepare(`
+      INSERT INTO clients (
+        id, business_name, demo_slug, view_count, last_viewed_at, last_viewer_device, created_at, updated_at
+      ) VALUES (?, ?, ?, 1, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        view_count = clients.view_count + 1,
+        last_viewed_at = excluded.last_viewed_at,
+        last_viewer_device = excluded.last_viewer_device,
+        updated_at = excluded.updated_at
+    `).bind(effectiveId, resolvedBiz, resolvedSlug, nowIso, device, Date.now(), nowIso).run();
+  }
+
+  await db.prepare(`
+    INSERT INTO tracking_events (id, slug, client_id, event_type, device, user_agent, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    `trk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    resolvedSlug,
+    effectiveId,
+    eventType,
+    device,
+    String(userAgent || '').slice(0, 240),
+    nowIso
+  ).run().catch(() => {});
+
+  const updated = await db.prepare('SELECT id, view_count, claim_click_count, last_viewed_at, last_clicked_at FROM clients WHERE id = ?').bind(effectiveId).first().catch(() => null);
+  return {
+    clientId: effectiveId,
+    slug: resolvedSlug,
+    businessName: resolvedBiz,
+    viewCount: Number((updated && updated.view_count) || 1),
+    claimClickCount: Number((updated && updated.claim_click_count) || (eventType === 'claim_click' ? 1 : 0)),
+    lastViewedAt: (updated && updated.last_viewed_at) || nowIso,
+    lastClickedAt: (updated && updated.last_clicked_at) || nowIso,
+    device
+  };
+}
+
+async function verifyStripeWebhookSig(rawBody, sigHeader, secret) {
+  if (!secret) return true;
+  if (!sigHeader || typeof sigHeader !== 'string') return false;
+  const parts = {};
+  for (const item of sigHeader.split(',')) {
+    const [k, v] = item.split('=');
+    if (k && v) parts[k.trim()] = v.trim();
+  }
+  const ts = Number(parts.t || 0);
+  const v1 = parts.v1 || '';
+  if (!ts || !v1 || Math.abs(Math.floor(Date.now() / 1000) - ts) > 300) {
+    return false;
+  }
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${ts}.${rawBody}`));
+  const hex = Array.from(new Uint8Array(mac)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (hex.length !== v1.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hex.length; i++) {
+    diff |= hex.charCodeAt(i) ^ v1.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+const AU_TIMEZONE = 'Australia/Sydney';
+
+function formatAuDateTime(dateInput = new Date(), timeZone = AU_TIMEZONE) {
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (Number.isNaN(d.getTime())) return '';
+  if (typeof Temporal !== 'undefined' && Temporal.Instant) {
+    try {
+      const zdt = Temporal.Instant.from(d.toISOString()).toZonedDateTimeISO(timeZone);
+      return `${zdt.toPlainDateTime().toString().slice(0, 19).replace('T', ' ')} (${zdt.offset})`;
+    } catch (_) {}
+  }
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZoneName: 'short'
+  }).format(d);
+}
+
+function auWallTimeToUtcIso(wallInput, timeZone = AU_TIMEZONE) {
+  const raw = String(wallInput || '').trim();
+  if (!raw) return '';
+  if (/(Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
+  }
+  const norm = raw.replace(' ', 'T');
+  const m = norm.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (!m) {
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const hour = Number(m[4] || 9);
+  const minute = Number(m[5] || 0);
+  const second = Number(m[6] || 0);
+
+  if (typeof Temporal !== 'undefined' && Temporal.ZonedDateTime) {
+    try {
+      const zdt = Temporal.ZonedDateTime.from({
+        timeZone,
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second
+      });
+      return new Date(Number(zdt.epochMilliseconds)).toISOString();
+    } catch (_) {}
+  }
+
+  // Deterministic iterative offset solver using Intl for AEST (+10) / AEDT (+11)
+  const targetUtcAsWall = Date.UTC(year, month - 1, day, hour, minute, second);
+  const dtf = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  let guess = targetUtcAsWall - 10 * 3600 * 1000;
+  for (let i = 0; i < 3; i++) {
+    const parts = {};
+    for (const p of dtf.formatToParts(new Date(guess))) {
+      if (p.type !== 'literal') parts[p.type] = Number(p.value);
+    }
+    const wallAtGuess = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+    const diff = targetUtcAsWall - wallAtGuess;
+    if (diff === 0) break;
+    guess += diff;
+  }
+  return new Date(guess).toISOString();
+}
+
+async function processDueScheduledSms(env, ctx) {
+  const db = getD1(env);
+  const nowUtcIso = new Date().toISOString();
+  const currentAuTime = formatAuDateTime(new Date(), AU_TIMEZONE);
+  if (!db) {
+    return { ok: false, error: 'D1 database binding missing', currentAuTime, nowUtcIso, processed: 0, sentCount: 0, failedCount: 0, items: [] };
+  }
+  await ensureD1Schema(env);
+  const { cfg } = await loadSyncedRuntime(env);
+
+  const dueRes = await db.prepare(
+    `SELECT * FROM scheduled_sms WHERE status = 'pending' AND scheduled_for_utc <= ? ORDER BY scheduled_for_utc ASC LIMIT 25`
+  ).bind(nowUtcIso).all().catch(() => null);
+  const dueRows = (dueRes && Array.isArray(dueRes.results)) ? dueRes.results : [];
+
+  let sentCount = 0;
+  let failedCount = 0;
+  const items = [];
+
+  for (const row of dueRows) {
+    // Atomic claim prevents duplicate sends across concurrent invocations
+    const claim = await db.prepare(
+      `UPDATE scheduled_sms SET status = 'sending' WHERE id = ? AND status = 'pending'`
+    ).bind(row.id).run().catch(() => null);
+    if (!claim || !claim.meta || claim.meta.changes !== 1) {
+      continue;
+    }
+
+    const smsRes = await sendClickSendSms({
+      to: row.to_phone,
+      message: row.body_text,
+      cfg
+    });
+    const sentAtIso = new Date().toISOString();
+    if (smsRes && smsRes.sent) {
+      sentCount++;
+      await db.prepare(
+        `UPDATE scheduled_sms SET status = 'sent', sent_at = ?, error_reason = '' WHERE id = ?`
+      ).bind(sentAtIso, row.id).run().catch(() => {});
+      if (row.client_id) {
+        const histPromise = recordSmsHistory({
+          customerId: row.client_id,
+          env,
+          stripeSecretKey: cfg.stripeSecretKey,
+          type: 'scheduled_sms',
+          to: row.to_phone,
+          text: row.body_text,
+          status: true,
+          reason: ''
+        });
+        runInBg(ctx, histPromise);
+      }
+      items.push({ id: row.id, status: 'sent', to: smsRes.to || row.to_phone, scheduledForAu: row.scheduled_for_au, sentAt: sentAtIso });
+    } else {
+      failedCount++;
+      const reason = (smsRes && smsRes.reason) || 'Send failed';
+      await db.prepare(
+        `UPDATE scheduled_sms SET status = 'failed', error_reason = ? WHERE id = ?`
+      ).bind(String(reason).slice(0, 480), row.id).run().catch(() => {});
+      items.push({ id: row.id, status: 'failed', to: row.to_phone, reason });
+    }
+  }
+
+  return {
+    ok: true,
+    timezone: AU_TIMEZONE,
+    currentAuTime,
+    nowUtcIso,
+    processed: items.length,
+    sentCount,
+    failedCount,
+    items
+  };
+}
+
+async function mirrorLeadHunterToD1(env, leads = []) {
+  const db = getD1(env);
+  if (!db || !Array.isArray(leads)) return;
+  await ensureD1Schema(env);
+  const nowIso = new Date().toISOString();
+  await db.prepare('DELETE FROM lead_hunter_leads').run().catch(() => {});
+  const chunkSize = 40;
+  for (let i = 0; i < leads.length; i += chunkSize) {
+    const chunk = leads.slice(i, i + chunkSize);
+    const stmts = chunk.map((l, idx) => {
+      const id = String(l.placeId || l.id || `lead_${i + idx}_${slugifyName(l.name || 'shop')}`);
+      return db.prepare(`
+        INSERT INTO lead_hunter_leads (id, place_id, name, industry, lead_type, imported, data_json, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          imported = excluded.imported,
+          data_json = excluded.data_json,
+          updated_at = excluded.updated_at
+      `).bind(
+        id,
+        String(l.placeId || ''),
+        String(l.name || ''),
+        String(l.industry || 'other'),
+        String(l.leadType || ''),
+        l.imported ? 1 : 0,
+        JSON.stringify(l).slice(0, 32000),
+        nowIso
+      );
+    });
+    if (stmts.length) await db.batch(stmts).catch(() => {});
+  }
+}
+
 // Persist full SMS message history in Cloudflare KV + sync latest status with Stripe metadata
 async function recordSmsHistory({ customerId, env, stripeSecretKey, type, to, text, status, reason }) {
   if (!customerId) return null;
@@ -750,28 +1325,42 @@ CLIENT'S REVISION REQUEST / INSTRUCTIONS:
 ${revData.menuText || 'Extract all services and prices from the attached menu image.'}`
       });
 
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            response_mime_type: 'application/json',
-            temperature: 0.1
-          }
-        })
-      });
+      const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-pro'];
+      let geminiSuccess = false;
+      for (const modelName of modelsToTry) {
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: {
+              response_mime_type: 'application/json',
+              temperature: 0.1
+            }
+          })
+        });
 
-      if (geminiRes.ok) {
-        const gData = await geminiRes.json();
-        const rawText = gData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (rawText) {
-          const parsed = JSON.parse(rawText.trim());
-          if (Array.isArray(parsed) && parsed.length) {
-            updatedMenu = parsed;
-            changesSummaryList.push(`Gemini AI updated ${parsed.length} menu categories based on client's request`);
+        if (geminiRes.ok) {
+          const gData = await geminiRes.json();
+          const rawText = (gData?.candidates?.[0]?.content?.parts?.[0]?.text || '')
+            .replace(/^```(?:json)?\s*/i, '')
+            .replace(/\s*```$/i, '')
+            .trim();
+          if (rawText) {
+            try {
+              const parsed = JSON.parse(rawText);
+              if (Array.isArray(parsed) && parsed.length) {
+                updatedMenu = parsed;
+                changesSummaryList.push(`Gemini AI (${modelName}) updated ${parsed.length} menu categories based on client's request`);
+                geminiSuccess = true;
+                break;
+              }
+            } catch (_) {}
           }
         }
+      }
+      if (!geminiSuccess && revData.menuText && updatedMenu) {
+        changesSummaryList.push('Applied fallback text menu notes');
       }
     } catch (gErr) {
       if (revData.menuText && updatedMenu) {
@@ -1987,24 +2576,46 @@ function injectClaimBarIntoHtml(rawHtml, client) {
   }
 
   const cleanSlug = slugifyName((client && (client.demoSlug || client.id || client.businessName)) || '');
+  const cidVal = (client && client.id && !String(client.id).startsWith('local_') ? client.id : '').replace(/'/g, '');
   const beaconScript = cleanSlug ? `
   <script>
     (function(){
       try {
         var s = '${cleanSlug}';
+        var cid = '${cidVal}';
         if (!s) return;
         var q = window.location.search || '';
         if (q.indexOf('admin=') !== -1 || q.indexOf('preview=') !== -1 || q.indexOf('bar=1') !== -1) return;
         if (window.localStorage && window.localStorage.getItem('wynn_admin_key')) return;
-        var now = Date.now();
-        var last = window.localStorage ? window.localStorage.getItem('wynn_dv_' + s) : null;
-        if (last && (now - parseInt(last, 10)) < 30 * 60 * 1000) return;
-        if (window.localStorage) window.localStorage.setItem('wynn_dv_' + s, now);
-        fetch('/api/track-view?slug=' + encodeURIComponent(s), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          keepalive: true
-        }).catch(function(){});
+        function sendTrack(evType) {
+          try {
+            var payload = JSON.stringify({
+              slug: s,
+              clientId: cid,
+              eventType: evType || 'demo_view'
+            });
+            var endpoint = '/api/track?slug=' + encodeURIComponent(s) + '&type=' + encodeURIComponent(evType || 'demo_view');
+            if (navigator.sendBeacon) {
+              var blob = new Blob([payload], { type: 'application/json' });
+              if (navigator.sendBeacon(endpoint, blob)) return;
+            }
+            fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: payload,
+              keepalive: true
+            }).catch(function(){});
+          } catch(e){}
+        }
+        var ssKey = 'wynn_dv_ss_' + s;
+        if (!window.sessionStorage || !window.sessionStorage.getItem(ssKey)) {
+          if (window.sessionStorage) window.sessionStorage.setItem(ssKey, String(Date.now()));
+          sendTrack('demo_view');
+        }
+        document.addEventListener('click', function(ev) {
+          var el = ev.target && ev.target.closest ? ev.target.closest('.claim-btn') : null;
+          if (el) sendTrack('claim_click');
+        }, true);
       } catch(e){}
     })();
   </script>` : '';
@@ -2200,43 +2811,59 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
 }
 
 // Record in-app activity feed event in KV and broadcast instant push (Telegram Bot + Web Push)
-async function recordActivityAndNotify({ type, title, message, clientName, slug, env, ctx }) {
-  if (!env || !env.WYNN_KV) return;
+async function recordActivityAndNotify({ type, title, message, clientName, slug, dedupeKey = '', dedupeTtl = 86400, env, ctx }) {
+  if (!env) return null;
+  if (dedupeKey && env.WYNN_KV) {
+    const sentLock = await env.WYNN_KV.get(dedupeKey).catch(() => null);
+    if (sentLock) return { ok: true, deduped: true };
+    await env.WYNN_KV.put(dedupeKey, new Date().toISOString(), { expirationTtl: dedupeTtl }).catch(() => {});
+  }
   const nowIso = new Date().toISOString();
   const eventId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
 
   let icon = '🔔';
   if (type === 'demo_viewed') icon = '👀';
+  else if (type === 'claim_clicked') icon = '💳';
   else if (type === 'payment_received') icon = '💰';
-  else if (type === 'revision_submitted') icon = '📝';
+  else if (type === 'revision_submitted' || type === 'brief_completed') icon = '📝';
   else if (type === 'domain_updated') icon = '🌐';
 
   const newEvent = {
     id: eventId,
-    type,
+    type: type || 'system',
     icon,
-    title,
-    message,
+    title: title || 'WynnPages Activity',
+    message: message || '',
     clientName: clientName || '',
     slug: slug || '',
     timestamp: nowIso
   };
 
-  // 1. Prepend to in-app activity feed in KV (keep last 30 events)
-  try {
-    const existingEvents = (await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || [];
-    const updatedEvents = [newEvent, ...existingEvents.filter(e => e.id !== eventId)].slice(0, 30);
-    await env.WYNN_KV.put('activity_events', JSON.stringify(updatedEvents)).catch(() => {});
-  } catch (_) {}
+  // 1. Prepend to D1 activity_events + KV activity_events cache (keep last 30 events)
+  const db = getD1(env);
+  if (db) {
+    await ensureD1Schema(env);
+    await db.prepare(
+      `INSERT INTO activity_events (id, type, icon, title, message, client_name, slug, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(newEvent.id, newEvent.type, newEvent.icon, newEvent.title, newEvent.message, newEvent.clientName, newEvent.slug, newEvent.timestamp).run().catch(() => {});
+  }
+  if (env.WYNN_KV) {
+    try {
+      const existingEvents = (await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || [];
+      const updatedEvents = [newEvent, ...existingEvents.filter(e => e.id !== eventId)].slice(0, 30);
+      await env.WYNN_KV.put('activity_events', JSON.stringify(updatedEvents)).catch(() => {});
+    } catch (_) {}
+  }
 
-  // 2. Dispatch Telegram Bot Alert (Instant Native iOS Push)
+  // 2. Dispatch Telegram Bot Alert (reads D1 settings -> KV -> env) inside ctx.waitUntil
   const sendTelegram = async () => {
     try {
-      const tgConfig = await env.WYNN_KV.get('telegram_config', 'json').catch(() => null);
-      const botToken = (tgConfig && tgConfig.botToken) || env.TELEGRAM_BOT_TOKEN;
-      const chatId = (tgConfig && tgConfig.chatId) || env.TELEGRAM_CHAT_ID;
+      const rt = await loadSyncedRuntime(env);
+      const botToken = rt.cfg.telegramBotToken || '';
+      const chatId = rt.cfg.telegramChatId || '';
       if (botToken && chatId) {
-        const text = `${icon} *${title}*\n\n${message}\n\n👉 [Mở Studio Command](https://wynnpages.com.au/admin.html)`;
+        const cleanTitle = String(title || '').replace(/[*_`[\]]/g, '');
+        const text = `${icon} *${cleanTitle}*\n\n${message}\n\n🕒 _${formatAuDateTime(new Date(), AU_TIMEZONE)}_\n👉 [Mở Studio Command](https://wynnpages.com.au/admin.html)`;
         await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2244,23 +2871,22 @@ async function recordActivityAndNotify({ type, title, message, clientName, slug,
             chat_id: chatId,
             text,
             parse_mode: 'Markdown',
-            disable_web_page_preview: false
+            disable_web_page_preview: true
           })
-        }).catch(() => {});
+        });
       }
-    } catch (_) {}
+    } catch (tgErr) {
+      console.error('[Telegram notify error]', tgErr);
+    }
   };
 
-  if (ctx && typeof ctx.waitUntil === 'function') {
-    ctx.waitUntil(sendTelegram());
-  } else {
-    sendTelegram().catch(() => {});
-  }
+  runInBg(ctx, sendTelegram());
+  return newEvent;
 }
 
-// Track client viewing their bespoke demo website (0ms real-time in KV + async Stripe sync)
+// Track client viewing their bespoke demo website (atomic D1 + KV mirror + async Stripe sync)
 async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx }) {
-  if (!slug || !env || !env.WYNN_KV) return null;
+  if (!slug || !env) return null;
   try {
     const url = request ? new URL(request.url) : null;
     const cookieHeader = (request && request.headers.get('cookie')) || '';
@@ -2275,11 +2901,34 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
     const isMobile = /mobile|iphone|android|ipad/i.test(userAgent);
     const device = isMobile ? 'Mobile' : 'Desktop';
     const now = new Date().toISOString();
+    const targetId = (client && client.id) || '';
+    const bizName = (client && (client.businessName || client.name)) || cleanSlug;
 
-    const kvKey = `demo_views:${cleanSlug}`;
-    const existing = await env.WYNN_KV.get(kvKey, 'json').catch(() => null);
-    const viewCount = Number(existing?.viewCount || 0) + 1;
-    const firstViewedAt = existing?.firstViewedAt || now;
+    const d1Track = await recordD1TrackingEvent(env, {
+      slug: cleanSlug,
+      clientId: targetId,
+      eventType: 'demo_view',
+      device,
+      userAgent,
+      businessName: bizName
+    });
+
+    let viewCount = Number(d1Track.viewCount || 0);
+    let firstViewedAt = now;
+    if (env.WYNN_KV) {
+      const kvKey = `demo_views:${cleanSlug}`;
+      const existing = await env.WYNN_KV.get(kvKey, 'json').catch(() => null);
+      viewCount = Math.max(viewCount, Number(existing?.viewCount || 0) + (getD1(env) ? 0 : 1), 1);
+      firstViewedAt = existing?.firstViewedAt || now;
+      await env.WYNN_KV.put(kvKey, JSON.stringify({
+        slug: cleanSlug,
+        viewCount,
+        firstViewedAt,
+        lastViewedAt: now,
+        lastDevice: device
+      })).catch(() => {});
+    }
+
     const updateObj = {
       slug: cleanSlug,
       viewCount,
@@ -2287,15 +2936,15 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
       lastViewedAt: now,
       lastDevice: device
     };
-    await env.WYNN_KV.put(kvKey, JSON.stringify(updateObj)).catch(() => {});
 
-    // Real-Time Event & Push Notification (Rate-limited to 1 alert per 30 minutes per client)
+    // Real-Time Event & Telegram Alert (Rate-limited to 1 alert per 30 minutes per client)
     const lockKey = `demo_notify_lock:${cleanSlug}`;
-    const isLocked = await env.WYNN_KV.get(lockKey).catch(() => null);
+    const isLocked = env.WYNN_KV ? await env.WYNN_KV.get(lockKey).catch(() => null) : null;
     if (!isLocked) {
-      await env.WYNN_KV.put(lockKey, '1', { expirationTtl: 1800 }).catch(() => {});
-      const bizName = (client && (client.businessName || client.name)) || cleanSlug;
-      recordActivityAndNotify({
+      if (env.WYNN_KV) {
+        await env.WYNN_KV.put(lockKey, '1', { expirationTtl: 1800 }).catch(() => {});
+      }
+      await recordActivityAndNotify({
         type: 'demo_viewed',
         title: '👀 Khách Đang Xem Demo!',
         message: `"${bizName}" vừa mở xem bản Demo của bạn! (${device})`,
@@ -2306,8 +2955,7 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
       });
     }
 
-    // Asynchronously update Stripe customer metadata if customer record is known (or search by slug)
-    const targetId = (client && client.id) || null;
+    // Asynchronously update Stripe customer metadata inside ctx.waitUntil
     if (stripeSecretKey && (targetId || cleanSlug)) {
       const bgStripe = async () => {
         try {
@@ -2329,14 +2977,10 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: body.toString()
-          }).catch(() => {});
+          });
         } catch (_) {}
       };
-      if (ctx && typeof ctx.waitUntil === 'function') {
-        ctx.waitUntil(bgStripe());
-      } else {
-        bgStripe().catch(() => {});
-      }
+      runInBg(ctx, bgStripe());
     }
     return updateObj;
   } catch (_) {
@@ -2879,11 +3523,7 @@ function getIndustryNicheTerms(industry) {
 
 async function runScheduledAutopilot(env, options = {}) {
   const force = Boolean(options.force);
-  let runtimeCreds = {};
-  if (env && env.WYNN_KV) {
-    runtimeCreds = (await env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => ({}))) || {};
-  }
-  const cfg = getConfig(env, runtimeCreds);
+  const { cfg } = await loadSyncedRuntime(env);
   if (!cfg.stripeSecretKey) {
     return { ok: false, error: 'Chưa cấu hình Stripe API Key' };
   }
@@ -3086,32 +3726,28 @@ export default {
     const url = new URL(request.url);
 
     // 1. CORS Preflight
+    // Handle CORS preflight globally (supports REST + Stripe webhook)
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, x-admin-key'
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, x-admin-key, stripe-signature'
         }
       });
     }
 
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, x-admin-key',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-admin-key, stripe-signature',
       'Content-Type': 'application/json'
     };
 
-    let runtimeCreds = {};
-    if (url.pathname.startsWith('/api/') && env && env.WYNN_KV) {
-      const savedCreds = await env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => null);
-      if (savedCreds && typeof savedCreds === 'object') {
-        runtimeCreds = savedCreds;
-      }
-    }
-    const cfg = getConfig(env, runtimeCreds);
+    const { cfg: syncedCfg } = await loadSyncedRuntime(env);
+    let runtimeCreds = syncedCfg;
+    const cfg = syncedCfg;
 
     // 1a. Wildcard Subdomain Demo (`https://lushnailbar.wynnpages.com.au`), Clean Path (`/d/lushnailbar`), & Custom Official Client Domains
     const hostLower = url.hostname.toLowerCase();
@@ -3137,7 +3773,9 @@ export default {
             client: liveClient,
             reqPath,
             url,
+            request,
             env,
+            ctx,
             stripeSecretKey: cfg.stripeSecretKey,
             isLiveDomain: true,
             isPathDemo: false,
@@ -3256,35 +3894,11 @@ export default {
       return Response.redirect(new URL(target, url.origin).toString(), 301);
     }
 
-    // 1a-track. Public Demo View Tracking Beacon (POST /api/track-view?slug=...)
-    if (url.pathname === '/api/track-view' && (request.method === 'POST' || request.method === 'GET' || request.method === 'OPTIONS')) {
-      if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: corsHeaders });
-      }
-      try {
-        let slug = (url.searchParams.get('slug') || '').trim();
-        if (!slug && request.method === 'POST') {
-          const body = await request.json().catch(() => ({}));
-          slug = (body.slug || '').trim();
-        }
-        if (!slug) {
-          return new Response(JSON.stringify({ ok: false, error: 'Missing slug' }), { status: 400, headers: corsHeaders });
-        }
-        const viewRes = await trackDemoView({
-          slug,
-          request,
-          env,
-          client: null,
-          stripeSecretKey: cfg.stripeSecretKey,
-          ctx
-        });
-        return new Response(JSON.stringify({ ok: true, slug: slugifyName(slug), viewRes }), {
-          status: 200,
-          headers: corsHeaders
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
-      }
+    // 1a-track. Public Demo View Tracking Beacon (Alias for /api/track)
+    if (url.pathname === '/api/track-view' && (request.method === 'POST' || request.method === 'GET')) {
+      const forwardedUrl = new URL(request.url);
+      forwardedUrl.pathname = '/api/track';
+      return await this.fetch(new Request(forwardedUrl.toString(), request), env, ctx);
     }
 
     // 1aa. Google Places Photo Media Proxy (GET /api/places-photo?ref=places/.../photos/...&maxWidth=800)
@@ -3598,18 +4212,39 @@ export default {
 
         const alreadyWelcomed = cust && cust.metadata && cust.metadata.welcome_sent === 'true';
         let notifyRes = null;
+        const isOutboundSession = (sessionData.metadata && sessionData.metadata.flow === 'outbound_demo') ||
+          (cust && cust.metadata && cust.metadata.flow_type === 'outbound');
+        const clientObj = {
+          id: (cust && cust.id) || (typeof sessionData.customer === 'string' ? sessionData.customer : ''),
+          name: name || (cust && cust.name) || '',
+          email: email || (cust && cust.email) || '',
+          phone: phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '',
+          businessName: (cust && cust.metadata && cust.metadata.business_name) || (sessionData.metadata && sessionData.metadata.customer_name) || '',
+          demoSlug: (cust && cust.metadata && cust.metadata.demo_slug) || slugifyName((cust && cust.metadata && cust.metadata.business_name) || name || ''),
+          demoUrl: (cust && cust.metadata && cust.metadata.demo_url) || (sessionData.metadata && sessionData.metadata.demo_url) || ''
+        };
+
+        if (sessionData.payment_status === 'paid' || sessionData.status === 'complete') {
+          const paidLabel = clientObj.businessName || clientObj.name || clientObj.email || 'Khách hàng mới';
+          await recordActivityAndNotify({
+            type: 'payment_received',
+            title: '💰 Đã Nhận Thanh Toán $599 AUD!',
+            message: `${paidLabel} vừa thanh toán $599 AUD qua Stripe!`,
+            clientName: paidLabel,
+            slug: clientObj.demoSlug || '',
+            dedupeKey: `paid_notified:${sessionId}`,
+            env,
+            ctx
+          });
+          await upsertD1Client(env, {
+            ...clientObj,
+            paymentStatus: 'paid',
+            flowType: isOutboundSession ? 'outbound' : 'inbound',
+            stage: isOutboundSession ? 'outbound_paid' : ((cust && cust.metadata && cust.metadata.stage) || 'paid')
+          });
+        }
 
         if (!alreadyWelcomed && (email || phone)) {
-          const isOutboundSession = (sessionData.metadata && sessionData.metadata.flow === 'outbound_demo') ||
-            (cust && cust.metadata && cust.metadata.flow_type === 'outbound');
-          const clientObj = {
-            id: (cust && cust.id) || (typeof sessionData.customer === 'string' ? sessionData.customer : ''),
-            name: name || (cust && cust.name) || '',
-            email: email || (cust && cust.email) || '',
-            phone: phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '',
-            businessName: (cust && cust.metadata && cust.metadata.business_name) || (sessionData.metadata && sessionData.metadata.customer_name) || '',
-            demoUrl: (cust && cust.metadata && cust.metadata.demo_url) || (sessionData.metadata && sessionData.metadata.demo_url) || ''
-          };
           notifyRes = await triggerLifecycleNotification({
             stage: isOutboundSession ? 'outbound_paid_confirmed' : 'payment_confirmed',
             client: clientObj,
@@ -3940,15 +4575,15 @@ export default {
               </div>
               <p style="margin-top:20px;"><a href="https://wynnpages.com.au/admin" style="display:inline-block;background:#96432b;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 22px;border-radius:12px;">Open WynnPages Admin →</a></p>
             </div>`;
-          await sendResendEmail({
+          runInBg(ctx, sendResendEmail({
             to: 'hello@wynnpages.com.au',
             subject: `⚡ [DOMAIN READY] ${customerLabel} (${domainLabel}) submitted access!`,
             html: adminHtml,
             cfg
-          }).catch(() => { });
+          }));
         }
 
-        // Trigger Stage 2 SMS + Email to Client
+        // Trigger Stage 2 SMS + Email to Client & Record Realtime Telegram Alert
         const resolvedNsStr = (bindRes && bindRes.attached && bindRes.nameservers) ? bindRes.nameservers : '';
         const clientRecord = {
           id: (custData && custData.id) || existingCustomerId || '',
@@ -3956,17 +4591,33 @@ export default {
           businessName,
           email,
           phone: customerPhone,
+          demoSlug: slugifyName(businessName || customerName || ''),
           briefType,
           industry,
           brandColors,
           vibeLinks,
           existingDomain: cleanExistingDomain,
           desiredDomains: cleanDesiredDomains,
+          liveUrl: autoLiveUrl || '',
+          stage: 'brief_completed',
+          paymentStatus: 'paid',
           dnsMode,
           domainDelegated,
           domainAccessNotes,
           cfNameservers: resolvedNsStr
         };
+
+        await upsertD1Client(env, clientRecord);
+        const briefLabel = businessName || customerName || email || 'Khách hàng mới';
+        await recordActivityAndNotify({
+          type: 'brief_completed',
+          title: '📝 Khách Đã Gửi Onboarding Brief!',
+          message: `${briefLabel} vừa hoàn tất 4 bước Onboarding Brief${domainSummary ? ` (Tên miền: ${domainSummary})` : ''}.`,
+          clientName: briefLabel,
+          slug: clientRecord.demoSlug || '',
+          env,
+          ctx
+        });
 
         const notification = await triggerLifecycleNotification({
           stage: 'brief_completed',
@@ -4024,7 +4675,7 @@ export default {
         const nowIso = new Date().toISOString();
         let bindResult = null;
         if (cleanHost && cleanHost.includes('.') && !cleanHost.endsWith('wynnpages.com.au') && env && env.WYNN_KV) {
-          bindResult = await ensureCustomLiveDomainOnCloudflare(cleanHost, env);
+          bindResult = await ensureCustomLiveDomainOnCloudflare(cleanHost, env, cfg.cfApiToken);
         }
 
         if (cust && cust.id && cfg.stripeSecretKey) {
@@ -4041,21 +4692,24 @@ export default {
           if (bindResult && bindResult.nameservers) {
             uParams.append('metadata[cf_nameservers]', bindResult.nameservers.slice(0, 490));
           }
-          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+          const patchCustRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${cfg.stripeSecretKey}`,
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: uParams.toString()
-          }).catch(() => { });
+          }).catch(() => null);
+          if (patchCustRes && patchCustRes.ok) {
+            await upsertD1Client(env, formatCustomerRecord(await patchCustRes.json()));
+          }
         }
 
         // Notify studio admin via Resend
         const customerLabel = bizName || (cust && (cust.metadata && cust.metadata.business_name || cust.name)) || 'A client';
         const domainLabel = cleanHost || (cust && cust.metadata && cust.metadata.live_url) || rawDomain || 'TBD';
 
-        recordActivityAndNotify({
+        await recordActivityAndNotify({
           type: 'domain_updated',
           title: '🌐 Tên Miền Đã Cập Nhật!',
           message: `${customerLabel} đã cập nhật thông tin tên miền ${domainLabel}. Sẵn sàng trỏ DNS!`,
@@ -4099,13 +4753,41 @@ export default {
       }
     }
 
-    // 4b-activity. Activity Feed & Real-Time Push Notification Engine
+    // 4b-activity. Activity Feed & Real-Time Push Notification Engine (D1 + KV Synced)
     if (url.pathname === '/api/activity-feed' && request.method === 'GET') {
-      const events = (env && env.WYNN_KV ? await env.WYNN_KV.get('activity_events', 'json').catch(() => null) : []) || [];
-      return new Response(JSON.stringify({ ok: true, events: events.slice(0, 20) }), { status: 200, headers: corsHeaders });
+      const db = getD1(env);
+      let d1Events = [];
+      if (db) {
+        await ensureD1Schema(env);
+        const rowsRes = await db.prepare('SELECT id, type, icon, title, message, client_name, slug, timestamp FROM activity_events ORDER BY timestamp DESC LIMIT 25').all().catch(() => null);
+        if (rowsRes && Array.isArray(rowsRes.results)) {
+          d1Events = rowsRes.results.map((r) => ({
+            id: r.id,
+            type: r.type,
+            icon: r.icon,
+            title: r.title,
+            message: r.message,
+            clientName: r.client_name,
+            slug: r.slug,
+            timestamp: r.timestamp
+          }));
+        }
+      }
+      const kvEvents = (env && env.WYNN_KV ? await env.WYNN_KV.get('activity_events', 'json').catch(() => null) : []) || [];
+      const merged = new Map();
+      for (const e of [...d1Events, ...kvEvents]) {
+        if (e && e.id && !merged.has(e.id)) merged.set(e.id, e);
+      }
+      const events = Array.from(merged.values()).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0)).slice(0, 20);
+      return new Response(JSON.stringify({ ok: true, events }), { status: 200, headers: corsHeaders });
     }
 
     if (url.pathname === '/api/activity-feed/clear' && request.method === 'POST') {
+      const db = getD1(env);
+      if (db) {
+        await ensureD1Schema(env);
+        await db.prepare('DELETE FROM activity_events').run().catch(() => {});
+      }
       if (env && env.WYNN_KV) {
         await env.WYNN_KV.put('activity_events', JSON.stringify([])).catch(() => {});
       }
@@ -4113,22 +4795,24 @@ export default {
     }
 
     if (url.pathname === '/api/telegram-config' && request.method === 'GET') {
-      const conf = (env && env.WYNN_KV ? await env.WYNN_KV.get('telegram_config', 'json').catch(() => null) : null) || {};
+      const rt = await loadSyncedRuntime(env);
       return new Response(JSON.stringify({
         ok: true,
-        botToken: conf.botToken || env.TELEGRAM_BOT_TOKEN || '',
-        chatId: conf.chatId || env.TELEGRAM_CHAT_ID || '',
-        hasBot: Boolean(conf.botToken || env.TELEGRAM_BOT_TOKEN)
+        botToken: rt.cfg.telegramBotToken || '',
+        chatId: rt.cfg.telegramChatId || '',
+        hasBot: Boolean(rt.cfg.telegramBotToken)
       }), { status: 200, headers: corsHeaders });
     }
 
     if (url.pathname === '/api/telegram-config' && request.method === 'POST') {
       const body = await request.json().catch(() => ({}));
+      const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
+      if (cfg.adminKey && providedKey && providedKey !== cfg.adminKey) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      }
       const botToken = (body.botToken || '').trim();
       const chatId = (body.chatId || '').trim();
-      if (env && env.WYNN_KV) {
-        await env.WYNN_KV.put('telegram_config', JSON.stringify({ botToken, chatId, updatedAt: new Date().toISOString() })).catch(() => {});
-      }
+      await saveSyncedSettings(env, { telegramBotToken: botToken, telegramChatId: chatId }, { clearEmpty: true });
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
     }
 
@@ -4522,7 +5206,7 @@ export default {
             uParams.append('metadata[checkout_session_id]', sessionId);
             if (cust.metadata && cust.metadata.welcome_sent !== 'true') {
               uParams.append('metadata[welcome_sent]', 'true');
-              triggerLifecycleNotification({
+              runInBg(ctx, triggerLifecycleNotification({
                 stage: 'outbound_paid_confirmed',
                 client: {
                   id: cust.id,
@@ -4534,31 +5218,35 @@ export default {
                 },
                 origin: url.origin,
                 cfg
-              }).catch(() => {});
+              }));
             }
-            fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+            runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${cfg.stripeSecretKey}`,
                 'Content-Type': 'application/x-www-form-urlencoded'
               },
               body: uParams.toString()
-            }).catch(() => {});
+            }));
             if (!cust.metadata) cust.metadata = {};
             cust.metadata.payment_status = 'paid';
             cust.metadata.stage = 'outbound_paid';
             cust.metadata.checkout_session_id = sessionId;
 
+            const reconciledRecord = formatCustomerRecord(cust);
+            const reconciledSlug = slugifyName(reconciledRecord.demoSlug);
             const paidBiz = (cust.metadata && cust.metadata.business_name) || cust.name || 'Khách hàng';
-            recordActivityAndNotify({
+            await recordActivityAndNotify({
               type: 'payment_received',
               title: '💰 Đã Nhận Thanh Toán $599 AUD!',
               message: `${paidBiz} vừa thanh toán $599 AUD qua Stripe!`,
               clientName: paidBiz,
-              slug: cleanSlug,
+              slug: reconciledSlug,
+              dedupeKey: `paid_notified:${sessionId}`,
               env,
               ctx
             });
+            await upsertD1Client(env, reconciledRecord);
           }
         }
 
@@ -4706,7 +5394,7 @@ export default {
 
         // Notify Studio Admin (App/Telegram) immediately
         const notifyBizName = revPayload.bizName || clientRecord.businessName || 'Khách hàng';
-        recordActivityAndNotify({
+        await recordActivityAndNotify({
           type: 'revision_submitted',
           title: '📝 Khách Đã Gửi Sửa Web (1 Vòng)!',
           message: `${notifyBizName} đã gửi thông tin chỉnh sửa web. Mở app để chạy AI!`,
@@ -4715,6 +5403,7 @@ export default {
           env,
           ctx
         });
+        await upsertD1Client(env, { ...clientRecord, revisionStatus: 'submitted', revisionSubmittedAt: nowIso });
 
         // Concurrently notify Admin via Email AND send Domain Guide Email + SMS to Client
         const shouldSendGuide = !clientRecord.domainDelegated && !(cust.metadata && cust.metadata.domain_guide_sent === 'true');
@@ -4804,6 +5493,14 @@ export default {
             body: uP.toString()
           }).catch(() => {});
         }
+
+        const updatedClientForD1 = {
+          ...clientRecord,
+          businessName: clientRecord.businessName,
+          revisionStatus: 'submitted',
+          revisionSubmittedAt: nowIso
+        };
+        await upsertD1Client(env, updatedClientForD1);
 
         return new Response(JSON.stringify({
           ok: true,
@@ -4955,6 +5652,16 @@ export default {
           }).catch(() => {});
         }
 
+        const updatedClientForD1 = {
+          ...clientRecord,
+          businessName: revData.bizName || clientRecord.businessName,
+          displayPhone: revData.phone || clientRecord.displayPhone,
+          businessAddress: revData.address || clientRecord.businessAddress,
+          revisionStatus: 'applied',
+          revisionAppliedAt: nowIso
+        };
+        await upsertD1Client(env, updatedClientForD1);
+
         return new Response(JSON.stringify({
           ok: true,
           message: 'AI auto-revisions applied successfully!',
@@ -5027,21 +5734,22 @@ export default {
                 healP.append('metadata[payment_status]', 'paid');
                 healP.append('metadata[stage]', 'outbound_paid');
                 healP.append('metadata[checkout_session_id]', matchedSession.id);
-                fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+                runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
                   method: 'POST',
                   headers: {
                     'Authorization': `Bearer ${cfg.stripeSecretKey}`,
                     'Content-Type': 'application/x-www-form-urlencoded'
                   },
                   body: healP.toString()
-                }).catch(() => {});
+                }));
 
-                recordActivityAndNotify({
+                await recordActivityAndNotify({
                   type: 'payment_received',
                   title: '💰 Đã Nhận Thanh Toán $599 AUD!',
                   message: `${c.businessName || c.name} vừa thanh toán $599 AUD qua Stripe!`,
                   clientName: c.businessName || c.name,
                   slug: c.demoSlug,
+                  dedupeKey: `paid_notified:${matchedSession.id}`,
                   env,
                   ctx
                 });
@@ -5051,6 +5759,7 @@ export default {
         }
       } catch (_) {}
 
+      const d1ClientsIdx = await getD1ClientsIndex(env);
       if (env && env.WYNN_KV) {
         await Promise.all(clients.map(async (c) => {
           if (!c.demoPalette || c.demoPalette === '01') {
@@ -5063,6 +5772,7 @@ export default {
             const v = await env.WYNN_KV.get(`demo_views:${c.demoSlug}`, 'json').catch(() => null);
             if (v && v.viewCount) {
               c.demoViewCount = Math.max(c.demoViewCount || 0, Number(v.viewCount));
+              if (v.claimClickCount) c.claimClickCount = Math.max(c.claimClickCount || 0, Number(v.claimClickCount));
               if (v.firstViewedAt) c.demoFirstViewedAt = v.firstViewedAt;
               if (v.lastViewedAt) c.demoLastViewedAt = v.lastViewedAt;
               if (v.lastDevice) c.demoViewerDevice = v.lastDevice;
@@ -5094,11 +5804,22 @@ export default {
         }));
       }
 
-      if (ctx && typeof ctx.waitUntil === 'function') {
-        ctx.waitUntil(
-          Promise.all(clients.map(c => ensureCloudflareSubdomain(c.demoSlug, env)))
-        );
+      for (const c of clients) {
+        const cleanSlugC = slugifyName(c.demoSlug || c.businessName || c.name || '');
+        const d1Row = (c.id && d1ClientsIdx.byId.get(c.id)) || (cleanSlugC && d1ClientsIdx.bySlug.get(cleanSlugC.toLowerCase()));
+        if (d1Row) {
+          c.demoViewCount = Math.max(Number(c.demoViewCount || 0), Number(d1Row.view_count || 0));
+          c.claimClickCount = Math.max(Number(c.claimClickCount || 0), Number(d1Row.claim_click_count || 0));
+          if (!c.demoLastViewedAt && d1Row.last_viewed_at) c.demoLastViewedAt = d1Row.last_viewed_at;
+          if (d1Row.last_clicked_at) c.demoLastClickedAt = d1Row.last_clicked_at;
+          if (!c.demoViewerDevice && d1Row.last_viewer_device) c.demoViewerDevice = d1Row.last_viewer_device;
+        }
       }
+
+      runInBg(ctx, Promise.all([
+        ...clients.map((c) => ensureCloudflareSubdomain(c.demoSlug, env, cfg.cfApiToken)),
+        ...clients.slice(0, 60).map((c) => upsertD1Client(env, c))
+      ]));
 
       return new Response(
         JSON.stringify({
@@ -5109,7 +5830,11 @@ export default {
             clicksend: Boolean(cfg.clicksendUsername && cfg.clicksendApiKey),
             resend: Boolean(cfg.resendApiKey),
             resendFromEmail: cfg.resendFromEmail,
-            googleDrive: Boolean(cfg.googleDriveWebhookUrl)
+            googleDrive: Boolean(cfg.googleDriveWebhookUrl),
+            googlePlaces: Boolean(cfg.googlePlacesApiKey),
+            gemini: Boolean(cfg.geminiApiKey),
+            telegram: Boolean(cfg.telegramBotToken && cfg.telegramChatId),
+            cfToken: Boolean(cfg.cfApiToken)
           },
           clients
         }),
@@ -5147,7 +5872,485 @@ export default {
       });
     }
 
-    // 5c. Google Places Lead Hunter Endpoint (POST /api/admin/lead-hunter)
+    // 5a. Synced Studio Settings API (GET / POST /api/settings — D1 + KV synced across MacBook & iPhone PWA)
+    if (url.pathname === '/api/settings' && (request.method === 'GET' || request.method === 'POST')) {
+      const providedKey = request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
+      if (request.method === 'GET') {
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+        }
+        const rt = await loadSyncedRuntime(env);
+        return new Response(JSON.stringify({
+          ok: true,
+          settings: rt.settings,
+          integrations: {
+            stripe: Boolean(rt.cfg.stripeSecretKey),
+            stripeEnvConfigured: rt.stripeEnvConfigured,
+            stripeWebhookSecret: Boolean(rt.cfg.stripeWebhookSecret),
+            clicksend: Boolean(rt.cfg.clicksendUsername && rt.cfg.clicksendApiKey),
+            resend: Boolean(rt.cfg.resendApiKey),
+            googlePlaces: Boolean(rt.cfg.googlePlacesApiKey),
+            gemini: Boolean(rt.cfg.geminiApiKey),
+            telegram: Boolean(rt.cfg.telegramBotToken && rt.cfg.telegramChatId),
+            cfToken: Boolean(rt.cfg.cfApiToken),
+            gdrive: Boolean(rt.cfg.googleDriveWebhookUrl)
+          }
+        }), { status: 200, headers: corsHeaders });
+      }
+
+      const body = await request.json().catch(() => ({}));
+      const postKey = body.adminKey || providedKey;
+      if (postKey !== cfg.adminKey) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      }
+      const incoming = (body.settings && typeof body.settings === 'object') ? body.settings : body;
+      const saved = await saveSyncedSettings(env, incoming, { clearEmpty: body.clearEmpty !== false });
+      const rt = await loadSyncedRuntime(env);
+      return new Response(JSON.stringify({
+        ok: true,
+        settings: saved,
+        integrations: {
+          stripe: Boolean(rt.cfg.stripeSecretKey),
+          stripeEnvConfigured: rt.stripeEnvConfigured,
+          stripeWebhookSecret: Boolean(rt.cfg.stripeWebhookSecret),
+          clicksend: Boolean(rt.cfg.clicksendUsername && rt.cfg.clicksendApiKey),
+          resend: Boolean(rt.cfg.resendApiKey),
+          googlePlaces: Boolean(rt.cfg.googlePlacesApiKey),
+          gemini: Boolean(rt.cfg.geminiApiKey),
+          telegram: Boolean(rt.cfg.telegramBotToken && rt.cfg.telegramChatId),
+          cfToken: Boolean(rt.cfg.cfApiToken),
+          gdrive: Boolean(rt.cfg.googleDriveWebhookUrl)
+        }
+      }), { status: 200, headers: corsHeaders });
+    }
+
+    // 5b. Client Records REST API (GET/POST/PUT/DELETE /api/clients — D1 + Stripe Sync)
+    if (url.pathname === '/api/clients') {
+      const providedKey = request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
+      let body = null;
+      if (request.method !== 'GET') {
+        body = await request.json().catch(() => ({}));
+      }
+      const authKey = (body && body.adminKey) || providedKey;
+      if (authKey !== cfg.adminKey) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      }
+
+      if (request.method === 'GET') {
+        const targetId = (url.searchParams.get('id') || '').trim();
+        const targetSlug = slugifyName(url.searchParams.get('slug') || '');
+        const d1Idx = await getD1ClientsIndex(env);
+        let clients = d1Idx.rows.map((r) => {
+          let parsed = {};
+          try { parsed = JSON.parse(r.metadata_json || '{}'); } catch (_) {}
+          return {
+            ...parsed,
+            id: r.id,
+            email: r.email || parsed.email || '',
+            name: r.name || parsed.name || '',
+            businessName: r.business_name || parsed.businessName || '',
+            phone: r.phone || parsed.phone || '',
+            demoSlug: r.demo_slug || parsed.demoSlug || '',
+            demoUrl: r.demo_url || parsed.demoUrl || '',
+            liveUrl: r.live_url || parsed.liveUrl || '',
+            stage: r.stage || parsed.stage || '',
+            paymentStatus: r.payment_status || parsed.paymentStatus || 'unpaid',
+            flowType: r.flow_type || parsed.flowType || 'inbound',
+            demoViewCount: Math.max(Number(r.view_count || 0), Number(parsed.demoViewCount || 0)),
+            claimClickCount: Math.max(Number(r.claim_click_count || 0), Number(parsed.claimClickCount || 0)),
+            demoLastViewedAt: r.last_viewed_at || parsed.demoLastViewedAt || '',
+            demoLastClickedAt: r.last_clicked_at || parsed.demoLastClickedAt || '',
+            demoViewerDevice: r.last_viewer_device || parsed.demoViewerDevice || ''
+          };
+        });
+        if (targetId) clients = clients.filter((c) => c.id === targetId);
+        if (targetSlug) clients = clients.filter((c) => slugifyName(c.demoSlug || c.businessName) === targetSlug);
+        return new Response(JSON.stringify({ ok: true, count: clients.length, clients }), { status: 200, headers: corsHeaders });
+      }
+
+      if (request.method === 'POST' || request.method === 'PUT') {
+        const clientId = String(body.id || body.customerId || '').trim();
+        let clientRecord = null;
+        if (cfg.stripeSecretKey) {
+          let existingCust = null;
+          if (clientId && clientId.startsWith('cus_')) {
+            const gRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(clientId)}`, {
+              headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+            });
+            if (gRes.ok) existingCust = await gRes.json();
+          }
+          const uParams = new URLSearchParams();
+          const bizName = (body.businessName !== undefined ? body.businessName : (existingCust?.metadata?.business_name || body.name || 'Boutique')).trim();
+          const slugVal = slugifyName(body.demoSlug || existingCust?.metadata?.demo_slug || bizName) || 'demo';
+          if (body.email !== undefined) uParams.append('email', String(body.email).trim());
+          if (body.name !== undefined || !existingCust) uParams.append('name', String(body.name || bizName).trim());
+          if (body.phone !== undefined) uParams.append('phone', String(body.phone).trim());
+          uParams.append('metadata[studio]', 'WynnPages Australia');
+          uParams.append('metadata[business_name]', bizName);
+          uParams.append('metadata[demo_slug]', slugVal);
+          uParams.append('metadata[demo_url]', (body.demoUrl || existingCust?.metadata?.demo_url || `https://${slugVal}.wynnpages.com.au`).trim());
+          if (body.flowType) uParams.append('metadata[flow_type]', String(body.flowType));
+          if (body.stage) uParams.append('metadata[stage]', String(body.stage));
+          if (body.paymentStatus) uParams.append('metadata[payment_status]', String(body.paymentStatus));
+          if (body.liveUrl !== undefined) uParams.append('metadata[live_url]', String(body.liveUrl).trim());
+          const endpoint = (existingCust && existingCust.id)
+            ? `https://api.stripe.com/v1/customers/${encodeURIComponent(existingCust.id)}`
+            : 'https://api.stripe.com/v1/customers';
+          const sRes = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+          if (sRes.ok) {
+            clientRecord = formatCustomerRecord(await sRes.json());
+            runInBg(ctx, ensureCloudflareSubdomain(clientRecord.demoSlug, env, cfg.cfApiToken));
+          }
+        }
+        if (!clientRecord) {
+          const slugVal = slugifyName(body.demoSlug || body.businessName || body.name || clientId || 'demo');
+          clientRecord = {
+            id: clientId || `local_${slugVal}`,
+            email: body.email || '',
+            name: body.name || body.businessName || '',
+            businessName: body.businessName || body.name || '',
+            phone: body.phone || '',
+            demoSlug: slugVal,
+            demoUrl: body.demoUrl || `https://${slugVal}.wynnpages.com.au`,
+            liveUrl: body.liveUrl || '',
+            stage: body.stage || 'outbound_pending',
+            paymentStatus: body.paymentStatus || 'unpaid',
+            flowType: body.flowType || 'outbound',
+            created: Date.now()
+          };
+        }
+        await upsertD1Client(env, clientRecord);
+        return new Response(JSON.stringify({ ok: true, client: clientRecord }), { status: request.method === 'POST' ? 201 : 200, headers: corsHeaders });
+      }
+
+      if (request.method === 'DELETE') {
+        const delId = String(body.id || url.searchParams.get('id') || '').trim();
+        if (!delId) {
+          return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400, headers: corsHeaders });
+        }
+        if (delId.startsWith('cus_') && cfg.stripeSecretKey) {
+          runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(delId)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          }));
+        }
+        await deleteD1Client(env, delId);
+        return new Response(JSON.stringify({ ok: true, deletedId: delId }), { status: 200, headers: corsHeaders });
+      }
+    }
+
+    // 5b-2. Unified Demo View & Stripe Click Tracker (GET/POST /api/track)
+    if (url.pathname === '/api/track' && (request.method === 'GET' || request.method === 'POST')) {
+      let body = {};
+      if (request.method === 'POST') {
+        body = await request.json().catch(() => ({}));
+      }
+      const rawSlug = (body.slug || body.cid || url.searchParams.get('slug') || url.searchParams.get('cid') || '').trim();
+      const rawCid = (body.clientId || body.cid || url.searchParams.get('cid') || '').trim();
+      const eventType = ((body.eventType || body.type || url.searchParams.get('type') || 'demo_view') === 'claim_click') ? 'claim_click' : 'demo_view';
+      const cleanSlug = slugifyName(rawSlug);
+      if (!cleanSlug && !rawCid) {
+        return new Response(JSON.stringify({ error: 'Missing slug or clientId' }), { status: 400, headers: corsHeaders });
+      }
+
+      const ua = (request.headers.get('user-agent') || '').toLowerCase();
+      if (/bot|crawler|spider|facebookexternalhit|WhatsApp|TelegramBot|Slackbot|Discordbot|LinkedInBot|Twitterbot|Googlebot|bingbot|Applebot|curl/i.test(ua)) {
+        return new Response(JSON.stringify({ ok: true, ignored: 'bot' }), { status: 200, headers: corsHeaders });
+      }
+      const device = body.device || (/iphone|ipad|ipod|android|mobile/.test(ua) ? 'Mobile' : 'Desktop');
+
+      const d1Track = await recordD1TrackingEvent(env, {
+        slug: cleanSlug,
+        clientId: rawCid,
+        eventType,
+        device,
+        userAgent: ua,
+        businessName: body.businessName || ''
+      });
+
+      const resolvedSlug = d1Track.slug || cleanSlug;
+      const trackBgPromise = (async () => {
+        try {
+          let targetClient = null;
+          if (cfg.stripeSecretKey) {
+            targetClient = await findCustomerBySlugOrId(rawCid || resolvedSlug, cfg.stripeSecretKey).catch(() => null);
+          }
+          const bizName = (targetClient && (targetClient.businessName || targetClient.name)) || d1Track.businessName || resolvedSlug;
+
+          // Mirror to KV demo_views cache
+          if (env && env.WYNN_KV && resolvedSlug) {
+            const viewKey = `demo_views:${resolvedSlug}`;
+            const prev = (await env.WYNN_KV.get(viewKey, 'json').catch(() => null)) || {};
+            const nowIso = new Date().toISOString();
+            const updatedKv = {
+              ...prev,
+              viewCount: Math.max(Number(prev.viewCount || 0), Number(d1Track.viewCount || 0)),
+              claimClickCount: Math.max(Number(prev.claimClickCount || 0), Number(d1Track.claimClickCount || 0)),
+              firstViewedAt: prev.firstViewedAt || nowIso,
+              lastViewedAt: eventType === 'demo_view' ? nowIso : (prev.lastViewedAt || nowIso),
+              lastClickedAt: eventType === 'claim_click' ? nowIso : (prev.lastClickedAt || ''),
+              viewerDevice: device
+            };
+            await env.WYNN_KV.put(viewKey, JSON.stringify(updatedKv)).catch(() => {});
+          }
+
+          // Mirror counters into Stripe Customer metadata
+          if (targetClient && targetClient.id && cfg.stripeSecretKey) {
+            const uP = new URLSearchParams();
+            uP.append('metadata[demo_view_count]', String(d1Track.viewCount || 1));
+            uP.append('metadata[claim_click_count]', String(d1Track.claimClickCount || 0));
+            uP.append('metadata[demo_last_viewed_at]', d1Track.lastViewedAt || new Date().toISOString());
+            uP.append('metadata[demo_viewer_device]', device);
+            if (!targetClient.demoFirstViewedAt) {
+              uP.append('metadata[demo_first_viewed_at]', d1Track.lastViewedAt || new Date().toISOString());
+            }
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(targetClient.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uP.toString()
+            }).catch(() => {});
+          }
+
+          if (eventType === 'claim_click') {
+            await recordActivityAndNotify({
+              type: 'claim_clicked',
+              title: '💳 Khách Bấm Nút Claim $599!',
+              message: `${bizName} vừa bấm nút Claim / Mua website trên Demo (${device})!`,
+              clientName: bizName,
+              slug: resolvedSlug,
+              dedupeKey: `claim_click_lock:${resolvedSlug}`,
+              dedupeTtl: 120,
+              env,
+              ctx
+            });
+          } else {
+            let shouldNotify = true;
+            if (env && env.WYNN_KV && resolvedSlug) {
+              const lockKey = `demo_notify_lock:${resolvedSlug}`;
+              const locked = await env.WYNN_KV.get(lockKey).catch(() => null);
+              if (locked) shouldNotify = false;
+              else await env.WYNN_KV.put(lockKey, new Date().toISOString(), { expirationTtl: 1800 }).catch(() => {});
+            }
+            if (shouldNotify) {
+              await recordActivityAndNotify({
+                type: 'demo_viewed',
+                title: '👀 Khách Đang Xem Demo!',
+                message: `${bizName} vừa mở xem bản Demo của bạn! (${device})`,
+                clientName: bizName,
+                slug: resolvedSlug,
+                env,
+                ctx
+              });
+            }
+          }
+        } catch (bgErr) {
+          console.error('[track bg error]', bgErr);
+        }
+      })();
+
+      runInBg(ctx, trackBgPromise);
+      return new Response(JSON.stringify({
+        ok: true,
+        eventType,
+        slug: resolvedSlug,
+        clientId: d1Track.clientId,
+        viewCount: d1Track.viewCount,
+        claimClickCount: d1Track.claimClickCount,
+        lastViewedAt: d1Track.lastViewedAt,
+        lastClickedAt: d1Track.lastClickedAt
+      }), { status: 200, headers: corsHeaders });
+    }
+
+    // 5b-3. Stripe Webhook Receiver (POST /api/stripe-webhook)
+    if (url.pathname === '/api/stripe-webhook' && request.method === 'POST') {
+      const rawBody = await request.text();
+      const sigHeader = request.headers.get('stripe-signature') || '';
+      if (cfg.stripeWebhookSecret) {
+        const validSig = await verifyStripeWebhookSig(rawBody, sigHeader, cfg.stripeWebhookSecret);
+        if (!validSig) {
+          return new Response(JSON.stringify({ error: 'Invalid Stripe webhook signature' }), { status: 400, headers: corsHeaders });
+        }
+      }
+
+      const event = (() => { try { return JSON.parse(rawBody); } catch (_) { return null; } })();
+      if (!event || !event.type) {
+        return new Response(JSON.stringify({ error: 'Invalid event payload' }), { status: 400, headers: corsHeaders });
+      }
+
+      if (event.type === 'checkout.session.completed' && event.data && event.data.object) {
+        const sessionObj = event.data.object;
+        const customerId = sessionObj.customer || (sessionObj.metadata && sessionObj.metadata.customer_id) || '';
+        const sessionEmail = sessionObj.customer_email || (sessionObj.customer_details && sessionObj.customer_details.email) || '';
+        const sessionName = (sessionObj.customer_details && sessionObj.customer_details.name) || '';
+        const flowType = (sessionObj.metadata && sessionObj.metadata.flow_type) || 'inbound';
+
+        const webhookJob = (async () => {
+          let cust = null;
+          if (customerId && cfg.stripeSecretKey) {
+            const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+            });
+            if (cRes.ok) cust = await cRes.json();
+          }
+          if (cust && cfg.stripeSecretKey) {
+            const uP = new URLSearchParams();
+            uP.append('metadata[payment_status]', 'paid');
+            uP.append('metadata[checkout_session_id]', sessionObj.id || '');
+            if (flowType === 'outbound' || (cust.metadata && cust.metadata.flow_type === 'outbound')) {
+              uP.append('metadata[stage]', 'outbound_paid');
+            } else if (!cust.metadata || !cust.metadata.stage || cust.metadata.stage === 'checkout_started') {
+              uP.append('metadata[stage]', 'paid');
+            }
+            if (sessionEmail && !cust.email) uP.append('email', sessionEmail);
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uP.toString()
+            }).catch(() => {});
+          }
+
+          const record = cust ? formatCustomerRecord(cust) : {
+            id: customerId || `wh_${sessionObj.id}`,
+            email: sessionEmail,
+            name: sessionName,
+            businessName: (sessionObj.metadata && sessionObj.metadata.business_name) || sessionName || sessionEmail || 'New Client',
+            demoSlug: slugifyName((sessionObj.metadata && sessionObj.metadata.demo_slug) || sessionName || ''),
+            paymentStatus: 'paid',
+            stage: flowType === 'outbound' ? 'outbound_paid' : 'paid',
+            flowType
+          };
+          await upsertD1Client(env, { ...record, paymentStatus: 'paid' });
+
+          const bizLabel = record.businessName || record.name || sessionEmail || 'Khách hàng mới';
+          await recordActivityAndNotify({
+            type: 'payment_received',
+            title: '💰 Đã Nhận Thanh Toán $599 AUD!',
+            message: `${bizLabel} vừa thanh toán $599 AUD qua Stripe!`,
+            clientName: bizLabel,
+            slug: record.demoSlug || '',
+            dedupeKey: `paid_notified:${sessionObj.id}`,
+            env,
+            ctx
+          });
+
+          if (!cust || !cust.metadata || cust.metadata.welcome_sent !== 'true') {
+            await triggerLifecycleNotification({
+              stage: flowType === 'outbound' ? 'outbound_paid_confirmed' : 'payment_confirmed',
+              client: record,
+              origin: url.origin,
+              cfg
+            }).catch(() => {});
+          }
+        })();
+
+        runInBg(ctx, webhookJob);
+      }
+
+      return new Response(JSON.stringify({ received: true, type: event.type }), { status: 200, headers: corsHeaders });
+    }
+
+    // 5b-4. Scheduled SMS Queue Management (GET/POST/DELETE /api/scheduled-sms) & Processor (/api/run-scheduled-sms)
+    if (url.pathname === '/api/scheduled-sms') {
+      const providedKey = request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
+      const db = getD1(env);
+      if (request.method === 'GET') {
+        if (providedKey !== cfg.adminKey) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+        }
+        if (!db) return new Response(JSON.stringify({ ok: true, currentAuTime: formatAuDateTime(new Date()), items: [] }), { status: 200, headers: corsHeaders });
+        await ensureD1Schema(env);
+        const rowsRes = await db.prepare('SELECT * FROM scheduled_sms ORDER BY scheduled_for_utc ASC LIMIT 100').all().catch(() => null);
+        return new Response(JSON.stringify({
+          ok: true,
+          timezone: AU_TIMEZONE,
+          currentAuTime: formatAuDateTime(new Date()),
+          items: (rowsRes && rowsRes.results) || []
+        }), { status: 200, headers: corsHeaders });
+      }
+
+      const body = await request.json().catch(() => ({}));
+      if ((body.adminKey || providedKey) !== cfg.adminKey) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      }
+      if (!db) return new Response(JSON.stringify({ error: 'D1 database missing' }), { status: 500, headers: corsHeaders });
+      await ensureD1Schema(env);
+
+      if (request.method === 'DELETE') {
+        const id = String(body.id || url.searchParams.get('id') || '').trim();
+        if (!id) return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400, headers: corsHeaders });
+        await db.prepare('DELETE FROM scheduled_sms WHERE id = ?').bind(id).run();
+        return new Response(JSON.stringify({ ok: true, deletedId: id }), { status: 200, headers: corsHeaders });
+      }
+
+      if (request.method === 'POST') {
+        const toPhone = String(body.toPhone || body.phone || '').trim();
+        const bodyText = String(body.bodyText || body.message || '').trim();
+        const wallInput = String(body.scheduledForAu || body.scheduledAt || '').trim();
+        const scheduledForUtc = body.scheduledForUtc
+          ? auWallTimeToUtcIso(body.scheduledForUtc)
+          : (wallInput ? auWallTimeToUtcIso(wallInput, AU_TIMEZONE) : new Date().toISOString());
+
+        if (!toPhone || !bodyText || !scheduledForUtc) {
+          return new Response(JSON.stringify({ error: 'Missing toPhone, bodyText, or valid scheduledForAu time' }), { status: 400, headers: corsHeaders });
+        }
+
+        const scheduledForAu = formatAuDateTime(new Date(scheduledForUtc), AU_TIMEZONE);
+        const rowId = `sms_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        await db.prepare(`
+          INSERT INTO scheduled_sms (id, client_id, client_name, to_phone, body_text, scheduled_for_utc, scheduled_for_au, au_timezone, status, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+        `).bind(
+          rowId,
+          String(body.clientId || ''),
+          String(body.clientName || ''),
+          normalizeAuPhone(toPhone) || toPhone,
+          toGsmSafeAscii(bodyText),
+          scheduledForUtc,
+          scheduledForAu,
+          AU_TIMEZONE,
+          new Date().toISOString()
+        ).run();
+
+        return new Response(JSON.stringify({
+          ok: true,
+          id: rowId,
+          toPhone: normalizeAuPhone(toPhone) || toPhone,
+          scheduledForUtc,
+          scheduledForAu,
+          timezone: AU_TIMEZONE,
+          status: 'pending'
+        }), { status: 201, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === '/api/run-scheduled-sms' && (request.method === 'GET' || request.method === 'POST')) {
+      const providedKey = request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
+      let bodyKey = '';
+      if (request.method === 'POST') {
+        const body = await request.json().catch(() => ({}));
+        bodyKey = body.adminKey || '';
+      }
+      if ((bodyKey || providedKey) !== cfg.adminKey) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      }
+      const result = await processDueScheduledSms(env, ctx);
+      return new Response(JSON.stringify(result), { status: 200, headers: corsHeaders });
+    }
+
+    // Google Places Lead Hunter Endpoint (POST /api/admin/lead-hunter)
     if (url.pathname === '/api/admin/lead-hunter' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
@@ -5286,6 +6489,7 @@ export default {
           if (found && env && env.WYNN_KV) {
             await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
           }
+          runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
 
           const { stats, industryCounts } = computeLeadStats(storedLeads);
           return new Response(
@@ -5309,6 +6513,9 @@ export default {
 
           if (storedLeads.length !== initialLen && env && env.WYNN_KV) {
             await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
+          }
+          if (storedLeads.length !== initialLen) {
+            runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
           }
 
           const { stats, industryCounts } = computeLeadStats(storedLeads);
@@ -5335,6 +6542,7 @@ export default {
           if (env && env.WYNN_KV) {
             await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
           }
+          runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
           const { stats, industryCounts } = computeLeadStats(storedLeads);
           return new Response(
             JSON.stringify({
@@ -5656,10 +6864,11 @@ export default {
 
         const mergedLeads = sortLeads(Array.from(leadMap.values()));
 
-        // Save cumulative database back to KV
+        // Save cumulative database back to KV and mirror to D1
         if (env && env.WYNN_KV) {
           await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(mergedLeads));
         }
+        runInBg(ctx, mirrorLeadHunterToD1(env, mergedLeads));
 
         const { stats, industryCounts } = computeLeadStats(mergedLeads);
 
@@ -5691,19 +6900,9 @@ export default {
           return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
         }
 
-        if (body.credentials && typeof body.credentials === 'object' && env && env.WYNN_KV) {
-          const mergedCreds = { ...runtimeCreds };
-          let hasNewCred = false;
-          for (const k of ['clicksendUsername', 'clicksendApiKey', 'resendApiKey', 'resendFromEmail', 'googleDriveWebhookUrl', 'cfApiToken', 'googlePlacesApiKey']) {
-            if (body.credentials[k] && String(body.credentials[k]).trim()) {
-              mergedCreds[k] = String(body.credentials[k]).trim();
-              hasNewCred = true;
-            }
-          }
-          if (hasNewCred) {
-            await env.WYNN_KV.put('studio_runtime_creds', JSON.stringify(mergedCreds)).catch(() => { });
-            runtimeCreds = mergedCreds;
-          }
+        if (body.credentials && typeof body.credentials === 'object') {
+          await saveSyncedSettings(env, body.credentials);
+          Object.assign(runtimeCreds, body.credentials);
         }
         const effectiveCfg = getConfig(env, { ...runtimeCreds, ...(body.credentials || {}) });
         const action = body.action || '';
@@ -5711,14 +6910,15 @@ export default {
 
         // Action 0: Delete Client Record
         if (action === 'save_cf_token') {
+          await saveSyncedSettings(env, { cfApiToken: (body.cfToken || '').trim() }, { clearEmpty: true });
           if (env && env.WYNN_KV) {
             if (body.cfToken) {
               await env.WYNN_KV.put('cf_api_token', body.cfToken.trim());
             } else {
               await env.WYNN_KV.delete('cf_api_token');
             }
-            return new Response(JSON.stringify({ ok: true, message: 'Cloudflare API Token updated' }), { status: 200, headers: corsHeaders });
           }
+          return new Response(JSON.stringify({ ok: true, message: 'Cloudflare API Token updated' }), { status: 200, headers: corsHeaders });
         }
 
         if (action === 'delete_client' && customerId) {
@@ -5783,6 +6983,7 @@ export default {
           } else {
             await cleanupJob;
           }
+          await deleteD1Client(env, customerId);
 
           return new Response(JSON.stringify({ ok: delRes.ok, customerId, deleted: delData }), { status: 200, headers: corsHeaders });
         }
@@ -5852,6 +7053,9 @@ export default {
           if (updatedCust && logMsg) {
             updatedCust.lastSmsLog = logMsg;
           }
+          if (updatedCust) {
+            await upsertD1Client(env, updatedCust);
+          }
 
           return new Response(JSON.stringify({ ok: true, dealStatus: 'flash_deal', dealExpiresAt, client: updatedCust, notifyRes }), { status: 200, headers: corsHeaders });
         }
@@ -5876,6 +7080,7 @@ export default {
           let updatedCust = null;
           if (patchRes.ok) {
             updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
           }
           return new Response(JSON.stringify({ ok: true, dealStatus: 'expired', client: updatedCust }), { status: 200, headers: corsHeaders });
         }
@@ -5899,6 +7104,7 @@ export default {
           let updatedCust = null;
           if (patchRes.ok) {
             updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
           }
           return new Response(JSON.stringify({ ok: true, dealStatus: 'standard', client: updatedCust }), { status: 200, headers: corsHeaders });
         }
@@ -6036,6 +7242,9 @@ export default {
           let updatedCust = formatted;
           if (patchRes.ok) {
             updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+          if (updatedCust) {
+            await upsertD1Client(env, updatedCust);
           }
 
           return new Response(JSON.stringify({ ok: Boolean(smsRes && smsRes.sent), result: smsRes, client: updatedCust }), { status: 200, headers: corsHeaders });
@@ -6555,6 +7764,10 @@ export default {
             }
           }
 
+          if (formatted && formatted.id) {
+            await upsertD1Client(env, formatted);
+          }
+
           return new Response(
             JSON.stringify({
               ok: true,
@@ -6623,10 +7836,16 @@ export default {
     return fetch(request);
   },
   async scheduled(event, env, ctx) {
+    const dueSmsPromise = processDueScheduledSms(env, ctx);
+    const shouldRunDailyAutopilot = !event || !event.cron || event.cron === '0 23 * * *';
+    const combinedJob = Promise.all([
+      dueSmsPromise,
+      shouldRunDailyAutopilot ? runScheduledAutopilot(env) : Promise.resolve(null)
+    ]);
     if (ctx && typeof ctx.waitUntil === 'function') {
-      ctx.waitUntil(runScheduledAutopilot(env));
+      ctx.waitUntil(combinedJob);
     } else {
-      await runScheduledAutopilot(env);
+      await combinedJob;
     }
   }
 };

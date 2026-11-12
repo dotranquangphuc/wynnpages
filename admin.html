@@ -745,7 +745,7 @@
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
           <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 leading-snug">Cấu Hình API &amp; Push Thông Báo</h3>
-          <p class="text-xs text-stone-500 mt-0.5">Ghi đè hoặc nhập nhanh API Key ngay trên trình duyệt.</p>
+          <p class="text-xs text-stone-500 mt-0.5">Đồng bộ trực tiếp trên Cloudflare D1 giữa MacBook, iPhone PWA &amp; Worker.</p>
         </div>
         <button type="button" id="btn-close-settings" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
       </div>
@@ -858,6 +858,20 @@
             <button type="button" id="btn-enable-web-push" class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 font-bold text-xs inline-flex items-center gap-1.5 shadow-2xs cursor-pointer">
               <span>📲 Bật Thêm Web Push Trên Safari</span>
             </button>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="font-bold text-stone-900">8. Stripe API &amp; Webhook (Tuỳ Chọn Ghi Đè)</p>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-stone-200 text-stone-700 uppercase">Cloudflare Secret Fallback</span>
+          </div>
+          <p class="text-stone-500 leading-relaxed">
+            Để trống nếu muốn tiếp tục dùng <code class="font-mono">STRIPE_SECRET_KEY</code> trên Cloudflare. Điền nếu muốn đồng bộ/ghi đè key qua Cloudflare D1.
+          </p>
+          <div class="space-y-2 pt-1">
+            <input type="password" id="cfg-stripe-key" placeholder="sk_live_... hoặc sk_test_... (Tuỳ chọn)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+            <input type="password" id="cfg-stripe-webhook" placeholder="whsec_... Stripe Webhook Signing Secret (Tuỳ chọn)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
       </div>
@@ -999,6 +1013,30 @@
           Chưa có báo cáo chạy.
         </div>
         <div id="ap-last-run-logs" class="hidden max-h-32 overflow-y-auto bg-white p-2.5 rounded-lg border border-stone-200 font-mono text-[10px] text-stone-700 space-y-1">
+        </div>
+      </div>
+
+      <!-- Scheduled SMS Queue (Australia/Sydney AEST/AEDT Timezone) -->
+      <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-2.5 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="font-extrabold text-amber-950">⏰ Hẹn Giờ Gửi SMS (Giờ Úc AEST/AEDT)</span>
+          <span id="sched-au-clock" class="text-[10.5px] font-mono text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full"></span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <input type="text" id="sched-sms-phone" placeholder="SĐT Úc (VD: 0412 345 678)" class="atelier-input rounded-xl px-3 py-2 text-xs font-mono">
+          <input type="datetime-local" id="sched-sms-time" class="atelier-input rounded-xl px-3 py-2 text-xs font-mono">
+        </div>
+        <textarea id="sched-sms-body" rows="2" placeholder="Nội dung tin nhắn SMS hẹn giờ gửi tự động..." class="atelier-input w-full rounded-xl px-3 py-2 text-xs"></textarea>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <button type="button" id="btn-add-scheduled-sms" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs cursor-pointer">
+            ＋ Đặt Lịch SMS
+          </button>
+          <button type="button" id="btn-run-scheduled-sms-now" class="px-3 py-2 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs cursor-pointer">
+            ▶ Chạy SMS Đến Hạn Ngay
+          </button>
+        </div>
+        <div id="scheduled-sms-list" class="max-h-32 overflow-y-auto space-y-1.5 text-[11px] text-stone-600">
+          Chưa có SMS nào được hẹn giờ.
         </div>
       </div>
 
@@ -1502,9 +1540,15 @@
 
   <script>
     (function () {
-      // Auto-load saved admin key from localStorage if present
+      // Auto-load admin passcode session only; all API keys sync exclusively via Cloudflare D1 (/api/settings)
       let adminKey = localStorage.getItem('wynn_admin_key') || '';
-      let localCreds = JSON.parse(localStorage.getItem('wynn_Messaging_creds') || '{}');
+      try {
+        localStorage.removeItem('wynn_Messaging_creds');
+        localStorage.removeItem('wynn_messaging_creds');
+        localStorage.removeItem('wynnpages_admin_settings');
+      } catch (_) {}
+      let localCreds = {};
+      let serverIntegrationsCache = {};
       let clientsCache = [];
 
       // Default to Outbound Tab first as requested!
@@ -1618,8 +1662,15 @@
       }
 
       function updateIntegrationPills(serverIntegrations = {}) {
-        const hasClicksend = serverIntegrations.clicksend || (localCreds.clicksendUsername && localCreds.clicksendApiKey);
-        const hasResend = serverIntegrations.resend || Boolean(localCreds.resendApiKey);
+        serverIntegrationsCache = { ...serverIntegrationsCache, ...serverIntegrations };
+        const hasStripe = serverIntegrationsCache.stripe !== false;
+        const hasClicksend = serverIntegrationsCache.clicksend || (localCreds.clicksendUsername && localCreds.clicksendApiKey);
+        const hasResend = serverIntegrationsCache.resend || Boolean(localCreds.resendApiKey);
+
+        const stripePill = document.querySelector('#integration-pills > span:first-child');
+        if (stripePill) {
+          stripePill.innerHTML = `<span class="w-2 h-2 rounded-full ${hasStripe ? 'bg-emerald-500' : 'bg-amber-500'}"></span> Stripe + D1 Sync`;
+        }
 
         if (hasClicksend) {
           pillClicksend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
@@ -1635,6 +1686,26 @@
         } else {
           pillResend.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200';
           pillResend.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Resend Email: Chưa nhập Key';
+        }
+      }
+
+      async function syncSettingsFromServer() {
+        if (!adminKey) return {};
+        try {
+          const res = await fetch(`/api/settings?key=${encodeURIComponent(adminKey)}`, {
+            headers: { 'x-admin-key': adminKey },
+            cache: 'no-store'
+          });
+          if (!res.ok) return {};
+          const data = await res.json().catch(() => ({}));
+          if (data && data.ok && data.settings) {
+            localCreds = { ...data.settings };
+            if (typeof updateLeadKeyIndicator === 'function') updateLeadKeyIndicator();
+            updateIntegrationPills(data.integrations || {});
+          }
+          return localCreds;
+        } catch (_) {
+          return {};
         }
       }
 
@@ -1929,6 +2000,7 @@
           dashboardContent.classList.remove('hidden');
           document.getElementById('header-actions').classList.remove('hidden');
 
+          await syncSettingsFromServer();
           updateIntegrationPills(data.integrations || {});
           clientsCache = data.clients || [];
           updateMetrics(clientsCache);
@@ -2660,6 +2732,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                            <span>⏳ Khách CHƯA XEM DEMO</span>
                          </span>`
                     }
+                    ${c.claimClickCount > 0
+                      ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-950 border border-amber-300 inline-flex items-center gap-1 shadow-2xs leading-snug">
+                           <span>💳 Bấm Claim $599:</span>
+                           <span class="px-1.5 py-0.5 rounded-full bg-amber-700 text-white text-[10px] font-extrabold shrink-0">${c.claimClickCount} lần</span>
+                         </span>`
+                      : ''
+                    }
                     <span class="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded wrap-anywhere">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-stone-600 min-w-0">
@@ -2905,7 +2984,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
                     </button>
                   </div>
-                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
+                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}${c.claimClickCount > 0 ? ` &bull; <span class="text-amber-800 font-extrabold">💳 Bấm Claim: ${c.claimClickCount}</span>` : ''}</span>
                   <span class="wrap-anywhere">📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
                 </div>
               </div>
@@ -3329,7 +3408,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
                     </button>
                   </div>
-                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}</span>
+                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}${c.claimClickCount > 0 ? ` &bull; <span class="text-amber-800 font-extrabold">💳 Bấm Claim: ${c.claimClickCount}</span>` : ''}</span>
                   <span class="wrap-anywhere">📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
                 </div>
               </div>
@@ -5070,11 +5149,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         showToast('Đã đăng xuất và khoá bảng điều khiển.');
       });
 
-      // Settings Modal
+      // Settings Modal (Synced via Cloudflare D1 /api/settings)
       const cfgGdriveWebhook = document.getElementById('cfg-gdrive-webhook');
       const cfgCfToken = document.getElementById('cfg-cf-token');
       const cfgGooglePlacesKey = document.getElementById('cfg-google-places-key');
-      document.getElementById('btn-open-settings').addEventListener('click', () => {
+      const cfgGeminiKey = document.getElementById('cfg-gemini-key');
+      const cfgStripeKey = document.getElementById('cfg-stripe-key');
+      const cfgStripeWebhook = document.getElementById('cfg-stripe-webhook');
+
+      function populateSettingsModalFields() {
         cfgClicksendUser.value = localCreds.clicksendUsername || '';
         cfgClicksendKey.value = localCreds.clicksendApiKey || '';
         cfgClicksendFrom.value = localCreds.clicksendFrom || '';
@@ -5083,21 +5166,20 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (cfgGdriveWebhook) cfgGdriveWebhook.value = localCreds.googleDriveWebhookUrl || '';
         if (cfgCfToken) cfgCfToken.value = localCreds.cfApiToken || '';
         if (cfgGooglePlacesKey) cfgGooglePlacesKey.value = localCreds.googlePlacesApiKey || '';
-        const cfgGeminiKey = document.getElementById('cfg-gemini-key');
         if (cfgGeminiKey) cfgGeminiKey.value = localCreds.geminiApiKey || '';
-
+        if (cfgStripeKey) cfgStripeKey.value = localCreds.stripeSecretKey || '';
+        if (cfgStripeWebhook) cfgStripeWebhook.value = localCreds.stripeWebhookSecret || '';
         const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
         const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
         if (cfgTgToken) cfgTgToken.value = localCreds.telegramBotToken || '';
         if (cfgTgChat) cfgTgChat.value = localCreds.telegramChatId || '';
-        fetch('/api/telegram-config?key=' + encodeURIComponent(adminKey)).then(r => r.json()).then(d => {
-          if (d && d.ok) {
-            if (cfgTgToken && !cfgTgToken.value) cfgTgToken.value = d.botToken || '';
-            if (cfgTgChat && !cfgTgChat.value) cfgTgChat.value = d.chatId || '';
-          }
-        }).catch(() => {});
+      }
 
+      document.getElementById('btn-open-settings').addEventListener('click', async () => {
+        populateSettingsModalFields();
         settingsModal.classList.remove('hidden');
+        await syncSettingsFromServer();
+        populateSettingsModalFields();
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
       document.getElementById('btn-save-settings').addEventListener('click', async () => {
@@ -5105,44 +5187,56 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const origHtml = saveBtn ? saveBtn.innerHTML : '';
         if (saveBtn) {
           saveBtn.disabled = true;
-          saveBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang lưu...</span>';
+          saveBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang đồng bộ D1...</span>';
         }
-        const cfgGemKey = document.getElementById('cfg-gemini-key');
-        const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
-        const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
+        try {
+          const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
+          const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
 
-        localCreds = {
-          clicksendUsername: cfgClicksendUser.value.trim(),
-          clicksendApiKey: cfgClicksendKey.value.trim(),
-          clicksendFrom: cfgClicksendFrom.value.trim(),
-          resendApiKey: cfgResendKey.value.trim(),
-          resendFromEmail: cfgResendFrom.value.trim(),
-          googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : '',
-          cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : '',
-          googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : '',
-          geminiApiKey: cfgGemKey ? cfgGemKey.value.trim() : '',
-          telegramBotToken: cfgTgToken ? cfgTgToken.value.trim() : '',
-          telegramChatId: cfgTgChat ? cfgTgChat.value.trim() : ''
-        };
-        localStorage.setItem('wynn_messaging_creds', JSON.stringify(localCreds));
-        if (typeof updateLeadKeyIndicator === 'function') updateLeadKeyIndicator();
+          const settingsPayload = {
+            stripeSecretKey: cfgStripeKey ? cfgStripeKey.value.trim() : '',
+            stripeWebhookSecret: cfgStripeWebhook ? cfgStripeWebhook.value.trim() : '',
+            clicksendUsername: cfgClicksendUser.value.trim(),
+            clicksendApiKey: cfgClicksendKey.value.trim(),
+            clicksendFrom: cfgClicksendFrom.value.trim(),
+            resendApiKey: cfgResendKey.value.trim(),
+            resendFromEmail: cfgResendFrom.value.trim(),
+            googleDriveWebhookUrl: cfgGdriveWebhook ? cfgGdriveWebhook.value.trim() : '',
+            cfApiToken: cfgCfToken ? cfgCfToken.value.trim() : '',
+            googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : '',
+            geminiApiKey: cfgGeminiKey ? cfgGeminiKey.value.trim() : '',
+            telegramBotToken: cfgTgToken ? cfgTgToken.value.trim() : '',
+            telegramChatId: cfgTgChat ? cfgTgChat.value.trim() : ''
+          };
 
-        if (localCreds.telegramBotToken || localCreds.telegramChatId) {
-          fetch('/api/telegram-config', {
+          const res = await fetch(`/api/settings?key=${encodeURIComponent(adminKey)}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ botToken: localCreds.telegramBotToken, chatId: localCreds.telegramChatId })
-          }).catch(() => {});
-        }
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': adminKey
+            },
+            body: JSON.stringify({ settings: settingsPayload })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'Không thể lưu cấu hình lên Cloudflare D1');
+          }
 
-        await runAdminAction({ action: 'save_creds', cfToken: localCreds.cfApiToken, credentials: localCreds }, { skipReload: true }).catch(() => {});
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = origHtml;
+          localCreds = { ...(data.settings || settingsPayload) };
+          if (typeof updateLeadKeyIndicator === 'function') updateLeadKeyIndicator();
+          if (typeof updateIntegrationPills === 'function') updateIntegrationPills(data.integrations || {});
+
+          settingsModal.classList.add('hidden');
+          loadClients();
+          showToast('✅ Đã đồng bộ API Key lên Cloudflare D1 (MacBook & iPhone dùng chung)!');
+        } catch (err) {
+          showToast('❌ Lỗi đồng bộ Settings: ' + (err.message || err), true);
+        } finally {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = origHtml;
+          }
         }
-        settingsModal.classList.add('hidden');
-        loadClients();
-        showToast('Đã lưu cấu hình ClickSend, Resend, Telegram Bot & Google Keys!');
       });
 
       // Test Telegram Notifications
@@ -5300,10 +5394,112 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         } catch (_) {}
       }
 
+      async function loadScheduledSmsQueue() {
+        if (!adminKey) return;
+        const clockEl = document.getElementById('sched-au-clock');
+        const listEl = document.getElementById('scheduled-sms-list');
+        try {
+          const res = await fetch(`/api/scheduled-sms?key=${encodeURIComponent(adminKey)}`, {
+            headers: { 'x-admin-key': adminKey },
+            cache: 'no-store'
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) return;
+          if (clockEl) clockEl.textContent = `Giờ Úc: ${data.currentAuTime || ''}`;
+          if (!listEl) return;
+          const items = Array.isArray(data.items) ? data.items : [];
+          if (!items.length) {
+            listEl.innerHTML = '<span class="text-stone-400">Chưa có SMS nào được hẹn giờ.</span>';
+            return;
+          }
+          listEl.innerHTML = items.map((it) => {
+            const stBadge = it.status === 'sent'
+              ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Đã gửi</span>'
+              : (it.status === 'failed'
+                  ? `<span class="px-1.5 py-0.5 rounded bg-red-100 text-red-800 font-bold" title="${escapeHtml(it.error_reason || '')}">Lỗi</span>`
+                  : '<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">Chờ gửi</span>');
+            return `
+              <div class="p-2 rounded-lg bg-white border border-stone-200 flex items-center justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    ${stBadge}
+                    <span class="font-mono font-bold text-stone-800">${escapeHtml(it.to_phone)}</span>
+                    <span class="text-stone-400 font-mono text-[10px]">${escapeHtml(it.scheduled_for_au || '')}</span>
+                  </div>
+                  <div class="text-stone-600 truncate mt-0.5">${escapeHtml(it.body_text)}</div>
+                </div>
+                <button type="button" data-del-sched="${escapeHtml(it.id)}" class="btn-del-sched px-2 py-1 rounded bg-stone-100 hover:bg-red-50 text-stone-500 hover:text-red-700 font-bold text-[10px] shrink-0 cursor-pointer">✕</button>
+              </div>
+            `;
+          }).join('');
+          listEl.querySelectorAll('.btn-del-sched').forEach((b) => {
+            b.addEventListener('click', async () => {
+              const id = b.getAttribute('data-del-sched');
+              await fetch(`/api/scheduled-sms?id=${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                headers: { 'x-admin-key': adminKey }
+              }).catch(() => {});
+              loadScheduledSmsQueue();
+            });
+          });
+        } catch (_) {}
+      }
+
+      const btnAddSchedSms = document.getElementById('btn-add-scheduled-sms');
+      if (btnAddSchedSms) {
+        btnAddSchedSms.addEventListener('click', async () => {
+          const phone = (document.getElementById('sched-sms-phone')?.value || '').trim();
+          const scheduledForAu = (document.getElementById('sched-sms-time')?.value || '').trim();
+          const bodyText = (document.getElementById('sched-sms-body')?.value || '').trim();
+          if (!phone || !scheduledForAu || !bodyText) {
+            return showToast('Vui lòng nhập SĐT, giờ Úc muốn gửi và nội dung SMS!', true);
+          }
+          btnAddSchedSms.disabled = true;
+          try {
+            const res = await fetch('/api/scheduled-sms', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+              body: JSON.stringify({ toPhone: phone, scheduledForAu, bodyText })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok || !d.ok) throw new Error(d.error || 'Không đặt được lịch');
+            document.getElementById('sched-sms-body').value = '';
+            showToast(`⏰ Đã lên lịch gửi SMS lúc ${d.scheduledForAu} (AEST/AEDT)!`);
+            loadScheduledSmsQueue();
+          } catch (err) {
+            showToast(err.message, true);
+          } finally {
+            btnAddSchedSms.disabled = false;
+          }
+        });
+      }
+
+      const btnRunSchedSmsNow = document.getElementById('btn-run-scheduled-sms-now');
+      if (btnRunSchedSmsNow) {
+        btnRunSchedSmsNow.addEventListener('click', async () => {
+          btnRunSchedSmsNow.disabled = true;
+          try {
+            const res = await fetch('/api/run-scheduled-sms', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+              body: JSON.stringify({ adminKey })
+            });
+            const d = await res.json().catch(() => ({}));
+            showToast(`✅ Đã xử lý ${d.processed || 0} SMS đến hạn (Gửi thành công: ${d.sentCount || 0})!`);
+            loadScheduledSmsQueue();
+          } catch (err) {
+            showToast('Lỗi chạy SMS: ' + err.message, true);
+          } finally {
+            btnRunSchedSmsNow.disabled = false;
+          }
+        });
+      }
+
       if (pillAutopilot) {
         pillAutopilot.addEventListener('click', () => {
           if (autopilotModal) autopilotModal.classList.remove('hidden');
           loadAutopilotSettings();
+          loadScheduledSmsQueue();
         });
       }
       if (btnCloseAutopilot) {
@@ -6510,8 +6706,7 @@ https://wynnpages.com.au`;
           if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
 
           try {
-            const savedSettings = JSON.parse(localStorage.getItem('wynnpages_admin_settings') || '{}');
-            const gKey = savedSettings.geminiApiKey || '';
+            const gKey = localCreds.geminiApiKey || localCreds.googlePlacesApiKey || '';
 
             const res = await fetch('/api/admin/apply-ai-revision', {
               method: 'POST',
@@ -6988,7 +7183,8 @@ https://wynnpages.com.au`;
             const timeAgo = formatTimeAgo(evt.timestamp);
             let borderCls = 'border-amber-200 bg-amber-50/40';
             if (evt.type === 'payment_received') borderCls = 'border-emerald-300 bg-emerald-50/60';
-            else if (evt.type === 'revision_submitted') borderCls = 'border-purple-200 bg-purple-50/50';
+            else if (evt.type === 'claim_clicked') borderCls = 'border-orange-300 bg-orange-50/60';
+            else if (evt.type === 'revision_submitted' || evt.type === 'brief_completed') borderCls = 'border-purple-200 bg-purple-50/50';
             else if (evt.type === 'domain_updated') borderCls = 'border-blue-200 bg-blue-50/50';
 
             return `

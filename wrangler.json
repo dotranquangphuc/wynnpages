@@ -16,8 +16,16 @@
       "id": "5abe71ee8f14439aa25a5c51df0edb70"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wynnpages-db",
+      "database_id": "62426f66-1cea-4256-ae7d-691bf3e5bc98"
+    }
+  ],
   "triggers": {
     "crons": [
+      "*/15 * * * *",
       "0 23 * * *"
     ]
   }

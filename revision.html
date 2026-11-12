@@ -43,11 +43,24 @@
     };
   </script>
   <style>
+    html, body {
+      overflow-x: clip;
+    }
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: #f6f1e8;
       color: #2b251e;
       -webkit-font-smoothing: antialiased;
+    }
+    .atelier-input {
+      font: inherit;
+    }
+    @media (max-width: 639px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      select,
+      textarea {
+        font-size: max(1rem, 1em) !important;
+      }
     }
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;

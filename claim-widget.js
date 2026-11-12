@@ -79,11 +79,35 @@
     </div>
   `;
 
+  function sendWynnTrack(evType) {
+    try {
+      var q = window.location.search || '';
+      if (q.indexOf('admin=') !== -1 || q.indexOf('preview=') !== -1 || q.indexOf('bar=1') !== -1) return;
+      if (window.localStorage && window.localStorage.getItem('wynn_admin_key')) return;
+      var payload = JSON.stringify({ slug: clientSlug, clientId: clientSlug, eventType: evType || 'demo_view' });
+      var ep = 'https://wynnpages.com.au/api/track?slug=' + encodeURIComponent(clientSlug) + '&type=' + encodeURIComponent(evType || 'demo_view');
+      if (navigator.sendBeacon) {
+        if (navigator.sendBeacon(ep, new Blob([payload], { type: 'application/json' }))) return;
+      }
+      fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(function () {});
+    } catch (_) {}
+  }
+
   function mount() {
     document.body.appendChild(bar);
+    var ssKey = 'wynn_dv_ss_' + clientSlug;
+    try {
+      if (!window.sessionStorage || !window.sessionStorage.getItem(ssKey)) {
+        if (window.sessionStorage) window.sessionStorage.setItem(ssKey, String(Date.now()));
+        sendWynnTrack('demo_view');
+      }
+    } catch (_) {
+      sendWynnTrack('demo_view');
+    }
     const btn = document.getElementById('wynnpages-claim-btn');
     if (btn) {
       btn.addEventListener('click', function () {
+        sendWynnTrack('claim_click');
         btn.style.opacity = '0.85';
         btn.innerHTML = '<span>Opening Secure Checkout...</span>';
       });
