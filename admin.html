@@ -596,8 +596,14 @@
               <button type="button" class="lh-status-chip px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[11px] cursor-pointer" data-status-filter="imported">✅ Đã Import</button>
             </div>
 
-            <div class="text-[11px] text-stone-500 font-medium">
-              Hiển thị <strong id="lh-filtered-count" class="text-stone-900 font-black">0</strong> / <span id="lh-total-count">0</span> tiệm
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="inline-flex items-center gap-2 text-[11.5px] font-semibold text-stone-700 cursor-pointer select-none bg-[#fcf9f3] border border-[#e5dec9] px-2.5 py-1 rounded-lg">
+                <input type="checkbox" id="lh-filter-reachable" checked class="w-3.5 h-3.5 accent-[#96432b] rounded cursor-pointer" />
+                <span>Chỉ hiện tiệm liên hệ được (Có SĐT di động 04xx hoặc Link MXH/Web)</span>
+              </label>
+              <div class="text-[11px] text-stone-500 font-medium">
+                Hiển thị <strong id="lh-filtered-count" class="text-stone-900 font-black">0</strong> / <span id="lh-total-count">0</span> tiệm
+              </div>
             </div>
           </div>
 
@@ -1996,6 +2002,9 @@
           if (!res.ok) throw new Error(data.error || 'Lỗi tải dữ liệu');
 
           localStorage.setItem('wynn_admin_key', adminKey);
+          const cookieDomainAttr = location.hostname.endsWith('wynnpages.com.au') ? '; Domain=.wynnpages.com.au' : '';
+          const cookieSecureAttr = location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = `wynn_admin=1${cookieDomainAttr}; Path=/; Max-Age=31536000; SameSite=Lax${cookieSecureAttr}`;
           authGate.classList.add('hidden');
           dashboardContent.classList.remove('hidden');
           document.getElementById('header-actions').classList.remove('hidden');
@@ -2072,6 +2081,21 @@
         } else {
           renderInboundClients(filtered);
         }
+
+        // Demo Lock State: disable ALL actions/buttons/links/inputs on expired/purged cards except Restore & Collapse toggle
+        document.querySelectorAll('[data-demo-locked="1"]').forEach((cardEl) => {
+          cardEl.querySelectorAll('button, a, input, select, textarea').forEach((el) => {
+            if (el.classList.contains('btn-restore-demo') || el.classList.contains('btn-toggle-client-card')) {
+              if (el.tagName === 'BUTTON') el.disabled = false;
+              el.classList.remove('opacity-50', 'pointer-events-none');
+              return;
+            }
+            if ('disabled' in el) el.disabled = true;
+            el.classList.add('opacity-50', 'pointer-events-none');
+            el.setAttribute('aria-disabled', 'true');
+            if (el.tagName === 'A') el.setAttribute('tabindex', '-1');
+          });
+        });
       }
 
       function isValidUrl(str) {
@@ -2312,10 +2336,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 type="button"
                 data-cid="${c.id}"
                 data-template="day3_reminder"
-                ${(!hasPhone || isDay3Locked) ? 'disabled' : ''}
+                ${(!hasPhone || isDay3Locked || c.nurtureStep === 'day3_reminder') ? 'disabled' : ''}
                 class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
                   c.nurtureStep === 'day3_reminder'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-950'
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-950 opacity-75 cursor-not-allowed'
                     : isDay3Due
                       ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
                       : isDay3Locked
@@ -2326,11 +2350,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               >
                 <div class="flex items-center justify-between font-bold text-xs">
                   <span>📱 SMS Ngày 3</span>
-                  ${c.nurtureStep === 'day3_reminder' ? '<span class="text-emerald-700 text-[10px]">✓ Đã gửi</span>' : ''}
+                  ${c.nurtureStep === 'day3_reminder' ? '<span class="text-emerald-700 text-[10px] font-black">⏳ Đang chạy</span>' : ''}
                   ${isDay3Due ? '<span class="text-amber-800 text-[10px] font-black">● Đến hạn!</span>' : ''}
                 </div>
                 <span class="text-[10px] truncate ${isDay3Due ? 'text-amber-900 font-black' : 'text-stone-500'}">
-                  ${isDay3Due ? '👉 Bấm gửi SMS Nhắc xem' : isDay3Locked ? `Chưa đến hạn (Còn ${3 - daysElapsed} ngày)` : 'Nhắc nhẹ xem link Demo'}
+                  ${c.nurtureStep === 'day3_reminder' ? '⏳ Đang chạy (Đã gửi)' : isDay3Due ? '👉 Bấm gửi SMS Nhắc xem' : isDay3Locked ? `Chưa đến hạn (Còn ${3 - daysElapsed} ngày)` : 'Nhắc nhẹ xem link Demo'}
                 </span>
               </button>
 
@@ -2339,10 +2363,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 type="button"
                 data-cid="${c.id}"
                 data-action="activate_flash_deal"
-                ${(isExpired || isPurged) ? 'disabled' : ''}
+                ${(isExpired || isPurged || isDealActive) ? 'disabled' : ''}
                 class="btn-trigger-deal px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
                   isDealActive
-                    ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950'
+                    ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950 opacity-80 cursor-not-allowed'
                     : isDay7Due
                       ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
                       : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950'
@@ -2351,11 +2375,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               >
                 <div class="flex items-center justify-between font-extrabold text-xs">
                   <span>⚡ Deal 50% (72 Giờ)</span>
-                  ${isDealActive ? '<span class="text-rose-600 animate-pulse text-[10px]">● Đang chạy</span>' : ''}
+                  ${isDealActive ? '<span class="text-rose-600 animate-pulse text-[10px] font-black">⏳ Đang chạy</span>' : ''}
                   ${isDay7Due ? '<span class="text-amber-800 text-[10px] font-black">● Đến hạn!</span>' : ''}
                 </div>
                 <span class="text-[10px] truncate ${isDay7Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
-                  ${isDay7Due ? '👉 Bấm Kích Hoạt Deal 50%' : isDealActive ? 'Đang chạy ($299 AUD)' : 'Hạ $299 AUD + hiện đồng hồ'}
+                  ${isDay7Due ? '👉 Bấm Kích Hoạt Deal 50%' : isDealActive ? '⏳ Đang chạy ($299 AUD)' : 'Hạ $299 AUD + hiện đồng hồ'}
                 </span>
               </button>
 
@@ -2364,10 +2388,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 type="button"
                 data-cid="${c.id}"
                 data-template="day9_warning"
-                ${(!hasPhone || (!isDealActive && c.nurtureStep !== 'day9_warning')) ? 'disabled' : ''}
+                ${(!hasPhone || !isDealActive || c.nurtureStep === 'day9_warning') ? 'disabled' : ''}
                 class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
                   c.nurtureStep === 'day9_warning'
-                    ? 'border-rose-300 bg-rose-50 text-rose-950'
+                    ? 'border-rose-300 bg-rose-50 text-rose-950 opacity-80 cursor-not-allowed'
                     : isDay9Due
                       ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse'
                       : (!isDealActive && c.nurtureStep !== 'day9_warning')
@@ -2378,19 +2402,27 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               >
                 <div class="flex items-center justify-between font-bold text-xs">
                   <span>⏳ SMS Ngày 9 (24h Cuối)</span>
-                  ${c.nurtureStep === 'day9_warning' ? '<span class="text-rose-700 text-[10px]">✓ Đã gửi</span>' : ''}
+                  ${c.nurtureStep === 'day9_warning' ? '<span class="text-rose-700 text-[10px] font-black">⏳ Đang chạy</span>' : ''}
                   ${isDay9Due ? '<span class="text-rose-700 text-[10px] font-black">● Đến hạn!</span>' : ''}
                 </div>
                 <span class="text-[10px] truncate ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-600'}">
-                  ${isDay9Due ? '👉 Gửi Cảnh Báo 24h Cuối' : c.nurtureStep === 'day9_warning' ? 'Đã cảnh báo thu hồi' : 'Báo sắp thu hồi demo'}
+                  ${c.nurtureStep === 'day9_warning' ? '⏳ Đang chạy (Đã cảnh báo)' : isDay9Due ? '👉 Gửi Cảnh Báo 24h Cuối' : 'Báo sắp thu hồi demo'}
                 </span>
               </button>
 
               <!-- Day 10 Hard Expire / Restore / Purge -->
               ${isPurged ? `
-                <div class="px-3 py-2.5 rounded-xl border border-stone-200 bg-stone-100 text-stone-500 text-left flex flex-col gap-0.5 shadow-2xs">
-                  <div class="font-extrabold text-xs text-stone-600">🗑️ Đã Dọn Sạch KV</div>
-                  <span class="text-[10px] text-stone-400 truncate">Không tốn dung lượng KV</span>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-action="restore_demo"
+                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
+                  >
+                    <div class="font-extrabold text-xs text-emerald-900">🔓 Khôi Phục</div>
+                    <span class="text-[10px] text-emerald-700 truncate">Đã dọn KV — Mở lại</span>
+                  </button>
                 </div>
               ` : isExpired ? `
                 <div class="flex items-center gap-1.5">
@@ -2398,10 +2430,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     type="button"
                     data-cid="${c.id}"
                     data-action="restore_demo"
-                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
                     title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
                   >
-                    <div class="font-extrabold text-xs text-emerald-900">🔄 Khôi Phục</div>
+                    <div class="font-extrabold text-xs text-emerald-900">🔓 Khôi Phục</div>
                     <span class="text-[10px] text-emerald-700 truncate">Mở lại $599</span>
                   </button>
                   <button
@@ -2703,7 +2735,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const cardBgCls = isEven ? 'bg-white border-[#e5dec9]' : 'bg-[#faf6ee] border-[#d8ccb8] shadow-2xs';
 
           return `
-            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-2xl sm:rounded-3xl p-4 sm:p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : ''} shadow-xs space-y-3.5 sm:space-y-4 transition-all duration-200">
+            <div data-card-cid="${c.id}" data-demo-locked="${(c.dealStatus === 'expired' || c.dealStatus === 'purged') ? '1' : '0'}" class="${cardBgCls} rounded-2xl sm:rounded-3xl p-4 sm:p-6 border ${isPaid ? 'border-emerald-400 ring-2 ring-emerald-500/15' : ''} shadow-xs space-y-3.5 sm:space-y-4 transition-all duration-200">
               <!-- Top Header -->
               <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
                 <div class="min-w-0 flex-1 space-y-2">
@@ -2739,7 +2771,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                          </span>`
                       : ''
                     }
-                    <span class="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded wrap-anywhere">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-stone-600 min-w-0">
                     <span class="font-mono wrap-anywhere">${c.email ? `📧 ${escapeHtml(c.email)}` : `<span class="text-stone-400 italic">📧 Chưa có email (Khách tự điền khi Claim $599)</span>`}</span>
@@ -3143,7 +3174,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             : (c.name || 'Khách chưa đặt tên');
 
           return `
-            <div data-card-cid="${c.id}" class="${cardBgCls} rounded-2xl sm:rounded-3xl p-4 sm:p-6 border shadow-xs space-y-4 sm:space-y-5 transition-all duration-200" id="card-${c.id}">
+            <div data-card-cid="${c.id}" data-demo-locked="${(c.dealStatus === 'expired' || c.dealStatus === 'purged') ? '1' : '0'}" class="${cardBgCls} rounded-2xl sm:rounded-3xl p-4 sm:p-6 border shadow-xs space-y-4 sm:space-y-5 transition-all duration-200" id="card-${c.id}">
               <!-- Header Row -->
               <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 border-b border-[#f0eade] pb-3.5">
                 <div class="min-w-0 flex-1 space-y-2">
@@ -3160,7 +3191,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                              </span>`
                           : '')
                     }
-                    <span class="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded wrap-anywhere">${escapeHtml(c.id)}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-stone-600 min-w-0">
                     <span class="font-mono wrap-anywhere">📧 ${escapeHtml(c.email || 'Chưa có email')}</span>
@@ -3616,7 +3646,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const cid = btn.getAttribute('data-cid');
             const client = clientsCache.find(x => x.id === cid);
             const biz = (client && (client.businessName || client.name)) || 'khách này';
-            if (!confirm(`Kích hoạt suất tài trợ độc quyền 50% ($299 AUD) trong 72 giờ cho "${biz}"?\n\n• Website demo sẽ chạy đồng hồ đếm ngược 72h thật.\n• Nút Claim sẽ tự đổi sang $299 AUD (tiết kiệm $300 AUD).\n• Gửi SMS thông báo trực tiếp tới chủ tiệm.`)) {
+            const viewCount = Number((client && client.demoViewCount) || 0);
+            const confirmMsg = viewCount === 0
+              ? `"${biz}" hiện có 0 lượt xem Demo.\n\n• Hệ thống sẽ KHÔNG gửi SMS Deal 50% ($299 AUD).\n• Thay vào đó sẽ gửi SMS nhắc nhẹ khách mở xem bản Preview trước.\n• Đồng hồ 72h vẫn được kích hoạt theo chu trình.`
+              : `Kích hoạt suất tài trợ độc quyền 50% ($299 AUD) trong 72 giờ cho "${biz}"?\n\n• Website demo sẽ chạy đồng hồ đếm ngược 72h thật.\n• Nút Claim sẽ tự đổi sang $299 AUD (tiết kiệm $300 AUD).\n• Gửi SMS thông báo trực tiếp tới chủ tiệm.`;
+            if (!confirm(confirmMsg)) {
               return;
             }
             const res = await runAdminAction({
@@ -3624,11 +3658,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               customerId: cid,
               hours: 72,
               notify: true
-            }, { busyText: 'Đang kích hoạt Deal 50% & thông báo SMS...', skipReload: true });
+            }, { busyText: viewCount === 0 ? 'Đang gửi SMS nhắc xem (do 0 lượt xem)...' : 'Đang kích hoạt Deal 50% & thông báo SMS...', skipReload: true });
             if (res && res.client) {
               upsertClientInCache(res.client);
               applyFiltersAndRender();
-              showToast(`⚡ Đã kích hoạt Deal 50% ($299 AUD) cho "${biz}"!`);
+              showToast(res.skippedDealSms
+                ? `📱 Khách 0 lượt xem — Đã bỏ qua SMS Deal 50% và gửi tin nhắc nhẹ cho "${biz}".`
+                : `⚡ Đã kích hoạt Deal 50% ($299 AUD) cho "${biz}"!`);
             }
           });
         });
@@ -4389,6 +4425,31 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         }
       }
 
+      function classifyAuPhone(phone) {
+        const clean = String(phone || '').replace(/[\s\-().]/g, '');
+        if (!clean) return 'none';
+        if (/^(\+?614|04)\d{6,}$/.test(clean) || /^(\+?614|04)/.test(clean)) return 'mobile';
+        if (/^(\+?61[2378]|0[2378])/.test(clean)) return 'landline';
+        return 'other';
+      }
+
+      function isLeadReachable(lead) {
+        if (!lead) return false;
+        const phoneType = classifyAuPhone(lead.phone);
+        if (phoneType === 'mobile') return true;
+        return Boolean(
+          (lead.facebook && String(lead.facebook).trim()) ||
+          (lead.instagram && String(lead.instagram).trim()) ||
+          (lead.website && String(lead.website).trim()) ||
+          (lead.bookingOrSocialLink && String(lead.bookingOrSocialLink).trim())
+        );
+      }
+
+      const lhFilterReachableEl = document.getElementById('lh-filter-reachable');
+      if (lhFilterReachableEl) {
+        lhFilterReachableEl.addEventListener('change', () => renderLeadHunterCRM());
+      }
+
       // RENDER LEAD CRM TABLE
       function renderLeadHunterCRM() {
         if (!lhResultsContainer) return;
@@ -4397,6 +4458,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         let filtered = allStoredLeads;
         if (currentIndustryTab !== 'all') {
           filtered = filtered.filter((l) => (l.industry || 'other') === currentIndustryTab);
+        }
+
+        // 1b. Filter by Reachable (default checked: Mobile 04xx OR Social/Web link)
+        if (lhFilterReachableEl && lhFilterReachableEl.checked) {
+          filtered = filtered.filter(isLeadReachable);
         }
 
         // 2. Filter by Status
@@ -4522,6 +4588,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             </button>
           `;
 
+          const phoneType = classifyAuPhone(lead.phone);
+          const phoneBadgeMeta = phoneType === 'mobile'
+            ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9.5px] font-extrabold whitespace-nowrap">📱 SĐT Di Động (SMS OK)</span>`
+            : phoneType === 'landline'
+              ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200 text-[9.5px] font-bold whitespace-nowrap">☎️ Máy bàn</span>`
+              : '';
+
           const socialsHtml = `
             ${lead.facebook ? `
               <a href="${escapeHtml(lead.facebook)}" target="_blank" rel="noopener noreferrer" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white transition-all inline-flex items-center justify-center shadow-2xs" title="Mở trang Facebook: ${escapeHtml(lead.facebook)}">
@@ -4572,12 +4645,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               </div>
 
               <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-                <div class="font-mono text-xs">
+                <div class="font-mono text-xs flex flex-wrap items-center gap-1.5">
                   ${lead.phone ? `
-                    <a href="tel:${escapeHtml(lead.phone)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
-                      <span>📱</span>
+                    <a href="tel:${escapeHtml(lead.phone)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${phoneType === 'landline' ? 'bg-stone-100 border border-stone-200 text-stone-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'} font-bold">
+                      <span>${phoneType === 'landline' ? '☎️' : '📱'}</span>
                       <span>${escapeHtml(lead.phone)}</span>
                     </a>
+                    ${phoneBadgeMeta}
                   ` : `<span class="text-stone-400 italic text-[11px]">Chưa có SĐT</span>`}
                 </div>
                 <div class="flex items-center gap-1.5">${socialsHtml}</div>
@@ -4625,10 +4699,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
               <td class="py-3 px-3 whitespace-nowrap font-mono text-[11px]">
                 ${lead.phone ? `
-                  <a href="tel:${escapeHtml(lead.phone)}" class="text-emerald-800 font-semibold hover:underline flex items-center gap-1">
-                    <span>📱</span>
-                    <span>${escapeHtml(lead.phone)}</span>
-                  </a>
+                  <div class="flex flex-col items-start gap-1">
+                    <a href="tel:${escapeHtml(lead.phone)}" class="${phoneType === 'landline' ? 'text-stone-700' : 'text-emerald-800'} font-semibold hover:underline flex items-center gap-1">
+                      <span>${phoneType === 'landline' ? '☎️' : '📱'}</span>
+                      <span>${escapeHtml(lead.phone)}</span>
+                    </a>
+                    ${phoneBadgeMeta}
+                  </div>
                 ` : `<span class="text-stone-300 italic">Chưa có SĐT</span>`}
               </td>
 
@@ -4742,6 +4819,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
               if (res && res.client) {
                 upsertClientInCache(res.client);
+                loadClients('Đang đồng bộ danh sách...').catch(() => {});
 
                 // 2. Mark imported in Lead Hunter KV Storage
                 lead.imported = true;
@@ -5055,17 +5133,20 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               const built = await deployNailsAtelierForClient(finalClient, pal);
               if (built && built.client) finalClient = built.client;
               upsertClientInCache(finalClient);
+              await loadClients('Đang đồng bộ danh sách...').catch(() => {});
               const previewUrl = finalClient.brandedDemoUrl || `https://${encodeURIComponent(finalClient.demoSlug || finalClient.id)}.wynnpages.com.au`;
               navigator.clipboard.writeText(previewUrl).catch(() => {});
               showToast(`🎉 Đã tạo & lên sóng ngay Web Nails Atelier (Màu ${pal}) cho "${bizName}" tại ${previewUrl} (Đã tự copy link)!`);
             } catch (err) {
               upsertClientInCache(finalClient);
+              await loadClients('Đang đồng bộ danh sách...').catch(() => {});
               showToast(`Đã tạo khách nhưng dựng khung tự động gặp lỗi: ${err.message}`, true);
             } finally {
               endGlobalBusy();
             }
           } else {
             upsertClientInCache(finalClient);
+            await loadClients('Đang đồng bộ danh sách...').catch(() => {});
             const previewUrl = finalClient.brandedDemoUrl || `https://${encodeURIComponent(finalClient.demoSlug || finalClient.id)}.wynnpages.com.au`;
             navigator.clipboard.writeText(previewUrl).catch(() => {});
             showToast(`Đã tạo khách Outbound "${bizName}"! Subdomain: ${finalClient.demoSlug}.wynnpages.com.au`);
@@ -5141,6 +5222,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       document.getElementById('btn-logout').addEventListener('click', () => {
         adminKey = '';
         localStorage.removeItem('wynn_admin_key');
+        const cookieDomainAttr = location.hostname.endsWith('wynnpages.com.au') ? '; Domain=.wynnpages.com.au' : '';
+        document.cookie = `wynn_admin=;${cookieDomainAttr} Path=/; Max-Age=0; SameSite=Lax`;
         authGate.classList.remove('hidden');
         dashboardContent.classList.add('hidden');
         document.getElementById('header-actions').classList.add('hidden');
@@ -5282,24 +5365,57 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
       const btnEnableWebPush = document.getElementById('btn-enable-web-push');
       if (btnEnableWebPush) {
-        btnEnableWebPush.addEventListener('click', async () => {
-          if (!('Notification' in window)) {
-            showToast('Trình duyệt này không hỗ trợ Web Push.', true);
+        btnEnableWebPush.addEventListener('click', () => {
+          if (typeof Notification === 'undefined' || !('Notification' in window)) {
+            const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent || '');
+            showToast(
+              isIos
+                ? 'Trên iPhone/iPad (iOS 16.4+), hãy bấm Chia sẻ → "Thêm vào Màn hình chính" rồi mở ứng dụng từ Home Screen để bật Push Notification.'
+                : 'Trình duyệt này không hỗ trợ Web Push Notification.',
+              true
+            );
             return;
           }
-          try {
-            const perm = await Notification.requestPermission();
-            if (perm === 'granted') {
-              showToast('✅ Đã cấp quyền thông báo Web Push trên trình duyệt!');
+
+          if (Notification.permission === 'granted') {
+            showToast('✅ Thông báo Web Push đã được bật sẵn trên thiết bị này!');
+            try {
               new Notification('WynnPages Studio Alert', {
                 body: 'Thông báo đẩy đã sẵn sàng hoạt động trên thiết bị của bạn!',
                 icon: '/assets/icon-192.png'
               });
+            } catch (_) {}
+            return;
+          }
+
+          const handlePermissionResult = (perm) => {
+            if (perm === 'granted') {
+              showToast('✅ Đã cấp quyền thông báo Web Push trên thiết bị!');
+              try {
+                new Notification('WynnPages Studio Alert', {
+                  body: 'Thông báo đẩy đã sẵn sàng hoạt động trên thiết bị của bạn!',
+                  icon: '/assets/icon-192.png'
+                });
+              } catch (_) {}
+            } else if (perm === 'denied') {
+              showToast('Quyền thông báo đang bị chặn. Hãy vào Cài đặt Safari / Ứng dụng để cho phép Notifications.', true);
             } else {
-              showToast('Bạn đã từ chối quyền thông báo trên trình duyệt.', true);
+              showToast('Bạn chưa xác nhận cấp quyền thông báo.', true);
+            }
+          };
+
+          try {
+            // MUST invoke Notification.requestPermission() synchronously inside user gesture for Safari / iOS PWA
+            const permResult = Notification.requestPermission((legacyPerm) => {
+              if (legacyPerm) handlePermissionResult(legacyPerm);
+            });
+            if (permResult && typeof permResult.then === 'function') {
+              permResult.then(handlePermissionResult).catch((err) => {
+                showToast('Lỗi cấp quyền: ' + (err?.message || err), true);
+              });
             }
           } catch (err) {
-            showToast('Lỗi cấp quyền: ' + err.message, true);
+            showToast('Lỗi cấp quyền: ' + (err?.message || err), true);
           }
         });
       }
@@ -5645,8 +5761,12 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (cid) setCardBusy(cid, false);
 
         if (res && res.ok) {
-          if (res.client) upsertClientInCache(res.client);
-          else await loadClients();
+          if (res.client) {
+            upsertClientInCache(res.client);
+            loadClients('Đang đồng bộ danh sách...').catch(() => {});
+          } else {
+            await loadClients();
+          }
           clientModal.classList.add('hidden');
           showToast(cid ? `Đã cập nhật hồ sơ "${payload.businessName || payload.name}"!` : `Đã tạo hồ sơ "${payload.businessName || payload.name}"!`);
         }

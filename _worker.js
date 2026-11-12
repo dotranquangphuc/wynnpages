@@ -146,8 +146,55 @@ const WYNN_SYNCED_SETTING_KEYS = [
   'googlePlacesApiKey',
   'geminiApiKey',
   'telegramBotToken',
-  'telegramChatId'
+  'telegramChatId',
+  'adminIp',
+  'adminIpList'
 ];
+
+function isBotUserAgent(ua = '') {
+  return /bot|crawler|spider|facebookexternalhit|Facebot|WhatsApp|TelegramBot|Slackbot|Discordbot|LinkedInBot|Twitterbot|Googlebot|bingbot|Applebot|curl|python|headless|Bytespider|GPTBot|PetalBot/i.test(String(ua || ''));
+}
+
+function getRequestClientIp(request) {
+  return (
+    request.headers.get('cf-connecting-ip') ||
+    (request.headers.get('x-forwarded-for') || '').split(',')[0] ||
+    ''
+  ).trim();
+}
+
+function requestHasAdminCookie(request) {
+  const cookieHeader = request.headers.get('cookie') || '';
+  return /(?:^|;\s*)wynn_admin=1(?:;|$)/.test(cookieHeader);
+}
+
+function parseAdminIpList(rawIp = '', rawList = '') {
+  const set = new Set();
+  for (const src of [rawIp, rawList]) {
+    String(src || '').split(/[\s,;]+/).map(s => s.trim()).filter(Boolean).forEach(ip => set.add(ip));
+  }
+  return Array.from(set);
+}
+
+function buildAdminHeaders(baseHeaders = {}) {
+  return {
+    ...baseHeaders,
+    'Set-Cookie': 'wynn_admin=1; Domain=.wynnpages.com.au; Path=/; Max-Age=31536000; SameSite=Lax; Secure'
+  };
+}
+
+async function captureAdminIp(request, env) {
+  const ip = getRequestClientIp(request);
+  if (!ip) return '';
+  try {
+    const { settings } = await loadSyncedRuntime(env);
+    const list = parseAdminIpList(settings.adminIp, settings.adminIpList);
+    if (list[0] === ip && settings.adminIp === ip) return ip;
+    const merged = [ip, ...list.filter(x => x !== ip)].slice(0, 8);
+    await saveSyncedSettings(env, { adminIp: ip, adminIpList: merged.join(',') }, { clearEmpty: false });
+  } catch (_) {}
+  return ip;
+}
 
 function getD1(env) {
   return (env && (env.DB || env.wynnpages_db)) || null;
@@ -267,7 +314,9 @@ async function loadSyncedRuntime(env, overrides = {}) {
     clicksendFrom: (mergedOverrides.clicksendFrom || baseCfg.clicksendFrom || '').trim(),
     telegramBotToken: (mergedOverrides.telegramBotToken || (env && env.TELEGRAM_BOT_TOKEN) || '').trim(),
     telegramChatId: (mergedOverrides.telegramChatId || (env && env.TELEGRAM_CHAT_ID) || '').trim(),
-    geminiApiKey: (mergedOverrides.geminiApiKey || mergedOverrides.googlePlacesApiKey || baseCfg.geminiApiKey || (env && env.GEMINI_API_KEY) || '').trim()
+    geminiApiKey: (mergedOverrides.geminiApiKey || mergedOverrides.googlePlacesApiKey || baseCfg.geminiApiKey || (env && env.GEMINI_API_KEY) || '').trim(),
+    adminIp: String(synced.adminIp || '').trim(),
+    adminIpList: parseAdminIpList(synced.adminIp, synced.adminIpList)
   };
 
   return {
@@ -414,7 +463,7 @@ async function getD1ClientsIndex(env) {
   return { byId, bySlug, rows };
 }
 
-async function recordD1TrackingEvent(env, { slug = '', clientId = '', eventType = 'demo_view', device = 'Desktop', userAgent = '', businessName = '' }) {
+async function recordD1TrackingEvent(env, { slug = '', clientId = '', eventType = 'demo_view', device = 'Desktop', userAgent = '', businessName = '', knownClient = null }) {
   const db = getD1(env);
   const nowIso = new Date().toISOString();
   const cleanSlug = slugifyName(slug);
@@ -425,38 +474,43 @@ async function recordD1TrackingEvent(env, { slug = '', clientId = '', eventType 
 
   let targetRow = null;
   if (clientId) {
-    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name FROM clients WHERE id = ?').bind(String(clientId)).first().catch(() => null);
+    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name, stage, metadata_json FROM clients WHERE id = ?').bind(String(clientId)).first().catch(() => null);
   }
   if (!targetRow && cleanSlug) {
-    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cleanSlug).first().catch(() => null);
+    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name, stage, metadata_json FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cleanSlug).first().catch(() => null);
   }
 
-  const effectiveId = (targetRow && targetRow.id) || String(clientId || (cleanSlug ? `local_${cleanSlug}` : `anon_${Date.now()}`));
-  const resolvedSlug = (targetRow && targetRow.demo_slug) || cleanSlug;
-  const resolvedBiz = (targetRow && (targetRow.business_name || targetRow.name)) || businessName || resolvedSlug || 'Boutique';
+  // Never materialize synthetic/ghost rows for deleted or non-existent clients
+  if (!targetRow && knownClient && knownClient.id) {
+    await upsertD1Client(env, knownClient);
+    targetRow = await db.prepare('SELECT id, demo_slug, view_count, claim_click_count, business_name, name, stage, metadata_json FROM clients WHERE id = ?').bind(String(knownClient.id)).first().catch(() => null);
+  }
+  if (!targetRow) {
+    return { notFound: true, clientId: '', slug: cleanSlug, viewCount: 0, claimClickCount: 0 };
+  }
+
+  const effectiveId = targetRow.id;
+  const resolvedSlug = targetRow.demo_slug || cleanSlug;
+  const resolvedBiz = targetRow.business_name || targetRow.name || businessName || resolvedSlug || 'Boutique';
 
   if (eventType === 'claim_click') {
     await db.prepare(`
-      INSERT INTO clients (
-        id, business_name, demo_slug, claim_click_count, last_clicked_at, last_viewer_device, created_at, updated_at
-      ) VALUES (?, ?, ?, 1, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        claim_click_count = clients.claim_click_count + 1,
-        last_clicked_at = excluded.last_clicked_at,
-        last_viewer_device = excluded.last_viewer_device,
-        updated_at = excluded.updated_at
-    `).bind(effectiveId, resolvedBiz, resolvedSlug, nowIso, device, Date.now(), nowIso).run();
+      UPDATE clients SET
+        claim_click_count = claim_click_count + 1,
+        last_clicked_at = ?,
+        last_viewer_device = ?,
+        updated_at = ?
+      WHERE id = ?
+    `).bind(nowIso, device, nowIso, effectiveId).run();
   } else {
     await db.prepare(`
-      INSERT INTO clients (
-        id, business_name, demo_slug, view_count, last_viewed_at, last_viewer_device, created_at, updated_at
-      ) VALUES (?, ?, ?, 1, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        view_count = clients.view_count + 1,
-        last_viewed_at = excluded.last_viewed_at,
-        last_viewer_device = excluded.last_viewer_device,
-        updated_at = excluded.updated_at
-    `).bind(effectiveId, resolvedBiz, resolvedSlug, nowIso, device, Date.now(), nowIso).run();
+      UPDATE clients SET
+        view_count = view_count + 1,
+        last_viewed_at = ?,
+        last_viewer_device = ?,
+        updated_at = ?
+      WHERE id = ?
+    `).bind(nowIso, device, nowIso, effectiveId).run();
   }
 
   await db.prepare(`
@@ -1139,7 +1193,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       heading: `Your pristine website is now live, ${firstName}!`,
       bodyHtml: `
         <p>Pop the champagne! Your hand-crafted website is officially live and ready to welcome your customers.</p>
-        <p>remember: with WynnPages, you own 100% of your site with zero monthly retainers.</p>
+        <p>Remember: with WynnPages, you own 100% of your site with zero monthly retainers.</p>
       `,
       primaryCta: {
         label: 'Visit Your Live Website',
@@ -1149,8 +1203,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   }
 
   const [smsResult, emailResult] = await Promise.all([
-    phone ? sendClickSendSms(phone, smsText, cfg) : Promise.resolve({ sent: false, reason: 'No phone number on record' }),
-    email ? sendResendEmail({ to: email, subject: emailSubject, html: emailHtml, cfg }) : Promise.resolve({ sent: false, reason: 'No email on record' })
+    phone ? Promise.resolve(sendClickSendSms(phone, smsText, cfg)).catch((err) => ({ sent: false, reason: (err && err.message) || 'SMS delivery error' })) : Promise.resolve({ sent: false, reason: 'No phone number on record' }),
+    email ? Promise.resolve(sendResendEmail({ to: email, subject: emailSubject, html: emailHtml, cfg })).catch((err) => ({ sent: false, reason: (err && err.message) || 'Email delivery skipped' })) : Promise.resolve({ sent: false, reason: 'No email on record' })
   ]);
 
   return { smsResult, emailResult, stage, smsText, phone };
@@ -1474,9 +1528,20 @@ function slugifyName(str) {
 
 function formatCustomerRecord(cust) {
   const m = cust.metadata || {};
-  const rawStage = m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'paid');
+  const rawStage = m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'outbound_pending');
   const flowType = m.flow_type || (rawStage.startsWith('outbound_') ? 'outbound' : 'inbound');
-  const paymentStatus = m.payment_status || ((flowType === 'outbound' && rawStage !== 'outbound_paid' && rawStage !== 'launched' && !m.checkout_session_id) ? 'unpaid' : 'paid');
+  const hasExplicitPaymentEvidence =
+    m.payment_status === 'paid' ||
+    rawStage === 'outbound_paid' ||
+    rawStage === 'launched' ||
+    (flowType === 'inbound' &&
+      rawStage !== 'checkout_started' &&
+      rawStage !== 'unpaid' &&
+      m.payment_status !== 'unpaid' &&
+      (Boolean(m.checkout_session_id) || m.welcome_sent === 'true' || m.brief_status === 'completed'));
+  const paymentStatus = m.payment_status === 'paid'
+    ? 'paid'
+    : (m.payment_status === 'unpaid' ? 'unpaid' : (hasExplicitPaymentEvidence ? 'paid' : 'unpaid'));
   const displayName = m.business_name || cust.name || m.customer_name || '';
   const demoSlug = m.demo_slug || slugifyName(displayName) || cust.id.toLowerCase();
   const brandedDemoUrl = `https://${demoSlug}.wynnpages.com.au`;
@@ -1808,19 +1873,19 @@ async function extractSocialAndContactFromWebsite(websiteUrl) {
 }
 
 function buildExpiredDemoHtml(client) {
-  const bizName = (client && (client.businessName || client.name)) || 'Quý Doanh Nghiệp';
+  const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const expDateStr = client && client.dealExpiresAt ? new Date(client.dealExpiresAt).toLocaleDateString('en-AU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }) : 'gần đây';
+  }) : 'recently';
 
   return `<!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bản Thiết Kế Đã Hết Hạn Lưu Trữ — WynnPages Studio</title>
+  <title>Demo Preview Archived — WynnPages Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1975,24 +2040,24 @@ function buildExpiredDemoHtml(client) {
       <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier">
     </div>
     <div class="status-pill">
-      <span>●</span> Demo Lưu Trữ Đã Hết Hạn
+      <span>●</span> Demo Preview Archived
     </div>
-    <h1>Bản Thiết Kế Đã Đóng &amp; <em>Thu Hồi</em></h1>
-    <p class="client-target">Dành riêng cho: <strong>${bizName}</strong></p>
+    <h1>This Bespoke Website Preview Has <em>Expired</em></h1>
+    <p class="client-target">Prepared exclusively for: <strong>${bizName}</strong></p>
     <p class="expired-desc">
-      Thời hạn bảo lưu và suất tài trợ số hoá độc quyền (50% OFF) dành cho <strong>${bizName}</strong> đã chính thức kết thúc vào ngày <strong>${expDateStr}</strong>.<br><br>
-      Để bảo đảm an toàn hạ tầng và tính độc quyền, bản website demo này hiện đã được đưa vào kho lưu trữ bảo mật của <strong>WynnPages Australian Web Atelier</strong>.
-      Nếu bạn là chủ tiệm và muốn kích hoạt lại hệ thống website này để nhận khách, vui lòng liên hệ trực tiếp Studio theo biểu phí tiêu chuẩn <strong>$599 AUD</strong>.
+      The preview hold and exclusive studio offer for <strong>${bizName}</strong> concluded on <strong>${expDateStr}</strong>.<br><br>
+      To protect brand exclusivity and keep every client design private on the <strong>WynnPages Studio Australian High-Speed Network</strong>, this website preview has been moved to our private archive.
+      If you are the business owner and would like to unlock, customise, or claim this website for a flat <strong>$599 AUD</strong> (100% ownership, zero monthly retainers), please message our studio directly.
     </p>
     <div class="btn-group">
-      <a href="sms:0424717777?&body=Hi%20WynnPages%2C%20t%C3%B4i%20l%C3%A0%20ch%E1%BB%A7%20ti%E1%BB%87m%20${encodeURIComponent(bizName)}%2C%20t%C3%B4i%20mu%E1%BB%91n%20k%C3%ADch%20ho%E1%BA%A1t%20l%E1%BA%A1i%20web%20demo%20c%E1%BB%A7a%20ti%E1%BB%87m." class="btn-primary">
-        <span>📱 SMS Kích Hoạt Lại (0424 717 777)</span>
+      <a href="sms:0424717777?&body=Hi%20WynnPages%20Studio%2C%20I%27m%20from%20${encodeURIComponent(bizName)}%20and%20would%20love%20to%20reactivate%20and%20customise%20our%20website%20preview." class="btn-primary">
+        <span>📱 SMS Studio to Reactivate (0424 717 777)</span>
       </a>
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="btn-secondary">
-        <span>Về Trang Chủ Atelier ↗</span>
+        <span>Visit WynnPages Studio ↗</span>
       </a>
     </div>
-    <p class="footer-note">WynnPages Studio — Australian Bespoke Web Atelier • Flat $599 AUD • Zero Retainers</p>
+    <p class="footer-note">WynnPages Studio — Australian Bespoke Web Atelier • Flat $599 AUD • Zero Monthly Retainers</p>
   </div>
 </body>
 </html>`;
@@ -2116,11 +2181,17 @@ function buildClaimBarSnippet(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const cid = (client && client.id) || '';
   const email = (client && client.email) || '';
+  const isPaid = Boolean(client && (
+    client.paymentStatus === 'paid' ||
+    client.stage === 'outbound_paid' ||
+    client.stage === 'launched' ||
+    client.stage === 'site_launched'
+  ));
 
-  // Check Flash Deal 50%
+  // Check Flash Deal 50% (only when unpaid)
   let isFlashDeal = false;
   let expiresTimestamp = 0;
-  if (client && client.dealStatus === 'flash_deal' && client.dealExpiresAt) {
+  if (!isPaid && client && client.dealStatus === 'flash_deal' && client.dealExpiresAt) {
     expiresTimestamp = new Date(client.dealExpiresAt).getTime();
     if (expiresTimestamp > Date.now()) {
       isFlashDeal = true;
@@ -2130,6 +2201,8 @@ function buildClaimBarSnippet(client) {
   const claimHref = isFlashDeal
     ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`
     : `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+
+  const revisionHref = `https://wynnpages.com.au/revision.html?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
 
   const btnLabel = isFlashDeal
     ? `Claim Website — $299 AUD (Save 50%)`
@@ -2141,7 +2214,7 @@ function buildClaimBarSnippet(client) {
       position: fixed;
       left: 50%;
       bottom: 20px;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(0);
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 880px;
@@ -2160,6 +2233,72 @@ function buildClaimBarSnippet(client) {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       box-sizing: border-box;
       overflow: visible;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    }
+    .claim-bar.is-collapsed {
+      transform: translateX(-50%) translateY(calc(100% + 48px));
+      opacity: 0;
+      pointer-events: none;
+    }
+    .claim-bar.claimed-active {
+      border: 1.5px solid rgba(52, 211, 153, 0.55);
+      background: rgba(16, 31, 24, 0.96);
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.65), 0 0 28px rgba(16, 185, 129, 0.2);
+    }
+    .claim-collapse-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid rgba(229, 222, 201, 0.24);
+      background: rgba(255, 255, 255, 0.08);
+      color: #e5dec9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.18s ease;
+    }
+    .claim-collapse-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+    }
+    .claim-restore-tab {
+      position: fixed;
+      right: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index: 999998;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(26, 23, 21, 0.94);
+      color: #fbdeb9;
+      border: 1px solid rgba(232, 185, 72, 0.55);
+      border-radius: 9999px;
+      padding: 8px 14px;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .claim-restore-tab.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .claim-claimed-btn {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+      border-color: rgba(167, 243, 208, 0.55) !important;
+      box-shadow: 0 10px 24px rgba(5, 150, 105, 0.45) !important;
+      animation: none !important;
     }
     .claim-bar.deal-active {
       border: 1.5px solid rgba(232, 185, 72, 0.75);
@@ -2476,7 +2615,7 @@ function buildClaimBarSnippet(client) {
       .claim-biz-highlight { font-size: 15px; }
     }
   </style>
-  <div class="claim-bar ${isFlashDeal ? 'deal-active' : ''}">
+  <div id="wynn-claim-bar" class="claim-bar ${isFlashDeal ? 'deal-active' : ''} ${isPaid ? 'claimed-active' : ''}">
     ${isFlashDeal ? `
       <div class="claim-deal-floating-seal">
         <span class="seal-icon">⚡</span>
@@ -2491,49 +2630,107 @@ function buildClaimBarSnippet(client) {
         <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" class="claim-badge-img">
       </a>
       <div class="claim-meta">
-        <div class="claim-tag">
-          ${isFlashDeal ? `
-            <span class="claim-tag-text" style="color:#f6ddb8;font-weight:800;">72-HOUR FLASH WINDOW</span>
+        ${isPaid ? `
+          <div class="claim-tag" style="color:#6ee7b7;">
+            <span class="claim-tag-text" style="color:#6ee7b7;font-weight:800;">🎉 OFFICIALLY CLAIMED</span>
             <span class="claim-bullet">•</span>
-            <span class="claim-tag-text" style="color:#fbdeb9;">$299 AUD Flat Fee</span>
-          ` : `
-            <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-link" title="Visit WynnPages Studio (wynnpages.com.au)">
-              <span>wynnpages.com.au</span>
-              <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
-              </svg>
-            </a>
-            <span class="claim-bullet">•</span>
-            <span class="claim-tag-text">Bespoke Demo</span>
-            <span class="claim-bullet">•</span>
-            <span class="claim-tag-text">No Monthly Fees</span>
-          `}
-        </div>
-        <div class="claim-title">
-          <span class="claim-for-text">Crafted exclusively for</span>
-          <strong class="claim-biz-highlight">${bizName}</strong>
-        </div>
-        ${isFlashDeal ? `
-          <div class="claim-countdown-wrap">
-            <span class="cd-label">OFFER EXPIRES IN:</span>
-            <span class="cd-timer" id="claim-cd-display">--h : --m : --s</span>
+            <span class="claim-tag-text" style="color:#d1fae5;">100% Client Ownership</span>
           </div>
-        ` : ''}
+          <div class="claim-title">
+            <strong class="claim-biz-highlight" style="font-size:14.5px;">🎉 This website has been officially claimed!</strong>
+          </div>
+        ` : `
+          <div class="claim-tag">
+            ${isFlashDeal ? `
+              <span class="claim-tag-text" style="color:#f6ddb8;font-weight:800;">72-HOUR FLASH WINDOW</span>
+              <span class="claim-bullet">•</span>
+              <span class="claim-tag-text" style="color:#fbdeb9;">$299 AUD Flat Fee</span>
+            ` : `
+              <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-link" title="Visit WynnPages Studio (wynnpages.com.au)">
+                <span>wynnpages.com.au</span>
+                <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+                </svg>
+              </a>
+              <span class="claim-bullet">•</span>
+              <span class="claim-tag-text">Bespoke Demo</span>
+              <span class="claim-bullet">•</span>
+              <span class="claim-tag-text">No Monthly Fees</span>
+            `}
+          </div>
+          <div class="claim-title">
+            <span class="claim-for-text">Crafted exclusively for</span>
+            <strong class="claim-biz-highlight">${bizName}</strong>
+          </div>
+          ${isFlashDeal ? `
+            <div class="claim-countdown-wrap">
+              <span class="cd-label">OFFER EXPIRES IN:</span>
+              <span class="cd-timer" id="claim-cd-display">--h : --m : --s</span>
+            </div>
+          ` : ''}
+        `}
       </div>
     </div>
     <div class="claim-actions">
-      <a href="${claimHref}" class="claim-btn ${isFlashDeal ? 'claim-deal-btn' : ''}">
-        <span>${btnLabel}</span>
-        <span class="claim-arrow">&rarr;</span>
-      </a>
-      <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-btn" title="Explore WynnPages Web Atelier">
-        <span>About Studio</span>
-        <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
-        </svg>
-      </a>
+      ${isPaid ? `
+        <a href="${revisionHref}" class="claim-btn claim-claimed-btn">
+          <span>👉 Click here to proceed to the next step (Customise Content &amp; Domain Setup)</span>
+          <span class="claim-arrow">&rarr;</span>
+        </a>
+      ` : `
+        <a href="${claimHref}" class="claim-btn ${isFlashDeal ? 'claim-deal-btn' : ''}">
+          <span>${btnLabel}</span>
+          <span class="claim-arrow">&rarr;</span>
+        </a>
+        <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-btn" title="Explore WynnPages Web Atelier">
+          <span>About Studio</span>
+          <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
+          </svg>
+        </a>
+      `}
+      <button type="button" id="wynn-claim-collapse" class="claim-collapse-btn" title="Minimise bar" aria-label="Minimise bar">⌄</button>
     </div>
   </div>
+  <button type="button" id="wynn-claim-restore" class="claim-restore-tab" aria-label="Expand website banner">
+    <span>⌃</span>
+    <span>${isPaid ? 'Next Step' : 'Claim Website'}</span>
+  </button>
+  <script>
+    (function(){
+      var bar = document.getElementById('wynn-claim-bar');
+      var collapseBtn = document.getElementById('wynn-claim-collapse');
+      var restoreBtn = document.getElementById('wynn-claim-restore');
+      if (!bar || !collapseBtn || !restoreBtn) return;
+      var manualCollapsedAt = 0;
+      function setCollapsed(collapsed) {
+        if (collapsed) {
+          bar.classList.add('is-collapsed');
+          restoreBtn.classList.add('visible');
+          manualCollapsedAt = Date.now();
+        } else {
+          bar.classList.remove('is-collapsed');
+          restoreBtn.classList.remove('visible');
+        }
+      }
+      collapseBtn.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setCollapsed(true);
+      });
+      restoreBtn.addEventListener('click', function() {
+        setCollapsed(false);
+      });
+      window.addEventListener('scroll', function() {
+        if (!bar.classList.contains('is-collapsed')) return;
+        if (Date.now() - manualCollapsedAt < 1200) return;
+        var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        if (window.scrollY + window.innerHeight >= docH - 150) {
+          setCollapsed(false);
+        }
+      }, { passive: true });
+    })();
+  </script>
   ${isFlashDeal ? `
   <script>
     (function(){
@@ -2586,6 +2783,7 @@ function injectClaimBarIntoHtml(rawHtml, client) {
         if (!s) return;
         var q = window.location.search || '';
         if (q.indexOf('admin=') !== -1 || q.indexOf('preview=') !== -1 || q.indexOf('bar=1') !== -1) return;
+        if (document.cookie && /(?:^|;\\s*)wynn_admin=1(?:;|$)/.test(document.cookie)) return;
         if (window.localStorage && window.localStorage.getItem('wynn_admin_key')) return;
         function sendTrack(evType) {
           try {
@@ -2608,9 +2806,27 @@ function injectClaimBarIntoHtml(rawHtml, client) {
           } catch(e){}
         }
         var ssKey = 'wynn_dv_ss_' + s;
-        if (!window.sessionStorage || !window.sessionStorage.getItem(ssKey)) {
-          if (window.sessionStorage) window.sessionStorage.setItem(ssKey, String(Date.now()));
+        var viewTracked = Boolean(window.sessionStorage && window.sessionStorage.getItem(ssKey));
+        var delayReady = false;
+        var humanInteracted = false;
+        function tryFireHumanView() {
+          if (viewTracked || !delayReady || !humanInteracted) return;
+          viewTracked = true;
+          try { if (window.sessionStorage) window.sessionStorage.setItem(ssKey, String(Date.now())); } catch(_) {}
           sendTrack('demo_view');
+        }
+        if (!viewTracked) {
+          setTimeout(function() {
+            delayReady = true;
+            tryFireHumanView();
+          }, 3000);
+          var markHuman = function() {
+            humanInteracted = true;
+            tryFireHumanView();
+          };
+          ['scroll', 'touchstart', 'mousemove', 'keydown'].forEach(function(evtName) {
+            window.addEventListener(evtName, markHuman, { once: true, passive: true });
+          });
         }
         document.addEventListener('click', function(ev) {
           var el = ev.target && ev.target.closest ? ev.target.closest('.claim-btn') : null;
@@ -2997,15 +3213,12 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
     const rawHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:${reqPath}`, 'text');
     if (rawHtml) {
       const resolvedClient = client || (stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
-      if (!isLiveDomain && (reqPath === '/index.html' || reqPath === '/')) {
-        await trackDemoView({ slug: cleanSlug, request, env, client: resolvedClient, stripeSecretKey, ctx });
-      }
       const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
       const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
       const isDealExpired = resolvedClient && (resolvedClient.dealStatus === 'expired' || resolvedClient.dealStatus === 'purged');
       if (!isLiveDomain && !isPaid && isDealExpired && !bypass) {
         return new Response(buildExpiredDemoHtml(resolvedClient), {
-          status: 200,
+          status: 403,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
@@ -3632,9 +3845,45 @@ async function runScheduledAutopilot(env, options = {}) {
       }
     }
 
-    // 3. Day 7-8 (Flash Deal 50% Activation)
+    // 3. Day 7-8 (Flash Deal 50% Activation — skip 50% discount SMS if demo has 0 views)
     if (daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
       if (settings.autoDeal || force) {
+        const cleanSlugC = slugifyName(c.demoSlug || c.businessName || c.name || '');
+        let realViews = Number(c.demoViewCount || 0);
+        if (env && env.WYNN_KV && cleanSlugC) {
+          const kvV = await env.WYNN_KV.get(`demo_views:${cleanSlugC}`, 'json').catch(() => null);
+          if (kvV && kvV.viewCount) realViews = Math.max(realViews, Number(kvV.viewCount));
+        }
+
+        if (realViews === 0) {
+          if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey && c.nurtureStep !== 'day7_nudge_0views') {
+            const nudgeMsg = `Hi ${biz}, WynnPages Studio here — just making sure you saw the bespoke website preview we crafted for ${biz}: ${demoUrl} . No rush at all, would love your feedback!`;
+            const smsRes = await sendClickSendSms(c.phone, nudgeMsg, cfg);
+            const uP = new URLSearchParams();
+            uP.append('metadata[nurture_step]', 'day7_nudge_0views');
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: uP.toString()
+            }).catch(() => {});
+            await recordSmsHistory({
+              customerId: c.id,
+              env,
+              stripeSecretKey: cfg.stripeSecretKey,
+              type: 'day7_nudge_0views',
+              to: c.phone,
+              text: nudgeMsg,
+              status: smsRes && smsRes.sent,
+              reason: smsRes && smsRes.reason
+            });
+            if (smsRes && smsRes.sent) smsSentCount++;
+            reports.push(`[Ngày 7 - 0 Views] Bỏ qua Deal 50%, gửi nudge kiểm tra link: ${biz}`);
+          } else {
+            reports.push(`[Ngày 7 - 0 Views] Đã bỏ qua Deal 50% (Khách chưa xem demo): ${biz}`);
+          }
+          continue;
+        }
+
         const dealExpiresAt = new Date(now + 72 * 3600 * 1000).toISOString();
         const uP = new URLSearchParams();
         uP.append('metadata[deal_status]', 'flash_deal');
@@ -3680,7 +3929,7 @@ async function runScheduledAutopilot(env, options = {}) {
     // 4. Day 3-6 (Reminder SMS)
     if (daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
       if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
-        const reminderMsg = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
+        const reminderMsg = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} — 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it yet?`;
         const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day3_reminder');
@@ -3742,7 +3991,9 @@ export default {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, x-admin-key, stripe-signature',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache'
     };
 
     const { cfg: syncedCfg } = await loadSyncedRuntime(env);
@@ -3826,7 +4077,6 @@ export default {
       if (reqPath === '/index.html' || reqPath === '/') {
         const client = await findCustomerBySlugOrId(targetSlug, cfg.stripeSecretKey);
         if (client) {
-          await trackDemoView({ slug: targetSlug, request, env, client, stripeSecretKey: cfg.stripeSecretKey, ctx });
           if (client.stage === 'launched' && client.liveUrl && !forceBar) {
             const cleanLive = client.liveUrl.startsWith('http') ? client.liveUrl : `https://${client.liveUrl}`;
             return Response.redirect(cleanLive, 302);
@@ -3836,7 +4086,7 @@ export default {
           const isDealExpired = (client.dealStatus === 'expired' || client.dealStatus === 'purged');
           if (!isPaid && isDealExpired && !bypass) {
             return new Response(buildExpiredDemoHtml(client), {
-              status: 200,
+              status: 403,
               headers: {
                 'Content-Type': 'text/html; charset=utf-8',
                 'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
@@ -3865,7 +4115,7 @@ export default {
       if (isSubdomainDemo) {
         if (reqPath === '/index.html' || reqPath === '/') {
           return new Response(buildExpiredDemoHtml({ businessName: targetSlug }), {
-            status: 200,
+            status: 403,
             headers: {
               'Content-Type': 'text/html; charset=utf-8',
               'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
@@ -4003,6 +4253,8 @@ export default {
         params.append('cancel_url', cancelUrl);
         params.append('allow_promotion_codes', 'true');
         params.append('billing_address_collection', 'auto');
+        params.append('phone_number_collection[enabled]', 'true');
+        params.append('metadata[flow_type]', 'outbound');
 
         let isFlashDeal50 = (url.searchParams.get('deal') === 'flash50');
         if (cust && cust.metadata && cust.metadata.deal_status === 'flash_deal') {
@@ -4126,6 +4378,8 @@ export default {
         params.append('cancel_url', cancelUrl);
         params.append('allow_promotion_codes', 'true');
         params.append('billing_address_collection', 'auto');
+        params.append('phone_number_collection[enabled]', 'true');
+        params.append('metadata[flow_type]', 'inbound');
 
         if (env.STRIPE_PRICE_ID) {
           params.append('line_items[0][price]', env.STRIPE_PRICE_ID);
@@ -4196,7 +4450,7 @@ export default {
         const sessionData = await sessionRes.json();
         const email = (sessionData.customer_details && sessionData.customer_details.email) || sessionData.customer_email || (sessionData.metadata && sessionData.metadata.customer_email) || '';
         const name = (sessionData.metadata && sessionData.metadata.customer_name) || (sessionData.customer_details && sessionData.customer_details.name) || '';
-        const phone = (sessionData.metadata && sessionData.metadata.customer_phone) || (sessionData.customer_details && sessionData.customer_details.phone) || '';
+        const phone = (sessionData.customer_details && sessionData.customer_details.phone) || (sessionData.metadata && sessionData.metadata.customer_phone) || '';
 
         let cust = null;
         if (typeof sessionData.customer === 'string') {
@@ -4213,12 +4467,15 @@ export default {
         const alreadyWelcomed = cust && cust.metadata && cust.metadata.welcome_sent === 'true';
         let notifyRes = null;
         const isOutboundSession = (sessionData.metadata && sessionData.metadata.flow === 'outbound_demo') ||
+          (sessionData.metadata && sessionData.metadata.flow_type === 'outbound') ||
           (cust && cust.metadata && cust.metadata.flow_type === 'outbound');
+        const resolvedPhone = phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '';
         const clientObj = {
           id: (cust && cust.id) || (typeof sessionData.customer === 'string' ? sessionData.customer : ''),
           name: name || (cust && cust.name) || '',
           email: email || (cust && cust.email) || '',
-          phone: phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '',
+          phone: resolvedPhone,
+          displayPhone: (cust && cust.metadata && cust.metadata.display_phone) || resolvedPhone,
           businessName: (cust && cust.metadata && cust.metadata.business_name) || (sessionData.metadata && sessionData.metadata.customer_name) || '',
           demoSlug: (cust && cust.metadata && cust.metadata.demo_slug) || slugifyName((cust && cust.metadata && cust.metadata.business_name) || name || ''),
           demoUrl: (cust && cust.metadata && cust.metadata.demo_url) || (sessionData.metadata && sessionData.metadata.demo_url) || ''
@@ -4244,18 +4501,24 @@ export default {
           });
         }
 
-        if (!alreadyWelcomed && (email || phone)) {
+        if (!alreadyWelcomed && (email || resolvedPhone)) {
           notifyRes = await triggerLifecycleNotification({
             stage: isOutboundSession ? 'outbound_paid_confirmed' : 'payment_confirmed',
             client: clientObj,
             origin: url.origin,
             cfg
-          });
+          }).catch((err) => ({ smsResult: { sent: false }, emailResult: { sent: false, reason: (err && err.message) || 'Skipped' } }));
 
           const uParams = new URLSearchParams();
           if (clientObj.email) uParams.append('email', clientObj.email);
           if (clientObj.name) uParams.append('name', clientObj.name);
-          if (clientObj.phone) uParams.append('phone', clientObj.phone);
+          if (resolvedPhone) {
+            uParams.append('phone', resolvedPhone);
+            uParams.append('metadata[customer_phone]', resolvedPhone);
+            if (!cust || !cust.metadata || !cust.metadata.display_phone) {
+              uParams.append('metadata[display_phone]', resolvedPhone);
+            }
+          }
           uParams.append('metadata[studio]', 'WynnPages Australia');
           uParams.append('metadata[welcome_sent]', 'true');
           uParams.append('metadata[payment_status]', 'paid');
@@ -4277,7 +4540,20 @@ export default {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: uParams.toString()
-          });
+          }).catch(() => {});
+        } else if (resolvedPhone && cust && cust.id && !cust.phone) {
+          const phP = new URLSearchParams();
+          phP.append('phone', resolvedPhone);
+          phP.append('metadata[customer_phone]', resolvedPhone);
+          if (!cust.metadata || !cust.metadata.display_phone) phP.append('metadata[display_phone]', resolvedPhone);
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: phP.toString()
+          }).catch(() => {});
         }
 
         return new Response(
@@ -5178,10 +5454,42 @@ export default {
           if (sessionRes && sessionRes.ok) {
             checkoutSessionObj = await sessionRes.json().catch(() => null);
             if (!cust && checkoutSessionObj) {
-              const custId = typeof checkoutSessionObj.customer === 'string' ? checkoutSessionObj.customer : null;
+              const custId = (typeof checkoutSessionObj.customer === 'string' && checkoutSessionObj.customer) || (checkoutSessionObj.metadata && checkoutSessionObj.metadata.customer_id) || null;
               if (custId) cust = await findCustomerBySlugOrId(custId, cfg.stripeSecretKey);
-              if (!cust && checkoutSessionObj.customer_email) {
-                cust = await findStripeCustomerByEmail(checkoutSessionObj.customer_email, cfg.stripeSecretKey);
+              const sessEmail = (checkoutSessionObj.customer_details && checkoutSessionObj.customer_details.email) || checkoutSessionObj.customer_email || '';
+              if (!cust && sessEmail) {
+                cust = await findStripeCustomerByEmail(sessEmail, cfg.stripeSecretKey);
+              }
+              if (!cust && (checkoutSessionObj.payment_status === 'paid' || checkoutSessionObj.status === 'complete')) {
+                const cd = checkoutSessionObj.customer_details || {};
+                const meta = checkoutSessionObj.metadata || {};
+                const createP = new URLSearchParams();
+                if (cd.email || sessEmail) createP.append('email', cd.email || sessEmail);
+                if (cd.name || meta.customer_name) createP.append('name', cd.name || meta.customer_name);
+                if (cd.phone || meta.customer_phone) {
+                  const p = cd.phone || meta.customer_phone;
+                  createP.append('phone', p);
+                  createP.append('metadata[customer_phone]', p);
+                  createP.append('metadata[display_phone]', p);
+                }
+                createP.append('metadata[studio]', 'WynnPages Australia');
+                createP.append('metadata[flow_type]', 'outbound');
+                createP.append('metadata[stage]', 'outbound_paid');
+                createP.append('metadata[payment_status]', 'paid');
+                createP.append('metadata[checkout_session_id]', sessionId);
+                if (meta.customer_name) createP.append('metadata[business_name]', meta.customer_name);
+                if (meta.demo_url) createP.append('metadata[demo_url]', meta.demo_url);
+                const createdRes = await fetch('https://api.stripe.com/v1/customers', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  body: createP.toString()
+                }).catch(() => null);
+                if (createdRes && createdRes.ok) {
+                  cust = await createdRes.json().catch(() => null);
+                }
               }
             }
           }
@@ -5197,28 +5505,47 @@ export default {
           });
         }
 
-        // Auto-reconcile payment if checkoutSessionObj is paid
+        // Auto-reconcile payment + Stripe Checkout collected phone if checkoutSessionObj is paid
         if (checkoutSessionObj && (checkoutSessionObj.payment_status === 'paid' || checkoutSessionObj.status === 'complete')) {
-          if (!cust.metadata || cust.metadata.payment_status !== 'paid' || cust.metadata.stage !== 'outbound_paid') {
+          const checkoutPhone = (checkoutSessionObj.customer_details && checkoutSessionObj.customer_details.phone) || '';
+          const checkoutEmail = (checkoutSessionObj.customer_details && checkoutSessionObj.customer_details.email) || checkoutSessionObj.customer_email || '';
+          const needPaidUpdate = !cust.metadata || cust.metadata.payment_status !== 'paid' || cust.metadata.stage !== 'outbound_paid';
+          const needPhoneUpdate = Boolean(checkoutPhone && (!cust.phone || !cust.metadata?.customer_phone));
+          if (needPaidUpdate || needPhoneUpdate) {
             const uParams = new URLSearchParams();
             uParams.append('metadata[payment_status]', 'paid');
             uParams.append('metadata[stage]', 'outbound_paid');
             uParams.append('metadata[checkout_session_id]', sessionId);
-            if (cust.metadata && cust.metadata.welcome_sent !== 'true') {
+            if (checkoutPhone) {
+              uParams.append('phone', checkoutPhone);
+              uParams.append('metadata[customer_phone]', checkoutPhone);
+              if (!cust.metadata || !cust.metadata.display_phone) {
+                uParams.append('metadata[display_phone]', checkoutPhone);
+              }
+              cust.phone = checkoutPhone;
+              if (!cust.metadata) cust.metadata = {};
+              cust.metadata.customer_phone = checkoutPhone;
+              if (!cust.metadata.display_phone) cust.metadata.display_phone = checkoutPhone;
+            }
+            if (checkoutEmail && !cust.email) {
+              uParams.append('email', checkoutEmail);
+              cust.email = checkoutEmail;
+            }
+            if (!cust.metadata || cust.metadata.welcome_sent !== 'true') {
               uParams.append('metadata[welcome_sent]', 'true');
               runInBg(ctx, triggerLifecycleNotification({
                 stage: 'outbound_paid_confirmed',
                 client: {
                   id: cust.id,
                   name: cust.name || '',
-                  email: cust.email || checkoutSessionObj.customer_email || '',
+                  email: cust.email || checkoutEmail || '',
                   phone: cust.phone || (cust.metadata && cust.metadata.customer_phone) || '',
                   businessName: (cust.metadata && cust.metadata.business_name) || cust.name || '',
                   demoUrl: (cust.metadata && cust.metadata.demo_url) || ''
                 },
                 origin: url.origin,
                 cfg
-              }));
+              }).catch(() => ({ sent: false })));
             }
             runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
               method: 'POST',
@@ -5722,18 +6049,27 @@ export default {
                 const sEmail = (s.customer_details && s.customer_details.email) || s.customer_email || (s.metadata && s.metadata.customer_email);
                 return (sCust && sCust.toLowerCase() === c.id.toLowerCase()) ||
                        (sMetaCust && sMetaCust.toLowerCase() === c.id.toLowerCase()) ||
-                       (c.email && sEmail && sEmail.toLowerCase() === c.email.toLowerCase());
+                       (!sCust && !sMetaCust && c.email && sEmail && sEmail.toLowerCase() === c.email.toLowerCase());
               });
 
               if (matchedSession) {
+                const sessPhone = (matchedSession.customer_details && matchedSession.customer_details.phone) || '';
                 c.paymentStatus = 'paid';
-                c.stage = 'outbound_paid';
+                c.stage = c.flowType === 'outbound' ? 'outbound_paid' : (c.stage === 'checkout_started' ? 'paid' : c.stage);
                 c.checkoutSessionId = matchedSession.id;
+                if (sessPhone && !c.phone) {
+                  c.phone = sessPhone;
+                  if (!c.displayPhone) c.displayPhone = sessPhone;
+                }
 
                 const healP = new URLSearchParams();
                 healP.append('metadata[payment_status]', 'paid');
-                healP.append('metadata[stage]', 'outbound_paid');
+                healP.append('metadata[stage]', c.stage);
                 healP.append('metadata[checkout_session_id]', matchedSession.id);
+                if (sessPhone) {
+                  healP.append('phone', sessPhone);
+                  healP.append('metadata[customer_phone]', sessPhone);
+                }
                 runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
                   method: 'POST',
                   headers: {
@@ -5817,6 +6153,7 @@ export default {
       }
 
       runInBg(ctx, Promise.all([
+        captureAdminIp(request, env),
         ...clients.map((c) => ensureCloudflareSubdomain(c.demoSlug, env, cfg.cfApiToken)),
         ...clients.slice(0, 60).map((c) => upsertD1Client(env, c))
       ]));
@@ -5838,7 +6175,7 @@ export default {
           },
           clients
         }),
-        { status: 200, headers: corsHeaders }
+        { status: 200, headers: buildAdminHeaders(corsHeaders) }
       );
     }
 
@@ -5880,6 +6217,7 @@ export default {
           return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
         }
         const rt = await loadSyncedRuntime(env);
+        runInBg(ctx, captureAdminIp(request, env));
         return new Response(JSON.stringify({
           ok: true,
           settings: rt.settings,
@@ -5895,7 +6233,7 @@ export default {
             cfToken: Boolean(rt.cfg.cfApiToken),
             gdrive: Boolean(rt.cfg.googleDriveWebhookUrl)
           }
-        }), { status: 200, headers: corsHeaders });
+        }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
       }
 
       const body = await request.json().catch(() => ({}));
@@ -5905,6 +6243,7 @@ export default {
       }
       const incoming = (body.settings && typeof body.settings === 'object') ? body.settings : body;
       const saved = await saveSyncedSettings(env, incoming, { clearEmpty: body.clearEmpty !== false });
+      await captureAdminIp(request, env);
       const rt = await loadSyncedRuntime(env);
       return new Response(JSON.stringify({
         ok: true,
@@ -5921,7 +6260,7 @@ export default {
           cfToken: Boolean(rt.cfg.cfApiToken),
           gdrive: Boolean(rt.cfg.googleDriveWebhookUrl)
         }
-      }), { status: 200, headers: corsHeaders });
+      }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     // 5b. Client Records REST API (GET/POST/PUT/DELETE /api/clients — D1 + Stripe Sync)
@@ -6035,15 +6374,75 @@ export default {
         if (!delId) {
           return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400, headers: corsHeaders });
         }
+        const db = getD1(env);
+        let slugToClean = '';
+        if (db) {
+          await ensureD1Schema(env);
+          const row = await db.prepare('SELECT demo_slug FROM clients WHERE id = ?').bind(delId).first().catch(() => null);
+          if (row && row.demo_slug) slugToClean = slugifyName(row.demo_slug);
+        }
         if (delId.startsWith('cus_') && cfg.stripeSecretKey) {
           runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(delId)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
           }));
         }
+        if (env && env.WYNN_KV && slugToClean) {
+          runInBg(ctx, Promise.all([
+            env.WYNN_KV.delete(`demo_views:${slugToClean}`).catch(() => {}),
+            env.WYNN_KV.delete(`demo_notify_lock:${slugToClean}`).catch(() => {}),
+            env.WYNN_KV.delete(`site_meta:${slugToClean}`).catch(() => {})
+          ]));
+        }
         await deleteD1Client(env, delId);
         return new Response(JSON.stringify({ ok: true, deletedId: delId }), { status: 200, headers: corsHeaders });
       }
+    }
+
+    // 5b-1. Public Demo Status Endpoint for claim-widget.js (GET /api/demo-status)
+    if (url.pathname === '/api/demo-status' && request.method === 'GET') {
+      const qCid = (url.searchParams.get('cid') || '').trim();
+      const qSlug = slugifyName(url.searchParams.get('slug') || '');
+      let clientObj = null;
+      const db = getD1(env);
+      if (db && (qCid || qSlug)) {
+        await ensureD1Schema(env);
+        const row = qCid
+          ? await db.prepare('SELECT id, email, business_name, demo_slug, stage, payment_status, metadata_json FROM clients WHERE id = ? LIMIT 1').bind(qCid).first().catch(() => null)
+          : await db.prepare('SELECT id, email, business_name, demo_slug, stage, payment_status, metadata_json FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(qSlug).first().catch(() => null);
+        if (row) {
+          let metaObj = {};
+          try { metaObj = JSON.parse(row.metadata_json || '{}'); } catch (_) {}
+          clientObj = {
+            ...metaObj,
+            id: row.id,
+            email: row.email || metaObj.email || '',
+            businessName: row.business_name || metaObj.businessName || '',
+            demoSlug: row.demo_slug || metaObj.demoSlug || qSlug,
+            stage: row.stage || metaObj.stage || '',
+            paymentStatus: row.payment_status || metaObj.paymentStatus || 'unpaid'
+          };
+        }
+      }
+      if (!clientObj && cfg.stripeSecretKey && (qCid || qSlug)) {
+        clientObj = await findCustomerBySlugOrId(qCid || qSlug, cfg.stripeSecretKey).catch(() => null);
+      }
+      if (!clientObj || clientObj.deleted) {
+        return new Response(JSON.stringify({ ok: true, found: false, isPaid: false }), { status: 200, headers: corsHeaders });
+      }
+      const isPaid = clientObj.paymentStatus === 'paid' || clientObj.stage === 'outbound_paid' || clientObj.stage === 'launched' || clientObj.stage === 'site_launched';
+      const isFlashDeal = !isPaid && clientObj.dealStatus === 'flash_deal' && clientObj.dealExpiresAt && new Date(clientObj.dealExpiresAt).getTime() > Date.now();
+      return new Response(JSON.stringify({
+        ok: true,
+        found: true,
+        isPaid,
+        isFlashDeal,
+        dealExpiresAt: clientObj.dealExpiresAt || '',
+        clientId: clientObj.id || qCid,
+        email: clientObj.email || '',
+        businessName: clientObj.businessName || clientObj.name || '',
+        slug: clientObj.demoSlug || qSlug
+      }), { status: 200, headers: corsHeaders });
     }
 
     // 5b-2. Unified Demo View & Stripe Click Tracker (GET/POST /api/track)
@@ -6060,29 +6459,108 @@ export default {
         return new Response(JSON.stringify({ error: 'Missing slug or clientId' }), { status: 400, headers: corsHeaders });
       }
 
-      const ua = (request.headers.get('user-agent') || '').toLowerCase();
-      if (/bot|crawler|spider|facebookexternalhit|WhatsApp|TelegramBot|Slackbot|Discordbot|LinkedInBot|Twitterbot|Googlebot|bingbot|Applebot|curl/i.test(ua)) {
+      // 1. Strict Bot & Crawler Filtering
+      const uaRaw = request.headers.get('user-agent') || '';
+      const ua = uaRaw.toLowerCase();
+      if (!ua || isBotUserAgent(uaRaw)) {
         return new Response(JSON.stringify({ ok: true, ignored: 'bot' }), { status: 200, headers: corsHeaders });
       }
+
+      // 2. Strict Admin Exclusion (Cross-subdomain cookie + ?preview=admin + recorded admin IPs)
+      const clientIp = getRequestClientIp(request);
+      const previewFlag = (body.preview || body.admin || url.searchParams.get('preview') || url.searchParams.get('admin') || '').toString().trim();
+      if (
+        requestHasAdminCookie(request) ||
+        previewFlag === 'admin' ||
+        previewFlag === '1' ||
+        body.isAdmin === true ||
+        (clientIp && Array.isArray(cfg.adminIpList) && cfg.adminIpList.includes(clientIp))
+      ) {
+        return new Response(JSON.stringify({ ok: true, ignored: 'admin' }), { status: 200, headers: corsHeaders });
+      }
+
+      // 3. Verify client exists in active DB (D1 or Stripe) and is NOT deleted or locked
+      const db = getD1(env);
+      let d1Client = null;
+      if (db) {
+        await ensureD1Schema(env);
+        if (rawCid) {
+          d1Client = await db.prepare('SELECT id, demo_slug, business_name, name, stage, payment_status, view_count, claim_click_count, metadata_json FROM clients WHERE id = ? LIMIT 1').bind(String(rawCid)).first().catch(() => null);
+        }
+        if (!d1Client && cleanSlug) {
+          d1Client = await db.prepare('SELECT id, demo_slug, business_name, name, stage, payment_status, view_count, claim_click_count, metadata_json FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cleanSlug).first().catch(() => null);
+        }
+      }
+
+      let stripeClient = null;
+      if (cfg.stripeSecretKey) {
+        stripeClient = await findCustomerBySlugOrId(rawCid || cleanSlug, cfg.stripeSecretKey).catch(() => null);
+      }
+
+      // If client was deleted from Stripe/DB, return 404 immediately & DO NOT notify Telegram
+      let d1DealStatus = '';
+      if (d1Client && d1Client.metadata_json) {
+        try {
+          const parsedD1 = JSON.parse(d1Client.metadata_json);
+          d1DealStatus = parsedD1.dealStatus || '';
+        } catch (_) {}
+      }
+      const effectiveClient = stripeClient || (d1Client ? {
+        id: d1Client.id,
+        demoSlug: d1Client.demo_slug || cleanSlug,
+        businessName: d1Client.business_name || d1Client.name || cleanSlug,
+        name: d1Client.name || '',
+        stage: d1Client.stage || '',
+        paymentStatus: d1Client.payment_status || 'unpaid',
+        dealStatus: d1DealStatus
+      } : null);
+
+      if (
+        !effectiveClient ||
+        effectiveClient.deleted ||
+        effectiveClient.dealStatus === 'expired' ||
+        effectiveClient.dealStatus === 'purged'
+      ) {
+        return new Response(JSON.stringify({ ok: false, error: 'Client not found or demo inactive' }), { status: 404, headers: corsHeaders });
+      }
+
+      const resolvedSlug = slugifyName(effectiveClient.demoSlug || cleanSlug);
       const device = body.device || (/iphone|ipad|ipod|android|mobile/.test(ua) ? 'Mobile' : 'Desktop');
 
+      // 4. Rate-limit demo_view to max 1 count + Telegram alert per unique IP per client every 6 hours (21600s)
+      const ipSafe = (clientIp || 'unknown').replace(/[^a-zA-Z0-9._:-]/g, '_');
+      if (eventType === 'demo_view' && env && env.WYNN_KV && resolvedSlug) {
+        const ipLockKey = `demo_view_ip_lock:${resolvedSlug}:${ipSafe}`;
+        const existingIpLock = await env.WYNN_KV.get(ipLockKey).catch(() => null);
+        if (existingIpLock) {
+          return new Response(JSON.stringify({
+            ok: true,
+            ignored: 'rate_limited_6h',
+            slug: resolvedSlug,
+            clientId: effectiveClient.id,
+            viewCount: Number((d1Client && d1Client.view_count) || effectiveClient.demoViewCount || 0)
+          }), { status: 200, headers: corsHeaders });
+        }
+        await env.WYNN_KV.put(ipLockKey, new Date().toISOString(), { expirationTtl: 21600 }).catch(() => {});
+      }
+
       const d1Track = await recordD1TrackingEvent(env, {
-        slug: cleanSlug,
-        clientId: rawCid,
+        slug: resolvedSlug,
+        clientId: effectiveClient.id || rawCid,
         eventType,
         device,
         userAgent: ua,
-        businessName: body.businessName || ''
+        businessName: effectiveClient.businessName || effectiveClient.name || body.businessName || '',
+        knownClient: effectiveClient
       });
 
-      const resolvedSlug = d1Track.slug || cleanSlug;
+      if (d1Track.notFound) {
+        return new Response(JSON.stringify({ ok: false, error: 'Client not found' }), { status: 404, headers: corsHeaders });
+      }
+
       const trackBgPromise = (async () => {
         try {
-          let targetClient = null;
-          if (cfg.stripeSecretKey) {
-            targetClient = await findCustomerBySlugOrId(rawCid || resolvedSlug, cfg.stripeSecretKey).catch(() => null);
-          }
-          const bizName = (targetClient && (targetClient.businessName || targetClient.name)) || d1Track.businessName || resolvedSlug;
+          const bizName = effectiveClient.businessName || effectiveClient.name || d1Track.businessName || resolvedSlug;
 
           // Mirror to KV demo_views cache
           if (env && env.WYNN_KV && resolvedSlug) {
@@ -6102,16 +6580,16 @@ export default {
           }
 
           // Mirror counters into Stripe Customer metadata
-          if (targetClient && targetClient.id && cfg.stripeSecretKey) {
+          if (effectiveClient && effectiveClient.id && String(effectiveClient.id).startsWith('cus_') && cfg.stripeSecretKey) {
             const uP = new URLSearchParams();
             uP.append('metadata[demo_view_count]', String(d1Track.viewCount || 1));
             uP.append('metadata[claim_click_count]', String(d1Track.claimClickCount || 0));
             uP.append('metadata[demo_last_viewed_at]', d1Track.lastViewedAt || new Date().toISOString());
             uP.append('metadata[demo_viewer_device]', device);
-            if (!targetClient.demoFirstViewedAt) {
+            if (!effectiveClient.demoFirstViewedAt) {
               uP.append('metadata[demo_first_viewed_at]', d1Track.lastViewedAt || new Date().toISOString());
             }
-            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(targetClient.id)}`, {
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(effectiveClient.id)}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${cfg.stripeSecretKey}`,
@@ -6128,30 +6606,23 @@ export default {
               message: `${bizName} vừa bấm nút Claim / Mua website trên Demo (${device})!`,
               clientName: bizName,
               slug: resolvedSlug,
-              dedupeKey: `claim_click_lock:${resolvedSlug}`,
+              dedupeKey: `claim_click_lock:${resolvedSlug}:${ipSafe}`,
               dedupeTtl: 120,
               env,
               ctx
             });
           } else {
-            let shouldNotify = true;
-            if (env && env.WYNN_KV && resolvedSlug) {
-              const lockKey = `demo_notify_lock:${resolvedSlug}`;
-              const locked = await env.WYNN_KV.get(lockKey).catch(() => null);
-              if (locked) shouldNotify = false;
-              else await env.WYNN_KV.put(lockKey, new Date().toISOString(), { expirationTtl: 1800 }).catch(() => {});
-            }
-            if (shouldNotify) {
-              await recordActivityAndNotify({
-                type: 'demo_viewed',
-                title: '👀 Khách Đang Xem Demo!',
-                message: `${bizName} vừa mở xem bản Demo của bạn! (${device})`,
-                clientName: bizName,
-                slug: resolvedSlug,
-                env,
-                ctx
-              });
-            }
+            await recordActivityAndNotify({
+              type: 'demo_viewed',
+              title: '👀 Khách Đang Xem Demo!',
+              message: `${bizName} vừa mở xem bản Demo của bạn! (${device})`,
+              clientName: bizName,
+              slug: resolvedSlug,
+              dedupeKey: `demo_notify_lock:${resolvedSlug}:${ipSafe}`,
+              dedupeTtl: 21600,
+              env,
+              ctx
+            });
           }
         } catch (bgErr) {
           console.error('[track bg error]', bgErr);
@@ -6192,7 +6663,8 @@ export default {
         const customerId = sessionObj.customer || (sessionObj.metadata && sessionObj.metadata.customer_id) || '';
         const sessionEmail = sessionObj.customer_email || (sessionObj.customer_details && sessionObj.customer_details.email) || '';
         const sessionName = (sessionObj.customer_details && sessionObj.customer_details.name) || '';
-        const flowType = (sessionObj.metadata && sessionObj.metadata.flow_type) || 'inbound';
+        const sessionPhone = (sessionObj.customer_details && sessionObj.customer_details.phone) || (sessionObj.metadata && sessionObj.metadata.customer_phone) || '';
+        const flowType = (sessionObj.metadata && sessionObj.metadata.flow_type) || ((sessionObj.metadata && sessionObj.metadata.flow === 'outbound_demo') ? 'outbound' : 'inbound');
 
         const webhookJob = (async () => {
           let cust = null;
@@ -6212,6 +6684,14 @@ export default {
               uP.append('metadata[stage]', 'paid');
             }
             if (sessionEmail && !cust.email) uP.append('email', sessionEmail);
+            if (sessionPhone) {
+              uP.append('phone', sessionPhone);
+              uP.append('metadata[customer_phone]', sessionPhone);
+              if (!cust.metadata || !cust.metadata.display_phone) uP.append('metadata[display_phone]', sessionPhone);
+              cust.phone = sessionPhone;
+              if (!cust.metadata) cust.metadata = {};
+              cust.metadata.customer_phone = sessionPhone;
+            }
             await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
               method: 'POST',
               headers: {
@@ -6226,8 +6706,10 @@ export default {
             id: customerId || `wh_${sessionObj.id}`,
             email: sessionEmail,
             name: sessionName,
-            businessName: (sessionObj.metadata && sessionObj.metadata.business_name) || sessionName || sessionEmail || 'New Client',
-            demoSlug: slugifyName((sessionObj.metadata && sessionObj.metadata.demo_slug) || sessionName || ''),
+            phone: sessionPhone,
+            displayPhone: sessionPhone,
+            businessName: (sessionObj.metadata && sessionObj.metadata.business_name) || (sessionObj.metadata && sessionObj.metadata.customer_name) || sessionName || sessionEmail || 'New Client',
+            demoSlug: slugifyName((sessionObj.metadata && sessionObj.metadata.demo_slug) || (sessionObj.metadata && sessionObj.metadata.customer_name) || sessionName || ''),
             paymentStatus: 'paid',
             stage: flowType === 'outbound' ? 'outbound_paid' : 'paid',
             flowType
@@ -6957,6 +7439,8 @@ export default {
                   env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => { }),
                   env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => { }),
                   env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => { }),
+                  env.WYNN_KV.delete(`demo_views:${cleanSlug}`).catch(() => { }),
+                  env.WYNN_KV.delete(`demo_notify_lock:${cleanSlug}`).catch(() => { }),
                   env.WYNN_KV.delete(metaKey).catch(() => { })
                 );
                 if (prevMeta && Array.isArray(prevMeta.filesList)) {
@@ -6995,6 +7479,73 @@ export default {
           const dealExpiresAt = new Date(now + hours * 3600 * 1000).toISOString();
           const dealActivatedAt = new Date(now).toISOString();
 
+          let custToNotify = null;
+          const preRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (preRes.ok) custToNotify = formatCustomerRecord(await preRes.json());
+
+          const cleanSlugCheck = slugifyName((custToNotify && (custToNotify.demoSlug || custToNotify.businessName)) || '');
+          let realViews = Number((custToNotify && custToNotify.demoViewCount) || 0);
+          const dbCheck = getD1(env);
+          if (dbCheck) {
+            await ensureD1Schema(env);
+            const rowV = await dbCheck.prepare('SELECT view_count FROM clients WHERE id = ?').bind(customerId).first().catch(() => null);
+            if (rowV && rowV.view_count) realViews = Math.max(realViews, Number(rowV.view_count));
+          }
+          if (env && env.WYNN_KV && cleanSlugCheck) {
+            const kvV = await env.WYNN_KV.get(`demo_views:${cleanSlugCheck}`, 'json').catch(() => null);
+            if (kvV && kvV.viewCount) realViews = Math.max(realViews, Number(kvV.viewCount));
+          }
+
+          if (realViews === 0) {
+            let nudgeRes = null;
+            let nudgeText = '';
+            const biz = (custToNotify && (custToNotify.businessName || custToNotify.name)) || 'Boutique';
+            const demoLink = (custToNotify && (custToNotify.demoUrl || custToNotify.brandedDemoUrl)) || (cleanSlugCheck ? `https://${cleanSlugCheck}.wynnpages.com.au` : '');
+            const uP0 = new URLSearchParams();
+            uP0.append('metadata[nurture_step]', 'day7_nudge_0views');
+            if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
+              nudgeText = `Hi ${biz}, WynnPages Studio here — just making sure you saw the bespoke website preview we crafted for ${biz}: ${demoLink} . No rush at all, would love to know your thoughts!`;
+              nudgeRes = await sendClickSendSms({ to: custToNotify.phone, message: nudgeText, cfg: effectiveCfg });
+              if (nudgeRes) {
+                const nowIso0 = new Date().toISOString();
+                const logMsg0 = nudgeRes.sent
+                  ? `OK (${nudgeRes.to || custToNotify.phone}) [day7_nudge_0views] @ ${nowIso0}`
+                  : `ERR: ${(nudgeRes && nudgeRes.reason) || 'Failed'} [day7_nudge_0views]`;
+                uP0.append('metadata[last_sms_log]', logMsg0.slice(0, 480));
+                await recordSmsHistory({
+                  customerId,
+                  env,
+                  stripeSecretKey: effectiveCfg.stripeSecretKey,
+                  type: 'day7_nudge_0views',
+                  to: custToNotify.phone,
+                  text: nudgeText,
+                  status: nudgeRes.sent,
+                  reason: nudgeRes.reason
+                });
+              }
+            }
+            const patch0 = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uP0.toString()
+            });
+            let updated0 = custToNotify;
+            if (patch0.ok) updated0 = formatCustomerRecord(await patch0.json());
+            if (updated0) await upsertD1Client(env, updated0);
+            return new Response(JSON.stringify({
+              ok: true,
+              skippedDealSms: true,
+              reason: 'Client has 0 demo views — skipped 50% Deal SMS and sent gentle preview nudge instead.',
+              client: updated0,
+              notifyRes: nudgeRes
+            }), { status: 200, headers: corsHeaders });
+          }
+
           let notifyRes = null;
           let logMsg = '';
           const uP = new URLSearchParams();
@@ -7003,37 +7554,28 @@ export default {
           uP.append('metadata[deal_expires_at]', dealExpiresAt);
           uP.append('metadata[nurture_step]', 'day7_deal_active');
 
-          // Send SMS first if notify requested, so we can save last_sms_log in the same customer update!
-          if (body.notify) {
-            let custToNotify = null;
-            const preRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
-              headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
-            });
-            if (preRes.ok) custToNotify = formatCustomerRecord(await preRes.json());
-
-            if (custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-              const biz = custToNotify.businessName || custToNotify.name || 'Boutique';
-              const demoLink = custToNotify.demoUrl || custToNotify.brandedDemoUrl || (custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${custToNotify.id}.wynnpages.com.au`);
-              const niche = getIndustryNicheTerms(custToNotify.industry);
-              const text = `Hi ${biz}, WynnPages Studio has opened a 72h ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
-              notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
-              if (notifyRes) {
-                const nowIso = new Date().toISOString();
-                logMsg = notifyRes.sent
-                  ? `OK (${notifyRes.to || custToNotify.phone}) [deal_50_active] @ ${nowIso}`
-                  : `ERR: ${(notifyRes && notifyRes.reason) || 'Failed'} [deal_50_active]`;
-                uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
-                await recordSmsHistory({
-                  customerId,
-                  env,
-                  stripeSecretKey: effectiveCfg.stripeSecretKey,
-                  type: 'deal_50_active',
-                  to: custToNotify.phone,
-                  text,
-                  status: notifyRes.sent,
-                  reason: notifyRes.reason
-                });
-              }
+          if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
+            const biz = custToNotify.businessName || custToNotify.name || 'Boutique';
+            const demoLink = custToNotify.demoUrl || custToNotify.brandedDemoUrl || (custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${custToNotify.id}.wynnpages.com.au`);
+            const niche = getIndustryNicheTerms(custToNotify.industry);
+            const text = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
+            notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
+            if (notifyRes) {
+              const nowIso = new Date().toISOString();
+              logMsg = notifyRes.sent
+                ? `OK (${notifyRes.to || custToNotify.phone}) [deal_50_active] @ ${nowIso}`
+                : `ERR: ${(notifyRes && notifyRes.reason) || 'Failed'} [deal_50_active]`;
+              uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+              await recordSmsHistory({
+                customerId,
+                env,
+                stripeSecretKey: effectiveCfg.stripeSecretKey,
+                type: 'deal_50_active',
+                to: custToNotify.phone,
+                text,
+                status: notifyRes.sent,
+                reason: notifyRes.reason
+              });
             }
           }
 
@@ -7192,18 +7734,36 @@ export default {
             return new Response(JSON.stringify({ error: 'Khách hàng này chưa có số điện thoại để gửi SMS!' }), { status: 400, headers: corsHeaders });
           }
 
-          const templateKey = body.templateKey || 'day3_reminder';
+          let templateKey = body.templateKey || 'day3_reminder';
           const biz = formatted.businessName || formatted.name || 'Boutique';
           const demoUrl = formatted.demoUrl || formatted.brandedDemoUrl || (formatted.demoSlug ? `https://${formatted.demoSlug}.wynnpages.com.au` : `https://${formatted.id}.wynnpages.com.au`);
           const niche = getIndustryNicheTerms(formatted.industry);
-          let smsText = '';
 
+          let realViews = Number(formatted.demoViewCount || 0);
+          const cleanSlugN = slugifyName(formatted.demoSlug || biz);
+          const dbN = getD1(env);
+          if (dbN) {
+            await ensureD1Schema(env);
+            const rN = await dbN.prepare('SELECT view_count FROM clients WHERE id = ?').bind(customerId).first().catch(() => null);
+            if (rN && rN.view_count) realViews = Math.max(realViews, Number(rN.view_count));
+          }
+          if (env && env.WYNN_KV && cleanSlugN) {
+            const kvN = await env.WYNN_KV.get(`demo_views:${cleanSlugN}`, 'json').catch(() => null);
+            if (kvN && kvN.viewCount) realViews = Math.max(realViews, Number(kvN.viewCount));
+          }
+
+          let smsText = '';
           if (templateKey === 'day3_reminder') {
-            smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} . 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it?`;
+            smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} — 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it yet?`;
           } else if (templateKey === 'day7_deal') {
-            smsText = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
+            if (realViews === 0) {
+              templateKey = 'day7_nudge_0views';
+              smsText = `Hi ${biz}, WynnPages Studio here — just making sure you saw the bespoke website preview we crafted for ${biz}: ${demoUrl} . No rush at all, would love your feedback!`;
+            } else {
+              smsText = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
+            }
           } else if (templateKey === 'day9_warning') {
-            smsText = `Final 24h Notice: The $299 AUD sponsorship deal and bespoke demo website for ${biz} will be permanently archived tomorrow. View & claim here: ${demoUrl} — WynnPages Studio`;
+            smsText = `Final 24h Notice: The exclusive preview and bespoke website crafted for ${biz} is scheduled to be archived tomorrow. View & claim your site here: ${demoUrl} — WynnPages Studio`;
           } else {
             smsText = (body.customMessage || '').trim();
           }
@@ -7637,6 +8197,10 @@ export default {
             uParams.append('metadata[places_photos]', phStr.slice(0, 490));
           }
 
+          if (!customerId) {
+            uParams.append('metadata[demo_view_count]', '0');
+            uParams.append('metadata[claim_click_count]', '0');
+          }
           const stageMap = {
             payment_confirmed: 'paid',
             brief_completed: 'brief_completed',

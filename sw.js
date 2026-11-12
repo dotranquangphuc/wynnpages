@@ -1,5 +1,5 @@
 // WynnPages Studio — Service Worker for iOS PWA & Push Notifications
-const CACHE_NAME = 'wynn-studio-pwa-v3';
+const CACHE_NAME = 'wynn-studio-pwa-v4';
 const PRECACHE_ASSETS = [
   '/admin.html',
   '/manifest.json',
