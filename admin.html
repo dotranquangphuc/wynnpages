@@ -880,6 +880,16 @@
             <input type="password" id="cfg-stripe-webhook" placeholder="whsec_... Stripe Webhook Signing Secret (Tuỳ chọn)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
           </div>
         </div>
+
+        <div class="p-4 rounded-2xl bg-[#fcf9f3] border border-[#e5dec9] space-y-2.5">
+          <p class="font-bold text-stone-900">9. Thông Tin Hoá Đơn Thuế Úc (Tax Invoice Email)</p>
+          <p class="text-stone-500 leading-relaxed">
+            Nhập số <strong>Australian Business Number (ABN)</strong> nếu muốn hiển thị tự động trên Email Tax Invoice gửi khách sau khi thanh toán.
+          </p>
+          <div class="space-y-2 pt-1">
+            <input type="text" id="cfg-abn" placeholder="ABN (VD: 12 345 678 901 — Tuỳ chọn)" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs font-mono">
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
@@ -5239,6 +5249,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       const cfgGeminiKey = document.getElementById('cfg-gemini-key');
       const cfgStripeKey = document.getElementById('cfg-stripe-key');
       const cfgStripeWebhook = document.getElementById('cfg-stripe-webhook');
+      const cfgAbn = document.getElementById('cfg-abn');
 
       function populateSettingsModalFields() {
         cfgClicksendUser.value = localCreds.clicksendUsername || '';
@@ -5252,6 +5263,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (cfgGeminiKey) cfgGeminiKey.value = localCreds.geminiApiKey || '';
         if (cfgStripeKey) cfgStripeKey.value = localCreds.stripeSecretKey || '';
         if (cfgStripeWebhook) cfgStripeWebhook.value = localCreds.stripeWebhookSecret || '';
+        if (cfgAbn) cfgAbn.value = localCreds.abn || '';
         const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
         const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
         if (cfgTgToken) cfgTgToken.value = localCreds.telegramBotToken || '';
@@ -5289,7 +5301,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             googlePlacesApiKey: cfgGooglePlacesKey ? cfgGooglePlacesKey.value.trim() : '',
             geminiApiKey: cfgGeminiKey ? cfgGeminiKey.value.trim() : '',
             telegramBotToken: cfgTgToken ? cfgTgToken.value.trim() : '',
-            telegramChatId: cfgTgChat ? cfgTgChat.value.trim() : ''
+            telegramChatId: cfgTgChat ? cfgTgChat.value.trim() : '',
+            abn: cfgAbn ? cfgAbn.value.trim() : ''
           };
 
           const res = await fetch(`/api/settings?key=${encodeURIComponent(adminKey)}`, {
@@ -7374,9 +7387,20 @@ https://wynnpages.com.au`;
         });
       }
 
-      // Initial feed load & 30s background poll
-      fetchActivityFeed();
-      setInterval(fetchActivityFeed, 30000);
+      // Initial feed load + refresh only on tab focus / visibility return (cooldown 60s to avoid polling)
+      let _lastActivityFetchAt = 0;
+      function refreshFeedIfVisible(force = false) {
+        if (document.hidden && !force) return;
+        const now = Date.now();
+        if (!force && now - _lastActivityFetchAt < 60000) return;
+        _lastActivityFetchAt = now;
+        fetchActivityFeed();
+      }
+      refreshFeedIfVisible(true);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) refreshFeedIfVisible(false);
+      });
+      window.addEventListener('focus', () => refreshFeedIfVisible(false));
 
       // Register PWA Service Worker for iOS & Desktop
       if ('serviceWorker' in navigator) {

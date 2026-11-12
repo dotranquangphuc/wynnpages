@@ -35,19 +35,20 @@
     'transform:translateX(-50%) translateY(0)',
     'z-index:2147483647',
     'width:calc(100% - 28px)',
-    'max-width:740px',
-    'background:rgba(35,31,26,0.96)',
+    'max-width:760px',
+    'background:rgba(24,19,17,0.82)',
     'backdrop-filter:blur(16px)',
     '-webkit-backdrop-filter:blur(16px)',
     'color:#fcf9f3',
-    'border:1px solid rgba(232,185,72,0.35)',
+    'border:1px solid rgba(255,255,255,0.14)',
     'border-radius:20px',
-    'padding:12px 16px 12px 20px',
-    'box-shadow:0 20px 50px rgba(0,0,0,0.35)',
+    'padding:24px 18px 12px 18px',
+    'box-shadow:0 20px 50px rgba(0,0,0,0.45)',
     'display:flex',
+    'flex-wrap:wrap',
     'align-items:center',
     'justify-content:space-between',
-    'gap:14px',
+    'gap:12px 16px',
     'font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","Segoe UI",Roboto,sans-serif',
     'box-sizing:border-box',
     'transition:transform 0.35s cubic-bezier(0.16,1,0.3,1),opacity 0.25s ease'
@@ -56,38 +57,52 @@
   const restoreTab = document.createElement('button');
   restoreTab.id = 'wynnpages-claim-restore';
   restoreTab.type = 'button';
-  restoreTab.innerHTML = '<span>⌃</span><span>Claim Website</span>';
+  restoreTab.setAttribute('aria-label', 'Expand website banner');
+  restoreTab.innerHTML = '<svg width="14" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>Claim This Website &mdash; $599</span>';
   restoreTab.style.cssText = [
     'position:fixed',
-    'right:16px',
+    'left:50%',
     'bottom:calc(16px + env(safe-area-inset-bottom,0px))',
     'z-index:2147483646',
     'display:inline-flex',
     'align-items:center',
-    'gap:6px',
-    'background:rgba(26,23,21,0.94)',
-    'color:#fbdeb9',
-    'border:1px solid rgba(232,185,72,0.55)',
+    'justify-content:center',
+    'gap:8px',
+    'background:rgba(24,19,17,0.82)',
+    'backdrop-filter:blur(16px)',
+    '-webkit-backdrop-filter:blur(16px)',
+    'color:rgba(255,255,255,0.94)',
+    'border:1px solid rgba(255,255,255,0.14)',
     'border-radius:9999px',
-    'padding:8px 14px',
+    'padding:9px 18px',
     'font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","Segoe UI",Roboto,sans-serif',
     'font-size:12px',
-    'font-weight:800',
-    'box-shadow:0 12px 28px rgba(0,0,0,0.45)',
+    'font-weight:700',
+    'letter-spacing:0.01em',
+    'white-space:nowrap',
+    'box-shadow:0 20px 50px rgba(0,0,0,0.45)',
     'cursor:pointer',
     'opacity:0',
-    'transform:translateY(16px)',
+    'transform:translateX(-50%) translateY(16px)',
     'pointer-events:none',
     'transition:all 0.28s cubic-bezier(0.16,1,0.3,1)'
   ].join(';');
 
   function renderBarHtml(isPaid) {
+    const collapseHandleHtml = `
+      <button type="button" id="wynnpages-claim-collapse" title="Minimise bar" aria-label="Minimise bar" style="position:absolute;top:4px;left:50%;transform:translateX(-50%);background:transparent;border:none;padding:3px 18px;color:rgba(255,255,255,0.6);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color 0.2s ease,opacity 0.2s ease;line-height:1;">
+        <svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
+      </button>
+    `;
+    const isNarrow = window.innerWidth <= 640;
+    bar.style.padding = isNarrow ? '24px 14px 12px 14px' : '22px 18px 14px 18px';
     if (isPaid) {
-      bar.style.background = 'rgba(16,31,24,0.96)';
-      bar.style.border = '1.5px solid rgba(52,211,153,0.55)';
-      restoreTab.innerHTML = '<span>⌃</span><span>Next Step</span>';
+      bar.style.background = 'rgba(16,31,24,0.84)';
+      bar.style.border = '1.5px solid rgba(52,211,153,0.45)';
+      restoreTab.innerHTML = '<svg width="14" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>Next Step &bull; Setup Content</span>';
       bar.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        ${collapseHandleHtml}
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 240px;">
           <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:12px;background:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;border:1px solid rgba(167,243,208,0.55);overflow:hidden;padding:3.5px;" title="Visit WynnPages Studio (wynnpages.com.au)">
             <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" style="width:100%;height:100%;object-fit:contain;display:block;">
           </a>
@@ -96,16 +111,16 @@
             <div style="font-size:14.5px;font-weight:800;color:#ffffff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎉 This website has been officially claimed!</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          <a href="${revisionHref}" style="background:linear-gradient(135deg,#059669 0%,#047857 100%);color:#ffffff;text-decoration:none;font-size:12.5px;font-weight:800;padding:11px 18px;border-radius:13px;white-space:nowrap;flex-shrink:0;box-shadow:0 6px 18px rgba(5,150,105,0.45);display:inline-flex;align-items:center;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;${isNarrow ? 'width:100%;' : ''}">
+          <a href="${revisionHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#059669 0%,#047857 100%);color:#ffffff;text-decoration:none;font-size:12.5px;font-weight:800;padding:11px 18px;border-radius:13px;white-space:normal;flex-shrink:0;box-shadow:0 6px 18px rgba(5,150,105,0.45);display:inline-flex;align-items:center;gap:6px;">
             <span>👉 Click here to proceed to the next step (Customise Content &amp; Domain Setup)</span>
           </a>
-          <button type="button" id="wynnpages-claim-collapse" title="Minimise bar" aria-label="Minimise bar" style="width:30px;height:30px;border-radius:10px;border:1px solid rgba(229,222,201,0.24);background:rgba(255,255,255,0.08);color:#e5dec9;font-size:14px;font-weight:800;cursor:pointer;">⌄</button>
         </div>
       `;
     } else {
       bar.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        ${collapseHandleHtml}
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 240px;">
           <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:12px;background:#96432b;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;border:1px solid rgba(232,185,72,0.45);overflow:hidden;padding:3.5px;box-shadow:0 4px 14px rgba(0,0,0,0.35);transition:all 0.2s ease;" title="Visit WynnPages Studio (wynnpages.com.au)">
             <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages Atelier" style="width:100%;height:100%;object-fit:contain;display:block;">
           </a>
@@ -126,23 +141,28 @@
             </div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.06);border:1px solid rgba(229,222,201,0.22);color:#f6f1e8;text-decoration:none;font-size:12px;font-weight:600;padding:11px 14px;border-radius:13px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:all 0.2s ease;" title="Visit WynnPages Studio">
+        <div style="display:flex;${isNarrow ? 'flex-direction:column;width:100%;align-items:center;' : 'flex-direction:row;align-items:center;'}gap:8px;flex-shrink:0;">
+          <a id="wynnpages-claim-btn" href="${claimHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#96432b 0%,#a84b31 100%);color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(251,222,185,0.28);box-shadow:0 8px 20px rgba(150,67,43,0.45);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
+            <span>Claim This Website &mdash; $599 AUD</span>
+            <span>&rarr;</span>
+          </a>
+          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="${isNarrow ? 'padding:4px 10px;font-size:11px;border:none;background:transparent;color:rgba(255,255,255,0.68);text-decoration:underline;' : 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);color:#f6f1e8;padding:11px 14px;border-radius:13px;font-size:12px;'}text-decoration:${isNarrow ? 'underline' : 'none'};font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;transition:all 0.2s ease;" title="Visit WynnPages Studio">
             <span>About Studio</span>
             <svg style="width:10px;height:10px;" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
             </svg>
           </a>
-          <a id="wynnpages-claim-btn" href="${claimHref}" style="background:#96432b;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:11px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;box-shadow:0 6px 18px rgba(150,67,43,0.45);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;">
-            <span>Claim This Website &mdash; $599 AUD</span>
-            <span>&rarr;</span>
-          </a>
-          <button type="button" id="wynnpages-claim-collapse" title="Minimise bar" aria-label="Minimise bar" style="width:30px;height:30px;border-radius:10px;border:1px solid rgba(229,222,201,0.24);background:rgba(255,255,255,0.08);color:#e5dec9;font-size:14px;font-weight:800;cursor:pointer;">⌄</button>
         </div>
       `;
     }
     const collapseBtn = document.getElementById('wynnpages-claim-collapse');
     if (collapseBtn) {
+      collapseBtn.addEventListener('mouseenter', function () {
+        collapseBtn.style.color = 'rgba(255,255,255,1)';
+      });
+      collapseBtn.addEventListener('mouseleave', function () {
+        collapseBtn.style.color = 'rgba(255,255,255,0.6)';
+      });
       collapseBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -169,14 +189,14 @@
       bar.style.opacity = '0';
       bar.style.pointerEvents = 'none';
       restoreTab.style.opacity = '1';
-      restoreTab.style.transform = 'translateY(0)';
+      restoreTab.style.transform = 'translateX(-50%) translateY(0)';
       restoreTab.style.pointerEvents = 'auto';
     } else {
       bar.style.transform = 'translateX(-50%) translateY(0)';
       bar.style.opacity = '1';
       bar.style.pointerEvents = 'auto';
       restoreTab.style.opacity = '0';
-      restoreTab.style.transform = 'translateY(16px)';
+      restoreTab.style.transform = 'translateX(-50%) translateY(16px)';
       restoreTab.style.pointerEvents = 'none';
     }
   }

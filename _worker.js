@@ -24,8 +24,14 @@ function getConfig(env, overrides = {}) {
     googleDriveWebhookUrl: overrides.googleDriveWebhookUrl || env.GOOGLE_DRIVE_WEBHOOK_URL || '',
     cfApiToken: overrides.cfApiToken || overrides.cfToken || env.CLOUDFLARE_API_TOKEN || '',
     googlePlacesApiKey: overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || '',
-    geminiApiKey: overrides.geminiApiKey || overrides.geminiKey || env.GEMINI_API_KEY || overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || ''
+    geminiApiKey: overrides.geminiApiKey || overrides.geminiKey || env.GEMINI_API_KEY || overrides.googlePlacesApiKey || overrides.googlePlacesKey || env.GOOGLE_PLACES_API_KEY || '',
+    abn: overrides.abn || env.WYNNPAGES_ABN || ''
   };
+}
+
+function isValidAuMobile(rawPhone) {
+  const norm = normalizeAuPhone(rawPhone);
+  return /^\+614\d{8}$/.test(norm);
 }
 
 function normalizeAuPhone(rawPhone) {
@@ -148,7 +154,8 @@ const WYNN_SYNCED_SETTING_KEYS = [
   'telegramBotToken',
   'telegramChatId',
   'adminIp',
-  'adminIpList'
+  'adminIpList',
+  'abn'
 ];
 
 function isBotUserAgent(ua = '') {
@@ -189,9 +196,20 @@ async function captureAdminIp(request, env) {
   try {
     const { settings } = await loadSyncedRuntime(env);
     const list = parseAdminIpList(settings.adminIp, settings.adminIpList);
-    if (list[0] === ip && settings.adminIp === ip) return ip;
+    if (list.includes(ip) && settings.adminIp) return ip;
     const merged = [ip, ...list.filter(x => x !== ip)].slice(0, 8);
-    await saveSyncedSettings(env, { adminIp: ip, adminIpList: merged.join(',') }, { clearEmpty: false });
+    const db = getD1(env);
+    if (db) {
+      // Persist admin IP solely to D1 during GET/read requests — zero KV writes!
+      await ensureD1Schema(env);
+      const nowIso = new Date().toISOString();
+      await db.batch([
+        db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+          .bind('adminIp', ip, nowIso),
+        db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+          .bind('adminIpList', merged.join(','), nowIso)
+      ]).catch(() => {});
+    }
   } catch (_) {}
   return ip;
 }
@@ -217,7 +235,10 @@ async function ensureD1Schema(env) {
         `CREATE INDEX IF NOT EXISTS idx_tracking_slug_created ON tracking_events(slug, created_at DESC)`,
         `CREATE TABLE IF NOT EXISTS scheduled_sms (id TEXT PRIMARY KEY, client_id TEXT NOT NULL DEFAULT '', client_name TEXT NOT NULL DEFAULT '', to_phone TEXT NOT NULL, body_text TEXT NOT NULL, scheduled_for_utc TEXT NOT NULL, scheduled_for_au TEXT NOT NULL, au_timezone TEXT NOT NULL DEFAULT 'Australia/Sydney', status TEXT NOT NULL DEFAULT 'pending', error_reason TEXT NOT NULL DEFAULT '', sent_at TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)`,
         `CREATE INDEX IF NOT EXISTS idx_scheduled_sms_due ON scheduled_sms(status, scheduled_for_utc)`,
-        `CREATE TABLE IF NOT EXISTS lead_hunter_leads (id TEXT PRIMARY KEY, place_id TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', industry TEXT NOT NULL DEFAULT 'other', lead_type TEXT NOT NULL DEFAULT '', imported INTEGER NOT NULL DEFAULT 0, data_json TEXT NOT NULL DEFAULT '{}', updated_at TEXT NOT NULL)`
+        `CREATE TABLE IF NOT EXISTS lead_hunter_leads (id TEXT PRIMARY KEY, place_id TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', industry TEXT NOT NULL DEFAULT 'other', lead_type TEXT NOT NULL DEFAULT '', imported INTEGER NOT NULL DEFAULT 0, data_json TEXT NOT NULL DEFAULT '{}', updated_at TEXT NOT NULL)`,
+        `CREATE TABLE IF NOT EXISTS rate_locks (lock_key TEXT PRIMARY KEY, expires_at INTEGER NOT NULL)`,
+        `CREATE TABLE IF NOT EXISTS sms_history (id TEXT PRIMARY KEY, client_id TEXT NOT NULL DEFAULT '', type TEXT NOT NULL DEFAULT 'sms', to_phone TEXT NOT NULL DEFAULT '', body_text TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'OK', reason TEXT NOT NULL DEFAULT '', timestamp TEXT NOT NULL)`,
+        `CREATE INDEX IF NOT EXISTS idx_sms_history_client ON sms_history(client_id, timestamp DESC)`
       ];
       await db.batch(statements.map((sql) => db.prepare(sql)));
       return true;
@@ -228,6 +249,65 @@ async function ensureD1Schema(env) {
     });
   }
   return _d1SchemaPromise;
+}
+
+async function hasD1RateLock(env, lockKey) {
+  if (!lockKey) return false;
+  const db = getD1(env);
+  if (db) {
+    await ensureD1Schema(env);
+    const row = await db.prepare('SELECT expires_at FROM rate_locks WHERE lock_key = ?').bind(lockKey).first().catch(() => null);
+    return Boolean(row && Number(row.expires_at) > Date.now());
+  }
+  if (env && env.WYNN_KV) {
+    return Boolean(await env.WYNN_KV.get(lockKey).catch(() => null));
+  }
+  return false;
+}
+
+async function acquireD1RateLock(env, lockKey, ttlSeconds = 21600) {
+  if (!lockKey) return true;
+  const db = getD1(env);
+  const now = Date.now();
+  const expiresAt = now + Math.max(10, Number(ttlSeconds) || 21600) * 1000;
+  if (db) {
+    await ensureD1Schema(env);
+    const row = await db.prepare('SELECT expires_at FROM rate_locks WHERE lock_key = ?').bind(lockKey).first().catch(() => null);
+    if (row && Number(row.expires_at) > now) {
+      return false; // Already locked
+    }
+    await db.prepare(
+      'INSERT INTO rate_locks (lock_key, expires_at) VALUES (?, ?) ON CONFLICT(lock_key) DO UPDATE SET expires_at = excluded.expires_at'
+    ).bind(lockKey, expiresAt).run().catch(() => {});
+    return true;
+  }
+  if (env && env.WYNN_KV) {
+    const existing = await env.WYNN_KV.get(lockKey).catch(() => null);
+    if (existing) return false;
+    await env.WYNN_KV.put(lockKey, new Date(now).toISOString(), { expirationTtl: ttlSeconds }).catch(() => {});
+    return true;
+  }
+  return true;
+}
+
+async function syncClientsKvSnapshot(env) {
+  if (!env || !env.WYNN_KV) return;
+  const db = getD1(env);
+  if (!db) return;
+  try {
+    await ensureD1Schema(env);
+    const res = await db.prepare(
+      'SELECT id, email, name, business_name, phone, demo_slug, demo_url, live_url, stage, payment_status, flow_type, view_count, claim_click_count, updated_at FROM clients ORDER BY updated_at DESC LIMIT 250'
+    ).all().catch(() => null);
+    const rows = (res && Array.isArray(res.results)) ? res.results : [];
+    const payload = JSON.stringify(rows);
+    const prevRow = await db.prepare('SELECT value FROM settings WHERE key = ?').bind('clients_data_hash').first().catch(() => null);
+    if (prevRow && prevRow.value === payload) return; // Unchanged — skip KV write
+    await env.WYNN_KV.put('CLIENTS_DATA', payload).catch(() => {});
+    await db.prepare(
+      'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
+    ).bind('clients_data_hash', payload, new Date().toISOString()).run().catch(() => {});
+  } catch (_) {}
 }
 
 function runInBg(ctx, promise) {
@@ -244,13 +324,6 @@ function runInBg(ctx, promise) {
 
 async function loadSyncedRuntime(env, overrides = {}) {
   const db = getD1(env);
-  const kvCreds = (env && env.WYNN_KV)
-    ? ((await env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => null)) || {})
-    : {};
-  const kvTg = (env && env.WYNN_KV)
-    ? ((await env.WYNN_KV.get('telegram_config', 'json').catch(() => null)) || {})
-    : {};
-
   const d1Settings = {};
   let d1Count = 0;
   if (db) {
@@ -261,6 +334,23 @@ async function loadSyncedRuntime(env, overrides = {}) {
       for (const r of rowsRes.results) {
         if (r && r.key) d1Settings[r.key] = String(r.value || '');
       }
+    }
+  }
+
+  // Only fall back to single-key APP_SETTINGS (or legacy KV keys) when D1 settings table has no keys yet
+  let kvCreds = {};
+  let kvTg = {};
+  if ((!db || d1Count === 0) && env && env.WYNN_KV) {
+    const appSettings = await env.WYNN_KV.get('APP_SETTINGS', 'json').catch(() => null);
+    if (appSettings && typeof appSettings === 'object') {
+      kvCreds = appSettings;
+    } else {
+      const [legacyCreds, legacyTg] = await Promise.all([
+        env.WYNN_KV.get('studio_runtime_creds', 'json').catch(() => null),
+        env.WYNN_KV.get('telegram_config', 'json').catch(() => null)
+      ]);
+      kvCreds = legacyCreds || {};
+      kvTg = legacyTg || {};
     }
   }
 
@@ -279,7 +369,7 @@ async function loadSyncedRuntime(env, overrides = {}) {
     synced[key] = val;
   }
 
-  // One-time backfill from legacy KV into D1 when D1 settings table has no keys yet
+  // One-time backfill into D1 when D1 settings table is empty
   if (db && d1Count === 0) {
     const backfillNow = new Date().toISOString();
     const stmts = [];
@@ -315,6 +405,7 @@ async function loadSyncedRuntime(env, overrides = {}) {
     telegramBotToken: (mergedOverrides.telegramBotToken || (env && env.TELEGRAM_BOT_TOKEN) || '').trim(),
     telegramChatId: (mergedOverrides.telegramChatId || (env && env.TELEGRAM_CHAT_ID) || '').trim(),
     geminiApiKey: (mergedOverrides.geminiApiKey || mergedOverrides.googlePlacesApiKey || baseCfg.geminiApiKey || (env && env.GEMINI_API_KEY) || '').trim(),
+    abn: String(mergedOverrides.abn || baseCfg.abn || '').trim(),
     adminIp: String(synced.adminIp || '').trim(),
     adminIpList: parseAdminIpList(synced.adminIp, synced.adminIpList)
   };
@@ -332,43 +423,46 @@ async function saveSyncedSettings(env, incoming = {}, opts = {}) {
   const current = await loadSyncedRuntime(env);
   const next = { ...current.settings };
 
+  let hasChanges = false;
   for (const key of WYNN_SYNCED_SETTING_KEYS) {
     if (Object.prototype.hasOwnProperty.call(incoming, key)) {
       const val = String(incoming[key] || '').trim();
-      if (val || opts.clearEmpty) {
+      if ((val || opts.clearEmpty) && next[key] !== val) {
         next[key] = val;
+        hasChanges = true;
       }
     }
+  }
+
+  // Skip all D1 and KV writes when nothing actually changed
+  if (!hasChanges) {
+    return current.settings;
   }
 
   if (db) {
     await ensureD1Schema(env);
     const stmts = [];
     for (const key of WYNN_SYNCED_SETTING_KEYS) {
-      stmts.push(
-        db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
-          .bind(key, String(next[key] || ''), nowIso)
-      );
+      if (Object.prototype.hasOwnProperty.call(incoming, key) && next[key] !== current.settings[key]) {
+        stmts.push(
+          db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+            .bind(key, String(next[key] || ''), nowIso)
+        );
+      }
     }
     if (stmts.length) {
       await db.batch(stmts);
     }
   }
 
-  if (env && env.WYNN_KV) {
-    const kvCreds = {};
+  // Persist the entire settings object under ONE single KV key: APP_SETTINGS
+  if (env && env.WYNN_KV && opts.skipKv !== true) {
+    const kvSettings = {};
     for (const key of WYNN_SYNCED_SETTING_KEYS) {
-      if (next[key]) kvCreds[key] = next[key];
+      if (next[key]) kvSettings[key] = next[key];
     }
-    kvCreds.updatedAt = nowIso;
-    await Promise.all([
-      env.WYNN_KV.put('studio_runtime_creds', JSON.stringify(kvCreds)).catch(() => {}),
-      env.WYNN_KV.put('telegram_config', JSON.stringify({
-        botToken: next.telegramBotToken || '',
-        chatId: next.telegramChatId || '',
-        updatedAt: nowIso
-      })).catch(() => {})
-    ]);
+    kvSettings.updatedAt = nowIso;
+    await env.WYNN_KV.put('APP_SETTINGS', JSON.stringify(kvSettings)).catch(() => {});
   }
 
   return next;
@@ -776,13 +870,27 @@ async function recordSmsHistory({ customerId, env, stripeSecretKey, type, to, te
     reason: reason || ''
   };
 
-  let list = [];
-  if (env && env.WYNN_KV) {
+  const db = getD1(env);
+  if (db) {
+    await ensureD1Schema(env);
+    await db.prepare(
+      `INSERT INTO sms_history (id, client_id, type, to_phone, body_text, status, reason, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      entry.id,
+      String(customerId),
+      entry.type,
+      entry.to,
+      entry.text,
+      entry.status,
+      entry.reason,
+      entry.timestamp
+    ).run().catch(() => {});
+  } else if (env && env.WYNN_KV) {
     const kvKey = `sms_history:${customerId}`;
     const raw = await env.WYNN_KV.get(kvKey, 'json').catch(() => null);
-    if (Array.isArray(raw)) list = raw;
+    let list = Array.isArray(raw) ? raw : [];
     list.push(entry);
-    if (list.length > 50) list = list.slice(-50); // Keep last 50 messages
+    if (list.length > 50) list = list.slice(-50);
     await env.WYNN_KV.put(kvKey, JSON.stringify(list)).catch(() => {});
   }
 
@@ -885,6 +993,469 @@ async function sendResendEmail({ to, subject, html, cfg }) {
   }
 }
 
+function escapeEmailHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function buildTaxInvoiceEmailHtml({
+  businessName = '',
+  customerName = '',
+  customerEmail = '',
+  customerPhone = '',
+  amountAud = '$599.00 AUD',
+  invoiceNumber = '',
+  paidAtAu = '',
+  invoiceUrl = '',
+  portalUrl = '',
+  portalLabel = '',
+  abn = '',
+  isOutbound = false
+}) {
+  const displayBiz = businessName || customerName || 'Valued Client';
+  const greetingName = (customerName || displayBiz).split(' ')[0] || 'there';
+  const stepTitle = isOutbound ? 'Submit Your 1-Round Revision Form' : 'Complete Your Onboarding Brief';
+  const introCopy = isOutbound
+    ? `Thank you for choosing <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed and your bespoke website for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially yours.`
+    : `Welcome to <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed and your 7-day bespoke build slot for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially locked in.`;
+  const nextStepCopy = isOutbound
+    ? `Use your interactive <strong>1-Round Revision Portal</strong> below to confirm your trading hours, phone number, menu pricing, or photos so we can launch your site cleanly within 24–48 hours. Need more time? You can click <strong>Save Draft (Finish Later)</strong> inside the form at any time and return via this same link.`
+    : `Please complete your quick 2-minute <strong>Onboarding Brief</strong> using the button below so our design engineers can begin crafting your website right away. Need more time to gather your logo or menu? Click <strong>Save Draft (Finish Later)</strong> inside the form and resume whenever you are ready.`;
+
+  const bodyHtml = `
+    <p>G'day ${escapeEmailHtml(greetingName)},</p>
+    <p>${introCopy}</p>
+    <div style="background-color:#fdf8f3;border:2px solid #96432b;border-radius:16px;padding:18px 20px;margin:20px 0;">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#96432b;margin-bottom:6px;">Action Required • Next Step</div>
+      <div style="font-size:15px;font-weight:700;color:#231f1a;margin-bottom:8px;">${escapeEmailHtml(stepTitle)}</div>
+      <div style="font-size:13.5px;line-height:1.6;color:#4a433b;margin-bottom:14px;">${nextStepCopy}</div>
+      <a href="${escapeEmailHtml(portalUrl)}" style="display:inline-block;background-color:#96432b;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:13px 24px;border-radius:12px;">
+        ${escapeEmailHtml(portalLabel || stepTitle)} &rarr;
+      </a>
+    </div>
+    <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:16px;padding:18px 20px;margin:20px 0;font-size:13px;line-height:1.65;color:#3d3730;">
+      <table role="presentation" style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="vertical-align:top;padding-bottom:12px;border-bottom:1px solid #e5dec9;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#786f64;">Tax Invoice / Payment Receipt</div>
+            <div style="font-size:16px;font-weight:700;color:#231f1a;margin-top:2px;">WynnPages Studio (Australia)</div>
+            ${abn ? `<div style="font-size:12px;color:#6f665c;">ABN: ${escapeEmailHtml(abn)}</div>` : ''}
+          </td>
+          <td style="vertical-align:top;text-align:right;padding-bottom:12px;border-bottom:1px solid #e5dec9;">
+            <span style="display:inline-block;background-color:#d4e4ce;color:#2f442c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:99px;">Paid in Full</span>
+            ${invoiceNumber ? `<div style="font-family:monospace;font-size:12px;color:#574f46;margin-top:6px;">#${escapeEmailHtml(invoiceNumber)}</div>` : ''}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top:12px;vertical-align:top;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8c8275;">Billed To</div>
+            <div style="font-weight:700;color:#231f1a;">${escapeEmailHtml(displayBiz)}</div>
+            ${customerEmail ? `<div style="color:#574f46;">${escapeEmailHtml(customerEmail)}</div>` : ''}
+            ${customerPhone ? `<div style="color:#574f46;">${escapeEmailHtml(customerPhone)}</div>` : ''}
+          </td>
+          <td style="padding-top:12px;vertical-align:top;text-align:right;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8c8275;">Date Issued (AU)</div>
+            <div style="font-weight:600;color:#231f1a;">${escapeEmailHtml(paidAtAu)}</div>
+          </td>
+        </tr>
+      </table>
+      <table role="presentation" style="width:100%;border-collapse:collapse;margin-top:14px;border-top:1px solid #e5dec9;">
+        <tr>
+          <td style="padding:10px 0 4px 0;color:#231f1a;font-weight:600;">Bespoke Website Design &amp; Build Package (100% Ownership)</td>
+          <td style="padding:10px 0 4px 0;text-align:right;font-weight:700;color:#231f1a;">${escapeEmailHtml(amountAud)}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;color:#786f64;font-size:12px;">Zero monthly studio retainers &bull; Hosted on WynnPages Studio Australian High-Speed Network</td>
+          <td style="padding:4px 0;text-align:right;color:#4c6b47;font-size:12px;font-weight:700;">Paid</td>
+        </tr>
+      </table>
+      ${invoiceUrl ? `
+        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #d8ccb8;">
+          <a href="${escapeEmailHtml(invoiceUrl)}" style="display:inline-block;background-color:#ffffff;color:#231f1a;border:1px solid #d8ccb8;font-weight:700;font-size:12px;text-decoration:none;padding:9px 16px;border-radius:10px;">
+            &#128196; Download Official PDF Tax Invoice / Receipt &rarr;
+          </a>
+        </div>
+      ` : ''}
+    </div>
+    <p style="font-size:13px;color:#6f665c;">Need a hand at any stage? Reply to this email or write to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
+  `;
+
+  return buildAtelierEmailHtml({
+    preheader: 'Official Tax Invoice & Next Step Portal Inside',
+    heading: `Payment Confirmed for ${escapeEmailHtml(displayBiz)}.`,
+    bodyHtml,
+    secondaryCta: {
+      label: 'Save Link or Visit WynnPages Studio',
+      url: portalUrl
+    }
+  });
+}
+
+async function fetchExpandedCheckoutSession(sessionId, stripeSecretKey) {
+  if (!sessionId || !stripeSecretKey) return null;
+  try {
+    const res = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=invoice&expand[]=payment_intent`,
+      {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+      }
+    );
+    if (!res.ok) return null;
+    return await res.json().catch(() => null);
+  } catch (_) {
+    return null;
+  }
+}
+
+async function retrieveStripeInvoiceUrls(sessionData, stripeSecretKey) {
+  let invoiceUrl = '';
+  let invoicePdf = '';
+  let invoiceNumber = '';
+  if (!sessionData) return { invoiceUrl, invoicePdf, invoiceNumber };
+
+  const invObj = (sessionData.invoice && typeof sessionData.invoice === 'object') ? sessionData.invoice : null;
+  if (invObj) {
+    invoiceUrl = invObj.hosted_invoice_url || '';
+    invoicePdf = invObj.invoice_pdf || '';
+    invoiceNumber = invObj.number || '';
+  } else if (typeof sessionData.invoice === 'string' && sessionData.invoice && stripeSecretKey) {
+    try {
+      const iRes = await fetch(`https://api.stripe.com/v1/invoices/${encodeURIComponent(sessionData.invoice)}`, {
+        headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+      });
+      if (iRes.ok) {
+        const fetchedInv = await iRes.json().catch(() => null);
+        if (fetchedInv) {
+          invoiceUrl = fetchedInv.hosted_invoice_url || '';
+          invoicePdf = fetchedInv.invoice_pdf || '';
+          invoiceNumber = fetchedInv.number || '';
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Fallback to Stripe Charge receipt_url if invoice object was not generated
+  if (!invoiceUrl && sessionData.payment_intent && typeof sessionData.payment_intent === 'object' && sessionData.payment_intent.latest_charge) {
+    const chgId = typeof sessionData.payment_intent.latest_charge === 'string'
+      ? sessionData.payment_intent.latest_charge
+      : (sessionData.payment_intent.latest_charge.id || '');
+    if (typeof sessionData.payment_intent.latest_charge === 'object' && sessionData.payment_intent.latest_charge.receipt_url) {
+      invoiceUrl = sessionData.payment_intent.latest_charge.receipt_url;
+    } else if (chgId && stripeSecretKey) {
+      try {
+        const chRes = await fetch(`https://api.stripe.com/v1/charges/${encodeURIComponent(chgId)}`, {
+          headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+        });
+        if (chRes.ok) {
+          const chData = await chRes.json().catch(() => null);
+          if (chData && chData.receipt_url) invoiceUrl = chData.receipt_url;
+        }
+      } catch (_) {}
+    }
+  }
+
+  if (!invoiceNumber && sessionData.id) {
+    invoiceNumber = 'WP-' + String(sessionData.id).slice(-8).toUpperCase();
+  }
+  return { invoiceUrl, invoicePdf, invoiceNumber };
+}
+
+async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = null, origin = 'https://wynnpages.com.au', env, ctx, cfg }) {
+  const sid = String(sessionId || (sessionObj && sessionObj.id) || '').trim();
+  if (!sid || !sid.startsWith('cs_')) {
+    return { ok: false, paid: false, reason: 'Invalid session ID' };
+  }
+
+  let sessionData = await fetchExpandedCheckoutSession(sid, cfg.stripeSecretKey);
+  if (!sessionData) sessionData = sessionObj;
+  if (!sessionData) {
+    return { ok: false, paid: false, reason: 'Checkout session not found' };
+  }
+
+  const isPaid = sessionData.payment_status === 'paid' || sessionData.status === 'complete';
+  const meta = sessionData.metadata || {};
+  const cd = sessionData.customer_details || {};
+  const email = (cd.email || sessionData.customer_email || meta.customer_email || '').trim();
+  const name = (meta.customer_name || cd.name || '').trim();
+  const phone = (cd.phone || meta.customer_phone || '').trim();
+
+  if (!isPaid) {
+    return { ok: true, paid: false, sessionId: sid, email, name, phone };
+  }
+
+  const flowTypeRaw = meta.flow_type || (meta.flow === 'outbound_demo' ? 'outbound' : 'inbound');
+  const customerIdHint = (typeof sessionData.customer === 'string' && sessionData.customer)
+    || sessionData.client_reference_id
+    || meta.customer_id
+    || '';
+
+  let cust = null;
+  if (customerIdHint && cfg.stripeSecretKey) {
+    const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerIdHint)}`, {
+      headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+    }).catch(() => null);
+    if (cRes && cRes.ok) cust = await cRes.json().catch(() => null);
+  }
+  if (!cust && email && cfg.stripeSecretKey) {
+    cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
+  }
+
+  // Create Stripe customer record if Checkout used customer_email without an existing customer
+  if (!cust && cfg.stripeSecretKey && (email || name || phone)) {
+    const createP = new URLSearchParams();
+    if (email) createP.append('email', email);
+    if (name) createP.append('name', name);
+    if (phone) {
+      createP.append('phone', phone);
+      createP.append('metadata[customer_phone]', phone);
+      createP.append('metadata[display_phone]', phone);
+    }
+    if (meta.business_name || name) createP.append('metadata[business_name]', meta.business_name || name);
+    if (meta.demo_slug) createP.append('metadata[demo_slug]', meta.demo_slug);
+    if (meta.demo_url) createP.append('metadata[demo_url]', meta.demo_url);
+    createP.append('metadata[studio]', 'WynnPages Australia');
+    createP.append('metadata[flow_type]', flowTypeRaw);
+    const createdRes = await fetch('https://api.stripe.com/v1/customers', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: createP.toString()
+    }).catch(() => null);
+    if (createdRes && createdRes.ok) {
+      cust = await createdRes.json().catch(() => null);
+    }
+  }
+
+  const isOutbound = flowTypeRaw === 'outbound' || Boolean(cust && cust.metadata && cust.metadata.flow_type === 'outbound');
+  const resolvedFlow = isOutbound ? 'outbound' : 'inbound';
+  const resolvedPhone = phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '';
+  const resolvedEmail = email || (cust && cust.email) || (cust && cust.metadata && cust.metadata.customer_email) || '';
+  const resolvedName = name || (cust && cust.name) || '';
+  const resolvedBiz = (cust && cust.metadata && cust.metadata.business_name) || meta.business_name || resolvedName || resolvedEmail || 'New Client';
+  const resolvedSlug = (cust && cust.metadata && cust.metadata.demo_slug) || meta.demo_slug || slugifyName(resolvedBiz);
+  const resolvedDemoUrl = (cust && cust.metadata && cust.metadata.demo_url) || meta.demo_url || (resolvedSlug ? `https://${resolvedSlug}.wynnpages.com.au` : '');
+  const resolvedCid = (cust && cust.id) || customerIdHint || `cs_${sid}`;
+
+  const { invoiceUrl, invoicePdf, invoiceNumber } = await retrieveStripeInvoiceUrls(sessionData, cfg.stripeSecretKey);
+  const effectiveInvoiceUrl = invoiceUrl || invoicePdf || '';
+  const amountTotal = Number(sessionData.amount_total || 59900);
+  const amountAudShort = `$${Math.round(amountTotal / 100)} AUD`;
+  const amountAudExact = `$${(amountTotal / 100).toFixed(2)} AUD`;
+  const paidAtAu = formatAuDateTime(new Date(), AU_TIMEZONE);
+
+  const portalUrl = isOutbound
+    ? `${origin}/revision.html?client_id=${encodeURIComponent(resolvedCid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`
+    : `${origin}/onboarding.html?client_id=${encodeURIComponent(resolvedCid)}&type=organic&session_id=${encodeURIComponent(sid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
+
+  // Check unified idempotency flag so post-payment alerts/email/SMS never fire twice
+  const db = getD1(env);
+  let d1Notified = false;
+  if (db) {
+    await ensureD1Schema(env);
+    const existingRow = await db.prepare('SELECT metadata_json FROM clients WHERE id = ?').bind(resolvedCid).first().catch(() => null);
+    if (existingRow && existingRow.metadata_json) {
+      try {
+        const parsedMeta = JSON.parse(existingRow.metadata_json);
+        if (parsedMeta && parsedMeta.paymentNotified === true) d1Notified = true;
+      } catch (_) {}
+    }
+  }
+  const custAlreadyNotified = Boolean(cust && cust.metadata && (cust.metadata.payment_notified === 'true' || cust.metadata.welcome_sent === 'true'));
+  let shouldNotify = !custAlreadyNotified && !d1Notified;
+  if (shouldNotify) {
+    shouldNotify = await acquireD1RateLock(env, `payment_notified:${sid}`, 31536000);
+  }
+
+  // Persist paid status, phone, and invoice metadata to Stripe Customer
+  if (cust && cust.id && cfg.stripeSecretKey) {
+    const uParams = new URLSearchParams();
+    if (resolvedEmail && !cust.email) uParams.append('email', resolvedEmail);
+    if (resolvedName && !cust.name) uParams.append('name', resolvedName);
+    if (resolvedPhone) {
+      uParams.append('phone', resolvedPhone);
+      uParams.append('metadata[customer_phone]', resolvedPhone);
+      if (!cust.metadata || !cust.metadata.display_phone) uParams.append('metadata[display_phone]', resolvedPhone);
+    }
+    uParams.append('metadata[studio]', 'WynnPages Australia');
+    uParams.append('metadata[payment_status]', 'paid');
+    uParams.append('metadata[flow_type]', resolvedFlow);
+    uParams.append('metadata[checkout_session_id]', sid);
+    if (effectiveInvoiceUrl) uParams.append('metadata[invoice_url]', effectiveInvoiceUrl.slice(0, 490));
+    if (invoiceNumber) uParams.append('metadata[invoice_number]', invoiceNumber.slice(0, 120));
+    if (isOutbound) {
+      uParams.append('metadata[stage]', 'outbound_paid');
+    } else if (!cust.metadata || !cust.metadata.brief_status || cust.metadata.stage === 'checkout_started' || !cust.metadata.stage) {
+      uParams.append('metadata[stage]', 'paid');
+    }
+    if (shouldNotify || !custAlreadyNotified) {
+      uParams.append('metadata[payment_notified]', 'true');
+      uParams.append('metadata[welcome_sent]', 'true');
+    }
+    await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: uParams.toString()
+    }).catch(() => {});
+
+    if (!cust.metadata) cust.metadata = {};
+    cust.metadata.payment_status = 'paid';
+    cust.metadata.flow_type = resolvedFlow;
+    cust.metadata.checkout_session_id = sid;
+    cust.metadata.payment_notified = 'true';
+    cust.metadata.welcome_sent = 'true';
+    if (isOutbound) cust.metadata.stage = 'outbound_paid';
+    else if (!cust.metadata.stage || cust.metadata.stage === 'checkout_started') cust.metadata.stage = 'paid';
+    if (resolvedPhone) {
+      cust.phone = resolvedPhone;
+      cust.metadata.customer_phone = resolvedPhone;
+      if (!cust.metadata.display_phone) cust.metadata.display_phone = resolvedPhone;
+    }
+  }
+
+  const baseRecord = cust ? formatCustomerRecord(cust) : {
+    id: resolvedCid,
+    name: resolvedName,
+    businessName: resolvedBiz,
+    email: resolvedEmail,
+    phone: resolvedPhone,
+    displayPhone: resolvedPhone,
+    demoSlug: resolvedSlug,
+    demoUrl: resolvedDemoUrl,
+    flowType: resolvedFlow,
+    stage: isOutbound ? 'outbound_paid' : 'paid',
+    paymentStatus: 'paid',
+    checkoutSessionId: sid
+  };
+  await upsertD1Client(env, {
+    ...baseRecord,
+    paymentStatus: 'paid',
+    paymentNotified: true,
+    invoiceUrl: effectiveInvoiceUrl,
+    invoiceNumber,
+    checkoutSessionId: sid
+  });
+  await syncClientsKvSnapshot(env);
+
+  if (shouldNotify) {
+    const portalLabel = isOutbound ? 'Open 1-Round Revision Portal' : 'Complete Your 2-Min Onboarding Brief';
+    const emailSubject = isOutbound
+      ? `Tax Invoice & Next Step: Finalise Your ${resolvedBiz} Website (${invoiceNumber})`
+      : `Tax Invoice & Onboarding Brief: Lock In Your ${resolvedBiz} Build (${invoiceNumber})`;
+    const emailHtml = buildTaxInvoiceEmailHtml({
+      businessName: resolvedBiz,
+      customerName: resolvedName,
+      customerEmail: resolvedEmail,
+      customerPhone: resolvedPhone,
+      amountAud: amountAudExact,
+      invoiceNumber,
+      paidAtAu,
+      invoiceUrl: effectiveInvoiceUrl,
+      portalUrl,
+      portalLabel,
+      abn: cfg.abn || '',
+      isOutbound
+    });
+
+    const smsText = isOutbound
+      ? `G'day ${resolvedBiz}! Thank you for choosing WynnPages Studio. Your ${amountAudShort} payment is confirmed. Please complete your 1-round revision form here: ${portalUrl}`
+      : `G'day ${resolvedBiz}! Thank you for choosing WynnPages Studio. Your ${amountAudShort} payment is confirmed. Please complete your quick onboarding brief here: ${portalUrl}`;
+
+    const tgMessage = [
+      `🏢 Khách hàng: ${resolvedBiz}`,
+      `📧 Email: ${resolvedEmail || 'N/A'}`,
+      `📱 SĐT: ${resolvedPhone || 'Chưa có'}`,
+      `🔗 Portal: ${portalUrl}`
+    ].join('\n');
+
+    const notifyPipeline = Promise.all([
+      // 1. Instant iPhone Telegram + Activity Feed notification
+      recordActivityAndNotify({
+        type: 'payment_received',
+        title: `💰 ĐƠN HÀNG MỚI ${amountAudShort}!`,
+        message: tgMessage,
+        clientName: resolvedBiz,
+        slug: resolvedSlug,
+        dedupeKey: `paid_notified:${sid}`,
+        env,
+        ctx
+      }).catch((err) => {
+        console.error('[post-payment telegram]', err && err.message ? err.message : err);
+      }),
+
+      // 2. Official Tax Invoice + Portal Link Email via Resend
+      (async () => {
+        try {
+          if (!resolvedEmail) return;
+          const emailRes = await sendResendEmail({ to: resolvedEmail, subject: emailSubject, html: emailHtml, cfg });
+          if (cust && cust.id && cfg.stripeSecretKey) {
+            const logP = new URLSearchParams();
+            logP.append(
+              'metadata[last_email_log]',
+              (emailRes.sent ? `OK (${resolvedEmail}) [tax_invoice] @ ${new Date().toISOString()}` : `ERR: ${emailRes.reason || 'Failed'} [tax_invoice]`).slice(0, 480)
+            );
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: logP.toString()
+            }).catch(() => {});
+          }
+        } catch (err) {
+          console.error('[post-payment email]', err && err.message ? err.message : err);
+        }
+      })(),
+
+      // 3. Direct Portal Magic Link SMS via ClickSend (AU mobile 04/+614 only)
+      (async () => {
+        try {
+          if (!resolvedPhone || !isValidAuMobile(resolvedPhone)) return;
+          const smsRes = await sendClickSendSms(resolvedPhone, smsText, cfg);
+          await recordSmsHistory({
+            customerId: resolvedCid,
+            type: isOutbound ? 'outbound_paid_confirmed' : 'payment_confirmed',
+            to: smsRes.to || normalizeAuPhone(resolvedPhone),
+            text: smsText,
+            smsResult: smsRes,
+            env,
+            stripeSecretKey: cfg.stripeSecretKey
+          }).catch(() => {});
+        } catch (err) {
+          console.error('[post-payment sms]', err && err.message ? err.message : err);
+        }
+      })()
+    ]);
+
+    runInBg(ctx, notifyPipeline);
+  }
+
+  return {
+    ok: true,
+    paid: true,
+    sessionId: sid,
+    cid: resolvedCid,
+    email: resolvedEmail,
+    name: resolvedName,
+    businessName: resolvedBiz,
+    phone: resolvedPhone,
+    flowType: resolvedFlow,
+    portalUrl,
+    invoiceUrl: effectiveInvoiceUrl,
+    invoiceNumber,
+    paymentNotified: shouldNotify
+  };
+}
+
 function buildDomainGuideUrl({ origin, client = {}, tab = '', ns = '' }) {
   const rawDom = String(client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
   const cleanDom = (rawDom && rawDom.toUpperCase() !== 'TBD') ? rawDom : '';
@@ -905,8 +1476,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   const email = client.email || '';
   const phone = client.phone || '';
   const demoUrl = client.demoUrl || (client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : `${origin}`);
-  const organicBriefUrl = `${origin}/brief?type=organic&email=${encodeURIComponent(email)}`;
-  const demoBriefUrl = `${origin}/brief?type=demo&email=${encodeURIComponent(email)}`;
+  const onboardingBriefUrl = `${origin}/onboarding.html?client_id=${encodeURIComponent(client.id || '')}&type=organic&email=${encodeURIComponent(email)}`;
+  const demoBriefUrl = `${origin}/onboarding.html?client_id=${encodeURIComponent(client.id || '')}&type=demo&email=${encodeURIComponent(email)}`;
 
   let smsText = '';
   let emailSubject = '';
@@ -915,19 +1486,22 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   const shortDemoUrl = client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : demoUrl;
 
   if (stage === 'payment_confirmed') {
-    smsText = `Hi ${firstName}, thank you for choosing WynnPages Studio! Your 7-day build slot is locked in. Please complete your quick 2-min studio brief here: ${origin}/onboarding - Any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
-    emailSubject = `Your 7-Day Build Slot is Locked — Complete Your 2-Min Brief`;
-    emailHtml = buildAtelierEmailHtml({
-      preheader: 'Payment Confirmed • WynnPages Digital Atelier',
-      heading: `Your 7-Day Build Slot is Locked, ${firstName}.`,
-      bodyHtml: `
-        <p>Welcome to <strong>WynnPages</strong>! Your $599 AUD studio build slot is officially reserved.</p>
-        <p>To get our lead artisan designer started on your custom website right away, please complete your quick 2-minute onboarding brief using the button below (or email us anytime at <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>):</p>
-      `,
-      primaryCta: {
-        label: 'Complete Your 2-Min Studio Brief',
-        url: organicBriefUrl
-      }
+    const bizLabel = client.businessName || client.name || 'your business';
+    smsText = `G'day ${bizLabel}! Thank you for choosing WynnPages Studio. Your $599 AUD payment is confirmed. Please complete your quick onboarding brief here: ${onboardingBriefUrl}`;
+    emailSubject = `Tax Invoice & Onboarding Brief: Lock In Your ${bizLabel} Build`;
+    emailHtml = buildTaxInvoiceEmailHtml({
+      businessName: bizLabel,
+      customerName: client.name || '',
+      customerEmail: email,
+      customerPhone: phone,
+      amountAud: '$599.00 AUD',
+      invoiceNumber: client.invoiceNumber || '',
+      paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
+      invoiceUrl: client.invoiceUrl || '',
+      portalUrl: onboardingBriefUrl,
+      portalLabel: 'Complete Your 2-Min Onboarding Brief',
+      abn: cfg.abn || '',
+      isOutbound: false
     });
   } else if (stage === 'brief_completed') {
     const domainInfo = client.existingDomain || client.desiredDomains || 'TBD';
@@ -1113,21 +1687,22 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'outbound_paid_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
-    const revisionUrl = `${origin}/revision.html?email=${encodeURIComponent(email)}&cid=${encodeURIComponent(client.id || '')}`;
-    smsText = `Hi ${firstName}, congratulations! Your payment for ${bizLabel} is confirmed. Please submit your 1-round revisions here so we can prepare your launch: ${revisionUrl} - For any questions, please email hello@wynnpages.com.au. Warm regards, Wynn`;
-    emailSubject = `Payment Secured! Submit Your 1-Round Revisions to Launch`;
-    emailHtml = buildAtelierEmailHtml({
-      preheader: 'Payment Secured • 1-Round Revision Portal Ready',
-      heading: `Payment Secured for ${bizLabel}!`,
-      bodyHtml: `
-        <p>Hi ${firstName},</p>
-        <p>Thank you for choosing <strong>WynnPages Studio</strong>! Your payment is confirmed, and your bespoke website is officially yours.</p>
-        <p>Use your interactive <strong>1-Round Revision Portal</strong> below to compare your demo side-by-side and submit any final menu, pricing, photo, or shop detail updates (your personalised domain connection guide follows right after):</p>
-      `,
-      primaryCta: {
-        label: 'Open 1-Round Revision Portal',
-        url: revisionUrl
-      }
+    const revisionUrl = `${origin}/revision.html?client_id=${encodeURIComponent(client.id || '')}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
+    smsText = `G'day ${bizLabel}! Thank you for choosing WynnPages Studio. Your $599 AUD payment is confirmed. Please complete your 1-round revision form here: ${revisionUrl}`;
+    emailSubject = `Tax Invoice & Next Step: Finalise Your ${bizLabel} Website`;
+    emailHtml = buildTaxInvoiceEmailHtml({
+      businessName: bizLabel,
+      customerName: client.name || '',
+      customerEmail: email,
+      customerPhone: phone,
+      amountAud: '$599.00 AUD',
+      invoiceNumber: client.invoiceNumber || '',
+      paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
+      invoiceUrl: client.invoiceUrl || '',
+      portalUrl: revisionUrl,
+      portalLabel: 'Open 1-Round Revision Portal',
+      abn: cfg.abn || '',
+      isOutbound: true
     });
   } else if (stage === 'outbound_revision_submitted') {
     const bizLabel = client.businessName || client.name || 'your business';
@@ -2218,13 +2793,13 @@ function buildClaimBarSnippet(client) {
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 880px;
-      background: rgba(26, 23, 21, 0.96);
+      background: rgba(24, 19, 17, 0.82);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(229, 222, 201, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 22px;
-      padding: 12px 18px 12px 18px;
-      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.55);
+      padding: 24px 18px 14px 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -2241,57 +2816,67 @@ function buildClaimBarSnippet(client) {
       pointer-events: none;
     }
     .claim-bar.claimed-active {
-      border: 1.5px solid rgba(52, 211, 153, 0.55);
-      background: rgba(16, 31, 24, 0.96);
-      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.65), 0 0 28px rgba(16, 185, 129, 0.2);
+      border: 1.5px solid rgba(52, 211, 153, 0.45);
+      background: rgba(16, 31, 24, 0.84);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 28px rgba(16, 185, 129, 0.18);
     }
     .claim-collapse-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 10px;
-      border: 1px solid rgba(229, 222, 201, 0.24);
-      background: rgba(255, 255, 255, 0.08);
-      color: #e5dec9;
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: none;
+      background: transparent;
+      padding: 3px 18px;
+      color: rgba(255, 255, 255, 0.6);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: 800;
       line-height: 1;
       cursor: pointer;
-      flex-shrink: 0;
-      transition: all 0.18s ease;
+      transition: color 0.18s ease, transform 0.18s ease;
+      z-index: 5;
     }
     .claim-collapse-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      color: #ffffff;
+      color: rgba(255, 255, 255, 1);
+      transform: translateX(-50%) translateY(1px);
     }
     .claim-restore-tab {
       position: fixed;
-      right: 16px;
+      left: 50%;
       bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(16px);
       z-index: 999998;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(26, 23, 21, 0.94);
-      color: #fbdeb9;
-      border: 1px solid rgba(232, 185, 72, 0.55);
+      justify-content: center;
+      gap: 8px;
+      background: rgba(24, 19, 17, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 9999px;
-      padding: 8px 14px;
+      padding: 9px 18px;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 12px;
-      font-weight: 800;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
       cursor: pointer;
       opacity: 0;
-      transform: translateY(16px);
       pointer-events: none;
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .claim-restore-tab:hover {
+      background: rgba(24, 19, 17, 0.92);
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #ffffff;
+    }
     .claim-restore-tab.visible {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
       pointer-events: auto;
     }
     .claim-claimed-btn {
@@ -2543,7 +3128,7 @@ function buildClaimBarSnippet(client) {
       .claim-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 14px 14px 10px 14px;
+        padding: 24px 14px 12px 14px;
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px;
         border-radius: 20px;
@@ -2552,7 +3137,10 @@ function buildClaimBarSnippet(client) {
         overflow: visible;
       }
       .claim-bar.deal-active {
-        padding-top: 26px;
+        padding-top: 32px;
+      }
+      .claim-bar.deal-active .claim-collapse-btn {
+        top: 10px;
       }
       .claim-deal-floating-seal {
         top: -15px;
@@ -2575,7 +3163,7 @@ function buildClaimBarSnippet(client) {
       .claim-actions {
         display: flex;
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
         gap: 6px;
         width: 100%;
       }
@@ -2598,12 +3186,13 @@ function buildClaimBarSnippet(client) {
       }
       .claim-studio-btn {
         justify-content: center;
-        padding: 5px 10px;
+        padding: 4px 10px;
         font-size: 11px;
         border: none;
         background: transparent;
-        color: #b8b0a5;
+        color: rgba(255, 255, 255, 0.68);
         text-decoration: underline;
+        margin: 0 auto;
       }
       .claim-studio-btn:hover {
         background: transparent;
@@ -2616,6 +3205,9 @@ function buildClaimBarSnippet(client) {
     }
   </style>
   <div id="wynn-claim-bar" class="claim-bar ${isFlashDeal ? 'deal-active' : ''} ${isPaid ? 'claimed-active' : ''}">
+    <button type="button" id="wynn-claim-collapse" class="claim-collapse-btn" title="Minimise bar" aria-label="Minimise bar">
+      <svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
+    </button>
     ${isFlashDeal ? `
       <div class="claim-deal-floating-seal">
         <span class="seal-icon">⚡</span>
@@ -2689,12 +3281,11 @@ function buildClaimBarSnippet(client) {
           </svg>
         </a>
       `}
-      <button type="button" id="wynn-claim-collapse" class="claim-collapse-btn" title="Minimise bar" aria-label="Minimise bar">⌄</button>
     </div>
   </div>
   <button type="button" id="wynn-claim-restore" class="claim-restore-tab" aria-label="Expand website banner">
-    <span>⌃</span>
-    <span>${isPaid ? 'Next Step' : 'Claim Website'}</span>
+    <svg width="14" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg>
+    <span>${isPaid ? 'Next Step &bull; Setup Content' : (isFlashDeal ? 'Claim This Website &mdash; $299' : 'Claim This Website &mdash; $599')}</span>
   </button>
   <script>
     (function(){
@@ -3029,10 +3620,9 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
 // Record in-app activity feed event in KV and broadcast instant push (Telegram Bot + Web Push)
 async function recordActivityAndNotify({ type, title, message, clientName, slug, dedupeKey = '', dedupeTtl = 86400, env, ctx }) {
   if (!env) return null;
-  if (dedupeKey && env.WYNN_KV) {
-    const sentLock = await env.WYNN_KV.get(dedupeKey).catch(() => null);
-    if (sentLock) return { ok: true, deduped: true };
-    await env.WYNN_KV.put(dedupeKey, new Date().toISOString(), { expirationTtl: dedupeTtl }).catch(() => {});
+  if (dedupeKey) {
+    const acquired = await acquireD1RateLock(env, dedupeKey, dedupeTtl);
+    if (!acquired) return { ok: true, deduped: true };
   }
   const nowIso = new Date().toISOString();
   const eventId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
@@ -3055,15 +3645,14 @@ async function recordActivityAndNotify({ type, title, message, clientName, slug,
     timestamp: nowIso
   };
 
-  // 1. Prepend to D1 activity_events + KV activity_events cache (keep last 30 events)
+  // 1. Store activity in D1 activity_events table (zero KV writes when D1 is available)
   const db = getD1(env);
   if (db) {
     await ensureD1Schema(env);
     await db.prepare(
       `INSERT INTO activity_events (id, type, icon, title, message, client_name, slug, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(newEvent.id, newEvent.type, newEvent.icon, newEvent.title, newEvent.message, newEvent.clientName, newEvent.slug, newEvent.timestamp).run().catch(() => {});
-  }
-  if (env.WYNN_KV) {
+  } else if (env.WYNN_KV) {
     try {
       const existingEvents = (await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || [];
       const updatedEvents = [newEvent, ...existingEvents.filter(e => e.id !== eventId)].slice(0, 30);
@@ -3131,10 +3720,10 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
 
     let viewCount = Number(d1Track.viewCount || 0);
     let firstViewedAt = now;
-    if (env.WYNN_KV) {
+    if (!getD1(env) && env.WYNN_KV) {
       const kvKey = `demo_views:${cleanSlug}`;
       const existing = await env.WYNN_KV.get(kvKey, 'json').catch(() => null);
-      viewCount = Math.max(viewCount, Number(existing?.viewCount || 0) + (getD1(env) ? 0 : 1), 1);
+      viewCount = Math.max(viewCount, Number(existing?.viewCount || 0) + 1, 1);
       firstViewedAt = existing?.firstViewedAt || now;
       await env.WYNN_KV.put(kvKey, JSON.stringify({
         slug: cleanSlug,
@@ -3153,13 +3742,10 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
       lastDevice: device
     };
 
-    // Real-Time Event & Telegram Alert (Rate-limited to 1 alert per 30 minutes per client)
+    // Real-Time Event & Telegram Alert (Rate-limited to 1 alert per 30 minutes via D1 rate_locks)
     const lockKey = `demo_notify_lock:${cleanSlug}`;
-    const isLocked = env.WYNN_KV ? await env.WYNN_KV.get(lockKey).catch(() => null) : null;
-    if (!isLocked) {
-      if (env.WYNN_KV) {
-        await env.WYNN_KV.put(lockKey, '1', { expirationTtl: 1800 }).catch(() => {});
-      }
+    const lockAcquired = await acquireD1RateLock(env, lockKey, 1800);
+    if (lockAcquired) {
       await recordActivityAndNotify({
         type: 'demo_viewed',
         title: '👀 Khách Đang Xem Demo!',
@@ -3742,7 +4328,21 @@ async function runScheduledAutopilot(env, options = {}) {
   }
 
   let settings = { enabled: true, autoSms: true, autoDeal: true, autoExpire: true };
-  if (env && env.WYNN_KV) {
+  const dbAp = getD1(env);
+  if (dbAp) {
+    await ensureD1Schema(env);
+    const apRow = await dbAp.prepare('SELECT value FROM settings WHERE key = ?').bind('studio_autopilot_settings').first().catch(() => null);
+    if (apRow && apRow.value) {
+      try { settings = { ...settings, ...JSON.parse(apRow.value) }; } catch (_) {}
+    } else if (env && env.WYNN_KV) {
+      const saved = await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null);
+      if (saved && typeof saved === 'object') {
+        settings = { ...settings, ...saved };
+        await dbAp.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO NOTHING')
+          .bind('studio_autopilot_settings', JSON.stringify(settings), new Date().toISOString()).run().catch(() => {});
+      }
+    }
+  } else if (env && env.WYNN_KV) {
     const saved = await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null);
     if (saved && typeof saved === 'object') {
       settings = { ...settings, ...saved };
@@ -3963,7 +4563,13 @@ async function runScheduledAutopilot(env, options = {}) {
     expiredCount,
     reports: reports.slice(0, 50)
   };
-  if (env && env.WYNN_KV) {
+  if (dbAp) {
+    if (force || smsSentCount > 0 || dealActivatedCount > 0 || expiredCount > 0) {
+      await dbAp.prepare(
+        'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
+      ).bind('studio_autopilot_last_run', JSON.stringify(lastRunRecord), new Date().toISOString()).run().catch(() => {});
+    }
+  } else if (env && env.WYNN_KV && (force || smsSentCount > 0 || dealActivatedCount > 0 || expiredCount > 0)) {
     await env.WYNN_KV.put('studio_autopilot_last_run', JSON.stringify(lastRunRecord)).catch(() => {});
   }
 
@@ -4239,7 +4845,7 @@ export default {
         }
 
         const origin = url.origin;
-        const successUrl = `${origin}/revision.html?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&cid=${encodeURIComponent(cid)}`;
+        const successUrl = `${origin}/revision.html?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&client_id=${encodeURIComponent(cid)}&cid=${encodeURIComponent(cid)}`;
         const cancelUrl = demoUrl && demoUrl.startsWith('http') ? demoUrl : `${origin}/?canceled=true`;
 
         const params = new URLSearchParams();
@@ -4249,12 +4855,16 @@ export default {
         } else if (email) {
           params.append('customer_email', email);
         }
+        if (cid) params.append('client_reference_id', cid);
         params.append('success_url', successUrl);
         params.append('cancel_url', cancelUrl);
         params.append('allow_promotion_codes', 'true');
         params.append('billing_address_collection', 'auto');
         params.append('phone_number_collection[enabled]', 'true');
+        params.append('invoice_creation[enabled]', 'true');
         params.append('metadata[flow_type]', 'outbound');
+        const outboundSlugMeta = slugifyName((cust && cust.metadata && cust.metadata.demo_slug) || bizName || '');
+        if (outboundSlugMeta) params.append('metadata[demo_slug]', outboundSlugMeta);
 
         let isFlashDeal50 = (url.searchParams.get('deal') === 'flash50');
         if (cust && cust.metadata && cust.metadata.deal_status === 'flash_deal') {
@@ -4362,15 +4972,17 @@ export default {
         const savedCustomer = await custRes.json().catch(() => ({}));
 
         const origin = url.origin;
-        const baseBriefUrl = env.TALLY_BRIEF_URL || `${origin}/brief?type=organic`;
+        const baseBriefUrl = env.TALLY_BRIEF_URL || `${origin}/onboarding.html?type=organic`;
         const separator = baseBriefUrl.includes('?') ? '&' : '?';
-        const successUrl = `${baseBriefUrl}${separator}session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}`;
+        const inboundCid = (savedCustomer && savedCustomer.id) ? savedCustomer.id : '';
+        const successUrl = `${baseBriefUrl}${separator}session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}${inboundCid ? `&client_id=${encodeURIComponent(inboundCid)}` : ''}`;
         const cancelUrl = `${origin}/?canceled=true`;
 
         const params = new URLSearchParams();
         params.append('mode', 'payment');
         if (savedCustomer && savedCustomer.id) {
           params.append('customer', savedCustomer.id);
+          params.append('client_reference_id', savedCustomer.id);
         } else {
           params.append('customer_email', email);
         }
@@ -4379,7 +4991,11 @@ export default {
         params.append('allow_promotion_codes', 'true');
         params.append('billing_address_collection', 'auto');
         params.append('phone_number_collection[enabled]', 'true');
+        params.append('invoice_creation[enabled]', 'true');
         params.append('metadata[flow_type]', 'inbound');
+        if (inboundCid) params.append('metadata[customer_id]', inboundCid);
+        const inboundSlugMeta = slugifyName(name || email.split('@')[0] || '');
+        if (inboundSlugMeta) params.append('metadata[demo_slug]', inboundSlugMeta);
 
         if (env.STRIPE_PRICE_ID) {
           params.append('line_items[0][price]', env.STRIPE_PRICE_ID);
@@ -4431,142 +5047,27 @@ export default {
       }
     }
 
-    // 3. Post-Payment Session Verification & Stage 1 Welcome SMS/Email Trigger
-    if (url.pathname === '/api/verify-session' && request.method === 'POST') {
+    // 3. Post-Payment Session Verification & Automated Tax Invoice / Email / SMS / Telegram Trigger
+    if ((url.pathname === '/api/verify-session' || url.pathname === '/api/verify-payment') && (request.method === 'POST' || request.method === 'GET')) {
       try {
-        const body = await request.json().catch(() => ({}));
-        const sessionId = (body.sessionId || '').trim();
+        let sessionId = (url.searchParams.get('session_id') || url.searchParams.get('sessionId') || '').trim();
+        if (request.method === 'POST') {
+          const body = await request.json().catch(() => ({}));
+          if (!sessionId) sessionId = (body.sessionId || body.session_id || '').trim();
+        }
         if (!sessionId || !sessionId.startsWith('cs_') || !cfg.stripeSecretKey) {
-          return new Response(JSON.stringify({ ok: false }), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: false, error: 'Missing or invalid sessionId' }), { status: 200, headers: corsHeaders });
         }
 
-        const sessionRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+        const result = await finalizeStripePaymentAndNotify({
+          sessionId,
+          origin: url.origin,
+          env,
+          ctx,
+          cfg
         });
-        if (!sessionRes.ok) {
-          return new Response(JSON.stringify({ ok: false }), { status: 200, headers: corsHeaders });
-        }
-        const sessionData = await sessionRes.json();
-        const email = (sessionData.customer_details && sessionData.customer_details.email) || sessionData.customer_email || (sessionData.metadata && sessionData.metadata.customer_email) || '';
-        const name = (sessionData.metadata && sessionData.metadata.customer_name) || (sessionData.customer_details && sessionData.customer_details.name) || '';
-        const phone = (sessionData.customer_details && sessionData.customer_details.phone) || (sessionData.metadata && sessionData.metadata.customer_phone) || '';
 
-        let cust = null;
-        if (typeof sessionData.customer === 'string') {
-          const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(sessionData.customer)}`, {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
-          });
-          if (cRes.ok) cust = await cRes.json();
-        }
-        if (!cust && email) {
-          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
-        }
-
-        const alreadyWelcomed = cust && cust.metadata && cust.metadata.welcome_sent === 'true';
-        let notifyRes = null;
-        const isOutboundSession = (sessionData.metadata && sessionData.metadata.flow === 'outbound_demo') ||
-          (sessionData.metadata && sessionData.metadata.flow_type === 'outbound') ||
-          (cust && cust.metadata && cust.metadata.flow_type === 'outbound');
-        const resolvedPhone = phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '';
-        const clientObj = {
-          id: (cust && cust.id) || (typeof sessionData.customer === 'string' ? sessionData.customer : ''),
-          name: name || (cust && cust.name) || '',
-          email: email || (cust && cust.email) || '',
-          phone: resolvedPhone,
-          displayPhone: (cust && cust.metadata && cust.metadata.display_phone) || resolvedPhone,
-          businessName: (cust && cust.metadata && cust.metadata.business_name) || (sessionData.metadata && sessionData.metadata.customer_name) || '',
-          demoSlug: (cust && cust.metadata && cust.metadata.demo_slug) || slugifyName((cust && cust.metadata && cust.metadata.business_name) || name || ''),
-          demoUrl: (cust && cust.metadata && cust.metadata.demo_url) || (sessionData.metadata && sessionData.metadata.demo_url) || ''
-        };
-
-        if (sessionData.payment_status === 'paid' || sessionData.status === 'complete') {
-          const paidLabel = clientObj.businessName || clientObj.name || clientObj.email || 'Khách hàng mới';
-          await recordActivityAndNotify({
-            type: 'payment_received',
-            title: '💰 Đã Nhận Thanh Toán $599 AUD!',
-            message: `${paidLabel} vừa thanh toán $599 AUD qua Stripe!`,
-            clientName: paidLabel,
-            slug: clientObj.demoSlug || '',
-            dedupeKey: `paid_notified:${sessionId}`,
-            env,
-            ctx
-          });
-          await upsertD1Client(env, {
-            ...clientObj,
-            paymentStatus: 'paid',
-            flowType: isOutboundSession ? 'outbound' : 'inbound',
-            stage: isOutboundSession ? 'outbound_paid' : ((cust && cust.metadata && cust.metadata.stage) || 'paid')
-          });
-        }
-
-        if (!alreadyWelcomed && (email || resolvedPhone)) {
-          notifyRes = await triggerLifecycleNotification({
-            stage: isOutboundSession ? 'outbound_paid_confirmed' : 'payment_confirmed',
-            client: clientObj,
-            origin: url.origin,
-            cfg
-          }).catch((err) => ({ smsResult: { sent: false }, emailResult: { sent: false, reason: (err && err.message) || 'Skipped' } }));
-
-          const uParams = new URLSearchParams();
-          if (clientObj.email) uParams.append('email', clientObj.email);
-          if (clientObj.name) uParams.append('name', clientObj.name);
-          if (resolvedPhone) {
-            uParams.append('phone', resolvedPhone);
-            uParams.append('metadata[customer_phone]', resolvedPhone);
-            if (!cust || !cust.metadata || !cust.metadata.display_phone) {
-              uParams.append('metadata[display_phone]', resolvedPhone);
-            }
-          }
-          uParams.append('metadata[studio]', 'WynnPages Australia');
-          uParams.append('metadata[welcome_sent]', 'true');
-          uParams.append('metadata[payment_status]', 'paid');
-          uParams.append('metadata[checkout_session_id]', sessionId);
-          if (isOutboundSession) {
-            uParams.append('metadata[flow_type]', 'outbound');
-            uParams.append('metadata[stage]', 'outbound_paid');
-          } else if (!cust || !cust.metadata || !cust.metadata.brief_status) {
-            uParams.append('metadata[stage]', 'paid');
-          }
-
-          const targetUrl = cust
-            ? `https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`
-            : 'https://api.stripe.com/v1/customers';
-          await fetch(targetUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: uParams.toString()
-          }).catch(() => {});
-        } else if (resolvedPhone && cust && cust.id && !cust.phone) {
-          const phP = new URLSearchParams();
-          phP.append('phone', resolvedPhone);
-          phP.append('metadata[customer_phone]', resolvedPhone);
-          if (!cust.metadata || !cust.metadata.display_phone) phP.append('metadata[display_phone]', resolvedPhone);
-          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: phP.toString()
-          }).catch(() => {});
-        }
-
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            email,
-            name,
-            phone,
-            welcomeTriggered: !alreadyWelcomed,
-            notifyRes
-          }),
-          { status: 200, headers: corsHeaders }
-        );
+        return new Response(JSON.stringify(result), { status: 200, headers: corsHeaders });
       } catch (err) {
         return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 200, headers: corsHeaders });
       }
@@ -4884,6 +5385,17 @@ export default {
         };
 
         await upsertD1Client(env, clientRecord);
+        await syncClientsKvSnapshot(env);
+        const dbClearDraft = getD1(env);
+        if (dbClearDraft) {
+          const draftKeysToClear = [];
+          if (clientRecord.id) draftKeysToClear.push(`onboarding_draft:cid:${clientRecord.id}`);
+          if (email) draftKeysToClear.push(`onboarding_draft:email:${email.toLowerCase()}`);
+          if (sessionId) draftKeysToClear.push(`onboarding_draft:sid:${sessionId}`);
+          if (draftKeysToClear.length) {
+            await dbClearDraft.batch(draftKeysToClear.map((k) => dbClearDraft.prepare('DELETE FROM settings WHERE key = ?').bind(k))).catch(() => {});
+          }
+        }
         const briefLabel = businessName || customerName || email || 'Khách hàng mới';
         await recordActivityAndNotify({
           type: 'brief_completed',
@@ -5032,12 +5544,12 @@ export default {
     // 4b-activity. Activity Feed & Real-Time Push Notification Engine (D1 + KV Synced)
     if (url.pathname === '/api/activity-feed' && request.method === 'GET') {
       const db = getD1(env);
-      let d1Events = [];
+      let events = [];
       if (db) {
         await ensureD1Schema(env);
-        const rowsRes = await db.prepare('SELECT id, type, icon, title, message, client_name, slug, timestamp FROM activity_events ORDER BY timestamp DESC LIMIT 25').all().catch(() => null);
+        const rowsRes = await db.prepare('SELECT id, type, icon, title, message, client_name, slug, timestamp FROM activity_events ORDER BY timestamp DESC LIMIT 20').all().catch(() => null);
         if (rowsRes && Array.isArray(rowsRes.results)) {
-          d1Events = rowsRes.results.map((r) => ({
+          events = rowsRes.results.map((r) => ({
             id: r.id,
             type: r.type,
             icon: r.icon,
@@ -5048,13 +5560,9 @@ export default {
             timestamp: r.timestamp
           }));
         }
+      } else if (env && env.WYNN_KV) {
+        events = ((await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || []).slice(0, 20);
       }
-      const kvEvents = (env && env.WYNN_KV ? await env.WYNN_KV.get('activity_events', 'json').catch(() => null) : []) || [];
-      const merged = new Map();
-      for (const e of [...d1Events, ...kvEvents]) {
-        if (e && e.id && !merged.has(e.id)) merged.set(e.id, e);
-      }
-      const events = Array.from(merged.values()).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0)).slice(0, 20);
       return new Response(JSON.stringify({ ok: true, events }), { status: 200, headers: corsHeaders });
     }
 
@@ -5063,8 +5571,7 @@ export default {
       if (db) {
         await ensureD1Schema(env);
         await db.prepare('DELETE FROM activity_events').run().catch(() => {});
-      }
-      if (env && env.WYNN_KV) {
+      } else if (env && env.WYNN_KV) {
         await env.WYNN_KV.put('activity_events', JSON.stringify([])).catch(() => {});
       }
       return new Response(JSON.stringify({ ok: true, events: [] }), { status: 200, headers: corsHeaders });
@@ -5442,150 +5949,77 @@ export default {
         const email = (url.searchParams.get('email') || '').trim();
         const sessionId = (url.searchParams.get('session_id') || '').trim();
 
-        let cust = null;
-        if (cid && cid.startsWith('cus_') && cfg.stripeSecretKey) {
-          cust = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
-        }
-        let checkoutSessionObj = null;
+        let paymentReconcile = null;
         if (sessionId && sessionId.startsWith('cs_') && cfg.stripeSecretKey) {
-          const sessionRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
-            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          paymentReconcile = await finalizeStripePaymentAndNotify({
+            sessionId,
+            origin: url.origin,
+            env,
+            ctx,
+            cfg
           }).catch(() => null);
-          if (sessionRes && sessionRes.ok) {
-            checkoutSessionObj = await sessionRes.json().catch(() => null);
-            if (!cust && checkoutSessionObj) {
-              const custId = (typeof checkoutSessionObj.customer === 'string' && checkoutSessionObj.customer) || (checkoutSessionObj.metadata && checkoutSessionObj.metadata.customer_id) || null;
-              if (custId) cust = await findCustomerBySlugOrId(custId, cfg.stripeSecretKey);
-              const sessEmail = (checkoutSessionObj.customer_details && checkoutSessionObj.customer_details.email) || checkoutSessionObj.customer_email || '';
-              if (!cust && sessEmail) {
-                cust = await findStripeCustomerByEmail(sessEmail, cfg.stripeSecretKey);
-              }
-              if (!cust && (checkoutSessionObj.payment_status === 'paid' || checkoutSessionObj.status === 'complete')) {
-                const cd = checkoutSessionObj.customer_details || {};
-                const meta = checkoutSessionObj.metadata || {};
-                const createP = new URLSearchParams();
-                if (cd.email || sessEmail) createP.append('email', cd.email || sessEmail);
-                if (cd.name || meta.customer_name) createP.append('name', cd.name || meta.customer_name);
-                if (cd.phone || meta.customer_phone) {
-                  const p = cd.phone || meta.customer_phone;
-                  createP.append('phone', p);
-                  createP.append('metadata[customer_phone]', p);
-                  createP.append('metadata[display_phone]', p);
-                }
-                createP.append('metadata[studio]', 'WynnPages Australia');
-                createP.append('metadata[flow_type]', 'outbound');
-                createP.append('metadata[stage]', 'outbound_paid');
-                createP.append('metadata[payment_status]', 'paid');
-                createP.append('metadata[checkout_session_id]', sessionId);
-                if (meta.customer_name) createP.append('metadata[business_name]', meta.customer_name);
-                if (meta.demo_url) createP.append('metadata[demo_url]', meta.demo_url);
-                const createdRes = await fetch('https://api.stripe.com/v1/customers', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                  },
-                  body: createP.toString()
-                }).catch(() => null);
-                if (createdRes && createdRes.ok) {
-                  cust = await createdRes.json().catch(() => null);
-                }
-              }
-            }
-          }
-        }
-        if (!cust && email && cfg.stripeSecretKey) {
-          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
         }
 
-        if (!cust) {
+        const effectiveCid = (paymentReconcile && paymentReconcile.cid) || cid;
+        const effectiveEmail = (paymentReconcile && paymentReconcile.email) || email;
+
+        let cust = null;
+        if (effectiveCid && effectiveCid.startsWith('cus_') && cfg.stripeSecretKey) {
+          cust = await findCustomerBySlugOrId(effectiveCid, cfg.stripeSecretKey);
+        }
+        if (!cust && effectiveEmail && cfg.stripeSecretKey) {
+          cust = await findStripeCustomerByEmail(effectiveEmail, cfg.stripeSecretKey);
+        }
+
+        // Fallback/enrich from D1 clients table
+        const dbRev = getD1(env);
+        let d1Meta = null;
+        if (dbRev) {
+          await ensureD1Schema(env);
+          let d1Row = null;
+          if (effectiveCid) {
+            d1Row = await dbRev.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(effectiveCid).first().catch(() => null);
+          }
+          if (!d1Row && (cust && cust.id)) {
+            d1Row = await dbRev.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(cust.id).first().catch(() => null);
+          }
+          if (!d1Row && effectiveEmail) {
+            d1Row = await dbRev.prepare('SELECT * FROM clients WHERE lower(email) = lower(?) LIMIT 1').bind(effectiveEmail).first().catch(() => null);
+          }
+          if (d1Row && d1Row.metadata_json) {
+            try { d1Meta = JSON.parse(d1Row.metadata_json); } catch (_) {}
+          }
+          if (!d1Meta && d1Row) {
+            d1Meta = {
+              id: d1Row.id,
+              email: d1Row.email,
+              name: d1Row.name,
+              businessName: d1Row.business_name,
+              phone: d1Row.phone,
+              demoSlug: d1Row.demo_slug,
+              demoUrl: d1Row.demo_url,
+              liveUrl: d1Row.live_url
+            };
+          }
+        }
+
+        if (!cust && !d1Meta) {
           return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), {
             status: 404,
             headers: corsHeaders
           });
         }
 
-        // Auto-reconcile payment + Stripe Checkout collected phone if checkoutSessionObj is paid
-        if (checkoutSessionObj && (checkoutSessionObj.payment_status === 'paid' || checkoutSessionObj.status === 'complete')) {
-          const checkoutPhone = (checkoutSessionObj.customer_details && checkoutSessionObj.customer_details.phone) || '';
-          const checkoutEmail = (checkoutSessionObj.customer_details && checkoutSessionObj.customer_details.email) || checkoutSessionObj.customer_email || '';
-          const needPaidUpdate = !cust.metadata || cust.metadata.payment_status !== 'paid' || cust.metadata.stage !== 'outbound_paid';
-          const needPhoneUpdate = Boolean(checkoutPhone && (!cust.phone || !cust.metadata?.customer_phone));
-          if (needPaidUpdate || needPhoneUpdate) {
-            const uParams = new URLSearchParams();
-            uParams.append('metadata[payment_status]', 'paid');
-            uParams.append('metadata[stage]', 'outbound_paid');
-            uParams.append('metadata[checkout_session_id]', sessionId);
-            if (checkoutPhone) {
-              uParams.append('phone', checkoutPhone);
-              uParams.append('metadata[customer_phone]', checkoutPhone);
-              if (!cust.metadata || !cust.metadata.display_phone) {
-                uParams.append('metadata[display_phone]', checkoutPhone);
-              }
-              cust.phone = checkoutPhone;
-              if (!cust.metadata) cust.metadata = {};
-              cust.metadata.customer_phone = checkoutPhone;
-              if (!cust.metadata.display_phone) cust.metadata.display_phone = checkoutPhone;
-            }
-            if (checkoutEmail && !cust.email) {
-              uParams.append('email', checkoutEmail);
-              cust.email = checkoutEmail;
-            }
-            if (!cust.metadata || cust.metadata.welcome_sent !== 'true') {
-              uParams.append('metadata[welcome_sent]', 'true');
-              runInBg(ctx, triggerLifecycleNotification({
-                stage: 'outbound_paid_confirmed',
-                client: {
-                  id: cust.id,
-                  name: cust.name || '',
-                  email: cust.email || checkoutEmail || '',
-                  phone: cust.phone || (cust.metadata && cust.metadata.customer_phone) || '',
-                  businessName: (cust.metadata && cust.metadata.business_name) || cust.name || '',
-                  demoUrl: (cust.metadata && cust.metadata.demo_url) || ''
-                },
-                origin: url.origin,
-                cfg
-              }).catch(() => ({ sent: false })));
-            }
-            runInBg(ctx, fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              body: uParams.toString()
-            }));
-            if (!cust.metadata) cust.metadata = {};
-            cust.metadata.payment_status = 'paid';
-            cust.metadata.stage = 'outbound_paid';
-            cust.metadata.checkout_session_id = sessionId;
+        const clientRecord = cust ? formatCustomerRecord(cust) : d1Meta;
+        const resolvedClientId = (cust && cust.id) || (d1Meta && d1Meta.id) || effectiveCid;
+        const cleanSlug = slugifyName(clientRecord.demoSlug || clientRecord.businessName || '');
 
-            const reconciledRecord = formatCustomerRecord(cust);
-            const reconciledSlug = slugifyName(reconciledRecord.demoSlug);
-            const paidBiz = (cust.metadata && cust.metadata.business_name) || cust.name || 'Khách hàng';
-            await recordActivityAndNotify({
-              type: 'payment_received',
-              title: '💰 Đã Nhận Thanh Toán $599 AUD!',
-              message: `${paidBiz} vừa thanh toán $599 AUD qua Stripe!`,
-              clientName: paidBiz,
-              slug: reconciledSlug,
-              dedupeKey: `paid_notified:${sessionId}`,
-              env,
-              ctx
-            });
-            await upsertD1Client(env, reconciledRecord);
-          }
+        // Check revision data in D1 first, then KV, then Stripe metadata
+        let savedRevData = (d1Meta && d1Meta.revisionData) || null;
+        if (!savedRevData && env && env.WYNN_KV && resolvedClientId) {
+          savedRevData = await env.WYNN_KV.get(`revision_data:${resolvedClientId}`, 'json').catch(() => null);
         }
-
-        const clientRecord = formatCustomerRecord(cust);
-        const cleanSlug = slugifyName(clientRecord.demoSlug);
-
-        // Check if revision data exists in KV or metadata
-        let savedRevData = null;
-        if (env && env.WYNN_KV) {
-          savedRevData = await env.WYNN_KV.get(`revision_data:${cust.id}`, 'json').catch(() => null);
-        }
-        if (!savedRevData && cust.metadata && cust.metadata.revision_json) {
+        if (!savedRevData && cust && cust.metadata && cust.metadata.revision_json) {
           try {
             savedRevData = JSON.parse(cust.metadata.revision_json);
           } catch (_) {}
@@ -5604,8 +6038,8 @@ export default {
         }
 
         const clientResp = {
-          id: cust.id,
-          email: clientRecord.email || '',
+          id: resolvedClientId,
+          email: clientRecord.email || effectiveEmail || '',
           dealStatus: clientRecord.dealStatus || 'standard',
           liveUrl: clientRecord.liveUrl || '',
           existingDomain: clientRecord.existingDomain || '',
@@ -5625,17 +6059,26 @@ export default {
           menu: demoMenu || null,
           photos: (demoConfig && demoConfig.images && demoConfig.images.lookbook) || null,
           demoUrl: clientRecord.demoUrl || clientRecord.brandedDemoUrl,
-          demoSlug: clientRecord.demoSlug
+          demoSlug: clientRecord.demoSlug || cleanSlug
         };
 
-        const revStatus = (cust.metadata && cust.metadata.revision_status) || (savedRevData ? 'submitted' : 'pending');
-        const revSubmittedAt = (cust.metadata && cust.metadata.revision_submitted_at) || (savedRevData && savedRevData.submittedAt) || '';
+        const revStatus = (cust && cust.metadata && cust.metadata.revision_status)
+          || (d1Meta && d1Meta.revisionStatus)
+          || (savedRevData && savedRevData.submittedAt ? 'submitted' : (savedRevData ? 'draft' : 'pending'));
+        const revSubmittedAt = (cust && cust.metadata && cust.metadata.revision_submitted_at)
+          || (d1Meta && d1Meta.revisionSubmittedAt)
+          || (savedRevData && savedRevData.submittedAt)
+          || '';
+        const revDraftAt = (d1Meta && d1Meta.revisionDraftAt)
+          || (savedRevData && savedRevData.draftSavedAt)
+          || '';
 
         return new Response(JSON.stringify({
           ok: true,
           client: clientResp,
           revisionStatus: revStatus,
           revisionSubmittedAt: revSubmittedAt,
+          revisionDraftAt: revDraftAt,
           revisionData: savedRevData
         }), { status: 200, headers: corsHeaders });
       } catch (err) {
@@ -5643,11 +6086,12 @@ export default {
       }
     }
 
-    // 4f. Submit & Lock Revision Round (POST /api/revision/submit)
-    if (url.pathname === '/api/revision/submit' && request.method === 'POST') {
+    // 4f. Submit & Lock OR Save Draft of Revision Round (POST /api/revision/submit | POST /api/revision/save-draft)
+    if ((url.pathname === '/api/revision/submit' || url.pathname === '/api/revision/save-draft') && request.method === 'POST') {
       try {
+        const isDraft = url.pathname === '/api/revision/save-draft';
         const body = await request.json().catch(() => ({}));
-        const cid = (body.cid || '').trim();
+        const cid = (body.cid || body.client_id || '').trim();
         const email = (body.email || '').trim();
         if (!cid && !email) {
           return new Response(JSON.stringify({ ok: false, error: 'Missing cid or email' }), { status: 400, headers: corsHeaders });
@@ -5660,16 +6104,48 @@ export default {
         if (!cust && email && cfg.stripeSecretKey) {
           cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
         }
-        if (!cust) {
+
+        const dbRevPost = getD1(env);
+        let d1RowMeta = null;
+        if (dbRevPost) {
+          await ensureD1Schema(env);
+          let d1Row = null;
+          if (cid) d1Row = await dbRevPost.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(cid).first().catch(() => null);
+          if (!d1Row && cust && cust.id) d1Row = await dbRevPost.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(cust.id).first().catch(() => null);
+          if (!d1Row && email) d1Row = await dbRevPost.prepare('SELECT * FROM clients WHERE lower(email) = lower(?) LIMIT 1').bind(email).first().catch(() => null);
+          if (d1Row && d1Row.metadata_json) {
+            try { d1RowMeta = JSON.parse(d1Row.metadata_json); } catch (_) {}
+          }
+          if (!d1RowMeta && d1Row) {
+            d1RowMeta = {
+              id: d1Row.id,
+              email: d1Row.email,
+              name: d1Row.name,
+              businessName: d1Row.business_name,
+              phone: d1Row.phone,
+              demoSlug: d1Row.demo_slug,
+              demoUrl: d1Row.demo_url,
+              liveUrl: d1Row.live_url
+            };
+          }
+        }
+
+        if (!cust && !d1RowMeta) {
           return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), { status: 404, headers: corsHeaders });
         }
 
         const nowIso = new Date().toISOString();
-        const clientRecord = formatCustomerRecord(cust);
-        const cleanSlug = slugifyName(clientRecord.demoSlug);
+        const clientRecord = cust ? formatCustomerRecord(cust) : d1RowMeta;
+        const resolvedClientId = (cust && cust.id) || (d1RowMeta && d1RowMeta.id) || cid;
+        const cleanSlug = slugifyName(clientRecord.demoSlug || clientRecord.businessName || '');
+
+        let prevRevData = (d1RowMeta && d1RowMeta.revisionData) || null;
+        if (!prevRevData && env && env.WYNN_KV && resolvedClientId) {
+          prevRevData = await env.WYNN_KV.get(`revision_data:${resolvedClientId}`, 'json').catch(() => null);
+        }
 
         // Save uploaded menu file if provided
-        let savedMenuUrl = '';
+        let savedMenuUrl = (prevRevData && prevRevData.menuFileUrl) || '';
         if (body.menuFileBase64 && env && env.WYNN_KV) {
           const mExt = (body.menuFileName && body.menuFileName.includes('.')) ? body.menuFileName.split('.').pop() : 'jpg';
           const mKey = `site_asset:${cleanSlug}:/assets/menu-revision.${mExt}`;
@@ -5678,18 +6154,18 @@ export default {
           await env.WYNN_KV.put(mKey, binaryBuf.buffer, {
             metadata: { contentType: body.menuFileBase64.startsWith('data:application/pdf') ? 'application/pdf' : 'image/jpeg' }
           }).catch(() => {});
-          await env.WYNN_KV.put(`revision_file:${cust.id}:menu`, body.menuFileBase64).catch(() => {});
+          await env.WYNN_KV.put(`revision_file:${resolvedClientId}:menu`, body.menuFileBase64).catch(() => {});
           savedMenuUrl = `https://${cleanSlug}.wynnpages.com.au/assets/menu-revision.${mExt}`;
         }
 
         // Save uploaded photos file if provided
         if (body.photosFileBase64 && env && env.WYNN_KV) {
-          await env.WYNN_KV.put(`revision_file:${cust.id}:photos`, body.photosFileBase64).catch(() => {});
+          await env.WYNN_KV.put(`revision_file:${resolvedClientId}:photos`, body.photosFileBase64).catch(() => {});
         }
 
         const revPayload = {
-          cid: cust.id,
-          email: cust.email || email,
+          cid: resolvedClientId,
+          email: (cust && cust.email) || clientRecord.email || email,
           bizName: body.bizName || '',
           phone: body.phone || '',
           address: body.address || '',
@@ -5698,16 +6174,46 @@ export default {
           heroHeadline: body.heroHeadline || '',
           heroStory: body.heroStory || '',
           menuText: body.menuText || '',
-          menuFileName: body.menuFileName || '',
+          menuFileName: body.menuFileName || (prevRevData && prevRevData.menuFileName) || '',
           menuFileUrl: savedMenuUrl,
-          photosFileName: body.photosFileName || '',
+          photosFileName: body.photosFileName || (prevRevData && prevRevData.photosFileName) || '',
           notes: body.notes || '',
-          submittedAt: nowIso
+          ...(isDraft ? { draftSavedAt: nowIso, isDraft: true } : { submittedAt: nowIso, isDraft: false })
         };
 
-        // Store revision JSON in KV
+        // Store revision JSON in KV as well (explicit save/submit action, not polling)
         if (env && env.WYNN_KV) {
-          await env.WYNN_KV.put(`revision_data:${cust.id}`, JSON.stringify(revPayload)).catch(() => {});
+          await env.WYNN_KV.put(`revision_data:${resolvedClientId}`, JSON.stringify(revPayload)).catch(() => {});
+        }
+
+        // If Save Draft: store in D1 & Stripe draft status WITHOUT locking and WITHOUT sending notifications
+        if (isDraft) {
+          if (cust && cust.id && cfg.stripeSecretKey) {
+            const draftP = new URLSearchParams();
+            draftP.append('metadata[revision_status]', 'draft');
+            draftP.append('metadata[revision_draft_at]', nowIso);
+            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: draftP.toString()
+            }).catch(() => {});
+          }
+          await upsertD1Client(env, {
+            ...clientRecord,
+            id: resolvedClientId,
+            revisionStatus: 'draft',
+            revisionDraftAt: nowIso,
+            revisionData: revPayload
+          });
+          return new Response(JSON.stringify({
+            ok: true,
+            draft: true,
+            savedAt: nowIso,
+            message: 'Draft saved! You can safely close this page and return later.'
+          }), { status: 200, headers: corsHeaders });
         }
 
         // Build summary text for Stripe metadata
@@ -5730,18 +6236,24 @@ export default {
           env,
           ctx
         });
-        await upsertD1Client(env, { ...clientRecord, revisionStatus: 'submitted', revisionSubmittedAt: nowIso });
+        await upsertD1Client(env, {
+          ...clientRecord,
+          id: resolvedClientId,
+          revisionStatus: 'submitted',
+          revisionSubmittedAt: nowIso,
+          revisionData: revPayload
+        });
 
         // Concurrently notify Admin via Email AND send Domain Guide Email + SMS to Client
-        const shouldSendGuide = !clientRecord.domainDelegated && !(cust.metadata && cust.metadata.domain_guide_sent === 'true');
+        const shouldSendGuide = !clientRecord.domainDelegated && !(cust && cust.metadata && cust.metadata.domain_guide_sent === 'true');
         const clientNotifyTask = shouldSendGuide
           ? triggerLifecycleNotification({
               stage: 'outbound_revision_submitted',
               client: {
-                id: cust.id,
+                id: resolvedClientId,
                 name: clientRecord.name || revPayload.bizName || '',
                 businessName: revPayload.bizName || clientRecord.businessName || clientRecord.name || '',
-                email: cust.email || email || clientRecord.email || '',
+                email: (cust && cust.email) || email || clientRecord.email || '',
                 phone: clientRecord.phone || clientRecord.displayPhone || revPayload.phone || '',
                 liveUrl: clientRecord.liveUrl || '',
                 existingDomain: clientRecord.existingDomain || '',
@@ -5786,7 +6298,7 @@ export default {
         );
 
         // Update Stripe Customer metadata (revision lock + domain guide delivery logs)
-        if (cfg.stripeSecretKey) {
+        if (cfg.stripeSecretKey && cust && cust.id) {
           const uP = new URLSearchParams();
           uP.append('metadata[revision_status]', 'submitted');
           uP.append('metadata[revision_submitted_at]', nowIso);
@@ -5823,11 +6335,14 @@ export default {
 
         const updatedClientForD1 = {
           ...clientRecord,
+          id: resolvedClientId,
           businessName: clientRecord.businessName,
           revisionStatus: 'submitted',
-          revisionSubmittedAt: nowIso
+          revisionSubmittedAt: nowIso,
+          revisionData: revPayload
         };
         await upsertD1Client(env, updatedClientForD1);
+        await syncClientsKvSnapshot(env);
 
         return new Response(JSON.stringify({
           ok: true,
@@ -5890,6 +6405,100 @@ export default {
       }
     }
 
+    // 4f-3. Onboarding Brief Cloud Save Draft & Resume (GET /api/onboarding/get-draft | POST /api/onboarding/save-draft)
+    if (url.pathname === '/api/onboarding/get-draft' && request.method === 'GET') {
+      try {
+        const cid = (url.searchParams.get('cid') || url.searchParams.get('client_id') || '').trim();
+        const email = (url.searchParams.get('email') || '').trim().toLowerCase();
+        const sessionId = (url.searchParams.get('session_id') || '').trim();
+        const keys = [];
+        if (cid) keys.push(`onboarding_draft:cid:${cid}`);
+        if (email) keys.push(`onboarding_draft:email:${email}`);
+        if (sessionId) keys.push(`onboarding_draft:sid:${sessionId}`);
+
+        let draft = null;
+        const dbOb = getD1(env);
+        if (dbOb && keys.length > 0) {
+          await ensureD1Schema(env);
+          for (const k of keys) {
+            const row = await dbOb.prepare('SELECT value, updated_at FROM settings WHERE key = ? LIMIT 1').bind(k).first().catch(() => null);
+            if (row && row.value) {
+              try {
+                draft = JSON.parse(row.value);
+                if (draft) break;
+              } catch (_) {}
+            }
+          }
+        }
+        return new Response(JSON.stringify({ ok: true, draft }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === '/api/onboarding/save-draft' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const cid = String(body.cid || body.client_id || '').trim();
+        const email = String(body.email || '').trim().toLowerCase();
+        const sessionId = String(body.sessionId || body.session_id || '').trim();
+        const nowIso = new Date().toISOString();
+
+        const keys = [];
+        if (cid) keys.push(`onboarding_draft:cid:${cid}`);
+        if (email) keys.push(`onboarding_draft:email:${email}`);
+        if (sessionId) keys.push(`onboarding_draft:sid:${sessionId}`);
+
+        if (keys.length === 0) {
+          return new Response(JSON.stringify({ ok: false, error: 'Please enter your email or open via your personal onboarding link to save a draft.' }), { status: 400, headers: corsHeaders });
+        }
+
+        const draftPayload = {
+          cid,
+          email: String(body.email || '').trim(),
+          sessionId,
+          briefType: String(body.briefType || 'organic'),
+          currentStep: Number(body.currentStep || 1),
+          businessName: String(body.businessName || ''),
+          displayPhone: String(body.displayPhone || ''),
+          businessAddress: String(body.businessAddress || ''),
+          socialLinks: String(body.socialLinks || ''),
+          logoFileName: String(body.logoFileName || ''),
+          logoLink: String(body.logoLink || ''),
+          menuFileName: String(body.menuFileName || ''),
+          menuLink: String(body.menuLink || ''),
+          hasPhotos: String(body.hasPhotos || ''),
+          photosFileName: String(body.photosFileName || ''),
+          photosLink: String(body.photosLink || ''),
+          brandColors: String(body.brandColors || ''),
+          vibeLinks: String(body.vibeLinks || ''),
+          hasDomain: String(body.hasDomain || ''),
+          existingDomain: String(body.existingDomain || ''),
+          desiredDomains: String(body.desiredDomains || ''),
+          savedAt: nowIso
+        };
+
+        const dbOb = getD1(env);
+        if (dbOb) {
+          await ensureD1Schema(env);
+          const payloadStr = JSON.stringify(draftPayload);
+          const stmts = keys.map((k) =>
+            dbOb.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+              .bind(k, payloadStr, nowIso)
+          );
+          await dbOb.batch(stmts).catch(() => {});
+        }
+
+        return new Response(JSON.stringify({
+          ok: true,
+          savedAt: nowIso,
+          message: 'Draft saved! You can safely close this page and return later.'
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 4g. Admin 1-Click Gemini AI Auto-Editor (POST /api/admin/apply-ai-revision)
     if (url.pathname === '/api/admin/apply-ai-revision' && request.method === 'POST') {
       try {
@@ -5912,9 +6521,20 @@ export default {
         const clientRecord = formatCustomerRecord(cust);
         const cleanSlug = slugifyName(clientRecord.demoSlug);
 
-        // Read revision data
+        // Read revision data (D1 fallback + KV + Stripe metadata)
         let revData = null;
-        if (env && env.WYNN_KV) {
+        const dbAi = getD1(env);
+        if (dbAi) {
+          await ensureD1Schema(env);
+          const aiRow = await dbAi.prepare('SELECT metadata_json FROM clients WHERE id = ? LIMIT 1').bind(cust.id).first().catch(() => null);
+          if (aiRow && aiRow.metadata_json) {
+            try {
+              const aiMeta = JSON.parse(aiRow.metadata_json);
+              if (aiMeta && aiMeta.revisionData) revData = aiMeta.revisionData;
+            } catch (_) {}
+          }
+        }
+        if (!revData && env && env.WYNN_KV) {
           revData = await env.WYNN_KV.get(`revision_data:${cust.id}`, 'json').catch(() => null);
         }
         if (!revData && cust.metadata && cust.metadata.revision_json) {
@@ -6096,15 +6716,41 @@ export default {
       } catch (_) {}
 
       const d1ClientsIdx = await getD1ClientsIndex(env);
+      const dbBriefs = getD1(env);
+      const d1SmsMap = new Map();
+      if (dbBriefs) {
+        const smsRes = await dbBriefs.prepare(
+          'SELECT id, client_id, type, to_phone, body_text, status, reason, timestamp FROM sms_history ORDER BY timestamp DESC LIMIT 500'
+        ).all().catch(() => null);
+        if (smsRes && Array.isArray(smsRes.results)) {
+          for (const sr of smsRes.results) {
+            if (!sr || !sr.client_id) continue;
+            if (!d1SmsMap.has(sr.client_id)) d1SmsMap.set(sr.client_id, []);
+            d1SmsMap.get(sr.client_id).push({
+              id: sr.id,
+              timestamp: sr.timestamp,
+              type: sr.type,
+              to: sr.to_phone,
+              text: sr.body_text,
+              status: sr.status,
+              reason: sr.reason
+            });
+          }
+        }
+      }
+
       if (env && env.WYNN_KV) {
         await Promise.all(clients.map(async (c) => {
-          if (!c.demoPalette || c.demoPalette === '01') {
+          const cleanSlugC = slugifyName(c.demoSlug || c.businessName || c.name || '');
+          const d1Row = (c.id && d1ClientsIdx.byId.get(c.id)) || (cleanSlugC && d1ClientsIdx.bySlug.get(cleanSlugC.toLowerCase()));
+
+          if ((!c.demoPalette || c.demoPalette === '01') && c.demoSlug) {
             const meta = await env.WYNN_KV.get(`site_meta:${c.demoSlug}`, 'json').catch(() => null);
             if (meta && meta.palette) {
               c.demoPalette = meta.palette;
             }
           }
-          if (c.demoSlug) {
+          if (!d1Row && c.demoSlug) {
             const v = await env.WYNN_KV.get(`demo_views:${c.demoSlug}`, 'json').catch(() => null);
             if (v && v.viewCount) {
               c.demoViewCount = Math.max(c.demoViewCount || 0, Number(v.viewCount));
@@ -6115,24 +6761,28 @@ export default {
             }
           }
           if (c.id) {
-            const rData = await env.WYNN_KV.get(`revision_data:${c.id}`, 'json').catch(() => null);
-            if (rData) {
-              c.revisionData = rData;
-              if (!c.revisionStatus || c.revisionStatus === 'none') c.revisionStatus = 'submitted';
+            if (c.revisionStatus && c.revisionStatus !== 'none') {
+              const rData = await env.WYNN_KV.get(`revision_data:${c.id}`, 'json').catch(() => null);
+              if (rData) c.revisionData = rData;
             }
-            const hist = await env.WYNN_KV.get(`sms_history:${c.id}`, 'json').catch(() => null);
-            if (Array.isArray(hist) && hist.length) {
-              c.smsHistory = hist;
+            const d1Hist = d1SmsMap.get(c.id);
+            if (Array.isArray(d1Hist) && d1Hist.length) {
+              c.smsHistory = d1Hist.slice(0, 50).reverse();
             } else if (c.lastSmsLog) {
-              c.smsHistory = [{
-                id: 'sms_fallback',
-                timestamp: c.submittedAt || new Date().toISOString(),
-                type: 'log',
-                to: c.phone || '',
-                text: c.lastSmsLog,
-                status: c.lastSmsLog.startsWith('OK') ? 'OK' : 'ERR',
-                reason: ''
-              }];
+              const kvHist = await env.WYNN_KV.get(`sms_history:${c.id}`, 'json').catch(() => null);
+              if (Array.isArray(kvHist) && kvHist.length) {
+                c.smsHistory = kvHist;
+              } else {
+                c.smsHistory = [{
+                  id: 'sms_fallback',
+                  timestamp: c.submittedAt || new Date().toISOString(),
+                  type: 'log',
+                  to: c.phone || '',
+                  text: c.lastSmsLog,
+                  status: c.lastSmsLog.startsWith('OK') ? 'OK' : 'ERR',
+                  reason: ''
+                }];
+              }
             } else {
               c.smsHistory = [];
             }
@@ -6152,11 +6802,7 @@ export default {
         }
       }
 
-      runInBg(ctx, Promise.all([
-        captureAdminIp(request, env),
-        ...clients.map((c) => ensureCloudflareSubdomain(c.demoSlug, env, cfg.cfApiToken)),
-        ...clients.slice(0, 60).map((c) => upsertD1Client(env, c))
-      ]));
+      runInBg(ctx, captureAdminIp(request, env));
 
       return new Response(
         JSON.stringify({
@@ -6366,6 +7012,7 @@ export default {
           };
         }
         await upsertD1Client(env, clientRecord);
+        runInBg(ctx, syncClientsKvSnapshot(env));
         return new Response(JSON.stringify({ ok: true, client: clientRecord }), { status: request.method === 'POST' ? 201 : 200, headers: corsHeaders });
       }
 
@@ -6527,12 +7174,12 @@ export default {
       const resolvedSlug = slugifyName(effectiveClient.demoSlug || cleanSlug);
       const device = body.device || (/iphone|ipad|ipod|android|mobile/.test(ua) ? 'Mobile' : 'Desktop');
 
-      // 4. Rate-limit demo_view to max 1 count + Telegram alert per unique IP per client every 6 hours (21600s)
+      // 4. Rate-limit demo_view to max 1 count + Telegram alert per unique IP per client every 6 hours (stored in D1 rate_locks — zero KV writes!)
       const ipSafe = (clientIp || 'unknown').replace(/[^a-zA-Z0-9._:-]/g, '_');
-      if (eventType === 'demo_view' && env && env.WYNN_KV && resolvedSlug) {
+      if (eventType === 'demo_view' && resolvedSlug) {
         const ipLockKey = `demo_view_ip_lock:${resolvedSlug}:${ipSafe}`;
-        const existingIpLock = await env.WYNN_KV.get(ipLockKey).catch(() => null);
-        if (existingIpLock) {
+        const acquired = await acquireD1RateLock(env, ipLockKey, 21600);
+        if (!acquired) {
           return new Response(JSON.stringify({
             ok: true,
             ignored: 'rate_limited_6h',
@@ -6541,7 +7188,6 @@ export default {
             viewCount: Number((d1Client && d1Client.view_count) || effectiveClient.demoViewCount || 0)
           }), { status: 200, headers: corsHeaders });
         }
-        await env.WYNN_KV.put(ipLockKey, new Date().toISOString(), { expirationTtl: 21600 }).catch(() => {});
       }
 
       const d1Track = await recordD1TrackingEvent(env, {
@@ -6562,8 +7208,8 @@ export default {
         try {
           const bizName = effectiveClient.businessName || effectiveClient.name || d1Track.businessName || resolvedSlug;
 
-          // Mirror to KV demo_views cache
-          if (env && env.WYNN_KV && resolvedSlug) {
+          // Only mirror to KV demo_views cache if D1 binding is absent
+          if (!getD1(env) && env && env.WYNN_KV && resolvedSlug) {
             const viewKey = `demo_views:${resolvedSlug}`;
             const prev = (await env.WYNN_KV.get(viewKey, 'json').catch(() => null)) || {};
             const nowIso = new Date().toISOString();
@@ -6660,85 +7306,14 @@ export default {
 
       if (event.type === 'checkout.session.completed' && event.data && event.data.object) {
         const sessionObj = event.data.object;
-        const customerId = sessionObj.customer || (sessionObj.metadata && sessionObj.metadata.customer_id) || '';
-        const sessionEmail = sessionObj.customer_email || (sessionObj.customer_details && sessionObj.customer_details.email) || '';
-        const sessionName = (sessionObj.customer_details && sessionObj.customer_details.name) || '';
-        const sessionPhone = (sessionObj.customer_details && sessionObj.customer_details.phone) || (sessionObj.metadata && sessionObj.metadata.customer_phone) || '';
-        const flowType = (sessionObj.metadata && sessionObj.metadata.flow_type) || ((sessionObj.metadata && sessionObj.metadata.flow === 'outbound_demo') ? 'outbound' : 'inbound');
-
-        const webhookJob = (async () => {
-          let cust = null;
-          if (customerId && cfg.stripeSecretKey) {
-            const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
-              headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
-            });
-            if (cRes.ok) cust = await cRes.json();
-          }
-          if (cust && cfg.stripeSecretKey) {
-            const uP = new URLSearchParams();
-            uP.append('metadata[payment_status]', 'paid');
-            uP.append('metadata[checkout_session_id]', sessionObj.id || '');
-            if (flowType === 'outbound' || (cust.metadata && cust.metadata.flow_type === 'outbound')) {
-              uP.append('metadata[stage]', 'outbound_paid');
-            } else if (!cust.metadata || !cust.metadata.stage || cust.metadata.stage === 'checkout_started') {
-              uP.append('metadata[stage]', 'paid');
-            }
-            if (sessionEmail && !cust.email) uP.append('email', sessionEmail);
-            if (sessionPhone) {
-              uP.append('phone', sessionPhone);
-              uP.append('metadata[customer_phone]', sessionPhone);
-              if (!cust.metadata || !cust.metadata.display_phone) uP.append('metadata[display_phone]', sessionPhone);
-              cust.phone = sessionPhone;
-              if (!cust.metadata) cust.metadata = {};
-              cust.metadata.customer_phone = sessionPhone;
-            }
-            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              body: uP.toString()
-            }).catch(() => {});
-          }
-
-          const record = cust ? formatCustomerRecord(cust) : {
-            id: customerId || `wh_${sessionObj.id}`,
-            email: sessionEmail,
-            name: sessionName,
-            phone: sessionPhone,
-            displayPhone: sessionPhone,
-            businessName: (sessionObj.metadata && sessionObj.metadata.business_name) || (sessionObj.metadata && sessionObj.metadata.customer_name) || sessionName || sessionEmail || 'New Client',
-            demoSlug: slugifyName((sessionObj.metadata && sessionObj.metadata.demo_slug) || (sessionObj.metadata && sessionObj.metadata.customer_name) || sessionName || ''),
-            paymentStatus: 'paid',
-            stage: flowType === 'outbound' ? 'outbound_paid' : 'paid',
-            flowType
-          };
-          await upsertD1Client(env, { ...record, paymentStatus: 'paid' });
-
-          const bizLabel = record.businessName || record.name || sessionEmail || 'Khách hàng mới';
-          await recordActivityAndNotify({
-            type: 'payment_received',
-            title: '💰 Đã Nhận Thanh Toán $599 AUD!',
-            message: `${bizLabel} vừa thanh toán $599 AUD qua Stripe!`,
-            clientName: bizLabel,
-            slug: record.demoSlug || '',
-            dedupeKey: `paid_notified:${sessionObj.id}`,
-            env,
-            ctx
-          });
-
-          if (!cust || !cust.metadata || cust.metadata.welcome_sent !== 'true') {
-            await triggerLifecycleNotification({
-              stage: flowType === 'outbound' ? 'outbound_paid_confirmed' : 'payment_confirmed',
-              client: record,
-              origin: url.origin,
-              cfg
-            }).catch(() => {});
-          }
-        })();
-
-        runInBg(ctx, webhookJob);
+        runInBg(ctx, finalizeStripePaymentAndNotify({
+          sessionId: sessionObj.id,
+          sessionObj,
+          origin: url.origin,
+          env,
+          ctx,
+          cfg
+        }));
       }
 
       return new Response(JSON.stringify({ received: true, type: event.type }), { status: 200, headers: corsHeaders });
@@ -7393,13 +7968,6 @@ export default {
         // Action 0: Delete Client Record
         if (action === 'save_cf_token') {
           await saveSyncedSettings(env, { cfApiToken: (body.cfToken || '').trim() }, { clearEmpty: true });
-          if (env && env.WYNN_KV) {
-            if (body.cfToken) {
-              await env.WYNN_KV.put('cf_api_token', body.cfToken.trim());
-            } else {
-              await env.WYNN_KV.delete('cf_api_token');
-            }
-          }
           return new Response(JSON.stringify({ ok: true, message: 'Cloudflare API Token updated' }), { status: 200, headers: corsHeaders });
         }
 
@@ -7468,6 +8036,7 @@ export default {
             await cleanupJob;
           }
           await deleteD1Client(env, customerId);
+          runInBg(ctx, syncClientsKvSnapshot(env));
 
           return new Response(JSON.stringify({ ok: delRes.ok, customerId, deleted: delData }), { status: 200, headers: corsHeaders });
         }
@@ -8330,6 +8899,7 @@ export default {
 
           if (formatted && formatted.id) {
             await upsertD1Client(env, formatted);
+            runInBg(ctx, syncClientsKvSnapshot(env));
           }
 
           return new Response(
@@ -8359,10 +8929,21 @@ export default {
         }
 
         const subAction = body.action || 'get_settings';
+        const dbApEndpoint = getD1(env);
         if (subAction === 'get_settings') {
           let settings = { enabled: true, autoSms: true, autoDeal: true, autoExpire: true };
           let lastRun = null;
-          if (env && env.WYNN_KV) {
+          if (dbApEndpoint) {
+            await ensureD1Schema(env);
+            const [sRow, rRow] = await Promise.all([
+              dbApEndpoint.prepare('SELECT value FROM settings WHERE key = ?').bind('studio_autopilot_settings').first().catch(() => null),
+              dbApEndpoint.prepare('SELECT value FROM settings WHERE key = ?').bind('studio_autopilot_last_run').first().catch(() => null)
+            ]);
+            if (sRow && sRow.value) { try { settings = { ...settings, ...JSON.parse(sRow.value) }; } catch (_) {} }
+            else if (env && env.WYNN_KV) { settings = (await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null)) || settings; }
+            if (rRow && rRow.value) { try { lastRun = JSON.parse(rRow.value); } catch (_) {} }
+            else if (env && env.WYNN_KV) { lastRun = await env.WYNN_KV.get('studio_autopilot_last_run', 'json').catch(() => null); }
+          } else if (env && env.WYNN_KV) {
             settings = (await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null)) || settings;
             lastRun = await env.WYNN_KV.get('studio_autopilot_last_run', 'json').catch(() => null);
           }
@@ -8376,7 +8957,12 @@ export default {
             autoDeal: Boolean(body.autoDeal),
             autoExpire: Boolean(body.autoExpire)
           };
-          if (env && env.WYNN_KV) {
+          if (dbApEndpoint) {
+            await ensureD1Schema(env);
+            await dbApEndpoint.prepare(
+              'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
+            ).bind('studio_autopilot_settings', JSON.stringify(newSettings), new Date().toISOString()).run().catch(() => {});
+          } else if (env && env.WYNN_KV) {
             await env.WYNN_KV.put('studio_autopilot_settings', JSON.stringify(newSettings)).catch(() => {});
           }
           return new Response(JSON.stringify({ ok: true, settings: newSettings }), { status: 200, headers: corsHeaders });

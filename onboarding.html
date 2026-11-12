@@ -648,10 +648,15 @@
           <span id="brief-error-text">Please complete all required fields.</span>
         </div>
 
+        <!-- Draft Saved Banner -->
+        <div id="onboarding-draft-banner" class="hidden rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs font-semibold text-emerald-900">
+          <span id="onboarding-draft-text">✓ Draft saved! You can safely close this page and return later.</span>
+        </div>
+
         <!-- ======================================================== -->
-        <!-- WIZARD NAVIGATION FOOTER (Back / Next / Final Submit)    -->
+        <!-- WIZARD NAVIGATION FOOTER (Back / Save Draft / Next / Submit) -->
         <!-- ======================================================== -->
-        <div class="pt-4 border-t border-[#ece5d8] flex items-center justify-between gap-4">
+        <div class="pt-4 border-t border-[#ece5d8] flex flex-wrap items-center justify-between gap-3">
           <!-- Back Button (Hidden on Step 1) -->
           <button 
             type="button" 
@@ -662,25 +667,35 @@
             <span>Back</span>
           </button>
 
-          <!-- Next Button (Visible on Steps 1, 2, 3) -->
-          <button 
-            type="button" 
-            id="wizard-next-btn"
-            class="ml-auto px-8 py-4 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all inline-flex items-center justify-center gap-2"
-          >
-            <span>Next</span>
-            <span>&rarr;</span>
-          </button>
+          <div class="flex flex-wrap items-center gap-2.5 ml-auto w-full sm:w-auto justify-end">
+            <button
+              type="button"
+              id="wizard-save-draft-btn"
+              class="px-5 py-3.5 rounded-2xl bg-[#f7f2e8] hover:bg-[#efe6d5] border border-[#d8ccb8] text-stone-800 font-semibold text-xs sm:text-sm transition-all inline-flex items-center justify-center gap-1.5"
+            >
+              <span>💾 Save Draft (Finish Later)</span>
+            </button>
 
-          <!-- Final Submit Button (ONLY Visible on Step 4) -->
-          <button 
-            type="submit" 
-            id="brief-submit-btn"
-            class="hidden flex-1 py-4 px-6 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all items-center justify-center gap-2"
-          >
-            <span id="brief-submit-label">Complete Onboarding Brief</span>
-            <span id="brief-submit-icon">&rarr;</span>
-          </button>
+            <!-- Next Button (Visible on Steps 1, 2, 3) -->
+            <button 
+              type="button" 
+              id="wizard-next-btn"
+              class="px-8 py-4 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all inline-flex items-center justify-center gap-2"
+            >
+              <span>Next</span>
+              <span>&rarr;</span>
+            </button>
+
+            <!-- Final Submit Button (ONLY Visible on Step 4) -->
+            <button 
+              type="submit" 
+              id="brief-submit-btn"
+              class="hidden py-4 px-6 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#96432b]/20 transition-all items-center justify-center gap-2"
+            >
+              <span id="brief-submit-label">Complete Onboarding Brief</span>
+              <span id="brief-submit-icon">&rarr;</span>
+            </button>
+          </div>
         </div>
 
         <p class="text-center text-[11px] text-stone-400 flex items-center justify-center gap-1.5">
@@ -735,6 +750,7 @@
     (function () {
       const urlParams = new URLSearchParams(window.location.search);
       const emailParam = (urlParams.get('email') || '').trim();
+      const cidParam = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
       const sessionId = (urlParams.get('session_id') || '').trim();
       const briefType = (urlParams.get('type') || 'organic').toLowerCase() === 'demo' ? 'demo' : 'organic';
 
@@ -790,6 +806,9 @@
       const wizardProgressBar = document.getElementById('wizard-progress-bar');
       const prevBtn = document.getElementById('wizard-prev-btn');
       const nextBtn = document.getElementById('wizard-next-btn');
+      const saveDraftBtn = document.getElementById('wizard-save-draft-btn');
+      const draftBanner = document.getElementById('onboarding-draft-banner');
+      const draftText = document.getElementById('onboarding-draft-text');
       const submitBtn = document.getElementById('brief-submit-btn');
       const submitLabel = document.getElementById('brief-submit-label');
       const submitIcon = document.getElementById('brief-submit-icon');
@@ -820,14 +839,69 @@
         emailFallbackWrap.classList.remove('hidden');
       }
 
-      // 1b. Trigger post-payment welcome SMS + Email if arriving from Stripe Checkout
+      // 1b. Verify Stripe payment (tax invoice, SMS, Telegram) & prefill account if arriving from Checkout
       if (sessionId && sessionId.startsWith('cs_')) {
-        fetch('/api/verify-session', {
+        fetch('/api/verify-payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId })
-        }).catch(() => {});
+        })
+          .then((r) => r.json())
+          .then((v) => {
+            if (v && v.email && !emailInput.value) {
+              emailInput.value = v.email;
+              emailDisplay.textContent = 'Account: ' + v.email;
+              emailPill.classList.remove('hidden');
+              emailFallbackWrap.classList.add('hidden');
+            }
+          })
+          .catch(() => {});
       }
+
+      // 1c. Auto-load any saved onboarding draft from Cloudflare D1
+      (async function restoreSavedDraft() {
+        if (!cidParam && !emailParam && !sessionId) return;
+        try {
+          const dRes = await fetch(`/api/onboarding/get-draft?cid=${encodeURIComponent(cidParam)}&email=${encodeURIComponent(emailParam)}&session_id=${encodeURIComponent(sessionId)}`);
+          const dData = await dRes.json().catch(() => ({}));
+          const draft = dData && dData.draft;
+          if (!draft) return;
+
+          if (draft.email && !emailInput.value) {
+            emailInput.value = draft.email;
+            emailDisplay.textContent = 'Account: ' + draft.email;
+            emailPill.classList.remove('hidden');
+            emailFallbackWrap.classList.add('hidden');
+          }
+          if (draft.businessName) businessNameInput.value = draft.businessName;
+          if (draft.displayPhone) displayPhoneInput.value = draft.displayPhone;
+          if (draft.businessAddress) addressInput.value = draft.businessAddress;
+          if (draft.socialLinks) socialsInput.value = draft.socialLinks;
+          if (draft.logoLink && logoLinkInput) logoLinkInput.value = draft.logoLink;
+          if (draft.menuLink && menuLinkInput) menuLinkInput.value = draft.menuLink;
+          if (draft.photosLink && photosLinkInput) photosLinkInput.value = draft.photosLink;
+          if (draft.brandColors && colorsInput) colorsInput.value = draft.brandColors;
+          if (draft.vibeLinks && vibesInput) vibesInput.value = draft.vibeLinks;
+          if (draft.existingDomain) existingDomainInput.value = draft.existingDomain;
+          if (draft.desiredDomains) desiredDomainsInput.value = draft.desiredDomains;
+
+          if (draft.hasPhotos) {
+            const matchPhotoBtn = Array.from(photoChoiceBtns).find((b) => b.getAttribute('data-photo-choice') === draft.hasPhotos);
+            if (matchPhotoBtn) matchPhotoBtn.click();
+          }
+          if (draft.hasDomain) {
+            const matchDomBtn = Array.from(domainChoiceBtns).find((b) => b.getAttribute('data-domain-choice') === draft.hasDomain);
+            if (matchDomBtn) matchDomBtn.click();
+          }
+          if (draft.currentStep && Number(draft.currentStep) > 1 && Number(draft.currentStep) <= totalSteps) {
+            goToStep(Number(draft.currentStep));
+          }
+          if (draftBanner && draftText) {
+            draftText.textContent = '✓ Saved draft restored! Feel free to continue where you left off.';
+            draftBanner.classList.remove('hidden');
+          }
+        } catch (_) {}
+      })();
 
       // 2. Setup Branch Mode (organic vs demo) inside Step 3
       if (briefType === 'demo') {
@@ -1164,6 +1238,57 @@
         });
       });
 
+      // 7b. Cloud Save Draft (Finish Later)
+      if (saveDraftBtn) {
+        saveDraftBtn.addEventListener('click', async () => {
+          hideError();
+          const resolvedEmail = (emailParam || emailInput.value || '').trim();
+          const origHtml = saveDraftBtn.innerHTML;
+          saveDraftBtn.disabled = true;
+          saveDraftBtn.innerHTML = '<span>Saving Draft...</span>';
+          try {
+            const draftPayload = {
+              cid: cidParam,
+              sessionId,
+              email: resolvedEmail,
+              briefType,
+              currentStep,
+              businessName: businessNameInput.value.trim(),
+              displayPhone: displayPhoneInput.value.trim(),
+              businessAddress: addressInput.value.trim(),
+              socialLinks: socialsInput.value.trim(),
+              hasPhotos: selectedPhotoOption,
+              photosLink: photosLinkInput ? photosLinkInput.value.trim() : '',
+              brandColors: colorsInput ? colorsInput.value.trim() : '',
+              vibeLinks: vibesInput ? vibesInput.value.trim() : '',
+              hasDomain: selectedDomainOption,
+              existingDomain: existingDomainInput.value.trim(),
+              desiredDomains: desiredDomainsInput.value.trim(),
+              logoLink: logoLinkInput ? logoLinkInput.value.trim() : '',
+              menuLink: menuLinkInput ? menuLinkInput.value.trim() : ''
+            };
+            const res = await fetch('/api/onboarding/save-draft', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(draftPayload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || 'Could not save draft right now.');
+            }
+            if (draftBanner && draftText) {
+              draftText.textContent = '✓ Draft saved! You can safely close this page and return later.';
+              draftBanner.classList.remove('hidden');
+            }
+          } catch (err) {
+            showError(err.message || 'Could not save draft.');
+          } finally {
+            saveDraftBtn.disabled = false;
+            saveDraftBtn.innerHTML = origHtml;
+          }
+        });
+      }
+
       // 8. Final Step Form Submission
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1175,11 +1300,13 @@
 
         submitBtn.disabled = true;
         prevBtn.disabled = true;
+        if (saveDraftBtn) saveDraftBtn.disabled = true;
         submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
         submitLabel.textContent = 'Saving your studio brief...';
         submitIcon.textContent = '⏳';
 
         const payload = {
+          customerId: cidParam,
           sessionId,
           email: resolvedEmail,
           briefType,

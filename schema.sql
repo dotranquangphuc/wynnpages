@@ -83,3 +83,20 @@ CREATE TABLE IF NOT EXISTS lead_hunter_leads (
   data_json TEXT NOT NULL DEFAULT '{}',
   updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS rate_locks (
+  lock_key TEXT PRIMARY KEY,
+  expires_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sms_history (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL DEFAULT 'sms',
+  to_phone TEXT NOT NULL DEFAULT '',
+  body_text TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'OK',
+  reason TEXT NOT NULL DEFAULT '',
+  timestamp TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sms_history_client ON sms_history(client_id, timestamp DESC);
