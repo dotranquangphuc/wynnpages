@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>WynnPages — Studio Command Center (/admin)</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
   <meta name="theme-color" content="#96432b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1556,6 +1556,73 @@
 
   <script>
     (function () {
+      // Global Admin Fetch Interceptor: Forward Zero Trust credentials (CF_Authorization) & auto-reload on session expiration
+      const origFetch = window.fetch;
+      window.fetch = async function (resource, init) {
+        init = init || {};
+        if (!init.credentials) {
+          init.credentials = 'same-origin';
+        }
+        try {
+          const res = await origFetch(resource, init);
+          const urlStr = typeof resource === 'string' ? resource : (resource && resource.url ? resource.url : '');
+          if (urlStr.includes('/api/')) {
+            const isAccessExpired = res.status === 401 || res.status === 403 || res.type === 'opaqueredirect' || res.redirected || (res.url && res.url.includes('cloudflareaccess.com'));
+            if (isAccessExpired) {
+              console.warn('[Zero Trust] Session expired or unauthorized for', urlStr, '- Reloading admin page for Cloudflare Access OTP...');
+              if (!window._isReloadingForAuth) {
+                window._isReloadingForAuth = true;
+                setTimeout(() => { window.location.reload(); }, 350);
+              }
+            }
+          }
+          return res;
+        } catch (err) {
+          throw err;
+        }
+      };
+
+      // Luxury Studio Audio Chime (Web Audio API synthesis: ~587Hz D5 -> ~880Hz A5 Gold Glass Bell)
+      function playLuxuryChime() {
+        if (document.visibilityState !== 'visible') return;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+          const now = ctx.currentTime;
+
+          // Tone 1: D5 (587.33 Hz) warm bronze bell
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(587.33, now);
+          gain1.gain.setValueAtTime(0, now);
+          gain1.gain.linearRampToValueAtTime(0.18, now + 0.02);
+          gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.9);
+
+          // Tone 2: A5 (880.00 Hz) gold glass chime (delicate overtone offset by 0.11s)
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(880.00, now + 0.11);
+          gain2.gain.setValueAtTime(0, now + 0.11);
+          gain2.gain.linearRampToValueAtTime(0.14, now + 0.14);
+          gain2.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          osc2.start(now + 0.11);
+          osc2.stop(now + 1.25);
+        } catch (_) {}
+      }
+      window.playLuxuryChime = playLuxuryChime;
+
       // Auto-load admin passcode session only; all API keys sync exclusively via Cloudflare D1 (/api/settings)
       let adminKey = localStorage.getItem('wynn_admin_key') || '';
       try {
@@ -2477,6 +2544,50 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 </button>
               `}
             </div>
+
+            <!-- 1-Click Australian Contextual SMS Templates -->
+            <div class="bg-white/90 rounded-2xl p-3 border border-[#e2d9c8] space-y-2 shadow-2xs">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-xs font-extrabold text-stone-900">🇦🇺 1-Click Aussie SMS Templates (Chuẩn Anh Úc, ấm áp &amp; không spam):</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-quick-sms="pitch"
+                  ${!hasPhone ? 'disabled' : ''}
+                  class="btn-aussie-quick-sms px-3 py-2 rounded-xl border border-[#dcd4c0] bg-[#faf6ee] hover:bg-[#f5ebd9] text-left flex flex-col gap-0.5 cursor-pointer transition-all shadow-2xs ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
+                  title="SMS Chào Hàng: 'Hey [Name], came across [Salon] in [Suburb] — stunning BIAB work! We crafted a private preview...'"
+                >
+                  <span class="text-xs font-bold text-stone-900">📨 1. SMS Chào (Chưa có Web)</span>
+                  <span class="text-[10px] text-stone-500 truncate">Khen tay nghề &amp; gửi link private preview</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-quick-sms="followup_views"
+                  ${!hasPhone ? 'disabled' : ''}
+                  class="btn-aussie-quick-sms px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/80 text-left flex flex-col gap-0.5 cursor-pointer transition-all shadow-2xs ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
+                  title="SMS Khách Đã Xem 2+ lần: 'Hi [Name], noticed you checked out your bespoke preview website...'"
+                >
+                  <span class="text-xs font-bold text-emerald-950">👀 2. SMS Nhắc Xem (2+ Lượt Xem)</span>
+                  <span class="text-[10px] text-emerald-800 truncate">Hỏi thăm góp ý &amp; gửi nút Claim $599 AUD</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-quick-sms="flash_deal_299"
+                  ${!hasPhone ? 'disabled' : ''}
+                  class="btn-aussie-quick-sms px-3 py-2 rounded-xl border border-rose-300 bg-rose-50/70 hover:bg-rose-100/80 text-left flex flex-col gap-0.5 cursor-pointer transition-all shadow-2xs ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
+                  title="SMS Chốt Flash Deal 50% ($299 AUD / 48h): Tự kích hoạt deal $299 AUD trên server &amp; gửi SMS chốt hạ"
+                >
+                  <span class="text-xs font-bold text-rose-950">⚡ 3. SMS Deal 50% ($299 AUD / 48h)</span>
+                  <span class="text-[10px] text-rose-800 truncate">Hạ $299 AUD &amp; báo hạn chót 48h</span>
+                </button>
+              </div>
+            </div>
           </div>
         `;
       }
@@ -2612,16 +2723,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       function renderCardActionButtons(c, titleName, previewOverlayUrl, deleteTitle) {
         return `
           <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto sm:shrink-0 pt-1 sm:pt-0 sm:ml-auto">
-            <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center justify-center gap-1 shrink-0 min-h-[38px] sm:min-h-0" title="Mở trang Demo trên tab mới">
-              <span>Mở Demo ↗</span>
-            </a>
             <button
               type="button"
               data-cid="${c.id}"
               class="btn-edit-client inline-flex items-center justify-center gap-1 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer shrink-0 min-h-[38px] sm:min-h-0"
-              title="Chỉnh sửa hồ sơ"
+              title="Chỉnh sửa hồ sơ tên tiệm, SĐT, địa chỉ"
             >
-              <span>✏️ Sửa</span>
+              <span>✏️ Hồ Sơ</span>
             </button>
             <button
               type="button"
@@ -2904,16 +3012,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                         type="button"
                         data-cid="${c.id}"
                         data-slug="${escapeHtml(c.demoSlug || '')}"
-                        class="btn-copy-ag-cmd px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        class="btn-copy-ag-cmd px-2 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-semibold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
                         title="Copy lệnh mở folder riêng clients/<slug>/ trên Antigravity để sửa sâu"
                       >
-                        <span>🤖 Kéo Về Antigravity</span>
+                        <span>⚡ Lệnh Antigravity</span>
                       </button>
-                      ${hasValidDemo ? `
-                        <a href="${escapeHtml(previewOverlayUrl)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 transition-colors inline-flex items-center gap-1">
-                          <span>👁️ Mở Demo ↗</span>
-                        </a>
-                      ` : ''}
                       <button
                         type="button"
                         data-cid="${c.id}"
@@ -3320,14 +3423,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                         type="button"
                         data-cid="${c.id}"
                         data-slug="${escapeHtml(c.demoSlug || '')}"
-                        class="btn-copy-ag-cmd px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-bold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        class="btn-copy-ag-cmd px-2 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-semibold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
                         title="Copy lệnh mở folder riêng clients/<slug>/ trên Antigravity để sửa sâu"
                       >
-                        <span>🤖 Kéo Về Antigravity</span>
+                        <span>⚡ Lệnh Antigravity</span>
                       </button>
-                      <a href="${escapeHtml(c.demoUrl || c.brandedDemoUrl || ('https://' + (c.demoSlug || c.id) + '.wynnpages.com.au'))}" target="_blank" class="px-3 py-1.5 rounded-xl bg-stone-200/80 hover:bg-stone-300/80 text-xs font-bold text-stone-800 inline-flex items-center gap-1">
-                        <span>👁️ Mở Demo ↗</span>
-                      </a>
                       <button
                         type="button"
                         data-cid="${c.id}"
@@ -3744,6 +3844,89 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               upsertClientInCache(res.client);
               applyFiltersAndRender();
               showToast(`📱 Đã bắn ${tplName} thành công tới ${client.phone}!`);
+            }
+          });
+        });
+
+        // 1-Click Australian Contextual SMS Templates (Pitch, 2+ Views Follow-up, 48h 50% Deal)
+        document.querySelectorAll('.btn-aussie-quick-sms').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const type = btn.getAttribute('data-quick-sms');
+            const client = clientsCache.find(x => x.id === cid);
+            if (!client) return;
+
+            const biz = client.businessName || client.name || 'Salon';
+            const ownerName = client.name || 'there';
+            const suburb = (client.suburb || (client.businessAddress ? client.businessAddress.split(',')[0].trim() : 'Australia')).trim();
+            const phone = client.phone;
+            if (!phone) {
+              showToast('Khách chưa có SĐT di động để gửi SMS!', true);
+              return;
+            }
+
+            const previewUrl = client.brandedDemoUrl || `https://${encodeURIComponent(client.demoSlug || client.id)}.wynnpages.com.au`;
+            const claimUrl = `${window.location.origin}/api/claim?cid=${encodeURIComponent(client.id)}`;
+
+            let message = '';
+            let confirmTitle = '';
+            let tplKey = '';
+
+            if (type === 'pitch') {
+              tplKey = 'aussie_pitch';
+              confirmTitle = `Gửi SMS Chào Hàng (Cold Pitch) tới ${phone} (${biz})?`;
+              message = `Hey ${ownerName}, came across ${biz} in ${suburb} — stunning BIAB work! We crafted a private preview website for you: ${previewUrl} (Customised with your real services & studio aesthetic). Take a look and let us know what you think!\n\n— WynnPages Australia`;
+            } else if (type === 'followup_views') {
+              tplKey = 'aussie_followup_views';
+              confirmTitle = `Gửi SMS Nhắc Xem (2+ Lượt Xem) tới ${phone} (${biz})?`;
+              message = `Hi ${ownerName}, noticed you checked out your bespoke preview website! Just wanted to see if you had any thoughts or wished to tweak any rituals/pricing? You can claim it directly for $599 AUD with zero monthly fees: ${claimUrl}\n\n— WynnPages Australia`;
+            } else if (type === 'flash_deal_299') {
+              tplKey = 'aussie_flash_deal_299';
+              confirmTitle = `Kích hoạt Flash Deal $299 AUD (48 Giờ) & Gửi SMS tới ${phone} (${biz})?`;
+              setCardBusy(cid, true);
+              try {
+                const dealRes = await runAdminAction({
+                  action: 'activate_flash_deal',
+                  customerId: cid,
+                  hours: 48
+                }, { busyText: 'Đang kích hoạt Flash Deal $299 AUD (48h)...', skipReload: true });
+
+                if (dealRes && dealRes.client) {
+                  upsertClientInCache(dealRes.client);
+                  applyFiltersAndRender();
+                }
+              } catch (err) {
+                console.warn('Deal activation error:', err);
+              } finally {
+                setCardBusy(cid, false);
+              }
+              message = `Quick note from WynnPages: your 50% studio waiver expires in 48h! Claim your bespoke website for just $299 AUD (one-off, 100% ownership, zero ongoing retainers): ${claimUrl} — After this, standard studio pricing applies.`;
+            }
+
+            if (!confirm(`${confirmTitle}\n\nNội dung SMS:\n"${message}"`)) {
+              return;
+            }
+
+            setCardBusy(cid, true);
+            try {
+              const res = await runAdminAction({
+                action: 'send_nurture_sms',
+                customerId: cid,
+                templateKey: tplKey,
+                customMessage: message
+              }, { busyText: `Đang gửi SMS tới ${phone}...`, skipReload: true });
+
+              if (res && res.client) {
+                showToast(`✅ Đã gửi SMS tới ${phone} thành công!`);
+                upsertClientInCache(res.client);
+                applyFiltersAndRender();
+              } else {
+                showToast(`❌ Lỗi gửi SMS: ${(res && res.error) || 'Thất bại'}`, true);
+              }
+            } catch (err) {
+              showToast(`Lỗi: ${err.message}`, true);
+            } finally {
+              setCardBusy(cid, false);
             }
           });
         });
@@ -4537,11 +4720,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           let badgeClass = 'bg-stone-100 text-stone-600 border-stone-200';
           let badgeText = '⚪ Đã có Web riêng';
           if (lead.leadType === 'hot_lead_no_web') {
-            badgeClass = 'bg-red-50 text-red-800 border-red-300 font-extrabold shadow-2xs';
-            badgeText = '🔴 Chưa có Web (HOT LEAD 🔥)';
+            if (lead.rating && lead.rating >= 4.8) {
+              badgeClass = 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-600 font-black shadow-xs ring-1 ring-red-400';
+              badgeText = '🔥 ĐỎ RỰC (Hot Lead: 4.8★+ Chưa Có Web)';
+            } else {
+              badgeClass = 'bg-red-50 text-red-800 border-red-300 font-extrabold shadow-2xs';
+              badgeText = '🔴 Chưa có Web (HOT LEAD 🔥)';
+            }
           } else if (lead.leadType === 'social_booking_only') {
-            badgeClass = 'bg-amber-50 text-amber-900 border-amber-300 font-bold';
-            badgeText = '🟡 Chỉ dùng MXH / Booking';
+            badgeClass = 'bg-amber-100 text-amber-950 border-amber-300 font-extrabold shadow-2xs';
+            badgeText = '🟡 VÀNG (Social / Fresha Only)';
           }
 
           const reviewSnippet = (lead.topReviews && lead.topReviews.length)
@@ -7289,6 +7477,7 @@ https://wynnpages.com.au`;
         return new Date(isoString).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       }
 
+      let _prevActivityCount = -1;
       async function fetchActivityFeed() {
         try {
           const res = await fetch('/api/activity-feed');
@@ -7300,6 +7489,11 @@ https://wynnpages.com.au`;
             if (events.length > 0) activityPing.classList.remove('hidden');
             else activityPing.classList.add('hidden');
           }
+
+          if (_prevActivityCount !== -1 && events.length > _prevActivityCount) {
+            playLuxuryChime();
+          }
+          _prevActivityCount = events.length;
 
           if (!activityFeedList) return;
           if (!events.length) {
@@ -7415,14 +7609,14 @@ https://wynnpages.com.au`;
         });
       }
 
-      // Auto-login on load if key is saved in localStorage
-      if (adminKey) {
-        loadClients();
-      } else {
-        authGate.classList.remove('hidden');
-        dashboardContent.classList.add('hidden');
-        document.getElementById('header-actions').classList.add('hidden');
-      }
+      // Auto-authenticate via Cloudflare Zero Trust (or saved admin key)
+      loadClients().catch(() => {
+        if (!adminKey) {
+          authGate.classList.remove('hidden');
+          dashboardContent.classList.add('hidden');
+          document.getElementById('header-actions').classList.add('hidden');
+        }
+      });
     })();
   </script>
 </body>

@@ -29,6 +29,36 @@ function getConfig(env, overrides = {}) {
   };
 }
 
+function verifyAdminAuth(request, env, cfg, body = null) {
+  // 1. Check Cloudflare Zero Trust (Access) Identity
+  const accessJwt = request.headers.get('cf-access-jwt-assertion') || request.headers.get('cf-access-token');
+  const accessEmail = (request.headers.get('cf-access-authenticated-user-email') || '').trim().toLowerCase();
+
+  if (accessJwt || accessEmail) {
+    const ownerEmail = (env.ADMIN_NOTIFY_EMAIL || 'dotranquangphuc@gmail.com').trim().toLowerCase();
+    if (accessEmail && accessEmail !== ownerEmail && accessEmail !== 'dotranquangphuc@gmail.com') {
+      return { ok: false, status: 403, error: 'Forbidden: Unauthorized Zero Trust Identity' };
+    }
+    return { ok: true, via: 'zero_trust', email: accessEmail || ownerEmail };
+  }
+
+  // 2. Fallback to Admin Key Passcode
+  try {
+    const url = new URL(request.url);
+    const providedKey = (body && body.adminKey) || request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
+    if (providedKey && cfg && cfg.adminKey && providedKey === cfg.adminKey) {
+      return { ok: true, via: 'admin_key' };
+    }
+  } catch (_) {
+    const fallbackKey = (body && body.adminKey) || request.headers.get('x-admin-key') || '';
+    if (fallbackKey && cfg && cfg.adminKey && fallbackKey === cfg.adminKey) {
+      return { ok: true, via: 'admin_key' };
+    }
+  }
+
+  return { ok: false, status: 401, error: 'Unauthorized: Missing valid Zero Trust Identity or Admin Passcode' };
+}
+
 function isValidAuMobile(rawPhone) {
   const norm = normalizeAuPhone(rawPhone);
   return /^\+614\d{8}$/.test(norm);
@@ -4850,6 +4880,20 @@ export default {
       return Response.redirect(new URL(target, url.origin).toString(), 301);
     }
 
+    // 1-admin. Clean Studio Command Center Route: /admin and /admin/ serve /admin.html
+    if (url.pathname === '/admin.html') {
+      const target = new URL('/admin', request.url);
+      target.search = url.search;
+      return Response.redirect(target.toString(), 301);
+    }
+
+    if (url.pathname === '/admin' || url.pathname === '/admin/') {
+      if (env.ASSETS) {
+        const adminReq = new Request(new URL('/admin.html', request.url), request);
+        return env.ASSETS.fetch(adminReq);
+      }
+    }
+
     // 1a-track. Public Demo View Tracking Beacon (Alias for /api/track)
     if (url.pathname === '/api/track-view' && (request.method === 'POST' || request.method === 'GET')) {
       const forwardedUrl = new URL(request.url);
@@ -5718,9 +5762,9 @@ export default {
     if (url.pathname === '/api/upload-demo-bundle' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
-        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
-        if (providedKey !== cfg.adminKey) {
-          return new Response(JSON.stringify({ error: 'Unauthorized. Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
 
         if (!env || !env.WYNN_KV) {
@@ -5940,9 +5984,9 @@ export default {
     if (url.pathname === '/api/switch-palette' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
-        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
-        if (providedKey !== cfg.adminKey) {
-          return new Response(JSON.stringify({ error: 'Unauthorized. Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
 
         if (!env || !env.WYNN_KV) {
@@ -6602,12 +6646,12 @@ export default {
     // 4g. Admin 1-Click Gemini AI Auto-Editor (POST /api/admin/apply-ai-revision)
     if (url.pathname === '/api/admin/apply-ai-revision' && request.method === 'POST') {
       try {
-        const keyParam = (url.searchParams.get('key') || request.headers.get('x-admin-key') || '').trim();
-        if (keyParam !== cfg.adminKey && keyParam !== 'wynn2026') {
-          return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+        const body = await request.json().catch(() => ({}));
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ ok: false, error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
 
-        const body = await request.json().catch(() => ({}));
         const cid = (body.cid || '').trim();
         if (!cid) {
           return new Response(JSON.stringify({ ok: false, error: 'Missing cid' }), { status: 400, headers: corsHeaders });
@@ -6722,11 +6766,11 @@ export default {
 
     // 5. AI & Admin Brief Retrieval Endpoint (GET /api/briefs)
     if (url.pathname === '/api/briefs' && request.method === 'GET') {
-      const providedKey = url.searchParams.get('key') || request.headers.get('x-admin-key') || '';
-      if (providedKey !== cfg.adminKey) {
+      const auth = verifyAdminAuth(request, env, cfg);
+      if (!auth.ok) {
         return new Response(
-          JSON.stringify({ error: 'Unauthorized. Provide valid ?key= or x-admin-key header.' }),
-          { status: 401, headers: corsHeaders }
+          JSON.stringify({ error: auth.error }),
+          { status: auth.status, headers: corsHeaders }
         );
       }
 
@@ -6957,10 +7001,10 @@ export default {
 
     // 5a. Synced Studio Settings API (GET / POST /api/settings — D1 + KV synced across MacBook & iPhone PWA)
     if (url.pathname === '/api/settings' && (request.method === 'GET' || request.method === 'POST')) {
-      const providedKey = request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
       if (request.method === 'GET') {
-        if (providedKey !== cfg.adminKey) {
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+        const auth = verifyAdminAuth(request, env, cfg);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
         const rt = await loadSyncedRuntime(env);
         runInBg(ctx, captureAdminIp(request, env));
@@ -6983,9 +7027,9 @@ export default {
       }
 
       const body = await request.json().catch(() => ({}));
-      const postKey = body.adminKey || providedKey;
-      if (postKey !== cfg.adminKey) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      const postAuth = verifyAdminAuth(request, env, cfg, body);
+      if (!postAuth.ok) {
+        return new Response(JSON.stringify({ error: postAuth.error }), { status: postAuth.status, headers: corsHeaders });
       }
       const incoming = (body.settings && typeof body.settings === 'object') ? body.settings : body;
       const saved = await saveSyncedSettings(env, incoming, { clearEmpty: body.clearEmpty !== false });
@@ -7011,14 +7055,13 @@ export default {
 
     // 5b. Client Records REST API (GET/POST/PUT/DELETE /api/clients — D1 + Stripe Sync)
     if (url.pathname === '/api/clients') {
-      const providedKey = request.headers.get('x-admin-key') || url.searchParams.get('key') || '';
       let body = null;
       if (request.method !== 'GET') {
         body = await request.json().catch(() => ({}));
       }
-      const authKey = (body && body.adminKey) || providedKey;
-      if (authKey !== cfg.adminKey) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      const auth = verifyAdminAuth(request, env, cfg, body);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
       }
 
       if (request.method === 'GET') {
@@ -7511,9 +7554,9 @@ export default {
     if (url.pathname === '/api/admin/lead-hunter' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
-        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
-        if (providedKey !== cfg.adminKey) {
-          return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
 
         const action = body.action || 'scan';
@@ -8067,9 +8110,9 @@ export default {
     if (url.pathname === '/api/admin/action' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
-        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
-        if (providedKey !== cfg.adminKey) {
-          return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
 
         if (body.credentials && typeof body.credentials === 'object') {
@@ -8437,7 +8480,15 @@ export default {
           }
 
           let smsText = '';
-          if (templateKey === 'day3_reminder') {
+          if (body.customMessage && String(body.customMessage).trim()) {
+            smsText = String(body.customMessage).trim();
+          } else if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
+            smsText = `Hey ${biz}, came across your work — stunning craft! We crafted a private preview website for you: ${demoUrl} (Customised with your real services & studio aesthetic). Take a look and let us know what you think!\n\n— WynnPages Australia`;
+          } else if (templateKey === 'aussie_followup_views' || templateKey === 'followup_views') {
+            smsText = `Hi ${biz}, noticed you checked out your bespoke preview website! Just wanted to see if you had any thoughts or wished to tweak any rituals/pricing? You can claim it directly for $599 AUD with zero monthly fees: ${demoUrl}\n\n— WynnPages Australia`;
+          } else if (templateKey === 'aussie_flash_deal_299' || templateKey === 'flash_deal_299') {
+            smsText = `Quick note from WynnPages: your 50% studio waiver expires in 48h! Claim your bespoke website for just $299 AUD (one-off, 100% ownership, zero ongoing retainers): ${demoUrl} — After this, standard studio pricing applies.`;
+          } else if (templateKey === 'day3_reminder') {
             smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} — 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it yet?`;
           } else if (templateKey === 'day7_deal') {
             if (realViews === 0) {
@@ -9038,9 +9089,9 @@ export default {
     if (url.pathname === '/api/admin/autopilot' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
-        const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
-        if (providedKey !== cfg.adminKey) {
-          return new Response(JSON.stringify({ error: 'Invalid Admin Passcode.' }), { status: 401, headers: corsHeaders });
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
         }
 
         const subAction = body.action || 'get_settings';

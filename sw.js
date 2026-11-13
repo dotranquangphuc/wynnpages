@@ -1,7 +1,6 @@
 // WynnPages Studio — Service Worker for iOS PWA & Push Notifications
-const CACHE_NAME = 'wynn-studio-pwa-v4';
+const CACHE_NAME = 'wynn-studio-pwa-v5';
 const PRECACHE_ASSETS = [
-  '/admin.html',
   '/manifest.json',
   '/assets/favicon.png',
   '/assets/icon-192.png?v=3',
@@ -52,7 +51,7 @@ self.addEventListener('push', (event) => {
     renotify: true,
     vibrate: [200, 100, 200],
     data: {
-      url: data.url || '/admin.html',
+      url: data.url || '/admin',
       timestamp: Date.now()
     }
   };
@@ -63,7 +62,7 @@ self.addEventListener('push', (event) => {
 // Tap Notification -> Focus or Open Admin
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/admin.html';
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/admin';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -79,28 +78,32 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Network-First with Cache Fallback for Navigation
+// Network-First with Cache Fallback for Navigation (Passes Zero Trust credentials & never caches 302 login redirects)
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Skip API endpoints, non-GET, or external requests
+  // Skip API endpoints, non-GET, or external cross-origin requests
   if (req.method !== 'GET' || url.pathname.startsWith('/api/') || url.origin !== self.location.origin) {
     return;
   }
 
+  // Forward with credentials so Cloudflare Access CF_Authorization cookie is transmitted
+  const fetchReq = new Request(req, { credentials: 'same-origin' });
+
   event.respondWith(
-    fetch(req)
+    fetch(fetchReq)
       .then((res) => {
-        if (res && res.status === 200 && res.type === 'basic') {
+        // Never cache Cloudflare Access login redirects or authentication screens
+        const isAccessRedirect = res.redirected || (res.url && res.url.includes('cloudflareaccess.com'));
+        if (res && res.status === 200 && res.type === 'basic' && !isAccessRedirect) {
           const resClone = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone)).catch(() => {});
         }
         return res;
       })
       .catch(() => {
-        return caches.match(req).then((cached) => cached || caches.match('/admin.html'));
+        return caches.match(req).then((cached) => cached || caches.match('/admin'));
       })
   );
 });
-

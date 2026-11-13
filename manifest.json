@@ -2,7 +2,7 @@
   "name": "WynnPages Studio Admin",
   "short_name": "WynnStudio",
   "description": "WynnPages Digital Atelier — Client Management, AI Revisions & Real-Time Alerts",
-  "start_url": "/admin.html",
+  "start_url": "/admin",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

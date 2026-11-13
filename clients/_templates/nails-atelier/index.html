@@ -1253,6 +1253,13 @@
           </a>
         </div>
 
+        <!-- Evergreen Scarcity Reassurance Badge -->
+        <div style="--hero-delay: 470ms;" class="hero-choreo flex items-center">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border shadow-2xs" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">
+            <span>🌿 Friday &amp; Saturday rituals book out early — Reserve ahead</span>
+          </div>
+        </div>
+
         <!-- Subtle Australian Social Proof Strip -->
         <div style="--hero-delay: 530ms; border-color: var(--border-hairline);" class="hero-choreo pt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t">
           <div class="flex items-center gap-2">
@@ -1421,17 +1428,179 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 4: TREATMENT MATCHMAKER (WHICH RITUAL IS RIGHT FOR YOU?)
+         SECTION 4: TREATMENT MATCHMAKER & BEFORE/AFTER EDITORIAL SLIDER
          ====================================================================== -->
-    <section id="matchmaker" class="space-y-7 sm:space-y-9">
+    <section id="matchmaker" class="space-y-10 sm:space-y-12">
       <div data-apple-reveal="header" class="text-center max-w-2xl mx-auto space-y-2.5">
-        <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Treatment Matchmaker</span>
+        <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Interactive Atelier Guide</span>
         <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
           Which ritual is <span class="accent-italic">right for you?</span>
         </h2>
         <p class="text-xs sm:text-sm leading-relaxed text-pretty" style="color: var(--ink-muted);">
-          Every set is tailored to your lifestyle, natural nail plate condition, and aesthetic vision.
+          Answer 3 brief questions to receive your tailored nail architecture, duration &amp; pricing in seconds.
         </p>
+      </div>
+
+      <!-- 3-Step Interactive Quiz Container -->
+      <div data-apple-reveal="center" class="atelier-card rounded-[32px] p-6 sm:p-9 max-w-3xl mx-auto space-y-6 relative overflow-hidden shadow-xl" style="border-color: var(--foil-gold);">
+        <!-- Quiz Progress Bar -->
+        <div class="flex items-center justify-between gap-3 border-b pb-4" style="border-color: var(--border-hairline);">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background: var(--accent-primary);" id="quiz-step-indicator">1</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-stone-600" id="quiz-step-title">Step 1: Your Occasion</span>
+          </div>
+          <span class="text-xs font-mono font-semibold" style="color: var(--accent-primary);" id="quiz-step-counter">1 of 3</span>
+        </div>
+
+        <!-- Quiz Step 1: Occasion -->
+        <div id="quiz-step-1" class="quiz-step space-y-4">
+          <h3 class="font-editorial text-2xl font-semibold">What is your primary focus for this visit?</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" data-quiz-choice="daily" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🌿</span>
+              <strong class="text-sm font-semibold block">Daily Quiet Luxury</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Low-maintenance, natural strength for work &amp; life.</span>
+            </button>
+            <button type="button" data-quiz-choice="event" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🥂</span>
+              <strong class="text-sm font-semibold block">Wedding / Event</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Flawless silhouette, camera-ready length &amp; finish.</span>
+            </button>
+            <button type="button" data-quiz-choice="rehab" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🩹</span>
+              <strong class="text-sm font-semibold block">Nail Rehabilitation</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Recovering from damage, acrylic trauma, or biting.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Step 2: Nail Health (Hidden initially) -->
+        <div id="quiz-step-2" class="quiz-step space-y-4 hidden">
+          <h3 class="font-editorial text-2xl font-semibold">How would you describe your natural nail plates?</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" data-quiz-choice="healthy" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">✨</span>
+              <strong class="text-sm font-semibold block">Healthy &amp; Intact</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Nails grow well; desire clean Russian care &amp; glow.</span>
+            </button>
+            <button type="button" data-quiz-choice="brittle" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🍂</span>
+              <strong class="text-sm font-semibold block">Thin, Bending or Brittle</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Snaps easily or peels; needs reinforced flexible apex.</span>
+            </button>
+            <button type="button" data-quiz-choice="short" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">📏</span>
+              <strong class="text-sm font-semibold block">Short &amp; Seeking Length</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Craving elegant almond or oval extensions instantly.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Step 3: Finish & Style (Hidden initially) -->
+        <div id="quiz-step-3" class="quiz-step space-y-4 hidden">
+          <h3 class="font-editorial text-2xl font-semibold">What is your dream aesthetic &amp; finish?</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" data-quiz-choice="nude" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🤍</span>
+              <strong class="text-sm font-semibold block">Porcelain / Sheer Glaze</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Understated, clean girl cashmere or translucent milk.</span>
+            </button>
+            <button type="button" data-quiz-choice="french" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">💅</span>
+              <strong class="text-sm font-semibold block">Classic Micro-French</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Fine hand-painted smile lines in ivory or champagne.</span>
+            </button>
+            <button type="button" data-quiz-choice="art" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🎨</span>
+              <strong class="text-sm font-semibold block">Artisan Bespoke Design</strong>
+              <span class="text-xs text-stone-500 block leading-snug">3D chrome accents, kintsugi foils, or velvet cat-eye.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Result Screen (Dynamically populated from window.SALON_MENU_DATA) -->
+        <div id="quiz-result" class="space-y-5 hidden">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] uppercase tracking-[0.2em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Your Tailored Match</span>
+            <span class="text-xs text-stone-500 font-medium" id="quiz-match-fit">98% Compatibility</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b pb-3" style="border-color: var(--border-hairline);">
+            <div>
+              <h3 class="font-editorial text-3xl font-semibold" id="quiz-matched-name">Signature BIAB Natural Overlay</h3>
+              <p class="text-xs font-semibold mt-1" style="color: var(--accent-primary);" id="quiz-matched-duration">60 mins • Unhurried One-on-One Care</p>
+            </div>
+            <div class="text-left sm:text-right">
+              <span class="font-editorial text-3xl sm:text-4xl font-bold block" style="color: var(--accent-primary);" id="quiz-matched-price">$85 AUD</span>
+              <span class="text-[11px] text-stone-400">All inclusive</span>
+            </div>
+          </div>
+
+          <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);" id="quiz-matched-desc">
+            Detailed e-file cuticle refinement, structured builder apex, sheer cashmere tint &amp; organic cuticle oil.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <button type="button" id="quiz-btn-book" data-open-booking="" class="btn-atelier-primary rounded-full px-6 py-3 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 cursor-pointer shadow-md flex-1 sm:flex-initial">
+              <span>Book This Ritual</span>
+              <span aria-hidden="true">→</span>
+            </button>
+            <button type="button" id="quiz-btn-retake" class="btn-atelier-secondary rounded-full px-5 py-3 text-xs font-semibold cursor-pointer">
+              <span>↻ Retake Quiz</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Before & After Editorial Split Slider -->
+      <div data-apple-reveal="center" class="atelier-card rounded-[32px] p-6 sm:p-8 max-w-4xl mx-auto space-y-5 shadow-lg relative overflow-hidden" style="border-color: var(--border-hairline);">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span class="text-[10px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Real Craftsmanship Results</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">The Anatomy of <span class="accent-italic">Transformation.</span></h3>
+          </div>
+          <p class="text-xs text-stone-500 max-w-xs leading-relaxed">
+            Drag the divider to compare raw natural plates with our precision Russian E-file &amp; structured BIAB finish.
+          </p>
+        </div>
+
+        <!-- Interactive Split Slider Container -->
+        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[16/10] sm:aspect-[16/9] select-none touch-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt);">
+          <!-- AFTER Layer (Underneath - Full Width) -->
+          <img
+            id="ba-after-img"
+            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
+            alt="After BIAB structured overlay and Russian cuticle refinement"
+            class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            loading="lazy"
+          >
+          <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
+            AFTER: Structured BIAB Overlay
+          </div>
+
+          <!-- BEFORE Layer (Top - Clipped by width %) -->
+          <div id="ba-before-layer" class="absolute inset-0 overflow-hidden pointer-events-none" style="width: 50%;">
+            <img
+              id="ba-before-img"
+              src="https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg"
+              alt="Before raw natural nails"
+              class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
+              style="width: 100%; height: 100%; object-fit: cover; filter: saturate(60%) contrast(90%);"
+              loading="lazy"
+            >
+            <div class="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
+              BEFORE: Fragile Natural Plate
+            </div>
+          </div>
+
+          <!-- Divider Handle -->
+          <div id="ba-handle" class="absolute top-0 bottom-0 pointer-events-none flex items-center justify-center" style="left: 50%; transform: translateX(-50%); width: 44px;">
+            <div class="w-[2px] h-full shadow-lg" style="background: var(--foil-gold);"></div>
+            <div class="absolute w-10 h-10 rounded-full flex items-center justify-center shadow-xl border-2 border-white pointer-events-auto cursor-ew-resize transition-transform hover:scale-110 active:scale-95" style="background: var(--accent-primary); color: white;">
+              <span class="text-xs font-mono font-bold tracking-tighter">◀ ▶</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-stretch">
@@ -2355,6 +2524,162 @@
       }
 
       if (menu.length) renderMenuCategory(0);
+
+      // ======================================================================
+      // 3b. INTERACTIVE TREATMENT MATCHMAKER (DYNAMIC LIVE MENU SYNC)
+      // ======================================================================
+      const quizChoices = { occasion: null, health: null, style: null };
+      const step1El = document.getElementById('quiz-step-1');
+      const step2El = document.getElementById('quiz-step-2');
+      const step3El = document.getElementById('quiz-step-3');
+      const resultEl = document.getElementById('quiz-result');
+      const indicatorEl = document.getElementById('quiz-step-indicator');
+      const titleEl = document.getElementById('quiz-step-title');
+      const counterEl = document.getElementById('quiz-step-counter');
+
+      function findMatchingRitual(choices) {
+        let allItems = [];
+        menu.forEach(cat => {
+          if (Array.isArray(cat.items)) {
+            cat.items.forEach(it => allItems.push({ ...it, catName: cat.category }));
+          }
+        });
+        if (!allItems.length) {
+          return { name: "Signature BIAB Natural Overlay", price: "$85 AUD", duration: "60 mins", desc: "Structured builder gel strengthening natural nails." };
+        }
+
+        if (choices.occasion === 'rehab' || choices.health === 'brittle') {
+          const rehab = allItems.find(it => it.name.toLowerCase().includes('restorative') || it.name.toLowerCase().includes('naked')) ||
+                        allItems.find(it => it.name.toLowerCase().includes('biab')) || allItems[0];
+          return rehab;
+        }
+        if (choices.health === 'short' || choices.occasion === 'event' || choices.style === 'art') {
+          const ext = allItems.find(it => it.name.toLowerCase().includes('extension') || it.name.toLowerCase().includes('apres') || it.name.toLowerCase().includes('sculpted')) ||
+                      allItems.find(it => it.name.toLowerCase().includes('french')) || allItems[0];
+          return ext;
+        }
+        if (choices.style === 'french') {
+          const french = allItems.find(it => it.name.toLowerCase().includes('french')) || allItems[0];
+          return french;
+        }
+        const biab = allItems.find(it => it.name.toLowerCase().includes('biab')) || allItems[0];
+        return biab;
+      }
+
+      function updateQuizUI(step) {
+        if (!indicatorEl || !titleEl || !counterEl) return;
+        indicatorEl.textContent = step <= 3 ? String(step) : '✓';
+        if (step === 1) {
+          titleEl.textContent = 'Step 1: Your Occasion';
+          counterEl.textContent = '1 of 3';
+          if (step1El) step1El.classList.remove('hidden');
+          if (step2El) step2El.classList.add('hidden');
+          if (step3El) step3El.classList.add('hidden');
+          if (resultEl) resultEl.classList.add('hidden');
+        } else if (step === 2) {
+          titleEl.textContent = 'Step 2: Natural Nail Health';
+          counterEl.textContent = '2 of 3';
+          if (step1El) step1El.classList.add('hidden');
+          if (step2El) step2El.classList.remove('hidden');
+          if (step3El) step3El.classList.add('hidden');
+          if (resultEl) resultEl.classList.add('hidden');
+        } else if (step === 3) {
+          titleEl.textContent = 'Step 3: Preferred Artistry';
+          counterEl.textContent = '3 of 3';
+          if (step1El) step1El.classList.add('hidden');
+          if (step2El) step2El.classList.add('hidden');
+          if (step3El) step3El.classList.remove('hidden');
+          if (resultEl) resultEl.classList.add('hidden');
+        } else if (step === 4) {
+          titleEl.textContent = 'Your Tailored Result';
+          counterEl.textContent = 'Complete';
+          if (step1El) step1El.classList.add('hidden');
+          if (step2El) step2El.classList.add('hidden');
+          if (step3El) step3El.classList.add('hidden');
+          if (resultEl) resultEl.classList.remove('hidden');
+
+          const matched = findMatchingRitual(quizChoices);
+          const nameEl = document.getElementById('quiz-matched-name');
+          const durationEl = document.getElementById('quiz-matched-duration');
+          const priceEl = document.getElementById('quiz-matched-price');
+          const descEl = document.getElementById('quiz-matched-desc');
+          const bookBtn = document.getElementById('quiz-btn-book');
+
+          if (nameEl) nameEl.textContent = matched.name;
+          if (durationEl) durationEl.textContent = (matched.duration ? `${matched.duration} • ` : '') + 'Unhurried One-on-One Care';
+          if (priceEl) priceEl.textContent = String(matched.price).includes('$') ? matched.price : `$${matched.price}`;
+          if (descEl) descEl.textContent = matched.desc || 'Detailed e-file cuticle refinement, structured builder apex & organic cuticle oil.';
+          if (bookBtn) {
+            bookBtn.setAttribute('data-open-booking', `${matched.name} (${matched.price})`);
+            bookBtn.onclick = () => openBookingFlow(`${matched.name} (${matched.price})`);
+          }
+        }
+      }
+
+      document.querySelectorAll('#quiz-step-1 [data-quiz-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          quizChoices.occasion = btn.getAttribute('data-quiz-choice');
+          updateQuizUI(2);
+        });
+      });
+      document.querySelectorAll('#quiz-step-2 [data-quiz-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          quizChoices.health = btn.getAttribute('data-quiz-choice');
+          updateQuizUI(3);
+        });
+      });
+      document.querySelectorAll('#quiz-step-3 [data-quiz-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          quizChoices.style = btn.getAttribute('data-quiz-choice');
+          updateQuizUI(4);
+        });
+      });
+      const retakeBtn = document.getElementById('quiz-btn-retake');
+      if (retakeBtn) {
+        retakeBtn.addEventListener('click', () => {
+          quizChoices.occasion = null;
+          quizChoices.health = null;
+          quizChoices.style = null;
+          updateQuizUI(1);
+        });
+      }
+
+      // ======================================================================
+      // 3c. BEFORE & AFTER EDITORIAL SPLIT SLIDER (TOUCH & MOUSE DRAGGABLE)
+      // ======================================================================
+      const baContainer = document.getElementById('before-after-container');
+      const baBeforeLayer = document.getElementById('ba-before-layer');
+      const baHandle = document.getElementById('ba-handle');
+      let isDraggingBA = false;
+
+      function updateBASplit(clientX) {
+        if (!baContainer || !baBeforeLayer || !baHandle) return;
+        const rect = baContainer.getBoundingClientRect();
+        const offsetX = clientX - rect.left;
+        let percentage = (offsetX / rect.width) * 100;
+        percentage = Math.max(5, Math.min(95, percentage));
+        baBeforeLayer.style.width = percentage + '%';
+        baHandle.style.left = percentage + '%';
+      }
+
+      if (baContainer) {
+        baContainer.addEventListener('pointerdown', (e) => {
+          isDraggingBA = true;
+          baContainer.setPointerCapture(e.pointerId);
+          updateBASplit(e.clientX);
+        });
+        baContainer.addEventListener('pointermove', (e) => {
+          if (!isDraggingBA) return;
+          updateBASplit(e.clientX);
+        });
+        baContainer.addEventListener('pointerup', (e) => {
+          isDraggingBA = false;
+          try { baContainer.releasePointerCapture(e.pointerId); } catch (_) {}
+        });
+        baContainer.addEventListener('pointercancel', () => {
+          isDraggingBA = false;
+        });
+      }
 
       // 4. Render Lookbook Grid + Interactive Apple Lightbox
       const lookbookGrid = document.getElementById('lookbook-grid');
