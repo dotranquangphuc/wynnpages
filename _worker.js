@@ -7598,14 +7598,39 @@ export default {
           });
         };
 
-        // Load existing stored leads from KV
+        // Load existing stored leads from D1 (primary) or KV (fallback)
         let storedLeads = [];
-        if (env && env.WYNN_KV) {
+        const dbLh = getD1(env);
+        if (dbLh) {
+          await ensureD1Schema(env);
+          const d1Res = await dbLh.prepare('SELECT data_json, imported FROM lead_hunter_leads ORDER BY updated_at DESC LIMIT 500').all().catch(() => null);
+          if (d1Res && Array.isArray(d1Res.results) && d1Res.results.length > 0) {
+            storedLeads = d1Res.results.map(r => {
+              try {
+                const parsed = JSON.parse(r.data_json || '{}');
+                if (r.imported) parsed.imported = true;
+                return parsed;
+              } catch (_) { return null; }
+            }).filter(Boolean);
+          }
+        }
+        if (storedLeads.length === 0 && env && env.WYNN_KV) {
           const rawKv = await env.WYNN_KV.get('studio_lead_hunter_db', 'json').catch(() => null);
           if (Array.isArray(rawKv)) {
             storedLeads = rawKv;
+            if (dbLh && storedLeads.length > 0) {
+              runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
+            }
           }
         }
+
+        const persistLeads = async (leadsToSave) => {
+          if (dbLh) {
+            await mirrorLeadHunterToD1(env, leadsToSave);
+          } else if (env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(leadsToSave)).catch(() => {});
+          }
+        };
 
         // ACTION 1: LIST STORED LEADS (Immediate cached read)
         if (action === 'list') {
@@ -7643,10 +7668,9 @@ export default {
             return l;
           });
 
-          if (found && env && env.WYNN_KV) {
-            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
+          if (found) {
+            await persistLeads(storedLeads);
           }
-          runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
 
           const { stats, industryCounts } = computeLeadStats(storedLeads);
           return new Response(
@@ -7668,11 +7692,8 @@ export default {
           const initialLen = storedLeads.length;
           storedLeads = storedLeads.filter((l) => !(l.placeId === targetId || l.id === targetId));
 
-          if (storedLeads.length !== initialLen && env && env.WYNN_KV) {
-            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
-          }
           if (storedLeads.length !== initialLen) {
-            runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
+            await persistLeads(storedLeads);
           }
 
           const { stats, industryCounts } = computeLeadStats(storedLeads);
@@ -7696,10 +7717,7 @@ export default {
           } else {
             storedLeads = storedLeads.filter((l) => (l.industry || 'other') !== indFilter);
           }
-          if (env && env.WYNN_KV) {
-            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(storedLeads));
-          }
-          runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
+          await persistLeads(storedLeads);
           const { stats, industryCounts } = computeLeadStats(storedLeads);
           return new Response(
             JSON.stringify({
@@ -8021,11 +8039,8 @@ export default {
 
         const mergedLeads = sortLeads(Array.from(leadMap.values()));
 
-        // Save cumulative database back to KV and mirror to D1
-        if (env && env.WYNN_KV) {
-          await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(mergedLeads));
-        }
-        runInBg(ctx, mirrorLeadHunterToD1(env, mergedLeads));
+        // Save cumulative database to D1 (primary) or KV (fallback)
+        await persistLeads(mergedLeads);
 
         const { stats, industryCounts } = computeLeadStats(mergedLeads);
 
