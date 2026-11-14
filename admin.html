@@ -7485,6 +7485,7 @@ https://wynnpages.com.au`;
       let _prevActivityCount = -1;
       async function fetchActivityFeed() {
         try {
+          if (!localStorage.getItem('wynn_admin_key')) return;
           const res = await fetch('/api/activity-feed');
           if (!res.ok) return;
           const data = await res.json();

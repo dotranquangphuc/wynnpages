@@ -5687,6 +5687,10 @@ export default {
 
     // 4b-activity. Activity Feed & Real-Time Push Notification Engine (D1 + KV Synced)
     if (url.pathname === '/api/activity-feed' && request.method === 'GET') {
+      const auth = verifyAdminAuth(request, env, cfg);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: buildAdminHeaders(corsHeaders) });
+      }
       const db = getD1(env);
       let events = [];
       if (db) {
@@ -5707,10 +5711,15 @@ export default {
       } else if (env && env.WYNN_KV) {
         events = ((await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || []).slice(0, 20);
       }
-      return new Response(JSON.stringify({ ok: true, events }), { status: 200, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, events }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     if (url.pathname === '/api/activity-feed/clear' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const auth = verifyAdminAuth(request, env, cfg, body);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: buildAdminHeaders(corsHeaders) });
+      }
       const db = getD1(env);
       if (db) {
         await ensureD1Schema(env);
@@ -5718,33 +5727,41 @@ export default {
       } else if (env && env.WYNN_KV) {
         await env.WYNN_KV.put('activity_events', JSON.stringify([])).catch(() => {});
       }
-      return new Response(JSON.stringify({ ok: true, events: [] }), { status: 200, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, events: [] }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     if (url.pathname === '/api/telegram-config' && request.method === 'GET') {
+      const auth = verifyAdminAuth(request, env, cfg);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: buildAdminHeaders(corsHeaders) });
+      }
       const rt = await loadSyncedRuntime(env);
       return new Response(JSON.stringify({
         ok: true,
         botToken: rt.cfg.telegramBotToken || '',
         chatId: rt.cfg.telegramChatId || '',
         hasBot: Boolean(rt.cfg.telegramBotToken)
-      }), { status: 200, headers: corsHeaders });
+      }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     if (url.pathname === '/api/telegram-config' && request.method === 'POST') {
       const body = await request.json().catch(() => ({}));
-      const providedKey = body.adminKey || request.headers.get('x-admin-key') || '';
-      if (cfg.adminKey && providedKey && providedKey !== cfg.adminKey) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      const auth = verifyAdminAuth(request, env, cfg, body);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: buildAdminHeaders(corsHeaders) });
       }
       const botToken = (body.botToken || '').trim();
       const chatId = (body.chatId || '').trim();
       await saveSyncedSettings(env, { telegramBotToken: botToken, telegramChatId: chatId }, { clearEmpty: true });
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     if (url.pathname === '/api/test-notify' && request.method === 'POST') {
       const body = await request.json().catch(() => ({}));
+      const auth = verifyAdminAuth(request, env, cfg, body);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: buildAdminHeaders(corsHeaders) });
+      }
       const customMsg = (body.message || '').trim() || 'Đây là thông báo thử nghiệm từ WynnPages Studio PWA đến iPhone của bạn!';
       await recordActivityAndNotify({
         type: 'payment_received',
@@ -5755,7 +5772,7 @@ export default {
         env,
         ctx
       });
-      return new Response(JSON.stringify({ ok: true, message: 'Đã phát tín hiệu thông báo thử nghiệm!' }), { status: 200, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, message: 'Đã phát tín hiệu thông báo thử nghiệm!' }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     // 4c. Upload Demo Bundle to Cloudflare KV Native Hosting (POST /api/upload-demo-bundle)
