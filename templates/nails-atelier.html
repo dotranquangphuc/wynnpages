@@ -873,6 +873,25 @@
     #atelier-header #btn-mobile-menu,
     header #btn-mobile-menu {
       flex-shrink: 0 !important;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    html, body {
+      max-width: 100%;
+      overflow-x: clip;
+    }
+    #atelier-header {
+      padding-top: max(12px, env(safe-area-inset-top, 12px));
+    }
+    body {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    @media (max-width: 639px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
     }
 
     /* ==========================================================================
@@ -1565,7 +1584,7 @@
         </div>
 
         <!-- Interactive Split Slider Container -->
-        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[16/10] sm:aspect-[16/9] select-none touch-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt);">
+        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[16/10] sm:aspect-[16/9] select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
           <!-- AFTER Layer (Underneath - Full Width) -->
           <img
             id="ba-after-img"
@@ -1573,13 +1592,14 @@
             alt="After BIAB structured overlay and Russian cuticle refinement"
             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
             loading="lazy"
+            decoding="async"
           >
           <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
             AFTER: Structured BIAB Overlay
           </div>
 
-          <!-- BEFORE Layer (Top - Clipped by width %) -->
-          <div id="ba-before-layer" class="absolute inset-0 overflow-hidden pointer-events-none" style="width: 50%;">
+          <!-- BEFORE Layer (Top - Clipped 1:1 without distortion via clip-path) -->
+          <div id="ba-before-layer" class="absolute inset-0 overflow-hidden pointer-events-none" style="clip-path: inset(0 50% 0 0); -webkit-clip-path: inset(0 50% 0 0);">
             <img
               id="ba-before-img"
               src="https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg"
@@ -1587,16 +1607,17 @@
               class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
               style="width: 100%; height: 100%; object-fit: cover; filter: saturate(60%) contrast(90%);"
               loading="lazy"
+              decoding="async"
             >
             <div class="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
               BEFORE: Fragile Natural Plate
             </div>
           </div>
 
-          <!-- Divider Handle -->
+          <!-- Divider Handle (44x44px iPhone 16 Touch Target) -->
           <div id="ba-handle" class="absolute top-0 bottom-0 pointer-events-none flex items-center justify-center" style="left: 50%; transform: translateX(-50%); width: 44px;">
             <div class="w-[2px] h-full shadow-lg" style="background: var(--foil-gold);"></div>
-            <div class="absolute w-10 h-10 rounded-full flex items-center justify-center shadow-xl border-2 border-white pointer-events-auto cursor-ew-resize transition-transform hover:scale-110 active:scale-95" style="background: var(--accent-primary); color: white;">
+            <div class="absolute w-11 h-11 rounded-full flex items-center justify-center shadow-xl border-2 border-white pointer-events-auto cursor-ew-resize transition-transform hover:scale-110 active:scale-95" style="background: var(--accent-primary); color: white;">
               <span class="text-xs font-mono font-bold tracking-tighter">◀ ▶</span>
             </div>
           </div>
@@ -2658,7 +2679,9 @@
         const offsetX = clientX - rect.left;
         let percentage = (offsetX / rect.width) * 100;
         percentage = Math.max(5, Math.min(95, percentage));
-        baBeforeLayer.style.width = percentage + '%';
+        const rightInset = 100 - percentage;
+        baBeforeLayer.style.clipPath = `inset(0 ${rightInset}% 0 0)`;
+        baBeforeLayer.style.webkitClipPath = `inset(0 ${rightInset}% 0 0)`;
         baHandle.style.left = percentage + '%';
       }
 

@@ -24,7 +24,7 @@
 
   const claimHref = checkoutUrlOverride ||
     `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}&demo=${encodeURIComponent(window.location.href)}`;
-  const revisionHref = `https://wynnpages.com.au/revision.html?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
+  const revisionHref = `https://wynnpages.com.au/revision?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
 
   if (!document.getElementById('wynnpages-claim-glass-style')) {
     const gStyle = document.createElement('style');
@@ -37,7 +37,7 @@
   bar.id = 'wynnpages-claim-bar';
   bar.style.cssText = [
     'position:fixed',
-    'bottom:20px',
+    'bottom:calc(20px + env(safe-area-inset-bottom,0px))',
     'left:50%',
     'transform:translateX(-50%) translateY(0)',
     'z-index:2147483647',

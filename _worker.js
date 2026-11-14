@@ -1280,8 +1280,8 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
   const paidAtAu = formatAuDateTime(new Date(), AU_TIMEZONE);
 
   const portalUrl = isOutbound
-    ? `${origin}/revision.html?client_id=${encodeURIComponent(resolvedCid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`
-    : `${origin}/onboarding.html?client_id=${encodeURIComponent(resolvedCid)}&type=organic&session_id=${encodeURIComponent(sid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
+    ? `${origin}/revision?client_id=${encodeURIComponent(resolvedCid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`
+    : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic&session_id=${encodeURIComponent(sid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
 
   // Check unified idempotency flag so post-payment alerts/email/SMS never fire twice
   const db = getD1(env);
@@ -1506,8 +1506,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   const email = client.email || '';
   const phone = client.phone || '';
   const demoUrl = client.demoUrl || (client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : `${origin}`);
-  const onboardingBriefUrl = `${origin}/onboarding.html?client_id=${encodeURIComponent(client.id || '')}&type=organic&email=${encodeURIComponent(email)}`;
-  const demoBriefUrl = `${origin}/onboarding.html?client_id=${encodeURIComponent(client.id || '')}&type=demo&email=${encodeURIComponent(email)}`;
+  const onboardingBriefUrl = `${origin}/onboarding?client_id=${encodeURIComponent(client.id || '')}&type=organic&email=${encodeURIComponent(email)}`;
+  const demoBriefUrl = `${origin}/onboarding?client_id=${encodeURIComponent(client.id || '')}&type=demo&email=${encodeURIComponent(email)}`;
 
   let smsText = '';
   let emailSubject = '';
@@ -1717,7 +1717,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     });
   } else if (stage === 'outbound_paid_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
-    const revisionUrl = `${origin}/revision.html?client_id=${encodeURIComponent(client.id || '')}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
+    const revisionUrl = `${origin}/revision?client_id=${encodeURIComponent(client.id || '')}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
     smsText = `G'day ${bizLabel}! Thank you for choosing WynnPages Studio. Your $599 AUD payment is confirmed. Please complete your 1-round revision form here: ${revisionUrl}`;
     emailSubject = `Tax Invoice & Next Step: Finalise Your ${bizLabel} Website`;
     emailHtml = buildTaxInvoiceEmailHtml({
@@ -2807,7 +2807,7 @@ function buildClaimBarSnippet(client) {
     ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`
     : `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
 
-  const revisionHref = `https://wynnpages.com.au/revision.html?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
+  const revisionHref = `https://wynnpages.com.au/revision?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
 
   const btnLabel = isFlashDeal
     ? `Claim Website — $299 AUD (Save 50%)`
@@ -3798,7 +3798,7 @@ async function recordActivityAndNotify({ type, title, message, clientName, slug,
       const chatId = rt.cfg.telegramChatId || '';
       if (botToken && chatId) {
         const cleanTitle = String(title || '').replace(/[*_`[\]]/g, '');
-        const text = `${icon} *${cleanTitle}*\n\n${message}\n\n🕒 _${formatAuDateTime(new Date(), AU_TIMEZONE)}_\n👉 [Mở Studio Command](https://wynnpages.com.au/admin.html)`;
+        const text = `${icon} *${cleanTitle}*\n\n${message}\n\n🕒 _${formatAuDateTime(new Date(), AU_TIMEZONE)}_\n👉 [Mở Studio Command](https://wynnpages.com.au/admin)`;
         await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4880,17 +4880,17 @@ export default {
       return Response.redirect(new URL(target, url.origin).toString(), 301);
     }
 
-    // 1-admin. Clean Studio Command Center Route: /admin and /admin/ serve /admin.html
-    if (url.pathname === '/admin.html') {
-      const target = new URL('/admin', request.url);
-      target.search = url.search;
-      return Response.redirect(target.toString(), 301);
-    }
-
-    if (url.pathname === '/admin' || url.pathname === '/admin/') {
+    // 1-admin. Clean Studio Command Center Route: /admin is served directly by Cloudflare Assets (Clean URLs) with no-store headers
+    if (url.pathname === '/admin') {
       if (env.ASSETS) {
-        const adminReq = new Request(new URL('/admin.html', request.url), request);
-        return env.ASSETS.fetch(adminReq);
+        const assetRes = await env.ASSETS.fetch(request);
+        const newHeaders = new Headers(assetRes.headers);
+        newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return new Response(assetRes.body, {
+          status: assetRes.status,
+          statusText: assetRes.statusText,
+          headers: newHeaders
+        });
       }
     }
 
@@ -4989,7 +4989,7 @@ export default {
         }
 
         const origin = url.origin;
-        const successUrl = `${origin}/revision.html?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&client_id=${encodeURIComponent(cid)}&cid=${encodeURIComponent(cid)}`;
+        const successUrl = `${origin}/revision?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&client_id=${encodeURIComponent(cid)}&cid=${encodeURIComponent(cid)}`;
         const cancelUrl = demoUrl && demoUrl.startsWith('http') ? demoUrl : `${origin}/?canceled=true`;
 
         const params = new URLSearchParams();
@@ -5116,7 +5116,7 @@ export default {
         const savedCustomer = await custRes.json().catch(() => ({}));
 
         const origin = url.origin;
-        const baseBriefUrl = env.TALLY_BRIEF_URL || `${origin}/onboarding.html?type=organic`;
+        const baseBriefUrl = env.TALLY_BRIEF_URL || `${origin}/onboarding?type=organic`;
         const separator = baseBriefUrl.includes('?') ? '&' : '?';
         const inboundCid = (savedCustomer && savedCustomer.id) ? savedCustomer.id : '';
         const successUrl = `${baseBriefUrl}${separator}session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}${inboundCid ? `&client_id=${encodeURIComponent(inboundCid)}` : ''}`;
@@ -9145,9 +9145,26 @@ export default {
       }
     }
 
-    // 7. Default static assets fetch
+    // 7. Default static assets fetch with Cloudflare Edge Caching Headers
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetRes = await env.ASSETS.fetch(request);
+      if (assetRes.status >= 300 && assetRes.status < 400) {
+        return assetRes;
+      }
+      const newHeaders = new Headers(assetRes.headers);
+      if (url.pathname.startsWith('/admin') || url.pathname === '/sw.js' || url.pathname === '/manifest.json') {
+        newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      } else if (
+        url.pathname.startsWith('/assets/') ||
+        /\.(css|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(url.pathname)
+      ) {
+        newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      return new Response(assetRes.body, {
+        status: assetRes.status,
+        statusText: assetRes.statusText,
+        headers: newHeaders
+      });
     }
     return fetch(request);
   },

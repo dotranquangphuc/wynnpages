@@ -1,5 +1,5 @@
 // WynnPages Studio — Service Worker for iOS PWA & Push Notifications
-const CACHE_NAME = 'wynn-studio-pwa-v5';
+const CACHE_NAME = 'wynn-studio-pwa-v6';
 const PRECACHE_ASSETS = [
   '/manifest.json',
   '/assets/favicon.png',
@@ -78,7 +78,7 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Network-First with Cache Fallback for Navigation (Passes Zero Trust credentials & never caches 302 login redirects)
+// Network-First with Cache Fallback for Static Assets (Never caches 301/302/307/308 redirects or /admin HTML)
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -88,14 +88,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Forward with credentials so Cloudflare Access CF_Authorization cookie is transmitted
-  const fetchReq = new Request(req, { credentials: 'same-origin' });
+  // Do not intercept navigation to /admin so browser + Cloudflare Access handle it natively without SW redirect loops
+  if (url.pathname === '/admin' || url.pathname === '/admin/' || url.pathname === '/admin.html' || req.mode === 'navigate') {
+    return;
+  }
+
+  // Forward with credentials and redirect: 'follow'
+  const fetchReq = new Request(req, { credentials: 'same-origin', redirect: 'follow' });
 
   event.respondWith(
     fetch(fetchReq)
       .then((res) => {
-        // Never cache Cloudflare Access login redirects or authentication screens
-        const isAccessRedirect = res.redirected || (res.url && res.url.includes('cloudflareaccess.com'));
+        // NEVER cache 301, 302, 307, 308 redirects, opaqueredirect, or Cloudflare Access URLs
+        const isRedirectStatus = res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308;
+        const isAccessRedirect = res.redirected || isRedirectStatus || res.type === 'opaqueredirect' || (res.url && res.url.includes('cloudflareaccess.com'));
         if (res && res.status === 200 && res.type === 'basic' && !isAccessRedirect) {
           const resClone = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone)).catch(() => {});
@@ -103,7 +109,7 @@ self.addEventListener('fetch', (event) => {
         return res;
       })
       .catch(() => {
-        return caches.match(req).then((cached) => cached || caches.match('/admin'));
+        return caches.match(req);
       })
   );
 });

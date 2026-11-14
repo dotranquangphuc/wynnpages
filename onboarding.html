@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>WynnPages — Atelier Client Onboarding</title>
   <meta name="description" content="Welcome to WynnPages! Your $599 payment is secured. Let's gather the final details to build your artisan website.">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
@@ -42,11 +42,26 @@
     };
   </script>
   <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: clip;
+    }
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: #f6f1e8;
       color: #2b251e;
       -webkit-font-smoothing: antialiased;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+    @media (max-width: 639px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
     }
     .font-editorial {
       font-family: 'Cormorant Garamond', Georgia, serif;
