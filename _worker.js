@@ -565,11 +565,98 @@ async function upsertD1Client(env, clientObj) {
   return id;
 }
 
-async function deleteD1Client(env, clientId) {
+async function deleteD1Client(env, clientId, cleanSlug = '') {
   const db = getD1(env);
-  if (!db || !clientId) return;
+  if (!db || (!clientId && !cleanSlug)) return;
   await ensureD1Schema(env);
-  await db.prepare('DELETE FROM clients WHERE id = ?').bind(String(clientId)).run().catch(() => {});
+  const stmts = [];
+  if (clientId) {
+    const cid = String(clientId);
+    stmts.push(
+      db.prepare('DELETE FROM clients WHERE id = ?').bind(cid),
+      db.prepare('DELETE FROM tracking_events WHERE client_id = ?').bind(cid),
+      db.prepare('DELETE FROM sms_history WHERE client_id = ?').bind(cid),
+      db.prepare('DELETE FROM scheduled_sms WHERE client_id = ?').bind(cid)
+    );
+  }
+  if (cleanSlug) {
+    const s = slugifyName(cleanSlug);
+    if (s) {
+      stmts.push(
+        db.prepare('DELETE FROM clients WHERE LOWER(demo_slug) = LOWER(?)').bind(s),
+        db.prepare('DELETE FROM tracking_events WHERE LOWER(slug) = LOWER(?)').bind(s),
+        db.prepare('DELETE FROM activity_events WHERE LOWER(slug) = LOWER(?)').bind(s),
+        db.prepare('DELETE FROM rate_locks WHERE lock_key LIKE ?').bind(`%:${s}%`)
+      );
+    }
+  }
+  if (stmts.length) {
+    await db.batch(stmts).catch(() => {});
+  }
+}
+
+async function purgeDemoSiteAssetsFromKv(env, rawSlug, customerId = '') {
+  if (!env || !env.WYNN_KV) return 0;
+  let deletedCount = 0;
+  const cleanSlug = slugifyName(String(rawSlug || '').replace(/\.wynnpages\.com\.au$/i, ''));
+  const tasks = [];
+
+  if (cleanSlug) {
+    const metaKey = `site_meta:${cleanSlug}`;
+    const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+    const assetKeys = new Set();
+    if (prevMeta && Array.isArray(prevMeta.filesList)) {
+      for (const p of prevMeta.filesList) {
+        assetKeys.add(`site_asset:${cleanSlug}:${p}`);
+      }
+    }
+    try {
+      const listed = await env.WYNN_KV.list({ prefix: `site_asset:${cleanSlug}:` });
+      if (listed && Array.isArray(listed.keys)) {
+        for (const k of listed.keys) {
+          if (k && k.name) assetKeys.add(k.name);
+        }
+      }
+    } catch (_) {}
+
+    for (const k of assetKeys) {
+      tasks.push(env.WYNN_KV.delete(k).catch(() => {}));
+      deletedCount++;
+    }
+    for (const keyName of [
+      `sub_${cleanSlug}`,
+      `demo_code:${cleanSlug}`,
+      `code_${cleanSlug}`,
+      `demo_zip:${cleanSlug}`,
+      `demo_views:${cleanSlug}`,
+      `demo_notify_lock:${cleanSlug}`,
+      metaKey
+    ]) {
+      tasks.push(env.WYNN_KV.delete(keyName).catch(() => {}));
+      deletedCount++;
+    }
+  }
+
+  if (customerId) {
+    const cid = String(customerId).trim();
+    tasks.push(
+      env.WYNN_KV.delete(`revision_data:${cid}`).catch(() => {}),
+      env.WYNN_KV.delete(`sms_history:${cid}`).catch(() => {}),
+      env.WYNN_KV.delete(`revision_file:${cid}:menu`).catch(() => {}),
+      env.WYNN_KV.delete(`revision_file:${cid}:photos`).catch(() => {})
+    );
+    try {
+      const revFiles = await env.WYNN_KV.list({ prefix: `revision_file:${cid}:` });
+      if (revFiles && Array.isArray(revFiles.keys)) {
+        for (const k of revFiles.keys) {
+          if (k && k.name) tasks.push(env.WYNN_KV.delete(k.name).catch(() => {}));
+        }
+      }
+    } catch (_) {}
+  }
+
+  await Promise.all(tasks);
+  return deletedCount;
 }
 
 async function getD1ClientsIndex(env) {
@@ -1908,6 +1995,110 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   return { smsResult, emailResult, stage, smsText, phone };
 }
 
+function parseJsLiteralSafe(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const src = raw.trim().replace(/;\s*$/, '');
+  try { return JSON.parse(src); } catch (_) {}
+
+  let out = '';
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    const ch = src[i];
+    if (ch === '"') {
+      out += ch;
+      i++;
+      while (i < n) {
+        const c = src[i];
+        out += c;
+        i++;
+        if (c === '\\' && i < n) {
+          out += src[i];
+          i++;
+        } else if (c === '"') {
+          break;
+        }
+      }
+      continue;
+    }
+    if (ch === "'") {
+      out += '"';
+      i++;
+      while (i < n) {
+        const c = src[i];
+        i++;
+        if (c === '\\' && i < n) {
+          const next = src[i];
+          i++;
+          if (next === "'") out += "'";
+          else if (next === '"') out += '\\"';
+          else out += '\\' + next;
+        } else if (c === '"') {
+          out += '\\"';
+        } else if (c === "'") {
+          break;
+        } else {
+          out += c;
+        }
+      }
+      out += '"';
+      continue;
+    }
+    if (ch === '/' && src[i + 1] === '/') {
+      i += 2;
+      while (i < n && src[i] !== '\n') i++;
+      continue;
+    }
+    if (ch === '/' && src[i + 1] === '*') {
+      i += 2;
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+
+  let jsonStr = '';
+  i = 0;
+  const m = out.length;
+  while (i < m) {
+    const ch = out[i];
+    if (ch === '"') {
+      jsonStr += ch;
+      i++;
+      while (i < m) {
+        const c = out[i];
+        jsonStr += c;
+        i++;
+        if (c === '\\' && i < m) {
+          jsonStr += out[i];
+          i++;
+        } else if (c === '"') {
+          break;
+        }
+      }
+      continue;
+    }
+    const rest = out.slice(i);
+    const keyMatch = rest.match(/^([,{]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)(\s*:)/);
+    if (keyMatch) {
+      jsonStr += `${keyMatch[1]}"${keyMatch[2]}"${keyMatch[3]}`;
+      i += keyMatch[0].length;
+      continue;
+    }
+    jsonStr += ch;
+    i++;
+  }
+
+  jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+  try {
+    return JSON.parse(jsonStr);
+  } catch (_) {
+    return null;
+  }
+}
+
 function parseConfigAndMenuFromHtml(html) {
   let config = null;
   let menu = null;
@@ -1915,18 +2106,12 @@ function parseConfigAndMenuFromHtml(html) {
 
   const cfgMatch = html.match(/window\.ATELIER_CONFIG\s*=\s*(\{[\s\S]*?\n\s*\};)/);
   if (cfgMatch) {
-    try {
-      const fn = new Function('return ' + cfgMatch[1].replace(/;\s*$/, ''));
-      config = fn();
-    } catch (_) {}
+    config = parseJsLiteralSafe(cfgMatch[1]);
   }
 
   const menuMatch = html.match(/window\.SALON_MENU_DATA\s*=\s*(\[[\s\S]*?\n\s*\];)/);
   if (menuMatch) {
-    try {
-      const fn = new Function('return ' + menuMatch[1].replace(/;\s*$/, ''));
-      menu = fn();
-    } catch (_) {}
+    menu = parseJsLiteralSafe(menuMatch[1]);
   }
 
   return { config, menu };
@@ -1954,6 +2139,17 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
     }
     if (newConfig.heroStory) {
       updated = updated.replace(/(<p id="hero-story-text"[^>]*>)[^<]*(<\/p>)/g, `$1${newConfig.heroStory}$2`);
+    }
+    if (newConfig.images) {
+      if (newConfig.images.hero) {
+        updated = updated.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.hero}$2`);
+      }
+      if (newConfig.images.biabFeature) {
+        updated = updated.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.biabFeature}$2`);
+      }
+      if (newConfig.images.pedicureFeature) {
+        updated = updated.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.pedicureFeature}$2`);
+      }
     }
   }
 
@@ -2021,6 +2217,25 @@ async function executeGeminiAutoRevision({ currentHtml, revData, menuImageBase64
     }
   }
 
+  // 1b. Apply Custom Salon Photos (up to 6 photos uploaded in revision portal)
+  if (Array.isArray(revData.salonPhotos) && revData.salonPhotos.length > 0) {
+    const validUrls = revData.salonPhotos.map(p => (typeof p === 'string' ? p : (p && p.url) || '')).filter(Boolean);
+    if (validUrls.length > 0) {
+      config.images = config.images || {};
+      if (validUrls[0]) config.images.hero = validUrls[0];
+      if (validUrls[1]) config.images.biabFeature = validUrls[1];
+      if (validUrls[2]) config.images.pedicureFeature = validUrls[2];
+      const existingLookbook = Array.isArray(config.images.lookbook) ? config.images.lookbook : [];
+      if (validUrls.length > 0 && existingLookbook.length > 0) {
+        config.images.lookbook = existingLookbook.map((item, idx) => {
+          const replacementUrl = validUrls[idx % validUrls.length];
+          return replacementUrl ? { ...item, src: replacementUrl } : item;
+        });
+      }
+      changesSummaryList.push(`Applied ${validUrls.length} uploaded salon photo(s)`);
+    }
+  }
+
   // 2. Apply Menu updates (using Gemini API if menu text or menu image provided)
   let updatedMenu = menu;
   const hasMenuEdits = Boolean((revData.menuText && revData.menuText.trim()) || menuImageBase64);
@@ -2077,7 +2292,7 @@ CLIENT'S REVISION REQUEST / INSTRUCTIONS:
 ${revData.menuText || 'Extract all services and prices from the attached menu image.'}`
       });
 
-      const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-pro'];
+      const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
       let geminiSuccess = false;
       for (const modelName of modelsToTry) {
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
@@ -2225,6 +2440,10 @@ function slugifyName(str) {
 }
 
 function formatCustomerRecord(cust) {
+  if (!cust || cust.deleted) return null;
+  if (!cust.metadata && typeof cust.demoSlug === 'string' && typeof cust.paymentStatus === 'string') {
+    return cust;
+  }
   const m = cust.metadata || {};
   const rawStage = m.stage || (m.brief_status === 'completed' ? 'brief_completed' : 'outbound_pending');
   const flowType = m.flow_type || (rawStage.startsWith('outbound_') ? 'outbound' : 'inbound');
@@ -2336,7 +2555,8 @@ function formatCustomerRecord(cust) {
     revisionMenuFileUrl: m.revision_menu_file_url || '',
     revisionPhotosFileName: m.revision_photos_file_name || '',
     submittedAt: m.submitted_at || new Date((cust.created && cust.created < 1e11 ? cust.created * 1000 : (cust.created || Date.now()))).toISOString(),
-    created: cust.created ? (cust.created < 1e11 ? cust.created * 1000 : cust.created) : Date.now()
+    created: cust.created ? (cust.created < 1e11 ? cust.created * 1000 : cust.created) : Date.now(),
+    metadata: m
   };
   record.aiPrompt = buildAiPromptForClient(record);
   return record;
@@ -2350,7 +2570,12 @@ async function findCustomerBySlugOrId(slugOrId, stripeSecretKey) {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
     });
-    if (res.ok) return formatCustomerRecord(await res.json());
+    if (res.ok) {
+      const rawCust = await res.json().catch(() => null);
+      if (!rawCust || rawCust.deleted) return null;
+      return formatCustomerRecord(rawCust);
+    }
+    return null;
   }
   const listRes = await fetch('https://api.stripe.com/v1/customers?limit=100', {
     method: 'GET',
@@ -2358,7 +2583,7 @@ async function findCustomerBySlugOrId(slugOrId, stripeSecretKey) {
   });
   if (!listRes.ok) return null;
   const data = await listRes.json().catch(() => ({}));
-  const list = (data.data || []).map(formatCustomerRecord);
+  const list = (data.data || []).filter(c => c && !c.deleted).map(formatCustomerRecord).filter(Boolean);
   return list.find(c =>
     c.demoSlug === cleanSlug ||
     slugifyName(c.businessName) === cleanSlug ||
@@ -3879,8 +4104,14 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
     );
   }
 
-  // 5. Upgrade relative /og-share.jpg inside JSON-LD to absolute URL
+  // 5. Upgrade relative /og-share.jpg inside JSON-LD to absolute URL and replace any template placeholder "Maison Élan" in SEO/OG/JSON-LD tags
   html = html.replace(/"image":\s*"\/og-share\.jpg"/g, `"url": "${canonicalUrl}",\n      "image": "${ogShareUrl}"`);
+  if (bizName && bizName !== 'Maison Élan') {
+    html = html
+      .replace(/(<meta[^>]+property=["']og:(?:site_name|title|image:alt)["'][^>]*content=["'][^"']*?)Maison Élan/gi, `$1${bizName}`)
+      .replace(/(<meta[^>]+name=["']twitter:title["'][^>]*content=["'][^"']*?)Maison Élan/gi, `$1${bizName}`)
+      .replace(/"name":\s*"Maison Élan"/g, `"name": "${bizName.replace(/"/g, '\\"')}"`);
+  }
 
   return html;
 }
@@ -4066,7 +4297,37 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
   if (env && env.WYNN_KV && cleanSlug && (reqPath === '/index.html' || reqPath.endsWith('.html'))) {
     const rawHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:${reqPath}`, 'text');
     if (rawHtml) {
-      const resolvedClient = client || (stripeSecretKey ? await findCustomerBySlugOrId(slug, stripeSecretKey) : null);
+      let resolvedClient = client || null;
+      if (!resolvedClient) {
+        const dbCheck = getD1(env);
+        if (dbCheck) {
+          await ensureD1Schema(env);
+          const d1Row = await dbCheck.prepare('SELECT * FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cleanSlug).first().catch(() => null);
+          if (d1Row && d1Row.metadata_json) {
+            try { resolvedClient = JSON.parse(d1Row.metadata_json); } catch (_) {}
+          }
+          if (!resolvedClient && d1Row) {
+            resolvedClient = {
+              id: d1Row.id,
+              businessName: d1Row.business_name || d1Row.name,
+              demoSlug: d1Row.demo_slug || cleanSlug,
+              paymentStatus: d1Row.payment_status,
+              stage: d1Row.stage,
+              liveUrl: d1Row.live_url
+            };
+          }
+        }
+      }
+      if (!resolvedClient && stripeSecretKey) {
+        resolvedClient = await findCustomerBySlugOrId(slug, stripeSecretKey);
+      }
+
+      // CRITICAL PROTECTION: Never serve orphaned demo HTML if the client was deleted from CRM & Stripe
+      if (!isLiveDomain && !resolvedClient) {
+        runInBg(ctx, purgeDemoSiteAssetsFromKv(env, cleanSlug));
+        return null;
+      }
+
       const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
       const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
       const isDealExpired = resolvedClient && (resolvedClient.dealStatus === 'expired' || resolvedClient.dealStatus === 'purged');
@@ -8493,71 +8754,77 @@ export default {
         if (action === 'delete_client' && customerId) {
           let slugToClean = (body.slug || '').trim();
           let liveUrlToClean = (body.liveUrl || '').trim();
-          if (!slugToClean) {
+          let phoneToClean = '';
+          const dbDel = getD1(env);
+          if (dbDel) {
+            await ensureD1Schema(env);
+            const d1Row = await dbDel.prepare('SELECT demo_slug, live_url, phone FROM clients WHERE id = ? LIMIT 1').bind(customerId).first().catch(() => null);
+            if (d1Row) {
+              if (!slugToClean && d1Row.demo_slug) slugToClean = d1Row.demo_slug;
+              if (!liveUrlToClean && d1Row.live_url) liveUrlToClean = d1Row.live_url;
+              if (d1Row.phone) phoneToClean = d1Row.phone;
+            }
+          }
+          if (!slugToClean || !liveUrlToClean) {
             try {
               const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
                 headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
               });
               if (cRes.ok) {
                 const cData = await cRes.json();
-                slugToClean = cData.metadata?.demo_slug || (cData.metadata?.demo_url ? extractCleanHost(cData.metadata.demo_url) : '');
-                liveUrlToClean = cData.metadata?.live_url || '';
+                if (!slugToClean) {
+                  slugToClean = cData.metadata?.demo_slug || (cData.metadata?.demo_url ? extractCleanHost(cData.metadata.demo_url) : '');
+                }
+                if (!liveUrlToClean) {
+                  liveUrlToClean = cData.metadata?.live_url || '';
+                }
+                if (!phoneToClean) {
+                  phoneToClean = cData.phone || cData.metadata?.customer_phone || '';
+                }
               }
             } catch (_) { }
           }
 
-          // Delete primary customer record immediately (~400ms), then clean up Worker Domains & KV in background!
+          // Delete primary customer record in Stripe, then completely purge KV, D1, and Worker Domains
           const delRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
           });
           const delData = await delRes.json().catch(() => ({}));
 
-          const cleanupJob = (async () => {
-            const tasks = [];
-            if (slugToClean) {
-              tasks.push(removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken).catch(() => { }));
-              const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
-              if (env && env.WYNN_KV && cleanSlug) {
-                const metaKey = `site_meta:${cleanSlug}`;
-                const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
-                tasks.push(
-                  env.WYNN_KV.delete(`sub_${cleanSlug}`).catch(() => { }),
-                  env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => { }),
-                  env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => { }),
-                  env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => { }),
-                  env.WYNN_KV.delete(`demo_views:${cleanSlug}`).catch(() => { }),
-                  env.WYNN_KV.delete(`demo_notify_lock:${cleanSlug}`).catch(() => { }),
-                  env.WYNN_KV.delete(metaKey).catch(() => { })
-                );
-                if (prevMeta && Array.isArray(prevMeta.filesList)) {
-                  for (const p of prevMeta.filesList) {
-                    tasks.push(env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => { }));
-                  }
-                }
-              }
-            }
-            if (liveUrlToClean) {
-              tasks.push(
-                removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken).catch(() => { }),
-                removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken).catch(() => { })
-              );
-              if (env && env.WYNN_KV) {
-                tasks.push(env.WYNN_KV.delete(`livedom_${liveUrlToClean}`).catch(() => { }));
-              }
-            }
-            await Promise.all(tasks);
-          })();
-
-          if (ctx && typeof ctx.waitUntil === 'function') {
-            ctx.waitUntil(cleanupJob);
-          } else {
-            await cleanupJob;
-          }
-          await deleteD1Client(env, customerId);
+          await Promise.all([
+            purgeDemoSiteAssetsFromKv(env, slugToClean, customerId).catch(() => {}),
+            deleteD1Client(env, customerId, slugToClean).catch(() => {}),
+            cancelPendingScheduledSmsForCustomer(env, customerId, phoneToClean).catch(() => {}),
+            slugToClean ? removeCloudflareWorkerDomain(slugToClean, env, effectiveCfg.cfApiToken).catch(() => {}) : Promise.resolve(),
+            liveUrlToClean ? removeCloudflareWorkerDomain(liveUrlToClean, env, effectiveCfg.cfApiToken).catch(() => {}) : Promise.resolve(),
+            liveUrlToClean ? removeCloudflareWorkerDomain(`www.${liveUrlToClean}`, env, effectiveCfg.cfApiToken).catch(() => {}) : Promise.resolve(),
+            (liveUrlToClean && env && env.WYNN_KV) ? env.WYNN_KV.delete(`livedom_${liveUrlToClean}`).catch(() => {}) : Promise.resolve()
+          ]);
           runInBg(ctx, syncClientsKvSnapshot(env));
 
-          return new Response(JSON.stringify({ ok: delRes.ok, customerId, deleted: delData }), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: delRes.ok || true, customerId, slugPurged: slugToClean, deleted: delData }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Toggle 10-Day Nurture Automation Per Client
+        if (action === 'toggle_nurture_auto' && customerId) {
+          const enabled = body.enabled !== false && body.enabled !== 'false';
+          const uP = new URLSearchParams();
+          uP.append('metadata[nurture_auto_enabled]', enabled ? 'true' : 'false');
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
+          }
+          return new Response(JSON.stringify({ ok: true, nurtureAutoEnabled: enabled, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
         // Action: Activate Flash Deal 50% ($299 AUD / 72h Server Synced)
@@ -8586,7 +8853,7 @@ export default {
             if (kvV && kvV.viewCount) realViews = Math.max(realViews, Number(kvV.viewCount));
           }
 
-          if (realViews === 0) {
+          if (realViews === 0 && body.onlyIfViewed === true) {
             let nudgeRes = null;
             let nudgeText = '';
             const biz = (custToNotify && (custToNotify.businessName || custToNotify.name)) || 'Boutique';
@@ -8594,7 +8861,7 @@ export default {
             const uP0 = new URLSearchParams();
             uP0.append('metadata[nurture_step]', 'day7_nudge_0views');
             if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-              nudgeText = `Hi ${biz}, WynnPages Studio here — just making sure you saw the bespoke website preview we crafted for ${biz}: ${demoLink} . No rush at all, would love to know your thoughts!`;
+              nudgeText = `Hi ${biz}, Sam at WynnPages here. Just making sure you saw the website preview we built for you: ${demoLink}`;
               nudgeRes = await sendClickSendSms({ to: custToNotify.phone, message: nudgeText, cfg: effectiveCfg });
               if (nudgeRes) {
                 const nowIso0 = new Date().toISOString();
@@ -8645,8 +8912,7 @@ export default {
           if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
             const biz = custToNotify.businessName || custToNotify.name || 'Boutique';
             const demoLink = custToNotify.demoUrl || custToNotify.brandedDemoUrl || (custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${custToNotify.id}.wynnpages.com.au`);
-            const niche = getIndustryNicheTerms(custToNotify.industry);
-            const text = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoLink}`;
+            const text = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoLink} - Sam`;
             notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
             if (notifyRes) {
               const nowIso = new Date().toISOString();
@@ -8742,6 +9008,12 @@ export default {
         // Action: Purge Demo KV Assets & Permanent Withdraw (Day 10+ Complete Clean)
         if (action === 'purge_demo' && customerId) {
           let slugToClean = (body.slug || '').trim();
+          const dbPurge = getD1(env);
+          if (!slugToClean && dbPurge) {
+            await ensureD1Schema(env);
+            const pRow = await dbPurge.prepare('SELECT demo_slug FROM clients WHERE id = ? LIMIT 1').bind(customerId).first().catch(() => null);
+            if (pRow && pRow.demo_slug) slugToClean = pRow.demo_slug;
+          }
           if (!slugToClean) {
             try {
               const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
@@ -8755,26 +9027,7 @@ export default {
           }
 
           const cleanSlug = slugifyName(slugToClean.replace('.wynnpages.com.au', ''));
-          let deletedCount = 0;
-
-          if (env && env.WYNN_KV && cleanSlug) {
-            const metaKey = `site_meta:${cleanSlug}`;
-            const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
-            if (prevMeta && Array.isArray(prevMeta.filesList)) {
-              for (const p of prevMeta.filesList) {
-                await env.WYNN_KV.delete(`site_asset:${cleanSlug}:${p}`).catch(() => {});
-                deletedCount++;
-              }
-            }
-            await Promise.all([
-              env.WYNN_KV.delete(`sub_${cleanSlug}`).catch(() => {}),
-              env.WYNN_KV.delete(`demo_code:${cleanSlug}`).catch(() => {}),
-              env.WYNN_KV.delete(`code_${cleanSlug}`).catch(() => {}),
-              env.WYNN_KV.delete(`demo_zip:${cleanSlug}`).catch(() => {}),
-              env.WYNN_KV.delete(metaKey).catch(() => {})
-            ]);
-            deletedCount += 5;
-          }
+          const deletedCount = await purgeDemoSiteAssetsFromKv(env, cleanSlug);
 
           // In background: detach Cloudflare Worker domain if one was created
           if (cleanSlug) {
@@ -8810,7 +9063,7 @@ export default {
           return new Response(JSON.stringify({ ok: true, dealStatus: 'purged', cleanSlug, deletedCount, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
-        // Action: Send Nurture SMS (Day 3 Reminder, Day 7 Deal, Day 9 Final Warning)
+        // Action: Send Nurture SMS (Unified 5-Step Pipeline: Step 1 Pitch, Step 2 Day 3 Check-in, Step 3 Deal 50% 72h, Step 4 Day 9 Final Warning)
         if (action === 'send_nurture_sms' && customerId) {
           let cust = null;
           const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
@@ -8825,7 +9078,6 @@ export default {
           let templateKey = body.templateKey || 'day3_reminder';
           const biz = formatted.businessName || formatted.name || 'Boutique';
           const demoUrl = formatted.demoUrl || formatted.brandedDemoUrl || (formatted.demoSlug ? `https://${formatted.demoSlug}.wynnpages.com.au` : `https://${formatted.id}.wynnpages.com.au`);
-          const niche = getIndustryNicheTerms(formatted.industry);
 
           let realViews = Number(formatted.demoViewCount || 0);
           const cleanSlugN = slugifyName(formatted.demoSlug || biz);
@@ -8844,22 +9096,27 @@ export default {
           if (body.customMessage && String(body.customMessage).trim()) {
             smsText = String(body.customMessage).trim();
           } else if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
-            smsText = `Hey ${biz}, came across your work — stunning craft! We crafted a private preview website for you: ${demoUrl} (Customised with your real services & studio aesthetic). Take a look and let us know what you think!\n\n— WynnPages Australia`;
+            smsText = `Hi ${biz}, Sam from WynnPages here. We built a custom website preview for your salon: ${demoUrl} - Have a look when free!`;
           } else if (templateKey === 'aussie_followup_views' || templateKey === 'followup_views') {
-            smsText = `Hi ${biz}, noticed you checked out your bespoke preview website! Just wanted to see if you had any thoughts or wished to tweak any rituals/pricing? You can claim it directly for $599 AUD with zero monthly fees: ${demoUrl}\n\n— WynnPages Australia`;
+            smsText = `Hi ${biz}, noticed you viewed your website preview! Happy to tweak any prices or photos. Claim it for $599 AUD ($0/mo): ${demoUrl}`;
           } else if (templateKey === 'aussie_flash_deal_299' || templateKey === 'flash_deal_299') {
-            smsText = `Quick note from WynnPages: your 50% studio waiver expires in 48h! Claim your bespoke website for just $299 AUD (one-off, 100% ownership, zero ongoing retainers): ${demoUrl} — After this, standard studio pricing applies.`;
+            smsText = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoUrl} - Sam`;
           } else if (templateKey === 'day3_reminder') {
-            smsText = `Hi ${biz}, WynnPages Studio checking in! We handcrafted a bespoke website preview for your ${niche.noun}: ${demoUrl} — 100% ownership, $599 AUD flat, zero monthly fees. Have you had a chance to view it yet?`;
-          } else if (templateKey === 'day7_deal') {
-            if (realViews === 0) {
-              templateKey = 'day7_nudge_0views';
-              smsText = `Hi ${biz}, WynnPages Studio here — just making sure you saw the bespoke website preview we crafted for ${biz}: ${demoUrl} . No rush at all, would love your feedback!`;
+            if (realViews >= 2) {
+              templateKey = 'aussie_followup_views';
+              smsText = `Hi ${biz}, noticed you viewed your website preview! Happy to tweak any prices or photos. Claim it for $599 AUD ($0/mo): ${demoUrl}`;
             } else {
-              smsText = `Hi ${biz}, WynnPages Studio has opened a 72-hour ${niche.sponsorship} for ${biz}: 50% OFF ($299 AUD, save $300 AUD). View your bespoke website and claim before the window closes: ${demoUrl}`;
+              smsText = `Hi ${biz}, Sam at WynnPages checking in! Did you get a chance to see the custom website preview we made for you? ${demoUrl}`;
+            }
+          } else if (templateKey === 'day7_deal') {
+            if (realViews === 0 && body.onlyIfViewed === true) {
+              templateKey = 'day7_nudge_0views';
+              smsText = `Hi ${biz}, Sam at WynnPages here. Just making sure you saw the website preview we built for you: ${demoUrl}`;
+            } else {
+              smsText = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoUrl} - Sam`;
             }
           } else if (templateKey === 'day9_warning') {
-            smsText = `Final 24h Notice: The exclusive preview and bespoke website crafted for ${biz} is scheduled to be archived tomorrow. View & claim your site here: ${demoUrl} — WynnPages Studio`;
+            smsText = `Hi ${biz}, quick heads up from WynnPages: your website preview (${demoUrl}) closes in 24h. Claim it today if you'd like to keep this design! - Sam`;
           } else {
             smsText = (body.customMessage || '').trim();
           }
@@ -8875,6 +9132,15 @@ export default {
           const uP = new URLSearchParams();
           uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
           uP.append('metadata[nurture_step]', templateKey);
+          if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
+            if (!formatted.demoSentAt) {
+              uP.append('metadata[demo_sent_at]', nowIso);
+            }
+            if (!formatted.stage || formatted.stage === 'outbound_pending') {
+              uP.append('metadata[stage]', 'outbound_pitched');
+            }
+            uP.append('metadata[nurture_auto_enabled]', 'true');
+          }
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
             headers: {
@@ -9446,10 +9712,10 @@ export default {
       }
     }
 
-    // 6b. Admin Autopilot Engine Endpoint (POST /api/admin/autopilot)
-    if (url.pathname === '/api/admin/autopilot' && request.method === 'POST') {
+    // 6b. Admin Autopilot Engine Endpoint (GET / POST /api/admin/autopilot)
+    if (url.pathname === '/api/admin/autopilot' && (request.method === 'POST' || request.method === 'GET')) {
       try {
-        const body = await request.json().catch(() => ({}));
+        const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
         const auth = verifyAdminAuth(request, env, cfg, body);
         if (!auth.ok) {
           return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });

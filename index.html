@@ -2019,7 +2019,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         <div class="flex flex-col items-center justify-center gap-1 text-stone-500 text-xs text-center">
           <div class="flex items-center gap-1.5 font-medium text-stone-700">
             <span class="material-symbols-outlined text-[15px] text-[#536251]">verified_user</span>
-            <span>Secured by Stripe Checkout AU</span>
+            <span>256-Bit Encrypted Australian Checkout</span>
           </div>
           <span class="text-[11px] text-stone-400">Accepts Apple Pay, Google Pay, Visa, Mastercard &amp; Amex</span>
         </div>
@@ -2037,7 +2037,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
         Payment secured. Let's not waste any time.<br>Complete your simple 5-minute brief now so we can start designing immediately.
       </p>
       
-      <a href="/brief?type=organic" class="w-full max-w-sm bg-stone-900 text-white font-semibold text-[16px] py-4 px-6 rounded-xl shadow-xl flex items-center justify-between group hover:bg-black transition-all active:scale-[0.98]">
+      <a href="/onboarding?type=organic" class="w-full max-w-sm bg-stone-900 text-white font-semibold text-[16px] py-4 px-6 rounded-xl shadow-xl flex items-center justify-between group hover:bg-black transition-all active:scale-[0.98]">
         <span class="pl-2">Start Your 5-Min Brief</span>
         <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
           <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -2139,7 +2139,7 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
     // Loading State
     btn.disabled = true;
     const originalText = text.innerText;
-    text.innerText = "Connecting to Stripe...";
+    text.innerText = "Opening Secure Checkout...";
     icon.innerText = "sync";
     icon.classList.add('animate-spin');
 
@@ -2153,16 +2153,15 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
       const data = await response.json();
 
       if (!response.ok || data.error) {
-        throw new Error(data.error || 'Unable to initiate Stripe checkout');
+        throw new Error(data.error || 'Unable to initiate secure checkout');
       }
 
       if (!data.url) {
         throw new Error('No checkout URL received from server.');
       }
-      // Redirect to the Stripe-hosted Checkout Session (email pre-filled via customer_email)
       window.location.href = data.url;
     } catch (err) {
-      console.error('Stripe Checkout Error:', err);
+      console.error('Checkout Error:', err);
       alert('Checkout could not be initialized: ' + err.message);
       btn.disabled = false;
       text.innerText = originalText;

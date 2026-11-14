@@ -2419,7 +2419,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-template="aussie_pitch"
                 data-step-label="Bước 1: SMS Chào Hàng (Bắt đầu 10 ngày)"
                 ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
                   !hasPhone
                     ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
                     : step1Done
@@ -2428,12 +2428,12 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 }"
                 title="Gửi SMS Chào Hàng chuẩn Anh Úc và kích hoạt đồng hồ đếm 10 ngày tự động"
               >
-                <div class="flex items-center justify-between gap-1 font-extrabold text-xs">
-                  <span class="truncate">👋 1. Gửi SMS Chào</span>
+                <div class="flex flex-wrap items-center justify-between gap-1 font-extrabold text-[11.5px] leading-snug">
+                  <span>👋 1. SMS Chào Hàng</span>
                   ${step1Done ? '<span class="text-emerald-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>' : '<span class="text-[#96432b] text-[10px] font-black shrink-0">👆 Mở màn</span>'}
                 </div>
-                <span class="text-[10px] truncate ${step1Done ? 'text-emerald-800' : 'text-stone-600'}">
-                  ${step1Done ? 'Đã bắt đầu chu trình 10 ngày (Bấm gửi lại)' : 'Bắt đầu 10 ngày tự động'}
+                <span class="text-[10.5px] leading-snug ${step1Done ? 'text-emerald-800' : 'text-stone-600'}">
+                  ${step1Done ? 'Chu trình 10 ngày đã chạy (Bấm gửi lại)' : 'Khởi động 10 ngày tự động'}
                 </span>
               </button>
 
@@ -2445,7 +2445,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-early="${(!pitchTime || daysElapsed < 3) ? '1' : '0'}"
                 data-step-label="Bước 2: SMS Hỏi Thăm Ngày 3 (${viewCount >= 2 ? 'Mẫu Đã Xem 2+ Lần' : 'Mẫu Nhắc Xem Nhẹ'})"
                 ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
                   !hasPhone
                     ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
                     : step2Done
@@ -2456,8 +2456,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 }"
                 title="Tự động dùng mẫu 'Noticed you viewed your preview' nếu khách đã xem >= 2 lần, hoặc mẫu nhắc nhẹ nếu < 2 lần"
               >
-                <div class="flex items-center justify-between gap-1 font-bold text-xs">
-                  <span class="truncate">👀 2. SMS Hỏi Thăm</span>
+                <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug">
+                  <span>👀 2. SMS Hỏi Thăm</span>
                   ${step2Done
                     ? '<span class="text-emerald-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>'
                     : isDay3Due
@@ -2465,10 +2465,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       : '<span class="text-amber-700 text-[10px] font-bold shrink-0">⏳ Ngày 3</span>'
                   }
                 </div>
-                <span class="text-[10px] truncate ${isDay3Due ? 'text-amber-900 font-black' : 'text-stone-500'}">
+                <span class="text-[10.5px] leading-snug ${isDay3Due ? 'text-amber-900 font-black' : 'text-stone-500'}">
                   ${step2Done
                     ? 'Đã gửi hỏi thăm Ngày 3'
-                    : (viewCount >= 2 ? `Khách xem ${viewCount} lần — Bấm hỏi thăm` : 'Tự chạy Ngày 3 (Hoặc bấm gửi sớm)')
+                    : (viewCount >= 2 ? `Khách xem ${viewCount} lần — Bấm hỏi thăm` : 'Tự chạy Ngày 3 (Hoặc gửi sớm)')
                   }
                 </span>
               </button>
@@ -2479,7 +2479,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-cid="${c.id}"
                 data-action="activate_flash_deal"
                 ${(isExpired || isPurged) ? 'disabled' : ''}
-                class="btn-trigger-deal px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                class="btn-trigger-deal px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
                   isDealActive
                     ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950'
                     : isDay6Due
@@ -2488,8 +2488,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 }"
                 title="Hạ giá Demo xuống $299 AUD kèm đồng hồ đếm ngược 72h & gửi SMS Flash Deal 50%"
               >
-                <div class="flex items-center justify-between gap-1 font-extrabold text-xs">
-                  <span class="truncate">⚡ 3. Deal 50% ($299)</span>
+                <div class="flex flex-wrap items-center justify-between gap-1 font-extrabold text-[11.5px] leading-snug">
+                  <span>⚡ 3. Deal $299 (50%)</span>
                   ${isDealActive
                     ? '<span class="text-rose-600 animate-pulse text-[10px] font-black shrink-0">⏳ 72h Active</span>'
                     : isDay6Due
@@ -2497,7 +2497,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       : '<span class="text-amber-800 text-[10px] font-bold shrink-0">⏳ Ngày 6</span>'
                   }
                 </div>
-                <span class="text-[10px] truncate ${isDay6Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
+                <span class="text-[10.5px] leading-snug ${isDay6Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
                   ${isDealActive ? 'Đang chạy $299 AUD (72h)' : 'Hạ $299 AUD / 72h + bắn SMS'}
                 </span>
               </button>
@@ -2510,7 +2510,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-early="${(!pitchTime || daysElapsed < 9) ? '1' : '0'}"
                 data-step-label="Bước 4: SMS Ngày 9 (Cảnh Báo 24h Cuối)"
                 ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
                   !hasPhone
                     ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
                     : step4Done
@@ -2521,17 +2521,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 }"
                 title="Gửi SMS Ngày 9: Thông báo 24 giờ cuối trước khi khoá & lưu trữ bản preview"
               >
-                <div class="flex items-center justify-between gap-1 font-bold text-xs">
-                  <span class="truncate">⏳ 4. SMS Ngày 9</span>
+                <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug">
+                  <span>⏳ 4. SMS Ngày 9</span>
                   ${step4Done
                     ? '<span class="text-rose-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>'
                     : isDay9Due
                       ? '<span class="text-rose-700 text-[10px] font-black shrink-0">● Đến hạn!</span>'
-                      : '<span class="text-rose-700 text-[10px] font-bold shrink-0">⏳ 24h Cuối</span>'
+                      : '<span class="text-rose-700 text-[10px] font-bold shrink-0">🚨 24h Cuối</span>'
                   }
                 </div>
-                <span class="text-[10px] truncate ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-700'}">
-                  ${step4Done ? 'Đã gửi cảnh báo 24h cuối' : 'Tự chạy Ngày 9 (Hoặc bấm gửi sớm)'}
+                <span class="text-[10.5px] leading-snug ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-700'}">
+                  ${step4Done ? 'Đã gửi cảnh báo 24h cuối' : 'Tự chạy Ngày 9 (Hoặc gửi sớm)'}
                 </span>
               </button>
 
@@ -2542,11 +2542,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     type="button"
                     data-cid="${c.id}"
                     data-action="restore_demo"
-                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col justify-between gap-1 shadow-2xs transition-all cursor-pointer"
                     title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
                   >
-                    <div class="font-extrabold text-xs text-emerald-900">🔓 5. Khôi Phục</div>
-                    <span class="text-[10px] text-emerald-700 truncate">Đã dọn KV — Mở lại</span>
+                    <div class="font-extrabold text-[11.5px] leading-snug text-emerald-900">🔓 5. Khôi Phục</div>
+                    <span class="text-[10.5px] leading-snug text-emerald-700">Đã dọn KV — Mở lại</span>
                   </button>
                 </div>
               ` : isExpired ? `
@@ -2555,22 +2555,22 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     type="button"
                     data-cid="${c.id}"
                     data-action="restore_demo"
-                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col justify-between gap-1 shadow-2xs transition-all cursor-pointer"
                     title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
                   >
-                    <div class="font-extrabold text-xs text-emerald-900">🔓 Mở Lại</div>
-                    <span class="text-[10px] text-emerald-700 truncate">Khôi phục $599</span>
+                    <div class="font-extrabold text-[11.5px] leading-snug text-emerald-900">🔓 Mở Lại</div>
+                    <span class="text-[10.5px] leading-snug text-emerald-700">Khôi phục $599</span>
                   </button>
                   <button
                     type="button"
                     data-cid="${c.id}"
                     data-slug="${c.demoSlug || ''}"
                     data-name="${escapeHtml(titleName)}"
-                    class="btn-purge-demo px-2.5 py-2.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
+                    class="btn-purge-demo px-2.5 py-2.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-950 text-left flex flex-col justify-between gap-1 shadow-2xs transition-all cursor-pointer"
                     title="Xoá vĩnh viễn toàn bộ file website demo khỏi KV"
                   >
-                    <div class="font-extrabold text-xs text-rose-900">🗑️ Dọn KV</div>
-                    <span class="text-[10px] text-rose-700 truncate">Xoá sạch file</span>
+                    <div class="font-extrabold text-[11.5px] leading-snug text-rose-900">🗑️ Dọn KV</div>
+                    <span class="text-[10.5px] leading-snug text-rose-700">Xoá sạch file</span>
                   </button>
                 </div>
               ` : `
@@ -2578,15 +2578,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   type="button"
                   data-cid="${c.id}"
                   data-action="expire_demo"
-                  class="btn-expire-demo px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                  class="btn-expire-demo px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
                     isDay10Due
                       ? 'border-2 border-stone-800 bg-stone-900 text-white font-extrabold animate-pulse'
                       : 'border-stone-300 bg-white hover:bg-stone-100 text-stone-700'
                   }"
                   title="Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)"
                 >
-                  <div class="flex items-center justify-between gap-1 font-bold text-xs ${isDay10Due ? 'text-white' : 'text-stone-800'}">
-                    <span class="truncate">🔒 5. Khoá Demo</span>
+                  <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug ${isDay10Due ? 'text-white' : 'text-stone-800'}">
+                    <span>🔒 5. Khoá Demo</span>
                     <span class="text-[10px] ${isDay10Due ? 'text-amber-300 font-black' : 'text-stone-400'} shrink-0">Ngày 10</span>
                   </div>
                   <span class="text-[10px] truncate ${isDay10Due ? 'text-stone-300 font-bold' : 'text-stone-500'}">
@@ -3849,7 +3849,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         document.querySelectorAll('.btn-toggle-nurture-auto').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
-            const currentAuto = btn.getAttribute('data-auto') === '1';
+            const currentAuto = btn.getAttribute('data-auto-enabled') === '1';
             const nextAuto = !currentAuto;
             const client = clientsCache.find(x => x.id === cid);
             const biz = (client && (client.businessName || client.name)) || 'khách này';
@@ -6897,14 +6897,19 @@ https://wynnpages.com.au`;
           const bPhone = (rev && rev.phone) ? escapeHtml(rev.phone) : '<span class="text-stone-400 italic">(Không đổi)</span>';
           const bAddress = (rev && rev.address) ? escapeHtml(rev.address) : '<span class="text-stone-400 italic">(Không đổi)</span>';
           const bHours = (rev && rev.hours) ? escapeHtml(rev.hours) : '<span class="text-stone-400 italic">(Không đổi)</span>';
-          const bBooking = (rev && rev.bookingLink) ? escapeHtml(rev.bookingLink) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bBooking = (rev && (rev.bookingUrl || rev.bookingLink)) ? escapeHtml(rev.bookingUrl || rev.bookingLink) : '<span class="text-stone-400 italic">(Không đổi)</span>';
           const bHero = (rev && rev.heroHeadline) ? escapeHtml(rev.heroHeadline) : '<span class="text-stone-400 italic">(Không đổi)</span>';
-          const bAbout = (rev && rev.aboutStory) ? escapeHtml(rev.aboutStory) : '<span class="text-stone-400 italic">(Không đổi)</span>';
-          const bMenuNotes = (rev && rev.menuNotes) ? escapeHtml(rev.menuNotes) : '<span class="text-stone-400 italic">(Không đổi)</span>';
-          const bFinalNotes = (rev && rev.finalNotes) ? escapeHtml(rev.finalNotes) : '<span class="text-stone-400 italic">(Không có)</span>';
+          const bAbout = (rev && (rev.heroStory || rev.aboutStory)) ? escapeHtml(rev.heroStory || rev.aboutStory) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bMenuNotes = (rev && (rev.menuText || rev.menuNotes)) ? escapeHtml(rev.menuText || rev.menuNotes) : '<span class="text-stone-400 italic">(Không đổi)</span>';
+          const bFinalNotes = (rev && (rev.notes || rev.finalNotes)) ? escapeHtml(rev.notes || rev.finalNotes) : '<span class="text-stone-400 italic">(Không có)</span>';
 
-          const hasMenuFile = rev && rev.menuFileName;
-          const hasPhotoFiles = rev && rev.photosFileName;
+          const menuFilesList = (rev && Array.isArray(rev.menuFiles) && rev.menuFiles.length)
+            ? rev.menuFiles
+            : (rev && rev.menuFileName ? [{ name: rev.menuFileName, url: rev.menuFileUrl || `/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=menu` }] : []);
+          const salonPhotosList = (rev && Array.isArray(rev.salonPhotos) && rev.salonPhotos.length)
+            ? rev.salonPhotos
+            : (rev && rev.photosFileName ? [{ name: rev.photosFileName, url: `/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=photos` }] : []);
+          const hasDomainRequest = Boolean(rev && (rev.domainConciergeRequested || rev.desiredDomain));
 
           aiRevDetailsBody.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -6951,10 +6956,17 @@ https://wynnpages.com.au`;
                   <strong class="text-stone-700">Ghi chú giá / dịch vụ:</strong>
                   <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap wrap-anywhere">${bMenuNotes}</div>
                 </div>
-                ${hasMenuFile ? `
-                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-wrap items-center justify-between gap-2">
-                    <span class="font-bold flex items-center gap-1.5 min-w-0 wrap-anywhere"><span>📷</span> <span>Menu Upload:</span> <em>${escapeHtml(rev.menuFileName)}</em></span>
-                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=menu" target="_blank" class="text-[11px] font-bold text-emerald-700 underline shrink-0">Xem Ảnh ↗</a>
+                ${menuFilesList.length ? `
+                  <div class="space-y-1.5">
+                    <span class="text-[11px] font-bold text-emerald-900 block">📷 Đính kèm Menu (${menuFilesList.length} file):</span>
+                    <div class="grid grid-cols-2 gap-2">
+                      ${menuFilesList.map((mf, idx) => `
+                        <a href="${escapeHtml(mf.url || `/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=menu`)}" target="_blank" class="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 flex items-center justify-between gap-1 text-[11px] font-bold">
+                          <span class="truncate">${escapeHtml(mf.name || `Menu #${idx + 1}`)}</span>
+                          <span class="shrink-0">↗</span>
+                        </a>
+                      `).join('')}
+                    </div>
                   </div>
                 ` : '<div class="text-[11px] text-stone-400 italic">Không đính kèm file ảnh menu</div>'}
               </div>
@@ -6965,12 +6977,26 @@ https://wynnpages.com.au`;
                   <span>🖼️ Block 4: Hình Ảnh Thật &amp; Ghi Chú</span>
                   <span class="text-[10px] text-stone-400 shrink-0">Photos &amp; Notes</span>
                 </div>
-                ${hasPhotoFiles ? `
-                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-wrap items-center justify-between gap-2">
-                    <span class="font-bold flex items-center gap-1.5 min-w-0 wrap-anywhere"><span>📸</span> <span>Ảnh tiệm:</span> <em>${escapeHtml(rev.photosFileName)}</em></span>
-                    <a href="/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=photos" target="_blank" class="text-[11px] font-bold text-emerald-700 underline shrink-0">Xem Ảnh ↗</a>
+                ${salonPhotosList.length ? `
+                  <div class="space-y-1.5">
+                    <span class="text-[11px] font-bold text-emerald-900 block">📸 Ảnh tiệm tải lên (${salonPhotosList.length} ảnh):</span>
+                    <div class="grid grid-cols-3 gap-2">
+                      ${salonPhotosList.map((ph, idx) => {
+                        const pUrl = ph.url || `/api/revision/get-file?cid=${encodeURIComponent(client.id)}&type=photos`;
+                        return `
+                          <a href="${escapeHtml(pUrl)}" target="_blank" class="block rounded-lg overflow-hidden border border-emerald-300 bg-white shadow-2xs group">
+                            <img src="${escapeHtml(pUrl)}" alt="${escapeHtml(ph.name || `Photo ${idx + 1}`)}" class="w-full aspect-4/3 object-cover group-hover:scale-105 transition-transform">
+                          </a>
+                        `;
+                      }).join('')}
+                    </div>
                   </div>
                 ` : '<div class="text-[11px] text-stone-400 italic">Giữ nguyên tranh sơn dầu nghệ thuật của Demo</div>'}
+                ${hasDomainRequest ? `
+                  <div class="p-2 rounded-lg bg-amber-50 border border-amber-300 text-amber-950 text-[11px]">
+                    <strong>🌐 Tên miền / Concierge:</strong> ${rev.domainConciergeRequested ? '🆘 Nhờ Studio cài hộ A–Z' : ''} ${rev.desiredDomain ? `(${escapeHtml(rev.desiredDomain)})` : ''}
+                  </div>
+                ` : ''}
                 <div>
                   <strong class="text-stone-700">Chỉ đạo cuối cùng:</strong>
                   <div class="bg-white/80 p-1.5 rounded-lg border border-[#ebdcc4] text-[11px] mt-0.5 whitespace-pre-wrap wrap-anywhere">${bFinalNotes}</div>
