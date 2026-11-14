@@ -107,6 +107,19 @@
       background: linear-gradient(135deg, #fff3d1 0%, #e8b948 35%, #c88a1b 70%, #995c07 100%);
       text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
     }
+    .section-keep-pill {
+      transition: all 0.18s ease;
+    }
+    .section-keep-pill.active-keep {
+      background-color: #ecfdf5;
+      border-color: #6ee7b7;
+      color: #065f46;
+    }
+    .section-keep-pill.active-edit {
+      background-color: #fff7ed;
+      border-color: #fdba74;
+      color: #9a3412;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-[#96432b] selection:text-white">
@@ -200,7 +213,7 @@
             Refine &amp; Finalize <span id="display-biz-name" class="font-editorial italic font-normal text-[#96432b]">Your Salon</span>
           </h1>
           <p class="text-xs text-stone-500 max-w-2xl leading-relaxed">
-            Compare what is currently running on your demo on the left, and submit your desired updates on the right.
+            Compare what is currently running on your demo on the left, and submit your desired updates on the right. Leave any field blank to keep the current demo version.
           </p>
         </div>
 
@@ -223,7 +236,7 @@
               WynnPages 1-Round Comprehensive Revision Policy
             </h3>
             <p class="text-xs text-[#734812] leading-relaxed max-w-4xl">
-              Your <strong>$599 AUD flat-fee package</strong> includes <strong>ONE comprehensive revision round</strong> so our Australian engineers can implement all changes accurately and launch your live website in 24–48 hours. Any further edit rounds requested after this submission incur a standard <strong>$49 AUD</strong> service fee. Please review all fields, prices, and phone numbers thoroughly before submitting.
+              Your <strong>bespoke flat-fee package</strong> includes <strong>ONE comprehensive revision round</strong> so our Australian engineers can implement all changes accurately and launch your live website in 24–48 hours. Any further edit rounds requested after this submission incur a standard <strong>$49 AUD</strong> service fee. Please review all fields, prices, and phone numbers thoroughly before submitting.
             </p>
           </div>
         </div>
@@ -264,7 +277,10 @@
                 <p class="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">Business Name, Phone, Address, Hours &amp; Booking Link</p>
               </div>
             </div>
-            <span class="hidden sm:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider shrink-0 whitespace-nowrap">Side-by-Side View</span>
+            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+              <button type="button" data-section-toggle="1" data-mode="keep" class="section-keep-pill active-keep px-2.5 py-1 rounded-full border text-[10.5px] font-bold cursor-pointer">✅ Looks Good — Keep As Is</button>
+              <button type="button" data-section-toggle="1" data-mode="edit" class="section-keep-pill px-2.5 py-1 rounded-full border border-stone-200 bg-white text-stone-600 text-[10.5px] font-bold cursor-pointer">✏️ Edit This Section</button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -303,7 +319,7 @@
             </div>
 
             <!-- Right: Update To -->
-            <div class="p-6 bg-white space-y-4">
+            <div id="section-body-1" class="p-6 bg-white space-y-4">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-black uppercase tracking-wider text-[#96432b]">Update to (Leave blank if correct)</span>
                 <span class="text-[10px] text-stone-400 italic">Optional</span>
@@ -350,7 +366,10 @@
                 <p class="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">Hero banner headline, badge subtitle &amp; your craftsmanship introduction</p>
               </div>
             </div>
-            <span class="hidden sm:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider shrink-0 whitespace-nowrap">Side-by-Side View</span>
+            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+              <button type="button" data-section-toggle="2" data-mode="keep" class="section-keep-pill active-keep px-2.5 py-1 rounded-full border text-[10.5px] font-bold cursor-pointer">✅ Looks Good — Keep As Is</button>
+              <button type="button" data-section-toggle="2" data-mode="edit" class="section-keep-pill px-2.5 py-1 rounded-full border border-stone-200 bg-white text-stone-600 text-[10.5px] font-bold cursor-pointer">✏️ Edit This Section</button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -378,7 +397,7 @@
             </div>
 
             <!-- Right: Update -->
-            <div class="p-6 bg-white space-y-4">
+            <div id="section-body-2" class="p-6 bg-white space-y-4">
               <span class="text-[11px] font-black uppercase tracking-wider text-[#96432b] block">Update to (Leave blank to keep demo wording)</span>
               <div class="space-y-3 text-xs">
                 <div>
@@ -409,7 +428,10 @@
                 <p class="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">Review demo services or upload a photo of your printed in-salon price list</p>
               </div>
             </div>
-            <span class="hidden sm:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider shrink-0 whitespace-nowrap">Side-by-Side View</span>
+            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+              <button type="button" data-section-toggle="3" data-mode="keep" class="section-keep-pill active-keep px-2.5 py-1 rounded-full border text-[10.5px] font-bold cursor-pointer">✅ Looks Good — Keep As Is</button>
+              <button type="button" data-section-toggle="3" data-mode="edit" class="section-keep-pill px-2.5 py-1 rounded-full border border-stone-200 bg-white text-stone-600 text-[10.5px] font-bold cursor-pointer">✏️ Edit This Section</button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
@@ -426,7 +448,7 @@
             </div>
 
             <!-- Right: Menu Tweaks or Photo Upload -->
-            <div class="p-6 bg-white space-y-4">
+            <div id="section-body-3" class="p-6 bg-white space-y-4">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-black uppercase tracking-wider text-[#96432b]">Update Services (2 Ways)</span>
                 <span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded">AI Assisted</span>
@@ -444,25 +466,23 @@
                 <span class="bg-white px-3 text-[10px] font-extrabold uppercase text-stone-400 tracking-wider absolute">OR EASIER</span>
               </div>
 
-              <!-- Option B: Upload Real Menu Photo / PDF -->
+              <!-- Option B: Upload Real Menu Photo / PDF (Up to 4 files) -->
               <div class="space-y-2 text-xs">
-                <label class="block font-bold text-stone-700">Method B: Upload Photo / PDF of Your Real Salon Menu</label>
+                <div class="flex items-center justify-between gap-2">
+                  <label class="block font-bold text-stone-700">Method B: Upload Photo / PDF of Your Real Salon Menu</label>
+                  <span id="menu-files-counter" class="px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-bold text-stone-600">0 / 4 files uploaded</span>
+                </div>
                 <div id="menu-upload-zone" class="upload-box rounded-2xl p-5 text-center cursor-pointer transition-all hover:border-[#96432b]">
-                  <input type="file" id="menu-file-input" name="menuFile" accept="image/*,.pdf" class="hidden">
+                  <input type="file" id="menu-file-input" name="menuFile" accept="image/*,.pdf" multiple class="hidden">
                   <span class="text-3xl block mb-1">📸</span>
-                  <p class="font-bold text-stone-800 text-xs sm:text-sm">Chạm để chọn ảnh bảng giá / PDF tiệm</p>
-                  <p class="text-[10.5px] text-stone-400 mt-1 max-w-sm mx-auto">Chụp ảnh bảng giá thật tại salon hoặc tải file PDF/JPG. Hệ thống sẽ trích xuất và cập nhật đầy đủ bảng giá thật.</p>
-                  <div class="mt-2.5 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold shadow-xs pointer-events-none">
-                    <span>📁 Chọn File / Chụp Ảnh Menu</span>
-                  </div>
-                  <div id="menu-file-preview" class="hidden mt-3 p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs font-semibold flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 min-w-0 flex-1 text-left">
-                      <span class="text-base shrink-0">📄</span>
-                      <span id="menu-file-name" class="truncate font-mono text-[11px]">menu.jpg</span>
-                    </div>
-                    <button type="button" id="btn-remove-menu-file" class="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold shrink-0 shadow-2xs">✕ Xoá</button>
+                  <p class="font-bold text-stone-800 text-xs sm:text-sm">Upload a Photo or PDF of Your Price List (Up to 4 files)</p>
+                  <p class="text-[10.5px] text-stone-500 mt-1 max-w-sm mx-auto leading-relaxed">Snap a clear photo of your printed in-salon menu or upload a PDF/JPG. Our studio will extract and update all treatments &amp; prices accurately.</p>
+                  <div class="mt-3 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold shadow-xs pointer-events-none">
+                    <span>📸 Choose or Snap Menu Photos</span>
                   </div>
                 </div>
+                <!-- Visual Thumbnail Grid for Menu Files -->
+                <div id="menu-thumbnails-grid" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1"></div>
               </div>
             </div>
           </div>
@@ -480,46 +500,50 @@
                   <h3 class="text-sm sm:text-base font-extrabold text-stone-900 leading-snug">Real Photo Swaps &amp; Final Directives</h3>
                   <span class="sm:hidden px-2 py-0.5 rounded-md bg-stone-200/80 text-[10px] font-extrabold uppercase tracking-wider text-stone-700 shrink-0">Step 4 of 4</span>
                 </div>
-                <p class="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">Replace demo oil paintings with your real salon photos &amp; add final requests</p>
+                <p class="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">Replace demo artwork with your real salon photos &amp; add final requests</p>
               </div>
             </div>
-            <span class="hidden sm:inline-block text-[11px] font-bold text-stone-400 uppercase tracking-wider shrink-0 whitespace-nowrap">Side-by-Side View</span>
+            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+              <button type="button" data-section-toggle="4" data-mode="keep" class="section-keep-pill active-keep px-2.5 py-1 rounded-full border text-[10.5px] font-bold cursor-pointer">✅ Looks Good — Keep As Is</button>
+              <button type="button" data-section-toggle="4" data-mode="edit" class="section-keep-pill px-2.5 py-1 rounded-full border border-stone-200 bg-white text-stone-600 text-[10.5px] font-bold cursor-pointer">✏️ Edit This Section</button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#e5dec9]">
-            <!-- Left: Current Demo Artworks -->
+            <!-- Left: Current Demo Artworks / Live Photos -->
             <div class="p-6 bg-[#faf6ee]/50 space-y-4">
-              <span class="text-[11px] font-black uppercase tracking-wider text-stone-500 block">Current Demo Artwork / Photos</span>
-              <div id="cur-photos-grid" class="grid grid-cols-2 gap-2.5">
-                <!-- Dynamically rendered -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-black uppercase tracking-wider text-stone-500 block">Current Demo Artwork / Photos</span>
+                <span id="cur-photos-badge" class="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-800">Synced with Live Demo</span>
               </div>
-              <p class="text-[10.5px] text-stone-400 italic">
+              <div id="cur-photos-grid" class="grid grid-cols-2 gap-2.5">
+                <!-- Dynamically rendered from live Demo HTML -->
+              </div>
+              <p id="cur-photos-caption" class="text-[10.5px] text-stone-500 italic leading-relaxed">
                 Our bespoke Haute Couture fine-art oil paintings &amp; 24k gold leaf accents are active by default. You can keep them or upload real salon photos.
               </p>
             </div>
 
             <!-- Right: Photo Uploads & Notes -->
-            <div class="p-6 bg-white space-y-4">
+            <div id="section-body-4" class="p-6 bg-white space-y-4">
               <span class="text-[11px] font-black uppercase tracking-wider text-[#96432b] block">Upload Real Photos &amp; Final Directives</span>
 
               <div class="space-y-2 text-xs">
-                <label class="block font-bold text-stone-700">Upload Your Real Photos (Optional)</label>
+                <div class="flex items-center justify-between gap-2">
+                  <label class="block font-bold text-stone-700">Upload Your Real Photos (Optional)</label>
+                  <span id="salon-photos-counter" class="px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-bold text-stone-600">0 / 6 photos uploaded</span>
+                </div>
                 <div id="photos-upload-zone" class="upload-box rounded-2xl p-5 text-center cursor-pointer transition-all hover:border-[#96432b]">
                   <input type="file" id="photos-file-input" name="photosFile" accept="image/*" multiple class="hidden">
                   <span class="text-3xl block mb-1">🖼️</span>
-                  <p class="font-bold text-stone-800 text-xs sm:text-sm">Chạm để chọn ảnh salon (Tối đa 6 ảnh)</p>
-                  <p class="text-[10.5px] text-stone-400 mt-1 max-w-sm mx-auto">Tải ảnh tiệm thật, không gian, thợ hoặc mẫu móng của bạn. Kỹ sư đồ hoạ sẽ căn chỉnh màu chuẩn website.</p>
-                  <div class="mt-2.5 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold shadow-xs pointer-events-none">
-                    <span>📷 Chọn Ảnh Thật Từ Thiết Bị</span>
-                  </div>
-                  <div id="photos-file-preview" class="hidden mt-3 p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs font-semibold flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 min-w-0 flex-1 text-left">
-                      <span class="text-base shrink-0">🖼️</span>
-                      <span id="photos-file-name" class="truncate font-mono text-[11px]">photos.zip</span>
-                    </div>
-                    <button type="button" id="btn-remove-photos-file" class="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold shrink-0 shadow-2xs">✕ Xoá</button>
+                  <p class="font-bold text-stone-800 text-xs sm:text-sm">Upload Your Real Salon Photos (Up to 6 photos)</p>
+                  <p class="text-[10.5px] text-stone-500 mt-1 max-w-sm mx-auto leading-relaxed">Upload photos of your salon space, team, or signature nail work. Our designers will colour-grade and fit them seamlessly into your website.</p>
+                  <div class="mt-3 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold shadow-xs pointer-events-none">
+                    <span>🖼 Choose Photos from Device</span>
                   </div>
                 </div>
+                <!-- Visual Thumbnail Grid for Salon Photos -->
+                <div id="salon-thumbnails-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1"></div>
               </div>
 
               <div class="space-y-1.5 text-xs">
@@ -531,38 +555,43 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- MANDATORY 1-ROUND CHECKBOX & SUBMIT BUTTON              -->
+        <!-- MANDATORY 1-ROUND CHECKBOX & SLEEK BOTTOM ACTION BAR     -->
         <!-- ======================================================== -->
-        <div id="submission-card" class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#96432b]/40 shadow-md space-y-5">
+        <div id="submission-card" class="bg-white rounded-3xl p-5 sm:p-7 border-2 border-[#96432b]/35 shadow-sm space-y-4">
           <div class="flex items-start gap-3">
-            <input type="checkbox" id="rev-confirm-checkbox" required class="mt-1 w-4 h-4 rounded text-[#96432b] border-[#d8cca6] focus:ring-[#96432b] cursor-pointer">
+            <input type="checkbox" id="rev-confirm-checkbox" required class="mt-1 w-4 h-4 rounded text-[#96432b] border-[#d8cca6] focus:ring-[#96432b] cursor-pointer shrink-0">
             <label for="rev-confirm-checkbox" class="text-xs font-bold text-stone-800 leading-relaxed cursor-pointer select-none">
               I have double-checked all details (phone number, physical address, trading hours, and pricing menu) and I am ready to submit my single complimentary revision round so WynnPages Studio can launch my website.
             </label>
           </div>
 
-          <div id="draft-saved-banner" class="hidden rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs font-semibold text-emerald-900 flex items-center justify-between gap-2">
-            <span id="draft-saved-text">✓ Draft saved! You can safely close this page and return later.</span>
+          <div id="draft-saved-banner" class="hidden rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-semibold text-emerald-900 flex items-center justify-between gap-2">
+            <span id="draft-saved-text">✓ Draft saved! You can safely close this page and return later on any device.</span>
           </div>
 
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#f0eade]">
-            <span class="text-[11px] text-stone-400 text-center sm:text-left">
-              ⚡ Expected live launch: within 24–48 hours upon final submission.
+          <!-- Sleek & Proportional Bottom Action Bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pt-3 border-t border-[#f0eade]">
+            <span class="text-[11.5px] font-medium text-stone-500 text-center sm:text-left">
+              ⚡ Expected live launch: within 24–48 hours upon final submission
             </span>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 w-full sm:w-auto shrink-0">
               <button
                 type="button"
                 id="btn-save-draft"
-                class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-[#f7f2e8] hover:bg-[#efe6d5] border border-[#d8cca6] text-stone-800 font-bold text-xs sm:text-sm transition-all active:scale-[0.98] cursor-pointer inline-flex items-center justify-center gap-2 min-h-[48px]"
+                style="padding: 10px 22px;"
+                class="w-full sm:w-auto rounded-2xl bg-[#f7f2e8] hover:bg-[#efe6d5] border border-[#d8cca6] text-stone-800 transition-all active:scale-[0.98] cursor-pointer flex flex-col items-center justify-center text-center min-h-[48px] sm:min-h-[50px]"
               >
-                <span>💾 Save Draft (Finish Later)</span>
+                <span class="text-[14px] font-semibold leading-tight text-stone-800">💾 Save Draft</span>
+                <span class="text-[11px] font-normal leading-tight text-stone-600 opacity-65 mt-0.5">Finish later on any device</span>
               </button>
               <button
                 type="submit"
                 id="btn-submit-revision"
-                class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#96432b] to-[#b84a30] hover:from-[#7d3520] hover:to-[#96432b] text-white font-extrabold text-xs sm:text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer inline-flex items-center justify-center gap-2 min-h-[50px]"
+                style="padding: 10px 24px;"
+                class="w-full sm:w-auto rounded-2xl bg-gradient-to-r from-[#96432b] to-[#b84a30] hover:from-[#7d3520] hover:to-[#96432b] text-white shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex flex-col items-center justify-center text-center min-h-[50px]"
               >
-                <span>🚀 Submit Revision Round (Complete My 1 Free Revision Round)</span>
+                <span class="text-[14px] font-semibold leading-tight text-white">🚀 Submit Final Revisions</span>
+                <span class="text-[11px] font-normal leading-tight text-white/80 mt-0.5">Uses your 1 complimentary revision round</span>
               </button>
             </div>
           </div>
@@ -611,11 +640,59 @@
       const badgeLockStatus = document.getElementById('badge-lock-status');
       const submissionCard = document.getElementById('submission-card');
 
+      const MAX_MENU_FILES = 4;
+      const MAX_SALON_PHOTOS = 6;
+
       let clientData = null;
-      let menuFileBase64 = null;
-      let menuFileName = '';
-      let photosFileBase64 = null;
-      let photosFileName = '';
+      let isFormLocked = false;
+      // State arrays for multi-file upload: each item is { name, dataUrl, url, type }
+      let menuFiles = [];
+      let salonPhotos = [];
+
+      const SAVE_DRAFT_DEFAULT_HTML = `
+        <span class="text-[14px] font-semibold leading-tight text-stone-800">💾 Save Draft</span>
+        <span class="text-[11px] font-normal leading-tight text-stone-600 opacity-65 mt-0.5">Finish later on any device</span>
+      `;
+      const SUBMIT_FINAL_DEFAULT_HTML = `
+        <span class="text-[14px] font-semibold leading-tight text-white">🚀 Submit Final Revisions</span>
+        <span class="text-[11px] font-normal leading-tight text-white/80 mt-0.5">Uses your 1 complimentary revision round</span>
+      `;
+
+      // Progressive Disclosure Section Toggles ("Looks Good — Keep As Is" vs "Edit This Section")
+      document.querySelectorAll('[data-section-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const secId = btn.getAttribute('data-section-toggle');
+          const mode = btn.getAttribute('data-mode');
+          const group = document.querySelectorAll(`[data-section-toggle="${secId}"]`);
+          group.forEach(b => {
+            b.classList.remove('active-keep', 'active-edit');
+            b.classList.add('border-stone-200', 'bg-white', 'text-stone-600');
+          });
+          btn.classList.remove('border-stone-200', 'bg-white', 'text-stone-600');
+          btn.classList.add(mode === 'keep' ? 'active-keep' : 'active-edit');
+          const bodyEl = document.getElementById(`section-body-${secId}`);
+          if (bodyEl && mode === 'edit') {
+            const firstInput = bodyEl.querySelector('input:not([type="file"]), textarea');
+            if (firstInput && !firstInput.disabled) firstInput.focus();
+          }
+        });
+      });
+
+      // Automatically switch pill to "Edit This Section" when user types in that section
+      [1, 2, 3, 4].forEach(secId => {
+        const bodyEl = document.getElementById(`section-body-${secId}`);
+        if (!bodyEl) return;
+        bodyEl.addEventListener('input', () => {
+          const keepBtn = document.querySelector(`[data-section-toggle="${secId}"][data-mode="keep"]`);
+          const editBtn = document.querySelector(`[data-section-toggle="${secId}"][data-mode="edit"]`);
+          if (keepBtn && editBtn) {
+            keepBtn.classList.remove('active-keep');
+            keepBtn.classList.add('border-stone-200', 'bg-white', 'text-stone-600');
+            editBtn.classList.remove('border-stone-200', 'bg-white', 'text-stone-600');
+            editBtn.classList.add('active-edit');
+          }
+        });
+      });
 
       // Initialize
       async function loadPortal() {
@@ -734,31 +811,50 @@
         }
         if (menuCountEl) menuCountEl.textContent = `${totalItems} Services Listed`;
 
-        // Block 4 Photos
+        // Block 4 Dynamically Synced Demo Artwork / Photos
         const photosGrid = document.getElementById('cur-photos-grid');
+        const photosCaption = document.getElementById('cur-photos-caption');
+        const photosBadge = document.getElementById('cur-photos-badge');
         photosGrid.innerHTML = '';
-        const photos = Array.isArray(c.photos) && c.photos.length
-          ? c.photos
-          : [
+
+        const liveDemoPhotos = (Array.isArray(c.demoPhotos) && c.demoPhotos.length)
+          ? c.demoPhotos
+          : (Array.isArray(c.photos) && c.photos.length ? c.photos : [
               { src: 'https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg', title: 'Sanctuary Hero' },
               { src: 'https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg', title: 'BIAB Artistry' },
               { src: 'https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg', title: 'Botanical Pedicure' },
               { src: 'https://wynnpages.com.au/assets/atelier/nails/lookbook-gilded-french.jpg', title: 'Micro-French' }
-            ];
+            ]);
 
-        photos.slice(0, 4).forEach((ph, i) => {
-          const imgUrl = typeof ph === 'string' ? ph : (ph.src || ph.url);
-          const title = ph.title || `Artwork ${i + 1}`;
+        liveDemoPhotos.slice(0, 6).forEach((ph, i) => {
+          const imgUrl = typeof ph === 'string' ? ph : (ph.src || ph.url || '');
+          const title = (typeof ph === 'object' && (ph.title || ph.label)) ? (ph.title || ph.label) : `Demo Image ${i + 1}`;
           const d = document.createElement('div');
           d.className = 'space-y-1';
           d.innerHTML = `
-            <div class="aspect-4/3 rounded-xl overflow-hidden border border-[#d8ccb8] bg-stone-100">
-              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover">
+            <div class="aspect-4/3 rounded-xl overflow-hidden border border-[#d8ccb8] bg-stone-100 shadow-2xs">
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(title)}" loading="lazy" class="w-full h-full object-cover">
             </div>
             <span class="text-[10px] text-stone-500 font-medium block truncate">${escapeHtml(title)}</span>
           `;
           photosGrid.appendChild(d);
         });
+
+        if (c.hasCustomDemoPhotos) {
+          if (photosCaption) {
+            photosCaption.textContent = 'Showing the custom photography & bespoke artwork currently live on your website preview. Upload additional photos on the right if you wish to swap or add more.';
+          }
+          if (photosBadge) {
+            photosBadge.textContent = '✓ Custom Demo Photos Active';
+          }
+        } else {
+          if (photosCaption) {
+            photosCaption.textContent = 'Our bespoke Haute Couture fine-art oil paintings & 24k gold leaf accents are active by default. You can keep them or upload real salon photos.';
+          }
+          if (photosBadge) {
+            photosBadge.textContent = 'Synced with Live Demo';
+          }
+        }
 
         // Populate any saved draft or submitted revision data, and lock only when submitted
         if (data.revisionStatus === 'submitted' || data.revisionStatus === 'applied') {
@@ -786,23 +882,47 @@
         if (revData.heroStory) document.getElementById('rev-hero-story').value = revData.heroStory;
         if (revData.menuText) document.getElementById('rev-menu-text').value = revData.menuText;
         if (revData.notes) document.getElementById('rev-notes').value = revData.notes;
-        if (revData.menuFileName) {
-          menuFileName = revData.menuFileName;
-          const preview = document.getElementById('menu-file-preview');
-          preview.classList.remove('hidden');
-          document.getElementById('menu-file-name').textContent = `✓ Uploaded: ${revData.menuFileName}`;
-          if (isLocked) document.getElementById('btn-remove-menu-file').style.display = 'none';
+
+        // Restore menuFiles array (or single fallback)
+        if (Array.isArray(revData.menuFiles) && revData.menuFiles.length) {
+          menuFiles = revData.menuFiles.slice(0, MAX_MENU_FILES).map((f, idx) => ({
+            name: f.name || `menu-${idx + 1}.jpg`,
+            dataUrl: f.dataUrl || '',
+            url: f.url || f.dataUrl || '',
+            type: f.type || ((f.name || '').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg')
+          }));
+        } else if (revData.menuFileUrl || revData.menuFileName) {
+          menuFiles = [{
+            name: revData.menuFileName || 'menu-upload.jpg',
+            dataUrl: '',
+            url: revData.menuFileUrl || '',
+            type: (revData.menuFileName || '').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'
+          }];
         }
-        if (revData.photosFileName) {
-          photosFileName = revData.photosFileName;
-          const preview = document.getElementById('photos-file-preview');
-          preview.classList.remove('hidden');
-          document.getElementById('photos-file-name').textContent = `✓ Uploaded: ${revData.photosFileName}`;
-          if (isLocked) document.getElementById('btn-remove-photos-file').style.display = 'none';
+
+        // Restore salonPhotos array (or single fallback)
+        if (Array.isArray(revData.salonPhotos) && revData.salonPhotos.length) {
+          salonPhotos = revData.salonPhotos.slice(0, MAX_SALON_PHOTOS).map((f, idx) => ({
+            name: f.name || `photo-${idx + 1}.jpg`,
+            dataUrl: f.dataUrl || '',
+            url: f.url || f.dataUrl || '',
+            type: f.type || 'image/jpeg'
+          }));
+        } else if (Array.isArray(revData.photosFileUrls) && revData.photosFileUrls.length) {
+          salonPhotos = revData.photosFileUrls.slice(0, MAX_SALON_PHOTOS).map((u, idx) => ({
+            name: `salon-photo-${idx + 1}.jpg`,
+            dataUrl: '',
+            url: u,
+            type: 'image/jpeg'
+          }));
         }
+
+        renderMenuThumbnails();
+        renderSalonPhotoThumbnails();
       }
 
       function lockPortal(revData, submittedAt) {
+        isFormLocked = true;
         lockedBanner.classList.remove('hidden');
         policyBanner.classList.add('hidden');
         if (draftSavedBanner) draftSavedBanner.classList.add('hidden');
@@ -814,9 +934,13 @@
           });
         }
 
-        // Disable all inputs
-        const allInputs = revisionForm.querySelectorAll('input, textarea, button[type="submit"], #btn-save-draft');
+        // Disable all inputs & upload zones
+        const allInputs = revisionForm.querySelectorAll('input, textarea, button[type="submit"], #btn-save-draft, [data-section-toggle]');
         allInputs.forEach(el => el.disabled = true);
+        const mZone = document.getElementById('menu-upload-zone');
+        const pZone = document.getElementById('photos-upload-zone');
+        if (mZone) mZone.classList.add('disabled', 'opacity-60', 'pointer-events-none');
+        if (pZone) pZone.classList.add('disabled', 'opacity-60', 'pointer-events-none');
 
         // Populate fields with submitted values if available
         if (revData) {
@@ -859,7 +983,7 @@
             <div class="mt-4 rounded-2xl bg-white/95 border border-emerald-300 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
               <div class="space-y-0.5 text-xs text-emerald-950">
                 <p class="font-extrabold">✓ Domain Connection Received${resolvedDom ? ` (${escapeHtml(resolvedDom)})` : ''}</p>
-                <p class="text-emerald-800 leading-relaxed">Our Australian engineers already have your domain access and will take your website live seamlessly once revisions are complete.</p>
+                <p class="text-emerald-800 leading-relaxed">Our Australian engineers already have your domain preferences and will take your website live seamlessly once revisions are complete.</p>
               </div>
               <a href="${escapeHtml(makeGuideHref(resolvedDom ? 'existing' : 'new'))}" target="_blank" rel="noopener" class="shrink-0 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-[11px] font-bold text-emerald-900 text-center transition-colors">
                 Update Domain Details ↗
@@ -879,26 +1003,33 @@
               </h4>
             </div>
             <p class="text-xs text-stone-600 leading-relaxed">
-              While our Australian engineers prepare your revised website for launch (24–48 hours), follow our visual concierge guide to register a new domain directly in your own name (~$15–$20 AUD/year) or connect a domain you already own — zero technical knowledge required.
+              While our Australian engineers prepare your revised website for launch (24–48 hours), choose how you'd like to connect your official <strong>.com.au</strong> or <strong>.com</strong> web address:
             </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <a href="${escapeHtml(makeGuideHref('new'))}" target="_blank" rel="noopener" class="p-3.5 rounded-xl bg-gradient-to-r from-[#96432b] to-[#b84a30] hover:from-[#7d3520] hover:to-[#96432b] text-white shadow-xs transition-all flex flex-col justify-between gap-1 group">
                 <span class="text-xs font-extrabold flex items-center justify-between gap-2">
-                  <span>1. Buy a New Domain (.com.au / .com)</span>
+                  <span>1. Buy a New Domain</span>
                   <span class="group-hover:translate-x-0.5 transition-transform">→</span>
                 </span>
-                <span class="text-[11px] text-white/85 leading-snug">Register directly on VentraIP Australia in your name &amp; invite hello@wynnpages.com.au (~2 mins)</span>
+                <span class="text-[11px] text-white/85 leading-snug">Register directly in your own name (~$15–$20 AUD/yr) with our visual guide</span>
               </a>
               <a href="${escapeHtml(makeGuideHref('existing'))}" target="_blank" rel="noopener" class="p-3.5 rounded-xl bg-[#faf6ef] hover:bg-[#f2e9da] border border-[#d8cbb4] text-stone-900 transition-all flex flex-col justify-between gap-1 group">
                 <span class="text-xs font-extrabold flex items-center justify-between gap-2 text-[#96432b]">
                   <span>2. I Already Own a Domain</span>
                   <span class="group-hover:translate-x-0.5 transition-transform">→</span>
                 </span>
-                <span class="text-[11px] text-stone-600 leading-snug">Invite hello@wynnpages.com.au or share registrar details (GoDaddy, VentraIP, CrazyDomains...)</span>
+                <span class="text-[11px] text-stone-600 leading-snug">Link your existing domain (VentraIP, GoDaddy, CrazyDomains...)</span>
+              </a>
+              <a href="${escapeHtml(makeGuideHref('concierge'))}" target="_blank" rel="noopener" class="p-3.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-300 text-emerald-950 transition-all flex flex-col justify-between gap-1 group">
+                <span class="text-xs font-extrabold flex items-center justify-between gap-2 text-emerald-900">
+                  <span>🤝 3. Help Me Set It Up</span>
+                  <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                </span>
+                <span class="text-[11px] text-emerald-800 leading-snug">Not tech-savvy? Our studio concierge will handle the entire domain setup for you</span>
               </a>
             </div>
             <p class="text-[11px] text-stone-500">
-              ✓ We have also sent your personalised domain guide to your email${resolvedEmail ? ` (<strong>${escapeHtml(resolvedEmail)}</strong>)` : ''} and mobile via SMS so you can finish anytime.
+              ✓ We have also sent your personalised domain link to your email${resolvedEmail ? ` (<strong>${escapeHtml(resolvedEmail)}</strong>)` : ''} and mobile via SMS so you can finish anytime.
             </p>
           </div>
         `;
@@ -914,50 +1045,222 @@
           .replace(/'/g, '&#39;');
       }
 
-      // File upload setup
-      function setupFileUpload(zoneId, inputId, previewId, nameId, removeBtnId, onFileLoaded) {
-        const zone = document.getElementById(zoneId);
-        const input = document.getElementById(inputId);
-        const preview = document.getElementById(previewId);
-        const nameEl = document.getElementById(nameId);
-        const removeBtn = document.getElementById(removeBtnId);
-
-        zone.addEventListener('click', (e) => {
-          if (!removeBtn.contains(e.target)) input.click();
-        });
-
-        input.addEventListener('change', () => {
-          if (input.files && input.files[0]) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              onFileLoaded(e.target.result, file.name);
-              nameEl.textContent = file.name;
-              preview.classList.remove('hidden');
+      // Client-side image compression helper (keeps PDFs intact, compresses high-res phone photos to crisp 1500px JPEG)
+      function readFileAsCompressedDataUrl(file, maxDim = 1500, quality = 0.82) {
+        return new Promise((resolve, reject) => {
+          const isPdf = file.type === 'application/pdf' || (file.name || '').toLowerCase().endsWith('.pdf');
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('Could not read file'));
+          reader.onload = (ev) => {
+            const rawDataUrl = ev.target.result;
+            if (isPdf || !file.type.startsWith('image/')) {
+              resolve({ name: file.name, dataUrl: rawDataUrl, url: rawDataUrl, type: file.type || 'application/pdf' });
+              return;
+            }
+            const img = new Image();
+            img.onerror = () => resolve({ name: file.name, dataUrl: rawDataUrl, url: rawDataUrl, type: file.type || 'image/jpeg' });
+            img.onload = () => {
+              let w = img.width;
+              let h = img.height;
+              if (w > maxDim || h > maxDim) {
+                if (w >= h) {
+                  h = Math.round((h * maxDim) / w);
+                  w = maxDim;
+                } else {
+                  w = Math.round((w * maxDim) / h);
+                  h = maxDim;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const compressed = canvas.toDataURL('image/jpeg', quality);
+              resolve({ name: file.name, dataUrl: compressed, url: compressed, type: 'image/jpeg' });
             };
-            reader.readAsDataURL(file);
-          }
-        });
-
-        removeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          input.value = '';
-          onFileLoaded(null, '');
-          preview.classList.add('hidden');
+            img.src = rawDataUrl;
+          };
+          reader.readAsDataURL(file);
         });
       }
 
-      setupFileUpload('menu-upload-zone', 'menu-file-input', 'menu-file-preview', 'menu-file-name', 'btn-remove-menu-file', (base64, name) => {
-        menuFileBase64 = base64;
-        menuFileName = name;
-      });
+      function renderMenuThumbnails() {
+        const grid = document.getElementById('menu-thumbnails-grid');
+        const counter = document.getElementById('menu-files-counter');
+        if (counter) {
+          counter.textContent = `${menuFiles.length} / ${MAX_MENU_FILES} files uploaded`;
+          counter.className = menuFiles.length > 0
+            ? 'px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-bold text-emerald-800'
+            : 'px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-bold text-stone-600';
+        }
+        if (!grid) return;
+        if (menuFiles.length === 0) {
+          grid.innerHTML = '';
+          grid.classList.add('hidden');
+          return;
+        }
+        grid.classList.remove('hidden');
+        grid.innerHTML = '';
+        menuFiles.forEach((item, index) => {
+          const isPdf = (item.type && item.type.includes('pdf')) || (item.name || '').toLowerCase().endsWith('.pdf') || (item.dataUrl || '').startsWith('data:application/pdf');
+          const previewSrc = item.dataUrl || item.url || '';
+          const card = document.createElement('div');
+          card.className = 'relative group rounded-xl overflow-hidden border border-[#d8ccb8] bg-stone-100 shadow-2xs flex flex-col';
+          card.innerHTML = `
+            <div class="aspect-4/3 w-full bg-stone-100 flex items-center justify-center overflow-hidden">
+              ${(!isPdf && previewSrc)
+                ? `<img src="${escapeHtml(previewSrc)}" alt="${escapeHtml(item.name)}" class="w-full h-full object-cover">`
+                : `<div class="text-center p-2"><span class="text-2xl block">📄</span><span class="text-[9px] font-bold uppercase text-stone-500">PDF Menu</span></div>`
+              }
+            </div>
+            <div class="px-2 py-1.5 bg-white flex items-center justify-between gap-1 border-t border-[#ece3d5]">
+              <span class="text-[10px] font-medium text-stone-700 truncate" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+              ${!isFormLocked ? `<button type="button" data-remove-menu="${index}" class="px-1.5 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold shrink-0 cursor-pointer">✕ Remove</button>` : ''}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
 
-      setupFileUpload('photos-upload-zone', 'photos-file-input', 'photos-file-preview', 'photos-file-name', 'btn-remove-photos-file', (base64, name) => {
-        photosFileBase64 = base64;
-        photosFileName = name;
-      });
+        grid.querySelectorAll('[data-remove-menu]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-remove-menu'), 10);
+            if (!isNaN(idx)) {
+              menuFiles.splice(idx, 1);
+              renderMenuThumbnails();
+            }
+          });
+        });
+      }
+
+      function renderSalonPhotoThumbnails() {
+        const grid = document.getElementById('salon-thumbnails-grid');
+        const counter = document.getElementById('salon-photos-counter');
+        if (counter) {
+          counter.textContent = `${salonPhotos.length} / ${MAX_SALON_PHOTOS} photos uploaded`;
+          counter.className = salonPhotos.length > 0
+            ? 'px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-bold text-emerald-800'
+            : 'px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-bold text-stone-600';
+        }
+        if (!grid) return;
+        if (salonPhotos.length === 0) {
+          grid.innerHTML = '';
+          grid.classList.add('hidden');
+          return;
+        }
+        grid.classList.remove('hidden');
+        grid.innerHTML = '';
+        salonPhotos.forEach((item, index) => {
+          const previewSrc = item.dataUrl || item.url || '';
+          const card = document.createElement('div');
+          card.className = 'relative group rounded-xl overflow-hidden border border-[#d8ccb8] bg-stone-100 shadow-2xs flex flex-col';
+          card.innerHTML = `
+            <div class="aspect-4/3 w-full bg-stone-100 flex items-center justify-center overflow-hidden">
+              ${previewSrc
+                ? `<img src="${escapeHtml(previewSrc)}" alt="${escapeHtml(item.name)}" class="w-full h-full object-cover">`
+                : `<span class="text-xl">🖼️</span>`
+              }
+            </div>
+            <div class="px-2 py-1.5 bg-white flex items-center justify-between gap-1 border-t border-[#ece3d5]">
+              <span class="text-[10px] font-medium text-stone-700 truncate" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+              ${!isFormLocked ? `<button type="button" data-remove-photo="${index}" class="px-1.5 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold shrink-0 cursor-pointer">✕ Remove</button>` : ''}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        grid.querySelectorAll('[data-remove-photo]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-remove-photo'), 10);
+            if (!isNaN(idx)) {
+              salonPhotos.splice(idx, 1);
+              renderSalonPhotoThumbnails();
+            }
+          });
+        });
+      }
+
+      // Setup Multi-File Menu Upload (Appends up to 4 files)
+      (function setupMenuMultiUpload() {
+        const zone = document.getElementById('menu-upload-zone');
+        const input = document.getElementById('menu-file-input');
+        if (!zone || !input) return;
+
+        zone.addEventListener('click', () => {
+          if (isFormLocked) return;
+          if (menuFiles.length >= MAX_MENU_FILES) {
+            alert(`You have reached the maximum of ${MAX_MENU_FILES} menu files. Remove a file first if you wish to replace it.`);
+            return;
+          }
+          input.click();
+        });
+
+        input.addEventListener('change', async () => {
+          if (!input.files || !input.files.length) return;
+          const remainingSlots = MAX_MENU_FILES - menuFiles.length;
+          if (remainingSlots <= 0) {
+            alert(`Maximum ${MAX_MENU_FILES} menu files allowed.`);
+            input.value = '';
+            return;
+          }
+          const selected = Array.from(input.files).slice(0, remainingSlots);
+          if (input.files.length > remainingSlots) {
+            alert(`Added ${remainingSlots} file(s) to reach the ${MAX_MENU_FILES}-file limit.`);
+          }
+          for (const file of selected) {
+            try {
+              const processed = await readFileAsCompressedDataUrl(file, 1600, 0.85);
+              menuFiles.push(processed);
+            } catch (_) {}
+          }
+          input.value = '';
+          renderMenuThumbnails();
+        });
+      })();
+
+      // Setup Multi-File Salon Photos Upload (Appends up to 6 photos)
+      (function setupSalonPhotosMultiUpload() {
+        const zone = document.getElementById('photos-upload-zone');
+        const input = document.getElementById('photos-file-input');
+        if (!zone || !input) return;
+
+        zone.addEventListener('click', () => {
+          if (isFormLocked) return;
+          if (salonPhotos.length >= MAX_SALON_PHOTOS) {
+            alert(`You have reached the maximum of ${MAX_SALON_PHOTOS} salon photos. Tap "✕ Remove" on any photo if you wish to swap it.`);
+            return;
+          }
+          input.click();
+        });
+
+        input.addEventListener('change', async () => {
+          if (!input.files || !input.files.length) return;
+          const remainingSlots = MAX_SALON_PHOTOS - salonPhotos.length;
+          if (remainingSlots <= 0) {
+            alert(`Maximum ${MAX_SALON_PHOTOS} salon photos allowed.`);
+            input.value = '';
+            return;
+          }
+          const selected = Array.from(input.files).slice(0, remainingSlots);
+          if (input.files.length > remainingSlots) {
+            alert(`Added ${remainingSlots} photo(s) to reach the ${MAX_SALON_PHOTOS}-photo limit.`);
+          }
+          for (const file of selected) {
+            try {
+              const processed = await readFileAsCompressedDataUrl(file, 1500, 0.82);
+              salonPhotos.push(processed);
+            } catch (_) {}
+          }
+          input.value = '';
+          renderSalonPhotoThumbnails();
+        });
+      })();
 
       function collectRevisionPayload(isDraft) {
+        const firstMenu = menuFiles[0] || null;
+        const firstPhoto = salonPhotos[0] || null;
         return {
           cid: (clientData && clientData.id) || cid,
           email: (clientData && clientData.email) || email,
@@ -969,22 +1272,39 @@
           heroHeadline: document.getElementById('rev-hero-headline').value.trim(),
           heroStory: document.getElementById('rev-hero-story').value.trim(),
           menuText: document.getElementById('rev-menu-text').value.trim(),
-          menuFileBase64,
-          menuFileName,
-          photosFileBase64,
-          photosFileName,
+          menuFiles: menuFiles.map(f => ({
+            name: f.name,
+            dataUrl: f.dataUrl || '',
+            url: f.url || '',
+            type: f.type || 'image/jpeg'
+          })),
+          salonPhotos: salonPhotos.map(f => ({
+            name: f.name,
+            dataUrl: f.dataUrl || '',
+            url: f.url || '',
+            type: f.type || 'image/jpeg'
+          })),
+          menuFileBase64: firstMenu ? (firstMenu.dataUrl || '') : null,
+          menuFileName: menuFiles.map(f => f.name).join(', '),
+          photosFileBase64: firstPhoto ? (firstPhoto.dataUrl || '') : null,
+          photosFileName: salonPhotos.map(f => f.name).join(', '),
           notes: document.getElementById('rev-notes').value.trim(),
           ...(isDraft ? { savedAt: new Date().toISOString() } : { submittedAt: new Date().toISOString() })
         };
       }
 
-      // Save Draft (no lock, no checkbox required, persists to cloud DB)
+      // Save Draft (no lock, no checkbox required, persists all uploaded images to cloud DB)
       if (btnSaveDraft) {
         btnSaveDraft.addEventListener('click', async () => {
           if (!clientData) return;
-          const origHtml = btnSaveDraft.innerHTML;
           btnSaveDraft.disabled = true;
-          btnSaveDraft.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-stone-700 border-t-transparent animate-spin inline-block"></div><span>Saving Draft...</span>`;
+          btnSaveDraft.innerHTML = `
+            <span class="text-[14px] font-semibold leading-tight text-stone-800 inline-flex items-center gap-2">
+              <span class="w-3.5 h-3.5 rounded-full border-2 border-stone-700 border-t-transparent animate-spin inline-block"></span>
+              <span>Saving Draft...</span>
+            </span>
+            <span class="text-[11px] font-normal leading-tight text-stone-600 opacity-65 mt-0.5">Uploading files &amp; notes</span>
+          `;
           try {
             const res = await fetch('/api/revision/save-draft', {
               method: 'POST',
@@ -994,7 +1314,7 @@
             const result = await res.json().catch(() => ({}));
             if (res.ok && result.ok) {
               if (draftSavedBanner && draftSavedText) {
-                draftSavedText.textContent = '✓ Draft saved! You can safely close this page and return later.';
+                draftSavedText.textContent = '✓ Draft saved! All text and uploaded photos are safely stored. You can return anytime on any device.';
                 draftSavedBanner.classList.remove('hidden');
               }
             } else {
@@ -1004,7 +1324,7 @@
             alert('Network error while saving draft: ' + err.message);
           } finally {
             btnSaveDraft.disabled = false;
-            btnSaveDraft.innerHTML = origHtml;
+            btnSaveDraft.innerHTML = SAVE_DRAFT_DEFAULT_HTML;
           }
         });
       }
@@ -1022,8 +1342,11 @@
         btnSubmit.disabled = true;
         if (btnSaveDraft) btnSaveDraft.disabled = true;
         btnSubmit.innerHTML = `
-          <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin inline-block mr-2"></div>
-          <span>Locking &amp; Submitting Revisions...</span>
+          <span class="text-[14px] font-semibold leading-tight text-white inline-flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
+            <span>Submitting Final Revisions...</span>
+          </span>
+          <span class="text-[11px] font-normal leading-tight text-white/80 mt-0.5">Syncing photos &amp; locking round</span>
         `;
 
         try {
@@ -1040,13 +1363,13 @@
             alert('Submission error: ' + (result.error || 'Please try again or contact studio.'));
             btnSubmit.disabled = false;
             if (btnSaveDraft) btnSaveDraft.disabled = false;
-            btnSubmit.innerHTML = `<span>🚀 Submit Revision Round (Complete My 1 Free Revision Round)</span>`;
+            btnSubmit.innerHTML = SUBMIT_FINAL_DEFAULT_HTML;
           }
         } catch (err) {
           alert('Network error while submitting: ' + err.message);
           btnSubmit.disabled = false;
           if (btnSaveDraft) btnSaveDraft.disabled = false;
-          btnSubmit.innerHTML = `<span>🚀 Submit Revision Round (Complete My 1 Free Revision Round)</span>`;
+          btnSubmit.innerHTML = SUBMIT_FINAL_DEFAULT_HTML;
         }
       });
 
@@ -1056,4 +1379,3 @@
   </script>
 </body>
 </html>
-

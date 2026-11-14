@@ -1100,8 +1100,18 @@
         tabBtnNew.addEventListener('click', () => switchTab('new'));
         tabBtnExisting.addEventListener('click', () => switchTab('existing'));
 
-        if (tabParam === 'existing') {
+        if (tabParam === 'existing' || tabParam === 'concierge') {
           switchTab('existing');
+          if (tabParam === 'concierge') {
+            const notesEl = document.getElementById('existing-notes');
+            if (notesEl && !notesEl.value) {
+              notesEl.value = 'Please help me set up or register my domain name — I would love hands-free concierge assistance from the WynnPages team.';
+            }
+            setTimeout(() => {
+              const fEx = document.getElementById('notify-form-existing');
+              if (fEx) fEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 250);
+          }
         } else {
           switchTab('new');
         }

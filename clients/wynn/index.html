@@ -26,29 +26,29 @@
   <meta name="twitter:description" id="tw-desc" content="Bespoke BIAB overlays, artisanal nail artistry, and hospital-grade botanical hand &amp; foot care. Reserve your appointment online.">
   <meta name="twitter:image" id="tw-image" content="/og-share.jpg">
   <script type="application/ld+json" id="salon-jsonld">
-{
-  "@context": "https://schema.org",
-  "@type": "NailSalon",
-  "name": "Wynn",
-  "description": "Bespoke BIAB overlays, artisanal nail artistry, and hospital-grade botanical hand & foot care in Lowood QLD.",
-  "image": "/og-share.jpg",
-  "priceRange": "$",
-  "currenciesAccepted": "AUD",
-  "telephone": "0424717777",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "34 Honeyeater Pl",
-    "addressLocality": "Lowood",
-    "addressRegion": "QLD",
-    "postalCode": "4311",
-    "addressCountry": "AU"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "280"
-  }
-}
+    {
+      "@context": "https://schema.org",
+      "@type": "NailSalon",
+      "name": "Maison Élan",
+      "description": "Bespoke BIAB overlays, artisanal nail artistry, and hospital-grade botanical hand & foot care.",
+      "image": "/og-share.jpg",
+      "priceRange": "$$",
+      "currenciesAccepted": "AUD",
+      "telephone": "(03) 9123 4567",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "1048 High Street",
+        "addressLocality": "Armadale",
+        "addressRegion": "VIC",
+        "postalCode": "3143",
+        "addressCountry": "AU"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "280"
+      }
+    }
   </script>
   <script type="application/ld+json" id="faq-jsonld">
     {
@@ -857,40 +857,75 @@
       pointer-events: none;
     }
 
-    /* ==========================================================================
-       APPLE FLOATING CALL RECEPTION PILL (DEDICATED & SEPARATE FROM BOOKING)
-       Top sticky header hosts primary "Book Visit", while bottom-right hosts
-       only "Call Salon" so mobile thumbs never confuse Call with Reserve.
-       ========================================================================== */
-    #atelier-float-dock {
-      position: fixed;
-      right: 18px;
-      bottom: 20px;
-      z-index: 38;
-      opacity: 0;
-      transform: translate3d(0, 26px, 0) scale(0.92);
-      pointer-events: none;
-      transition:
-        opacity 0.52s var(--apple-spring),
-        transform 0.52s var(--apple-spring),
-        bottom 0.35s var(--apple-spring);
+    /* Header Brand Identity & Book Visit CTA Mobile Responsiveness */
+    #atelier-nav-shell {
+      min-width: 0 !important;
     }
-    #atelier-float-dock.is-docked {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
-      pointer-events: auto;
+    #atelier-nav-shell > a:first-child {
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
     }
-    /* Automatically clear the Demo Preview Claim Bar when present */
-    body:has(.claim-bar) #atelier-float-dock {
-      bottom: 108px;
+    #atelier-nav-shell > a:first-child > div:last-child {
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
     }
-    @media (max-width: 640px) {
-      #atelier-float-dock {
-        right: 14px;
-        bottom: 16px;
-      }
-      body:has(.claim-bar) #atelier-float-dock {
-        bottom: 146px;
+    #nav-salon-name {
+      display: block !important;
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+      font-size: clamp(15px, 4.2vw, 22px) !important;
+      line-height: 1.15 !important;
+    }
+    #nav-salon-sub {
+      display: block !important;
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+    }
+    #atelier-header button[data-open-booking],
+    header button[data-open-booking] {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
+    #atelier-header button[data-open-booking] svg:not(:first-child),
+    header button[data-open-booking] svg:not(:first-child),
+    #atelier-header button[data-open-booking] .wynn-merged-phone-icon ~ svg,
+    header button[data-open-booking] .wynn-merged-phone-icon ~ svg {
+      display: none !important;
+    }
+    #atelier-header #btn-mobile-menu,
+    header #btn-mobile-menu {
+      flex-shrink: 0 !important;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    html, body {
+      max-width: 100%;
+      overflow-x: clip;
+    }
+    #atelier-header {
+      padding-top: max(12px, env(safe-area-inset-top, 12px));
+    }
+    body {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    @media (max-width: 639px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      select,
+      textarea {
+        font-size: 16px !important;
       }
     }
 
@@ -1118,7 +1153,7 @@
        ======================================================================== -->
   <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2 w-full">
     <div class="max-w-6xl mx-auto relative">
-      <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4" aria-label="Primary Navigation">
+      <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 min-w-0" aria-label="Primary Navigation">
         <!-- Brand Identity + Wax Monogram Seal -->
         <a href="#top" data-smooth-anchor="#top" class="flex items-center gap-2 sm:gap-3 group min-w-0 flex-1 lg:flex-initial overflow-hidden">
           <div id="brand-logo-slot" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-105">
@@ -1216,14 +1251,20 @@
             <span class="text-xs opacity-45">07</span>
           </a>
         </div>
-        <div class="pt-3 mt-1 border-t flex items-center justify-between gap-2.5" style="border-color: var(--border-hairline);">
-          <a id="mobile-call-link" href="tel:0391234567" class="flex-1 btn-atelier-secondary rounded-full py-2.5 px-4 text-xs font-semibold inline-flex items-center justify-center gap-2">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            <span>Call Reception</span>
-          </a>
-          <a id="mobile-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-10 h-10 rounded-full btn-atelier-secondary inline-flex items-center justify-center shrink-0">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/></svg>
-          </a>
+        <div class="pt-3 mt-1 border-t space-y-2.5" style="border-color: var(--border-hairline);">
+          <button type="button" data-open-booking="" class="w-full btn-atelier-primary rounded-full py-3 px-5 text-xs font-semibold tracking-wide inline-flex items-center justify-center gap-2 cursor-pointer shadow-md">
+            <span>Book Appointment</span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 8h9M8.5 4l4 4-4 4"/></svg>
+          </button>
+          <div class="flex items-center justify-between gap-2.5">
+            <a id="mobile-call-link" href="tel:0391234567" class="flex-1 btn-atelier-secondary rounded-full py-2.5 px-4 text-xs font-semibold inline-flex items-center justify-center gap-2">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>Call Reception</span>
+            </a>
+            <a id="mobile-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-10 h-10 rounded-full btn-atelier-secondary inline-flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/></svg>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -1264,6 +1305,13 @@
           <a href="#menu" data-smooth-anchor="#menu" class="btn-atelier-secondary rounded-full px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 flex-1 min-[430px]:flex-initial">
             <span>Explore Price Menu</span>
           </a>
+        </div>
+
+        <!-- Evergreen Scarcity Reassurance Badge -->
+        <div style="--hero-delay: 470ms;" class="hero-choreo flex items-center">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border shadow-2xs" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">
+            <span>🌿 Friday &amp; Saturday rituals book out early — Reserve ahead</span>
+          </div>
         </div>
 
         <!-- Subtle Australian Social Proof Strip -->
@@ -1411,8 +1459,8 @@
       </div>
 
       <!-- Dynamic Category Tabs (Smooth Horizontal Snap Rail on Mobile, Clean Wrap on Desktop) -->
-      <div data-apple-reveal="header" class="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
-        <div id="menu-tabs-bar" class="flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-max sm:w-auto py-1" role="tablist" aria-label="Service Categories"></div>
+      <div id="menu-tabs-scroll" data-apple-reveal="header" class="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
+        <div id="menu-tabs-bar" class="flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-max sm:w-auto" role="tablist" aria-label="Service Categories"></div>
       </div>
 
       <!-- Active Menu Card -->
@@ -1426,7 +1474,7 @@
 
         <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t text-xs" style="border-color: var(--border-hairline); color: var(--ink-muted);">
           <span>All prices are inclusive of GST in Australian Dollars (AUD). Sunday &amp; Public Holiday surcharges may apply.</span>
-          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-5 py-3 sm:py-2.5 text-xs font-semibold shrink-0 cursor-pointer w-full sm:w-auto text-center">
+          <button type="button" data-open-booking="" class="btn-atelier-primary menu-book-full-btn rounded-full px-5 py-3 sm:py-2.5 text-xs font-semibold shrink-0 cursor-pointer w-full sm:w-auto text-center">
             Book Full Appointment →
           </button>
         </div>
@@ -1434,17 +1482,181 @@
     </section>
 
     <!-- ======================================================================
-         SECTION 4: TREATMENT MATCHMAKER (WHICH RITUAL IS RIGHT FOR YOU?)
+         SECTION 4: TREATMENT MATCHMAKER & BEFORE/AFTER EDITORIAL SLIDER
          ====================================================================== -->
-    <section id="matchmaker" class="space-y-7 sm:space-y-9">
+    <section id="matchmaker" class="space-y-10 sm:space-y-12">
       <div data-apple-reveal="header" class="text-center max-w-2xl mx-auto space-y-2.5">
-        <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Treatment Matchmaker</span>
+        <span class="text-[11px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Interactive Atelier Guide</span>
         <h2 class="font-editorial text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
           Which ritual is <span class="accent-italic">right for you?</span>
         </h2>
         <p class="text-xs sm:text-sm leading-relaxed text-pretty" style="color: var(--ink-muted);">
-          Every set is tailored to your lifestyle, natural nail plate condition, and aesthetic vision.
+          Answer 3 brief questions to receive your tailored nail architecture, duration &amp; pricing in seconds.
         </p>
+      </div>
+
+      <!-- 3-Step Interactive Quiz Container -->
+      <div data-apple-reveal="center" class="atelier-card rounded-[32px] p-6 sm:p-9 max-w-3xl mx-auto space-y-6 relative overflow-hidden shadow-xl" style="border-color: var(--foil-gold);">
+        <!-- Quiz Progress Bar -->
+        <div class="flex items-center justify-between gap-3 border-b pb-4" style="border-color: var(--border-hairline);">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background: var(--accent-primary);" id="quiz-step-indicator">1</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-stone-600" id="quiz-step-title">Step 1: Your Occasion</span>
+          </div>
+          <span class="text-xs font-mono font-semibold" style="color: var(--accent-primary);" id="quiz-step-counter">1 of 3</span>
+        </div>
+
+        <!-- Quiz Step 1: Occasion -->
+        <div id="quiz-step-1" class="quiz-step space-y-4">
+          <h3 class="font-editorial text-2xl font-semibold">What is your primary focus for this visit?</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" data-quiz-choice="daily" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🌿</span>
+              <strong class="text-sm font-semibold block">Daily Quiet Luxury</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Low-maintenance, natural strength for work &amp; life.</span>
+            </button>
+            <button type="button" data-quiz-choice="event" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🥂</span>
+              <strong class="text-sm font-semibold block">Wedding / Event</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Flawless silhouette, camera-ready length &amp; finish.</span>
+            </button>
+            <button type="button" data-quiz-choice="rehab" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🩹</span>
+              <strong class="text-sm font-semibold block">Nail Rehabilitation</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Recovering from damage, acrylic trauma, or biting.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Step 2: Nail Health (Hidden initially) -->
+        <div id="quiz-step-2" class="quiz-step space-y-4 hidden">
+          <h3 class="font-editorial text-2xl font-semibold">How would you describe your natural nail plates?</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" data-quiz-choice="healthy" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">✨</span>
+              <strong class="text-sm font-semibold block">Healthy &amp; Intact</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Nails grow well; desire clean Russian care &amp; glow.</span>
+            </button>
+            <button type="button" data-quiz-choice="brittle" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🍂</span>
+              <strong class="text-sm font-semibold block">Thin, Bending or Brittle</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Snaps easily or peels; needs reinforced flexible apex.</span>
+            </button>
+            <button type="button" data-quiz-choice="short" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">📏</span>
+              <strong class="text-sm font-semibold block">Short &amp; Seeking Length</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Craving elegant almond or oval extensions instantly.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Step 3: Finish & Style (Hidden initially) -->
+        <div id="quiz-step-3" class="quiz-step space-y-4 hidden">
+          <h3 class="font-editorial text-2xl font-semibold">What is your dream aesthetic &amp; finish?</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" data-quiz-choice="nude" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🤍</span>
+              <strong class="text-sm font-semibold block">Porcelain / Sheer Glaze</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Understated, clean girl cashmere or translucent milk.</span>
+            </button>
+            <button type="button" data-quiz-choice="french" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">💅</span>
+              <strong class="text-sm font-semibold block">Classic Micro-French</strong>
+              <span class="text-xs text-stone-500 block leading-snug">Fine hand-painted smile lines in ivory or champagne.</span>
+            </button>
+            <button type="button" data-quiz-choice="art" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
+              <span class="text-xl block">🎨</span>
+              <strong class="text-sm font-semibold block">Artisan Bespoke Design</strong>
+              <span class="text-xs text-stone-500 block leading-snug">3D chrome accents, kintsugi foils, or velvet cat-eye.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Result Screen (Dynamically populated from window.SALON_MENU_DATA) -->
+        <div id="quiz-result" class="space-y-5 hidden">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] uppercase tracking-[0.2em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Your Tailored Match</span>
+            <span class="text-xs text-stone-500 font-medium" id="quiz-match-fit">98% Compatibility</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b pb-3" style="border-color: var(--border-hairline);">
+            <div>
+              <h3 class="font-editorial text-3xl font-semibold" id="quiz-matched-name">Signature BIAB Natural Overlay</h3>
+              <p class="text-xs font-semibold mt-1" style="color: var(--accent-primary);" id="quiz-matched-duration">60 mins • Unhurried One-on-One Care</p>
+            </div>
+            <div class="text-left sm:text-right">
+              <span class="font-editorial text-3xl sm:text-4xl font-bold block" style="color: var(--accent-primary);" id="quiz-matched-price">$85 AUD</span>
+              <span class="text-[11px] text-stone-400">All inclusive</span>
+            </div>
+          </div>
+
+          <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);" id="quiz-matched-desc">
+            Detailed e-file cuticle refinement, structured builder apex, sheer cashmere tint &amp; organic cuticle oil.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <button type="button" id="quiz-btn-book" data-open-booking="" class="btn-atelier-primary rounded-full px-6 py-3 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 cursor-pointer shadow-md flex-1 sm:flex-initial">
+              <span>Book This Ritual</span>
+              <span aria-hidden="true">→</span>
+            </button>
+            <button type="button" id="quiz-btn-retake" class="btn-atelier-secondary rounded-full px-5 py-3 text-xs font-semibold cursor-pointer">
+              <span>↻ Retake Quiz</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Before & After Editorial Split Slider -->
+      <div data-apple-reveal="center" class="atelier-card rounded-[32px] p-6 sm:p-8 max-w-4xl mx-auto space-y-5 shadow-lg relative overflow-hidden" style="border-color: var(--border-hairline);">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span class="text-[10px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Real Craftsmanship Results</span>
+            <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">The Anatomy of <span class="accent-italic">Transformation.</span></h3>
+          </div>
+          <p class="text-xs text-stone-500 max-w-xs leading-relaxed">
+            Drag the divider to compare raw natural plates with our precision Russian E-file &amp; structured BIAB finish.
+          </p>
+        </div>
+
+        <!-- Interactive Split Slider Container -->
+        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[16/10] sm:aspect-[16/9] select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
+          <!-- AFTER Layer (Underneath - Full Width) -->
+          <img
+            id="ba-after-img"
+            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
+            alt="After BIAB structured overlay and Russian cuticle refinement"
+            class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            loading="lazy"
+            decoding="async"
+          >
+          <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
+            AFTER: Structured BIAB Overlay
+          </div>
+
+          <!-- BEFORE Layer (Top - Clipped 1:1 without distortion via clip-path) -->
+          <div id="ba-before-layer" class="absolute inset-0 overflow-hidden pointer-events-none" style="clip-path: inset(0 50% 0 0); -webkit-clip-path: inset(0 50% 0 0);">
+            <img
+              id="ba-before-img"
+              src="https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg"
+              alt="Before raw natural nails"
+              class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
+              style="width: 100%; height: 100%; object-fit: cover; filter: saturate(60%) contrast(90%);"
+              loading="lazy"
+              decoding="async"
+            >
+            <div class="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
+              BEFORE: Fragile Natural Plate
+            </div>
+          </div>
+
+          <!-- Divider Handle (44x44px iPhone 16 Touch Target) -->
+          <div id="ba-handle" class="absolute top-0 bottom-0 pointer-events-none flex items-center justify-center" style="left: 50%; transform: translateX(-50%); width: 44px;">
+            <div class="w-[2px] h-full shadow-lg" style="background: var(--foil-gold);"></div>
+            <div class="absolute w-11 h-11 rounded-full flex items-center justify-center shadow-xl border-2 border-white pointer-events-auto cursor-ew-resize transition-transform hover:scale-110 active:scale-95" style="background: var(--accent-primary); color: white;">
+              <span class="text-xs font-mono font-bold tracking-tighter">◀ ▶</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-stretch">
@@ -1873,28 +2085,7 @@
     </div>
   </footer>
 
-  <!-- ========================================================================
-       APPLE FLOATING CALL RECEPTION PILL
-       (Glides up when scrolling down past Hero; tucks away on scroll-up to top or at #visit)
-       Strictly dedicated to phone calls so it can never be mistapped for booking.
-       ======================================================================== -->
-  <div id="atelier-float-dock" aria-label="Call salon reception">
-    <a
-      id="dock-call-link"
-      href="tel:0391234567"
-      aria-label="Call salon reception"
-      title="Call salon reception"
-      class="atelier-card rounded-full h-11 px-4 sm:px-5 inline-flex items-center gap-2.5 shadow-2xl cursor-pointer transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
-      style="background: var(--bg-card-elevated); border-color: var(--foil-gold);"
-    >
-      <span class="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style="background: var(--pill-bg); color: var(--accent-primary);">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-        </svg>
-      </span>
-      <span class="text-xs font-semibold tracking-wide" style="color: var(--ink-primary);">Call Salon</span>
-    </a>
-  </div>
+  <!-- Floating Call Reception pill merged into top Book Visit CTA -->
 
   <!-- ========================================================================
        APPLE PHOTOS-STYLE LOOKBOOK LIGHTBOX (<dialog closedby="any">)
@@ -1931,8 +2122,6 @@
       </div>
     </div>
   </dialog>
-
-
 
   <!-- ========================================================================
        CLIENT-SIDE HYDRATION & APPLE FLUID MOTION ENGINE
@@ -2102,7 +2291,19 @@
       setText('nav-monogram', cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase());
       setText('footer-monogram', cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase());
 
-      if (cfg.logoUrl) {
+      if (cfg.wordmarkUrl) {
+        const slot = document.getElementById('brand-logo-slot');
+        const brandLink = slot ? slot.closest('a') : null;
+        if (brandLink) {
+          brandLink.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-10 sm:h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]" style="filter: drop-shadow(0 2px 6px rgba(138, 77, 26, 0.25));">`;
+        }
+        const fMono = document.getElementById('footer-monogram');
+        const fSeal = fMono ? fMono.parentElement : null;
+        if (fSeal) {
+          fSeal.className = 'flex items-center';
+          fSeal.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-12 sm:h-14 w-auto object-contain" style="filter: drop-shadow(0 3px 8px rgba(138, 77, 26, 0.32));">`;
+        }
+      } else if (cfg.logoUrl) {
         const slot = document.getElementById('brand-logo-slot');
         if (slot) {
           slot.innerHTML = `<img src="${cfg.logoUrl}" alt="${cfg.salonName || 'Salon Logo'}" class="w-7 h-7 object-contain">`;
@@ -2128,6 +2329,10 @@
         if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;
         const pediImg = document.getElementById('feature-pedicure-img') || document.getElementById('feature-pedi-img');
         if (pediImg && resolvedImages.pedicureFeature) pediImg.src = resolvedImages.pedicureFeature;
+        const baAfterImg = document.getElementById('ba-after-img');
+        if (baAfterImg && resolvedImages.biabFeature) baAfterImg.src = resolvedImages.biabFeature;
+        const baBeforeImg = document.getElementById('ba-before-img');
+        if (baBeforeImg && resolvedImages.pedicureFeature) baBeforeImg.src = resolvedImages.pedicureFeature;
       }
 
       // Social Links
@@ -2392,6 +2597,164 @@
 
       if (menu.length) renderMenuCategory(0);
 
+      // ======================================================================
+      // 3b. INTERACTIVE TREATMENT MATCHMAKER (DYNAMIC LIVE MENU SYNC)
+      // ======================================================================
+      const quizChoices = { occasion: null, health: null, style: null };
+      const step1El = document.getElementById('quiz-step-1');
+      const step2El = document.getElementById('quiz-step-2');
+      const step3El = document.getElementById('quiz-step-3');
+      const resultEl = document.getElementById('quiz-result');
+      const indicatorEl = document.getElementById('quiz-step-indicator');
+      const titleEl = document.getElementById('quiz-step-title');
+      const counterEl = document.getElementById('quiz-step-counter');
+
+      function findMatchingRitual(choices) {
+        let allItems = [];
+        menu.forEach(cat => {
+          if (Array.isArray(cat.items)) {
+            cat.items.forEach(it => allItems.push({ ...it, catName: cat.category }));
+          }
+        });
+        if (!allItems.length) {
+          return { name: "Signature BIAB Natural Overlay", price: "$85 AUD", duration: "60 mins", desc: "Structured builder gel strengthening natural nails." };
+        }
+
+        if (choices.occasion === 'rehab' || choices.health === 'brittle') {
+          const rehab = allItems.find(it => it.name.toLowerCase().includes('restorative') || it.name.toLowerCase().includes('naked')) ||
+                        allItems.find(it => it.name.toLowerCase().includes('biab')) || allItems[0];
+          return rehab;
+        }
+        if (choices.health === 'short' || choices.occasion === 'event' || choices.style === 'art') {
+          const ext = allItems.find(it => it.name.toLowerCase().includes('extension') || it.name.toLowerCase().includes('apres') || it.name.toLowerCase().includes('sculpted')) ||
+                      allItems.find(it => it.name.toLowerCase().includes('french')) || allItems[0];
+          return ext;
+        }
+        if (choices.style === 'french') {
+          const french = allItems.find(it => it.name.toLowerCase().includes('french')) || allItems[0];
+          return french;
+        }
+        const biab = allItems.find(it => it.name.toLowerCase().includes('biab')) || allItems[0];
+        return biab;
+      }
+
+      function updateQuizUI(step) {
+        if (!indicatorEl || !titleEl || !counterEl) return;
+        indicatorEl.textContent = step <= 3 ? String(step) : '✓';
+        if (step === 1) {
+          titleEl.textContent = 'Step 1: Your Occasion';
+          counterEl.textContent = '1 of 3';
+          if (step1El) step1El.classList.remove('hidden');
+          if (step2El) step2El.classList.add('hidden');
+          if (step3El) step3El.classList.add('hidden');
+          if (resultEl) resultEl.classList.add('hidden');
+        } else if (step === 2) {
+          titleEl.textContent = 'Step 2: Natural Nail Health';
+          counterEl.textContent = '2 of 3';
+          if (step1El) step1El.classList.add('hidden');
+          if (step2El) step2El.classList.remove('hidden');
+          if (step3El) step3El.classList.add('hidden');
+          if (resultEl) resultEl.classList.add('hidden');
+        } else if (step === 3) {
+          titleEl.textContent = 'Step 3: Preferred Artistry';
+          counterEl.textContent = '3 of 3';
+          if (step1El) step1El.classList.add('hidden');
+          if (step2El) step2El.classList.add('hidden');
+          if (step3El) step3El.classList.remove('hidden');
+          if (resultEl) resultEl.classList.add('hidden');
+        } else if (step === 4) {
+          titleEl.textContent = 'Your Tailored Result';
+          counterEl.textContent = 'Complete';
+          if (step1El) step1El.classList.add('hidden');
+          if (step2El) step2El.classList.add('hidden');
+          if (step3El) step3El.classList.add('hidden');
+          if (resultEl) resultEl.classList.remove('hidden');
+
+          const matched = findMatchingRitual(quizChoices);
+          const nameEl = document.getElementById('quiz-matched-name');
+          const durationEl = document.getElementById('quiz-matched-duration');
+          const priceEl = document.getElementById('quiz-matched-price');
+          const descEl = document.getElementById('quiz-matched-desc');
+          const bookBtn = document.getElementById('quiz-btn-book');
+
+          if (nameEl) nameEl.textContent = matched.name;
+          if (durationEl) durationEl.textContent = (matched.duration ? `${matched.duration} • ` : '') + 'Unhurried One-on-One Care';
+          if (priceEl) priceEl.textContent = String(matched.price).includes('$') ? matched.price : `$${matched.price}`;
+          if (descEl) descEl.textContent = matched.desc || 'Detailed e-file cuticle refinement, structured builder apex & organic cuticle oil.';
+          if (bookBtn) {
+            bookBtn.setAttribute('data-open-booking', `${matched.name} (${matched.price})`);
+            bookBtn.onclick = () => openBookingFlow(`${matched.name} (${matched.price})`);
+          }
+        }
+      }
+
+      document.querySelectorAll('#quiz-step-1 [data-quiz-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          quizChoices.occasion = btn.getAttribute('data-quiz-choice');
+          updateQuizUI(2);
+        });
+      });
+      document.querySelectorAll('#quiz-step-2 [data-quiz-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          quizChoices.health = btn.getAttribute('data-quiz-choice');
+          updateQuizUI(3);
+        });
+      });
+      document.querySelectorAll('#quiz-step-3 [data-quiz-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          quizChoices.style = btn.getAttribute('data-quiz-choice');
+          updateQuizUI(4);
+        });
+      });
+      const retakeBtn = document.getElementById('quiz-btn-retake');
+      if (retakeBtn) {
+        retakeBtn.addEventListener('click', () => {
+          quizChoices.occasion = null;
+          quizChoices.health = null;
+          quizChoices.style = null;
+          updateQuizUI(1);
+        });
+      }
+
+      // ======================================================================
+      // 3c. BEFORE & AFTER EDITORIAL SPLIT SLIDER (TOUCH & MOUSE DRAGGABLE)
+      // ======================================================================
+      const baContainer = document.getElementById('before-after-container');
+      const baBeforeLayer = document.getElementById('ba-before-layer');
+      const baHandle = document.getElementById('ba-handle');
+      let isDraggingBA = false;
+
+      function updateBASplit(clientX) {
+        if (!baContainer || !baBeforeLayer || !baHandle) return;
+        const rect = baContainer.getBoundingClientRect();
+        const offsetX = clientX - rect.left;
+        let percentage = (offsetX / rect.width) * 100;
+        percentage = Math.max(5, Math.min(95, percentage));
+        const rightInset = 100 - percentage;
+        baBeforeLayer.style.clipPath = `inset(0 ${rightInset}% 0 0)`;
+        baBeforeLayer.style.webkitClipPath = `inset(0 ${rightInset}% 0 0)`;
+        baHandle.style.left = percentage + '%';
+      }
+
+      if (baContainer) {
+        baContainer.addEventListener('pointerdown', (e) => {
+          isDraggingBA = true;
+          baContainer.setPointerCapture(e.pointerId);
+          updateBASplit(e.clientX);
+        });
+        baContainer.addEventListener('pointermove', (e) => {
+          if (!isDraggingBA) return;
+          updateBASplit(e.clientX);
+        });
+        baContainer.addEventListener('pointerup', (e) => {
+          isDraggingBA = false;
+          try { baContainer.releasePointerCapture(e.pointerId); } catch (_) {}
+        });
+        baContainer.addEventListener('pointercancel', () => {
+          isDraggingBA = false;
+        });
+      }
+
       // 4. Render Lookbook Grid + Interactive Apple Lightbox
       const lookbookGrid = document.getElementById('lookbook-grid');
       const lightbox = document.getElementById('lookbook-lightbox');
@@ -2485,6 +2848,7 @@
       }
 
       function openBookingFlow(preselectedService) {
+        if (typeof setMobileMenuOpen === 'function') setMobileMenuOpen(false);
         if (cfg.bookingUrl && cfg.bookingUrl.trim().startsWith('http')) {
           window.open(cfg.bookingUrl.trim(), '_blank', 'noopener');
           return;

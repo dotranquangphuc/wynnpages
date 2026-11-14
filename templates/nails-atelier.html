@@ -2291,7 +2291,19 @@
       setText('nav-monogram', cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase());
       setText('footer-monogram', cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase());
 
-      if (cfg.logoUrl) {
+      if (cfg.wordmarkUrl) {
+        const slot = document.getElementById('brand-logo-slot');
+        const brandLink = slot ? slot.closest('a') : null;
+        if (brandLink) {
+          brandLink.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-10 sm:h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]" style="filter: drop-shadow(0 2px 6px rgba(138, 77, 26, 0.25));">`;
+        }
+        const fMono = document.getElementById('footer-monogram');
+        const fSeal = fMono ? fMono.parentElement : null;
+        if (fSeal) {
+          fSeal.className = 'flex items-center';
+          fSeal.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-12 sm:h-14 w-auto object-contain" style="filter: drop-shadow(0 3px 8px rgba(138, 77, 26, 0.32));">`;
+        }
+      } else if (cfg.logoUrl) {
         const slot = document.getElementById('brand-logo-slot');
         if (slot) {
           slot.innerHTML = `<img src="${cfg.logoUrl}" alt="${cfg.salonName || 'Salon Logo'}" class="w-7 h-7 object-contain">`;
@@ -2317,6 +2329,10 @@
         if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;
         const pediImg = document.getElementById('feature-pedicure-img') || document.getElementById('feature-pedi-img');
         if (pediImg && resolvedImages.pedicureFeature) pediImg.src = resolvedImages.pedicureFeature;
+        const baAfterImg = document.getElementById('ba-after-img');
+        if (baAfterImg && resolvedImages.biabFeature) baAfterImg.src = resolvedImages.biabFeature;
+        const baBeforeImg = document.getElementById('ba-before-img');
+        if (baBeforeImg && resolvedImages.pedicureFeature) baBeforeImg.src = resolvedImages.pedicureFeature;
       }
 
       // Social Links

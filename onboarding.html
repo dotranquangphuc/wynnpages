@@ -163,7 +163,7 @@
         </svg>
       </div>
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4e4ce] text-[#586755] font-semibold text-[10px] uppercase tracking-wider mb-3">
-        <span>Payment Secured via Stripe</span>
+        <span>Payment Secured • 100% Client Ownership</span>
       </div>
       <h1 class="font-editorial text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 leading-tight mb-3">
         Your 7-Day Build Slot is Locked, mate.
@@ -578,7 +578,7 @@
 
           <input type="hidden" name="has_domain" id="hidden-has-domain" value="">
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" role="radiogroup" aria-label="Domain Name Setup">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5" role="radiogroup" aria-label="Domain Name Setup">
             <!-- Radio Option A: I already own a domain -->
             <button 
               type="button" 
@@ -606,6 +606,21 @@
               <div>
                 <span class="text-sm font-bold text-stone-900 block">I need to register a new domain</span>
                 <span class="text-[11px] text-stone-500">Get a new .com.au or .com address</span>
+              </div>
+            </button>
+
+            <!-- Radio Option C: Hands-Free Concierge -->
+            <button 
+              type="button" 
+              data-domain-choice="Hands-Free Concierge — Please help me set up my domain"
+              class="choice-card domain-choice-btn rounded-2xl p-4 text-left flex items-center gap-3.5 group focus:outline-none"
+            >
+              <span class="choice-badge w-7 h-7 rounded-lg bg-[#f2ebe1] border border-[#d8ccb8] text-xs font-bold text-stone-700 flex items-center justify-center shrink-0 transition-colors">
+                C
+              </span>
+              <div>
+                <span class="text-sm font-bold text-stone-900 block">Please help me set up my domain</span>
+                <span class="text-[11px] text-stone-500">Hands-free studio concierge support</span>
               </div>
             </button>
           </div>
@@ -1052,7 +1067,7 @@
 
         if (step === 4) {
           if (!selectedDomainOption) {
-            showError('Please select a Domain Name Setup option (Option A or B).');
+            showError('Please select a Domain Name Setup option (Option A, B, or C).');
             return false;
           }
           if (selectedDomainOption === 'I already own a domain' && !existingDomainInput.value.trim()) {
@@ -1118,7 +1133,7 @@
         colorsInput.addEventListener('input', syncPaletteCardState);
       }
 
-      // 5. File Upload Readers + Drag-and-Drop Support
+      // 5. File Upload Readers + Client-Side Image Compression + Drag-and-Drop Support
       function bindFileUpload(inputEl, labelEl, dropzoneId, onLoaded) {
         if (!inputEl) return;
         const dropzone = document.getElementById(dropzoneId);
@@ -1126,8 +1141,9 @@
         function handleFiles(files) {
           if (!files || !files.length) return;
           const file = files[0];
-          if (file.size > 4.5 * 1024 * 1024) {
-            showError('File size exceeds 4MB. Please choose a smaller file or paste a shared cloud link below.');
+          const isImg = file.type && file.type.startsWith('image/') && !file.type.includes('svg');
+          if (!isImg && file.size > 6 * 1024 * 1024) {
+            showError('File size exceeds 6MB. Please choose a smaller file or paste a shared cloud link below.');
             inputEl.value = '';
             return;
           }
@@ -1136,12 +1152,45 @@
           labelEl.classList.add('text-[#96432b]');
           const reader = new FileReader();
           reader.onload = () => {
-            onLoaded({
-              name: Array.from(files).map(f => f.name).join(', '),
-              type: file.type,
-              size: file.size,
-              dataUrl: reader.result
-            });
+            if (isImg) {
+              const img = new Image();
+              img.onload = () => {
+                let w = img.width;
+                let h = img.height;
+                const maxDim = 1500;
+                if (w > maxDim || h > maxDim) {
+                  if (w >= h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                  else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const compressed = canvas.toDataURL('image/jpeg', 0.84);
+                onLoaded({
+                  name: Array.from(files).map(f => f.name).join(', '),
+                  type: 'image/jpeg',
+                  size: compressed.length,
+                  dataUrl: compressed
+                });
+              };
+              img.onerror = () => {
+                onLoaded({
+                  name: Array.from(files).map(f => f.name).join(', '),
+                  type: file.type,
+                  size: file.size,
+                  dataUrl: reader.result
+                });
+              };
+              img.src = reader.result;
+            } else {
+              onLoaded({
+                name: Array.from(files).map(f => f.name).join(', '),
+                type: file.type,
+                size: file.size,
+                dataUrl: reader.result
+              });
+            }
           };
           reader.readAsDataURL(file);
         }
@@ -1205,10 +1254,17 @@
             domainYesWrap.classList.remove('hidden');
             domainNoWrap.classList.add('hidden');
             existingDomainInput.focus();
-          } else {
+          } else if (selectedDomainOption === 'I need to register a new domain') {
             domainNoWrap.classList.remove('hidden');
             domainYesWrap.classList.add('hidden');
             desiredDomainsInput.focus();
+          } else {
+            domainNoWrap.classList.remove('hidden');
+            domainYesWrap.classList.add('hidden');
+            if (!desiredDomainsInput.value.trim() && businessNameInput.value.trim()) {
+              const cleanName = businessNameInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (cleanName) desiredDomainsInput.value = `${cleanName}.com.au (Studio Concierge Assisted)`;
+            }
           }
           hideError();
         });

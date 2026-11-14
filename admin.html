@@ -2347,15 +2347,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Chuẩn $599 AUD</span>`;
         }
 
-        let photos = (c.placesPhotos && Array.isArray(c.placesPhotos)) ? c.placesPhotos : [];
-        if (!photos.length && typeof allStoredLeads !== 'undefined' && Array.isArray(allStoredLeads)) {
-          const matchL = allStoredLeads.find(l => (c.googlePlaceId && (l.placeId || l.id) === c.googlePlaceId) || (l.name && l.name.toLowerCase() === (c.businessName || c.name || '').toLowerCase()));
-          if (matchL && Array.isArray(matchL.photos) && matchL.photos.length) {
-            photos = matchL.photos;
-            c.placesPhotos = photos;
-          }
-        }
-        const photosCount = photos.length;
+        const autoEnabled = c.nurtureAutoEnabled !== false;
 
         // Due Action & Visual Alert
         const due = getClientDueAction(c);
@@ -2372,12 +2364,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           `;
         }
 
-        // Time gates for buttons
-        const isDay3Due = Boolean(pitchTime) && daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && !isDealActive && !isExpired;
-        const isDay3Locked = !pitchTime || daysElapsed < 3;
-        const isDay7Due = Boolean(pitchTime) && daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && !isExpired;
-        const isDay9Due = Boolean(pitchTime) && daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning';
+        const step1Done = Boolean(pitchTime) || c.nurtureStep === 'aussie_pitch' || c.nurtureStep === 'pitch' || isPitched;
+        const step2Done = c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views' || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'day9_warning' || isDealActive || isExpired;
+        const step3Done = isDealActive || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'aussie_flash_deal_299' || c.nurtureStep === 'day9_warning' || isExpired;
+        const step4Done = c.nurtureStep === 'day9_warning' || isExpired;
+
+        const isDay3Due = Boolean(pitchTime) && daysElapsed >= 3 && daysElapsed < 6 && !step2Done && !isDealActive && !isExpired;
+        const isDay6Due = Boolean(pitchTime) && daysElapsed >= 6 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && !isExpired;
+        const isDay9Due = Boolean(pitchTime) && daysElapsed >= 9 && daysElapsed < 10 && c.nurtureStep !== 'day9_warning' && !isExpired;
         const isDay10Due = Boolean(pitchTime) && daysElapsed >= 10 && !isExpired;
+
+        const viewCount = Number(c.demoViewCount || 0);
 
         return `
           <div class="bg-gradient-to-br from-[#fcfbf7] to-[#fbf6ed] rounded-2xl p-3.5 border border-[#e2d9c8] space-y-3 shadow-2xs">
@@ -2400,99 +2397,145 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 <button
                   type="button"
                   data-cid="${c.id}"
-                  data-name="${escapeHtml(titleName)}"
-                  class="btn-copy-art-card px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 hover:from-amber-200 hover:to-amber-300 border border-amber-300 text-amber-950 text-[11px] font-bold transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer"
-                  title="Copy Prompt Dịch Ảnh Sang Tranh Sơn Dầu (Cách 2)"
+                  data-auto-enabled="${autoEnabled ? '1' : '0'}"
+                  class="btn-toggle-nurture-auto px-2.5 py-1 rounded-xl border text-[11px] font-extrabold transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer ${
+                    autoEnabled
+                      ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900'
+                      : 'bg-stone-100 hover:bg-stone-200 border-stone-300 text-stone-600'
+                  }"
+                  title="Bật/Tắt tự động chạy chuỗi 10 ngày cho riêng khách hàng này"
                 >
-                  <span>🎨 Copy Prompt Dịch Tranh (${photosCount} ảnh)</span>
+                  <span>${autoEnabled ? '🤖 Tự động chạy: BẬT' : '⏸️ Tự động chạy: TẮT'}</span>
                 </button>
               </div>
             </div>
 
-            ${renderClientPhotosStrip(photos)}
+            <!-- Unified 5-Step Automated Closing Pipeline -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-1">
+              <!-- Step 1: Initial Pitch SMS (Starts 10-Day Timer) -->
+              <button
+                type="button"
+                data-cid="${c.id}"
+                data-template="aussie_pitch"
+                data-step-label="Bước 1: SMS Chào Hàng (Bắt đầu 10 ngày)"
+                ${!hasPhone ? 'disabled' : ''}
+                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
+                  !hasPhone
+                    ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
+                    : step1Done
+                      ? 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950'
+                      : 'border-2 border-[#96432b] bg-[#fffaf4] hover:bg-[#fbdeb9]/40 text-stone-900'
+                }"
+                title="Gửi SMS Chào Hàng chuẩn Anh Úc và kích hoạt đồng hồ đếm 10 ngày tự động"
+              >
+                <div class="flex items-center justify-between gap-1 font-extrabold text-xs">
+                  <span class="truncate">👋 1. Gửi SMS Chào</span>
+                  ${step1Done ? '<span class="text-emerald-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>' : '<span class="text-[#96432b] text-[10px] font-black shrink-0">👆 Mở màn</span>'}
+                </div>
+                <span class="text-[10px] truncate ${step1Done ? 'text-emerald-800' : 'text-stone-600'}">
+                  ${step1Done ? 'Đã bắt đầu chu trình 10 ngày (Bấm gửi lại)' : 'Bắt đầu 10 ngày tự động'}
+                </span>
+              </button>
 
-            <!-- 4 Automated Urgency Triggers -->
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
-              <!-- Day 3 SMS -->
+              <!-- Step 2: Auto Day 3 Follow-Up (Smart 2+ Views Check) -->
               <button
                 type="button"
                 data-cid="${c.id}"
                 data-template="day3_reminder"
-                ${(!hasPhone || isDay3Locked || c.nurtureStep === 'day3_reminder') ? 'disabled' : ''}
+                data-early="${(!pitchTime || daysElapsed < 3) ? '1' : '0'}"
+                data-step-label="Bước 2: SMS Hỏi Thăm Ngày 3 (${viewCount >= 2 ? 'Mẫu Đã Xem 2+ Lần' : 'Mẫu Nhắc Xem Nhẹ'})"
+                ${!hasPhone ? 'disabled' : ''}
                 class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
-                  c.nurtureStep === 'day3_reminder'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-950 opacity-75 cursor-not-allowed'
-                    : isDay3Due
-                      ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
-                      : isDay3Locked
-                        ? 'border-stone-200 bg-stone-50/70 text-stone-400 opacity-60 cursor-not-allowed'
+                  !hasPhone
+                    ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
+                    : step2Done
+                      ? 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950'
+                      : isDay3Due
+                        ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
                         : 'border-[#dcd4c0] bg-white hover:bg-stone-50 text-stone-800'
                 }"
-                title="${isDay3Locked ? `Chưa đến hạn Ngày 3 (Còn ${3 - daysElapsed} ngày nữa)` : 'Gửi SMS Ngày 3: Nhắc nhẹ khách xem website preview'}"
+                title="Tự động dùng mẫu 'Noticed you viewed your preview' nếu khách đã xem >= 2 lần, hoặc mẫu nhắc nhẹ nếu < 2 lần"
               >
-                <div class="flex items-center justify-between font-bold text-xs">
-                  <span>📱 SMS Ngày 3</span>
-                  ${c.nurtureStep === 'day3_reminder' ? '<span class="text-emerald-700 text-[10px] font-black">⏳ Đang chạy</span>' : ''}
-                  ${isDay3Due ? '<span class="text-amber-800 text-[10px] font-black">● Đến hạn!</span>' : ''}
+                <div class="flex items-center justify-between gap-1 font-bold text-xs">
+                  <span class="truncate">👀 2. SMS Hỏi Thăm</span>
+                  ${step2Done
+                    ? '<span class="text-emerald-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>'
+                    : isDay3Due
+                      ? '<span class="text-amber-800 text-[10px] font-black shrink-0">● Đến hạn!</span>'
+                      : '<span class="text-amber-700 text-[10px] font-bold shrink-0">⏳ Ngày 3</span>'
+                  }
                 </div>
                 <span class="text-[10px] truncate ${isDay3Due ? 'text-amber-900 font-black' : 'text-stone-500'}">
-                  ${c.nurtureStep === 'day3_reminder' ? '⏳ Đang chạy (Đã gửi)' : isDay3Due ? '👉 Bấm gửi SMS Nhắc xem' : isDay3Locked ? `Chưa đến hạn (Còn ${3 - daysElapsed} ngày)` : 'Nhắc nhẹ xem link Demo'}
+                  ${step2Done
+                    ? 'Đã gửi hỏi thăm Ngày 3'
+                    : (viewCount >= 2 ? `Khách xem ${viewCount} lần — Bấm hỏi thăm` : 'Tự chạy Ngày 3 (Hoặc bấm gửi sớm)')
+                  }
                 </span>
               </button>
 
-              <!-- Day 7 Flash Deal 50% -->
+              <!-- Step 3: Auto Day 6 Unified 72h Flash Deal ($299 AUD) -->
               <button
                 type="button"
                 data-cid="${c.id}"
                 data-action="activate_flash_deal"
-                ${(isExpired || isPurged || isDealActive) ? 'disabled' : ''}
+                ${(isExpired || isPurged) ? 'disabled' : ''}
                 class="btn-trigger-deal px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
                   isDealActive
-                    ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950 opacity-80 cursor-not-allowed'
-                    : isDay7Due
+                    ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950'
+                    : isDay6Due
                       ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
-                      : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950'
+                      : 'border-amber-300 bg-gradient-to-r from-amber-50/80 to-orange-50/80 hover:from-amber-100 hover:to-orange-100 text-amber-950'
                 }"
-                title="Kích hoạt giảm 50% ($299 AUD) trong 72h + chạy đồng hồ đếm ngược trên web demo"
+                title="Hạ giá Demo xuống $299 AUD kèm đồng hồ đếm ngược 72h & gửi SMS Flash Deal 50%"
               >
-                <div class="flex items-center justify-between font-extrabold text-xs">
-                  <span>⚡ Deal 50% (72 Giờ)</span>
-                  ${isDealActive ? '<span class="text-rose-600 animate-pulse text-[10px] font-black">⏳ Đang chạy</span>' : ''}
-                  ${isDay7Due ? '<span class="text-amber-800 text-[10px] font-black">● Đến hạn!</span>' : ''}
+                <div class="flex items-center justify-between gap-1 font-extrabold text-xs">
+                  <span class="truncate">⚡ 3. Deal 50% ($299)</span>
+                  ${isDealActive
+                    ? '<span class="text-rose-600 animate-pulse text-[10px] font-black shrink-0">⏳ 72h Active</span>'
+                    : isDay6Due
+                      ? '<span class="text-amber-800 text-[10px] font-black shrink-0">● Đến hạn!</span>'
+                      : '<span class="text-amber-800 text-[10px] font-bold shrink-0">⏳ Ngày 6</span>'
+                  }
                 </div>
-                <span class="text-[10px] truncate ${isDay7Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
-                  ${isDay7Due ? '👉 Bấm Kích Hoạt Deal 50%' : isDealActive ? '⏳ Đang chạy ($299 AUD)' : 'Hạ $299 AUD + hiện đồng hồ'}
+                <span class="text-[10px] truncate ${isDay6Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
+                  ${isDealActive ? 'Đang chạy $299 AUD (72h)' : 'Hạ $299 AUD / 72h + bắn SMS'}
                 </span>
               </button>
 
-              <!-- Day 9 Warning SMS -->
+              <!-- Step 4: Auto Day 9 Final 24h Notice -->
               <button
                 type="button"
                 data-cid="${c.id}"
                 data-template="day9_warning"
-                ${(!hasPhone || !isDealActive || c.nurtureStep === 'day9_warning') ? 'disabled' : ''}
+                data-early="${(!pitchTime || daysElapsed < 9) ? '1' : '0'}"
+                data-step-label="Bước 4: SMS Ngày 9 (Cảnh Báo 24h Cuối)"
+                ${!hasPhone ? 'disabled' : ''}
                 class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col gap-0.5 shadow-2xs cursor-pointer ${
-                  c.nurtureStep === 'day9_warning'
-                    ? 'border-rose-300 bg-rose-50 text-rose-950 opacity-80 cursor-not-allowed'
-                    : isDay9Due
-                      ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse'
-                      : (!isDealActive && c.nurtureStep !== 'day9_warning')
-                        ? 'border-stone-200 bg-stone-50/70 text-stone-400 opacity-60 cursor-not-allowed'
+                  !hasPhone
+                    ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
+                    : step4Done
+                      ? 'border-rose-300 bg-rose-50/80 text-rose-950'
+                      : isDay9Due
+                        ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse'
                         : 'border-[#dcd4c0] bg-white hover:bg-rose-50 text-rose-950'
                 }"
-                title="Gửi SMS Ngày 9: Cảnh báo 24 giờ cuối trước khi đóng & thu hồi demo vĩnh viễn"
+                title="Gửi SMS Ngày 9: Thông báo 24 giờ cuối trước khi khoá & lưu trữ bản preview"
               >
-                <div class="flex items-center justify-between font-bold text-xs">
-                  <span>⏳ SMS Ngày 9 (24h Cuối)</span>
-                  ${c.nurtureStep === 'day9_warning' ? '<span class="text-rose-700 text-[10px] font-black">⏳ Đang chạy</span>' : ''}
-                  ${isDay9Due ? '<span class="text-rose-700 text-[10px] font-black">● Đến hạn!</span>' : ''}
+                <div class="flex items-center justify-between gap-1 font-bold text-xs">
+                  <span class="truncate">⏳ 4. SMS Ngày 9</span>
+                  ${step4Done
+                    ? '<span class="text-rose-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>'
+                    : isDay9Due
+                      ? '<span class="text-rose-700 text-[10px] font-black shrink-0">● Đến hạn!</span>'
+                      : '<span class="text-rose-700 text-[10px] font-bold shrink-0">⏳ 24h Cuối</span>'
+                  }
                 </div>
-                <span class="text-[10px] truncate ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-600'}">
-                  ${c.nurtureStep === 'day9_warning' ? '⏳ Đang chạy (Đã cảnh báo)' : isDay9Due ? '👉 Gửi Cảnh Báo 24h Cuối' : 'Báo sắp thu hồi demo'}
+                <span class="text-[10px] truncate ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-700'}">
+                  ${step4Done ? 'Đã gửi cảnh báo 24h cuối' : 'Tự chạy Ngày 9 (Hoặc bấm gửi sớm)'}
                 </span>
               </button>
 
-              <!-- Day 10 Hard Expire / Restore / Purge -->
+              <!-- Step 5: Auto Day 10 Hard Lock / Restore / Purge -->
               ${isPurged ? `
                 <div class="flex items-center gap-1.5">
                   <button
@@ -2502,7 +2545,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
                     title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
                   >
-                    <div class="font-extrabold text-xs text-emerald-900">🔓 Khôi Phục</div>
+                    <div class="font-extrabold text-xs text-emerald-900">🔓 5. Khôi Phục</div>
                     <span class="text-[10px] text-emerald-700 truncate">Đã dọn KV — Mở lại</span>
                   </button>
                 </div>
@@ -2515,8 +2558,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     class="btn-restore-demo flex-1 px-2.5 py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
                     title="Khôi phục demo về trạng thái bình thường ($599 AUD) để khách xem lại"
                   >
-                    <div class="font-extrabold text-xs text-emerald-900">🔓 Khôi Phục</div>
-                    <span class="text-[10px] text-emerald-700 truncate">Mở lại $599</span>
+                    <div class="font-extrabold text-xs text-emerald-900">🔓 Mở Lại</div>
+                    <span class="text-[10px] text-emerald-700 truncate">Khôi phục $599</span>
                   </button>
                   <button
                     type="button"
@@ -2524,7 +2567,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     data-slug="${c.demoSlug || ''}"
                     data-name="${escapeHtml(titleName)}"
                     class="btn-purge-demo px-2.5 py-2.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-950 text-left flex flex-col gap-0.5 shadow-2xs transition-all cursor-pointer"
-                    title="Xoá vĩnh viễn toàn bộ file website demo khỏi Cloudflare KV để dọn dẹp sạch sẽ"
+                    title="Xoá vĩnh viễn toàn bộ file website demo khỏi KV"
                   >
                     <div class="font-extrabold text-xs text-rose-900">🗑️ Dọn KV</div>
                     <span class="text-[10px] text-rose-700 truncate">Xoá sạch file</span>
@@ -2542,56 +2585,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   }"
                   title="Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)"
                 >
-                  <div class="font-bold text-xs ${isDay10Due ? 'text-white' : 'text-stone-800'}">🔒 Khoá / Thu Hồi Demo</div>
+                  <div class="flex items-center justify-between gap-1 font-bold text-xs ${isDay10Due ? 'text-white' : 'text-stone-800'}">
+                    <span class="truncate">🔒 5. Khoá Demo</span>
+                    <span class="text-[10px] ${isDay10Due ? 'text-amber-300 font-black' : 'text-stone-400'} shrink-0">Ngày 10</span>
+                  </div>
                   <span class="text-[10px] truncate ${isDay10Due ? 'text-stone-300 font-bold' : 'text-stone-500'}">
-                    ${isDay10Due ? '👉 ĐÃ QUÁ 10 NGÀY — BẤM KHOÁ' : 'Khoá truy cập link demo'}
+                    ${isDay10Due ? '👉 Quá 10 ngày — Bấm khoá' : 'Tự khoá Ngày 10 (Hoặc khoá sớm)'}
                   </span>
                 </button>
               `}
-            </div>
-
-            <!-- 1-Click Australian Contextual SMS Templates -->
-            <div class="bg-white/90 rounded-2xl p-3 border border-[#e2d9c8] space-y-2 shadow-2xs">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-stone-900">🇦🇺 1-Click Aussie SMS Templates (Chuẩn Anh Úc, ấm áp &amp; không spam):</span>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  data-cid="${c.id}"
-                  data-quick-sms="pitch"
-                  ${!hasPhone ? 'disabled' : ''}
-                  class="btn-aussie-quick-sms px-3 py-2 rounded-xl border border-[#dcd4c0] bg-[#faf6ee] hover:bg-[#f5ebd9] text-left flex flex-col gap-0.5 cursor-pointer transition-all shadow-2xs ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
-                  title="SMS Chào Hàng: 'Hey [Name], came across [Salon] in [Suburb] — stunning BIAB work! We crafted a private preview...'"
-                >
-                  <span class="text-xs font-bold text-stone-900">📨 1. SMS Chào (Chưa có Web)</span>
-                  <span class="text-[10px] text-stone-500 truncate">Khen tay nghề &amp; gửi link private preview</span>
-                </button>
-
-                <button
-                  type="button"
-                  data-cid="${c.id}"
-                  data-quick-sms="followup_views"
-                  ${!hasPhone ? 'disabled' : ''}
-                  class="btn-aussie-quick-sms px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/80 text-left flex flex-col gap-0.5 cursor-pointer transition-all shadow-2xs ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
-                  title="SMS Khách Đã Xem 2+ lần: 'Hi [Name], noticed you checked out your bespoke preview website...'"
-                >
-                  <span class="text-xs font-bold text-emerald-950">👀 2. SMS Nhắc Xem (2+ Lượt Xem)</span>
-                  <span class="text-[10px] text-emerald-800 truncate">Hỏi thăm góp ý &amp; gửi nút Claim $599 AUD</span>
-                </button>
-
-                <button
-                  type="button"
-                  data-cid="${c.id}"
-                  data-quick-sms="flash_deal_299"
-                  ${!hasPhone ? 'disabled' : ''}
-                  class="btn-aussie-quick-sms px-3 py-2 rounded-xl border border-rose-300 bg-rose-50/70 hover:bg-rose-100/80 text-left flex flex-col gap-0.5 cursor-pointer transition-all shadow-2xs ${!hasPhone ? 'opacity-50 cursor-not-allowed' : ''}"
-                  title="SMS Chốt Flash Deal 50% ($299 AUD / 48h): Tự kích hoạt deal $299 AUD trên server &amp; gửi SMS chốt hạ"
-                >
-                  <span class="text-xs font-bold text-rose-950">⚡ 3. SMS Deal 50% ($299 AUD / 48h)</span>
-                  <span class="text-[10px] text-rose-800 truncate">Hạ $299 AUD &amp; báo hạn chót 48h</span>
-                </button>
-              </div>
             </div>
           </div>
         `;
@@ -3025,6 +3027,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <button
                         type="button"
                         data-cid="${c.id}"
+                        data-name="${escapeHtml(titleName)}"
+                        class="btn-copy-oil-prompt px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy Prompt tiếng Anh chuẩn để đưa 4 ảnh Google của tiệm vào AI vẽ thành tranh sơn dầu"
+                      >
+                        <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
                         class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl ${c.revisionStatus === 'submitted' ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse' : 'bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300'} text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
                         title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
                       >
@@ -3042,6 +3053,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     </div>
                   </div>
                   ${renderPaletteSwatchBar(c)}
+                  ${renderClientPhotosStrip(Array.isArray(c.photos) ? c.photos : [])}
                 </div>
 
                 <!-- Section 2: Urgency & Closing Engine (10-Day Automated Pipeline) -->
@@ -3436,6 +3448,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       <button
                         type="button"
                         data-cid="${c.id}"
+                        data-name="${escapeHtml(titleName)}"
+                        class="btn-copy-oil-prompt px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy Prompt tiếng Anh chuẩn để đưa 4 ảnh Google của tiệm vào AI vẽ thành tranh sơn dầu"
+                      >
+                        <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-cid="${c.id}"
                         class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl ${c.revisionStatus === 'submitted' ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse' : 'bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300'} text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
                         title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
                       >
@@ -3453,6 +3474,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     </div>
                   </div>
                   ${renderPaletteSwatchBar(c)}
+                  ${renderClientPhotosStrip(Array.isArray(c.photos) ? c.photos : [])}
                 </div>
 
                 <!-- Row 2: Official Live Domain (Unified Smart Concierge Flow) -->
@@ -3823,21 +3845,58 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // 10-Day Closing Engine: Nurture SMS (Day 3, Day 7, Day 9)
+        // 10-Day Closing Engine: Toggle Auto-Nurture On/Off per Client
+        document.querySelectorAll('.btn-toggle-nurture-auto').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const currentAuto = btn.getAttribute('data-auto') === '1';
+            const nextAuto = !currentAuto;
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            const res = await runAdminAction({
+              action: 'toggle_nurture_auto',
+              customerId: cid,
+              enabled: nextAuto
+            }, { busyText: nextAuto ? 'Đang BẬT tự động 10 ngày...' : 'Đang TẮT tự động 10 ngày...', skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(nextAuto
+                ? `🤖 Đã BẬT chạy tự động 10 ngày cho "${biz}"!`
+                : `⏸ Đã TẮT chạy tự động 10 ngày cho "${biz}" (chỉ gửi khi bấm tay).`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Unified 5-Step Pipeline SMS (Step 1 Pitch, Step 2 Day 3, Step 4 Day 9)
         document.querySelectorAll('.btn-nurture-sms').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const tpl = btn.getAttribute('data-template');
             const client = clientsCache.find(x => x.id === cid);
-            const biz = (client && (client.businessName || client.name)) || 'tiệm';
-            let tplName = 'SMS Ngày 3 (Nhắc Xem Demo)';
-            if (tpl === 'day7_deal') tplName = 'SMS Ngày 7 (Deal 50% $299 AUD)';
-            if (tpl === 'day9_warning') tplName = 'SMS Ngày 9 (Cảnh Báo 24h Cuối)';
             if (!client || !client.phone) {
               showToast('Khách chưa có SĐT để gửi SMS!', true);
               return;
             }
-            if (!confirm(`Bắn ${tplName} tới số ${client.phone} của "${biz}"?`)) {
+            const biz = client.businessName || client.name || 'tiệm';
+            const viewCount = Number(client.demoViewCount || 0);
+            let tplName = 'SMS Chăm Sóc';
+            let subHint = '';
+            if (tpl === 'aussie_pitch') {
+              tplName = 'Bước 1: SMS Chào Hàng (Khởi động chu trình 10 ngày)';
+              subHint = '\n• Gửi SMS giới thiệu bản Demo chuẩn giọng Úc.\n• Bắt đầu đếm đồng hồ tự động 10 ngày.';
+            } else if (tpl === 'day3_reminder') {
+              tplName = viewCount >= 2
+                ? `Bước 2: SMS Hỏi Thăm (Khách đã xem ${viewCount} lần)`
+                : 'Bước 2: SMS Nhắc Xem Demo (Ngày 3)';
+              subHint = viewCount >= 2
+                ? `\n• Tự động chọn mẫu hỏi thăm ấm áp vì khách đã mở xem Demo ${viewCount} lần.`
+                : '\n• Tự động chọn mẫu nhắc nhẹ mở xem bản Preview.';
+            } else if (tpl === 'day9_warning') {
+              tplName = 'Bước 4: SMS Ngày 9 (Cảnh Báo 24h Cuối)';
+              subHint = '\n• Báo khách bản Preview và mức giá ưu đãi sẽ đóng sau 24 giờ nữa.';
+            }
+            if (!confirm(`Bắn ${tplName} tới số ${client.phone} của "${biz}"?${subHint}`)) {
               return;
             }
             const res = await runAdminAction({
@@ -3849,89 +3908,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               upsertClientInCache(res.client);
               applyFiltersAndRender();
               showToast(`📱 Đã bắn ${tplName} thành công tới ${client.phone}!`);
-            }
-          });
-        });
-
-        // 1-Click Australian Contextual SMS Templates (Pitch, 2+ Views Follow-up, 48h 50% Deal)
-        document.querySelectorAll('.btn-aussie-quick-sms').forEach((btn) => {
-          btn.addEventListener('click', async () => {
-            const cid = btn.getAttribute('data-cid');
-            const type = btn.getAttribute('data-quick-sms');
-            const client = clientsCache.find(x => x.id === cid);
-            if (!client) return;
-
-            const biz = client.businessName || client.name || 'Salon';
-            const ownerName = client.name || 'there';
-            const suburb = (client.suburb || (client.businessAddress ? client.businessAddress.split(',')[0].trim() : 'Australia')).trim();
-            const phone = client.phone;
-            if (!phone) {
-              showToast('Khách chưa có SĐT di động để gửi SMS!', true);
-              return;
-            }
-
-            const previewUrl = client.brandedDemoUrl || `https://${encodeURIComponent(client.demoSlug || client.id)}.wynnpages.com.au`;
-            const claimUrl = `${window.location.origin}/api/claim?cid=${encodeURIComponent(client.id)}`;
-
-            let message = '';
-            let confirmTitle = '';
-            let tplKey = '';
-
-            if (type === 'pitch') {
-              tplKey = 'aussie_pitch';
-              confirmTitle = `Gửi SMS Chào Hàng (Cold Pitch) tới ${phone} (${biz})?`;
-              message = `Hey ${ownerName}, came across ${biz} in ${suburb} — stunning BIAB work! We crafted a private preview website for you: ${previewUrl} (Customised with your real services & studio aesthetic). Take a look and let us know what you think!\n\n— WynnPages Australia`;
-            } else if (type === 'followup_views') {
-              tplKey = 'aussie_followup_views';
-              confirmTitle = `Gửi SMS Nhắc Xem (2+ Lượt Xem) tới ${phone} (${biz})?`;
-              message = `Hi ${ownerName}, noticed you checked out your bespoke preview website! Just wanted to see if you had any thoughts or wished to tweak any rituals/pricing? You can claim it directly for $599 AUD with zero monthly fees: ${claimUrl}\n\n— WynnPages Australia`;
-            } else if (type === 'flash_deal_299') {
-              tplKey = 'aussie_flash_deal_299';
-              confirmTitle = `Kích hoạt Flash Deal $299 AUD (48 Giờ) & Gửi SMS tới ${phone} (${biz})?`;
-              setCardBusy(cid, true);
-              try {
-                const dealRes = await runAdminAction({
-                  action: 'activate_flash_deal',
-                  customerId: cid,
-                  hours: 48
-                }, { busyText: 'Đang kích hoạt Flash Deal $299 AUD (48h)...', skipReload: true });
-
-                if (dealRes && dealRes.client) {
-                  upsertClientInCache(dealRes.client);
-                  applyFiltersAndRender();
-                }
-              } catch (err) {
-                console.warn('Deal activation error:', err);
-              } finally {
-                setCardBusy(cid, false);
-              }
-              message = `Quick note from WynnPages: your 50% studio waiver expires in 48h! Claim your bespoke website for just $299 AUD (one-off, 100% ownership, zero ongoing retainers): ${claimUrl} — After this, standard studio pricing applies.`;
-            }
-
-            if (!confirm(`${confirmTitle}\n\nNội dung SMS:\n"${message}"`)) {
-              return;
-            }
-
-            setCardBusy(cid, true);
-            try {
-              const res = await runAdminAction({
-                action: 'send_nurture_sms',
-                customerId: cid,
-                templateKey: tplKey,
-                customMessage: message
-              }, { busyText: `Đang gửi SMS tới ${phone}...`, skipReload: true });
-
-              if (res && res.client) {
-                showToast(`✅ Đã gửi SMS tới ${phone} thành công!`);
-                upsertClientInCache(res.client);
-                applyFiltersAndRender();
-              } else {
-                showToast(`❌ Lỗi gửi SMS: ${(res && res.error) || 'Thất bại'}`, true);
-              }
-            } catch (err) {
-              showToast(`Lỗi: ${err.message}`, true);
-            } finally {
-              setCardBusy(cid, false);
             }
           });
         });
@@ -6347,6 +6323,8 @@ https://wynnpages.com.au`;
         patchStringField('biabFeature', pv.biab);
         patchStringField('pedicureFeature', pv.pedi);
         html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.pedi}$2`);
 
         const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
         const resolvedState = address ? parsedAddr.state : '';
