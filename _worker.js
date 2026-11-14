@@ -2479,11 +2479,45 @@ async function extractSocialAndContactFromWebsite(websiteUrl) {
 
 function buildExpiredDemoHtml(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
+  const demoSlug = (client && client.demoSlug) || slugifyName(bizName);
+  const demoUrl = (client && (client.demoUrl || client.brandedDemoUrl)) || (demoSlug ? `https://${demoSlug}.wynnpages.com.au` : '');
+  const clientPhone = (client && (client.phone || client.displayPhone)) || '';
+  const clientEmail = (client && client.email) || '';
+  const clientAddress = (client && client.businessAddress) || '';
+  const clientId = (client && client.id) || '';
+
   const expDateStr = client && client.dealExpiresAt ? new Date(client.dealExpiresAt).toLocaleDateString('en-AU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   }) : 'recently';
+
+  const mailSubject = `Reactivate Website Preview — ${bizName}`;
+  const specLines = [
+    `• Business Name: ${bizName}`,
+    demoUrl ? `• Preview Link: ${demoUrl}` : '',
+    clientPhone ? `• Phone: ${clientPhone}` : '',
+    clientEmail ? `• Email: ${clientEmail}` : '',
+    clientAddress ? `• Address: ${clientAddress}` : '',
+    clientId ? `• Studio Reference: ${clientId}` : ''
+  ].filter(Boolean).join('\n');
+
+  const mailBody = [
+    `Hi WynnPages Studio,`,
+    ``,
+    `I am the owner of ${bizName} and would love to unlock and reactivate our bespoke website preview ($599 AUD flat, 100% ownership, zero monthly fees).`,
+    ``,
+    `--- MY BUSINESS DETAILS ---`,
+    specLines,
+    `---------------------------`,
+    ``,
+    `Please reactivate our preview link and send through the next steps.`,
+    ``,
+    `Warm regards,`,
+    bizName
+  ].join('\n');
+
+  const mailtoHref = `mailto:hello@wynnpages.com.au?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`;
 
   return `<!DOCTYPE html>
 <html lang="en-AU">
@@ -2592,16 +2626,23 @@ function buildExpiredDemoHtml(client) {
       gap: 12px;
       margin-top: 10px;
     }
-    @media (min-width: 640px) {
-      .btn-group { flex-direction: row; justify-content: center; }
+    @media (min-width: 520px) {
+      .btn-group {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: center;
+        align-items: center;
+      }
     }
     .btn-primary {
       background: linear-gradient(135deg, #96432b 0%, #7d3520 100%);
       color: #ffffff;
-      padding: 13px 24px;
+      padding: 13px 22px;
       border-radius: 14px;
       font-weight: 700;
       font-size: 13px;
+      line-height: 1.2;
+      white-space: nowrap;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
@@ -2622,10 +2663,13 @@ function buildExpiredDemoHtml(client) {
       border-radius: 14px;
       font-weight: 600;
       font-size: 13px;
+      line-height: 1.2;
+      white-space: nowrap;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       transition: all 0.2s;
     }
     .btn-secondary:hover {
@@ -2652,11 +2696,11 @@ function buildExpiredDemoHtml(client) {
     <p class="expired-desc">
       The preview hold and exclusive studio offer for <strong>${bizName}</strong> concluded on <strong>${expDateStr}</strong>.<br><br>
       To protect brand exclusivity and keep every client design private on the <strong>WynnPages Studio Australian High-Speed Network</strong>, this website preview has been moved to our private archive.
-      If you are the business owner and would like to unlock, customise, or claim this website for a flat <strong>$599 AUD</strong> (100% ownership, zero monthly retainers), please message our studio directly.
+      If you are the business owner and would like to unlock, customise, or claim this website for a flat <strong>$599 AUD</strong> (100% ownership, zero monthly retainers), please email our studio directly below.
     </p>
     <div class="btn-group">
-      <a href="sms:0424717777?&body=Hi%20WynnPages%20Studio%2C%20I%27m%20from%20${encodeURIComponent(bizName)}%20and%20would%20love%20to%20reactivate%20and%20customise%20our%20website%20preview." class="btn-primary">
-        <span>📱 SMS Studio to Reactivate (0424 717 777)</span>
+      <a href="${mailtoHref}" class="btn-primary">
+        <span>✉️ Email Studio to Reactivate</span>
       </a>
       <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="btn-secondary">
         <span>Visit WynnPages Studio ↗</span>

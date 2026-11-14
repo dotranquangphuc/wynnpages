@@ -532,6 +532,41 @@
     }
 
     /* ==========================================================================
+       SERVICE MENU CATEGORY PILLS & BOOK FULL APPOINTMENT (EDITORIAL AMBIENT GLOW)
+       ========================================================================== */
+    #menu-tabs-scroll,
+    div:has(> #menu-tabs-bar) {
+      padding: 6px 4px 14px 4px;
+      margin-bottom: -8px;
+    }
+
+    #menu-tabs-bar [role="tab"][aria-selected="false"] {
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(45, 56, 48, 0.15);
+      color: #2D3830;
+      box-shadow: none !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (hover: hover) {
+      #menu-tabs-bar [role="tab"][aria-selected="false"]:hover {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(45, 56, 48, 0.3);
+        transform: translate3d(0, -1px, 0);
+      }
+    }
+
+    #menu-tabs-bar [role="tab"][aria-selected="true"],
+    #menu .menu-book-full-btn,
+    #menu button[data-open-booking] {
+      background: #2D3830;
+      border: 1px solid #2D3830;
+      color: #FFFFFF;
+      box-shadow: 0 6px 16px -4px rgba(45, 56, 48, 0.18), 0 2px 6px -1px rgba(45, 56, 48, 0.10) !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ==========================================================================
        APPLE SLOW-LUXURY CHOREOGRAPHY (BIDIRECTIONAL SCROLL DOWN & SCROLL UP)
        - Scroll down into viewport -> slow, unhurried 1.3s exponential glide in
        - Scroll back up -> smooth 0.82s Apple-spring retract back down
@@ -1424,8 +1459,8 @@
       </div>
 
       <!-- Dynamic Category Tabs (Smooth Horizontal Snap Rail on Mobile, Clean Wrap on Desktop) -->
-      <div data-apple-reveal="header" class="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
-        <div id="menu-tabs-bar" class="flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-max sm:w-auto py-1" role="tablist" aria-label="Service Categories"></div>
+      <div id="menu-tabs-scroll" data-apple-reveal="header" class="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
+        <div id="menu-tabs-bar" class="flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-max sm:w-auto" role="tablist" aria-label="Service Categories"></div>
       </div>
 
       <!-- Active Menu Card -->
@@ -1439,7 +1474,7 @@
 
         <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t text-xs" style="border-color: var(--border-hairline); color: var(--ink-muted);">
           <span>All prices are inclusive of GST in Australian Dollars (AUD). Sunday &amp; Public Holiday surcharges may apply.</span>
-          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-5 py-3 sm:py-2.5 text-xs font-semibold shrink-0 cursor-pointer w-full sm:w-auto text-center">
+          <button type="button" data-open-booking="" class="btn-atelier-primary menu-book-full-btn rounded-full px-5 py-3 sm:py-2.5 text-xs font-semibold shrink-0 cursor-pointer w-full sm:w-auto text-center">
             Book Full Appointment →
           </button>
         </div>
