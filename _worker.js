@@ -2036,6 +2036,62 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   return { smsResult, emailResult, stage, smsText, phone };
 }
 
+function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
+  const biz = (client && (client.businessName || client.name)) || 'your boutique';
+  const firstName = ((client && client.name) || biz).split(/\s+/)[0] || 'there';
+  const previewLink = demoUrl || (client && (client.demoUrl || client.brandedDemoUrl)) || 'https://wynnpages.com.au';
+  const pBox = `<p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;"><a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a></p>`;
+
+  if (stepKey === 'step1' || stepKey === 'aussie_pitch' || stepKey === 'pitch') {
+    return {
+      subject: `A custom website concept we prepared for ${biz}`,
+      html: buildAtelierEmailHtml({
+        preheader: 'WynnPages Studio • Bespoke Australian Website Preview ($0 Monthly Fees)',
+        heading: `A bespoke website concept for ${biz}.`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>We admired <strong>${biz}</strong> and hand-crafted a complete, mobile-ready website preview tailored specifically to your business:</p>${pBox}<p>Feel free to have a browse whenever you have a spare moment. If you love the direction ($599 AUD flat one-time, $0 monthly fees), you can claim it directly on the preview page or reply with any adjustments.</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
+        primaryCta: { label: 'View Your Custom Website Preview →', url: previewLink }
+      })
+    };
+  }
+  if (stepKey === 'step2' || stepKey === 'day3_reminder' || stepKey === 'aussie_followup_views' || stepKey === 'followup_views') {
+    const sawMultiple = Number(views || 0) >= 2;
+    return {
+      subject: sawMultiple ? `Glad you had a look at the ${biz} website preview!` : `Quick check-in: Did you get a chance to see your ${biz} website preview?`,
+      html: buildAtelierEmailHtml({
+        preheader: sawMultiple ? 'Happy to tweak any prices, services, or photos for you' : 'Friendly follow-up from WynnPages Studio Australia',
+        heading: sawMultiple ? `Happy to tailor anything for ${biz}, ${firstName}!` : `Hope your week is going well, ${firstName}!`,
+        bodyHtml: sawMultiple
+          ? `<p>Hi ${firstName},</p><p>We noticed you checked out the custom website preview we crafted for <strong>${biz}</strong>:</p>${pBox}<p>If you'd like us to tweak any service prices, swap photos, or adjust colours before connecting it to your <code>.com.au</code> domain, we include a full bespoke revision round at no extra cost ($599 AUD flat, $0/month).</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`
+          : `<p>Hi ${firstName},</p><p>Just a friendly check-in in case our earlier note got buried! Your bespoke website preview for <strong>${biz}</strong> is ready to explore:</p>${pBox}<p>We're happy to adjust any services, pricing, or photos for you. Claim online anytime ($599 AUD flat, $0 monthly fees).</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
+        primaryCta: { label: 'Open Your Live Website Preview →', url: previewLink }
+      })
+    };
+  }
+  if (stepKey === 'step3' || stepKey === 'day7_deal' || stepKey === 'aussie_flash_deal_299' || stepKey === 'flash_deal_299') {
+    return {
+      subject: `72-Hour 50% OFF Offer: Claim Your ${biz} Website for $299 AUD`,
+      html: buildAtelierEmailHtml({
+        preheader: 'Save $300 AUD • $299 AUD Flat One-Time • Zero Monthly Fees (Ends in 72 Hours)',
+        heading: `72-Hour 50% OFF Sponsorship for ${biz}`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>Since we have already finished hand-crafting the custom website design for <strong>${biz}</strong>, we would love to see it go to you rather than archiving the work.</p><div style="background-color:#fef3c7;border:1px solid #f59e0b;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:13px;line-height:1.7;color:#78350f;"><strong>⚡ 72-Hour 50% OFF Studio Offer:</strong> For the next 72 hours, claim the entire custom website for a flat <strong>$299 AUD one-time</strong> (save $300 AUD off $599, with <strong>$0 monthly fees forever</strong>).</div>${pBox}<p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
+        primaryCta: { label: 'Claim Website for $299 AUD (50% OFF) →', url: previewLink }
+      })
+    };
+  }
+  if (stepKey === 'step4' || stepKey === 'day9_warning') {
+    return {
+      subject: `Final 24-Hour Notice: Your ${biz} Website Preview Closes Tomorrow`,
+      html: buildAtelierEmailHtml({
+        preheader: '24 Hours Remaining Before Preview Archive',
+        heading: `Quick heads up for ${biz}, ${firstName}`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>Just a quick heads up from <strong>WynnPages Studio</strong>: the custom website preview and <strong>$299 AUD (50% OFF)</strong> offer we prepared for <strong>${biz}</strong> closes in <strong>24 hours</strong>:</p>${pBox}<p>If you'd like to keep this design and lock in the $299 AUD one-time rate ($0 monthly fees), please claim it today before the preview is archived.</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
+        primaryCta: { label: 'Claim Your Website Before It Closes →', url: previewLink }
+      })
+    };
+  }
+  return null;
+}
+
 function parseJsLiteralSafe(raw) {
   if (!raw || typeof raw !== 'string') return null;
   const src = raw.trim().replace(/;\s*$/, '');
@@ -2584,6 +2640,16 @@ function formatCustomerRecord(cust) {
     editorialSummary: m.editorial_summary || '',
     launchedAt: m.launched_at || '',
     fbPitchedAt: m.fb_pitched_at || '',
+    channelMode: m.channel_mode || (m.fb_pitched_at && !m.demo_sent_at ? 'facebook' : 'sms'),
+    turboTestMode: m.turbo_test_mode === 'true',
+    sequenceStartedAt: m.sequence_started_at || m.demo_sent_at || m.fb_pitched_at || '',
+    step1SentAt: m.step1_sent_at || m.demo_sent_at || m.fb_pitched_at || '',
+    step2SentAt: m.step2_sent_at || '',
+    step3SentAt: m.step3_sent_at || m.deal_activated_at || '',
+    step4SentAt: m.step4_sent_at || '',
+    step5LockedAt: m.step5_locked_at || (m.deal_status === 'expired' ? (m.deal_expires_at || 'true') : ''),
+    fbDueStep: m.fb_due_step || '',
+    fbAlertedSteps: m.fb_alerted_steps || '',
     demoViewCount: Number(m.demo_view_count || 0),
     demoFirstViewedAt: m.demo_first_viewed_at || '',
     demoLastViewedAt: m.demo_last_viewed_at || '',
@@ -4945,61 +5011,128 @@ async function runScheduledAutopilot(env, options = {}) {
   }
 
   const reports = [];
+  const updatedClients = [];
   let smsSentCount = 0;
   let dealActivatedCount = 0;
   let expiredCount = 0;
   let scannedCount = 0;
 
+  async function patchCustAndSync(custId, uP) {
+    const pRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(custId)}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: uP.toString()
+    }).catch(() => null);
+    if (pRes && pRes.ok) {
+      const updated = formatCustomerRecord(await pRes.json());
+      if (updated) {
+        await upsertD1Client(env, updated);
+        updatedClients.push(updated);
+      }
+      return updated;
+    }
+    return null;
+  }
+
   for (const rawCust of allCustomers) {
     const c = formatCustomerRecord(rawCust);
+    if (!c) continue;
     const isOutbound = c.source === 'admin_lead_hunter' || c.source === 'outbound_admin' || c.outboundPitched || c.isOutboundLead || Boolean(c.demoUrl || c.brandedDemoUrl);
     const isPaid = c.paymentStatus === 'paid' || c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
     if (!isOutbound || isPaid) continue;
-    if (c.nurtureAutoEnabled === false) continue;
+    const isTurbo = c.turboTestMode === true;
+    if (c.nurtureAutoEnabled === false && !isTurbo) continue;
 
-    // The 10-day autopilot countdown ONLY starts after the studio owner actually pitches the client (via SMS or Facebook)
-    const sentTime = c.demoSentAt || c.fbPitchedAt;
+    const sentTime = c.sequenceStartedAt || c.demoSentAt || c.fbPitchedAt;
     if (!sentTime) continue;
 
     scannedCount++;
     const now = Date.now();
+    const nowIso = new Date(now).toISOString();
     const sentTimeMs = typeof sentTime === 'number' ? (sentTime < 1e11 ? sentTime * 1000 : sentTime) : new Date(sentTime).getTime();
     if (!sentTimeMs || isNaN(sentTimeMs)) continue;
-    const daysElapsed = (now - sentTimeMs) / (1000 * 3600 * 24);
+    const elapsedMs = Math.max(0, now - sentTimeMs);
+    const daysElapsed = elapsedMs / (1000 * 3600 * 24);
+    const minsElapsed = elapsedMs / (1000 * 60);
     const biz = c.businessName || c.name || 'Boutique';
     const demoUrl = c.demoUrl || c.brandedDemoUrl || (c.demoSlug ? `https://${c.demoSlug}.wynnpages.com.au` : `https://${c.id}.wynnpages.com.au`);
-    const niche = getIndustryNicheTerms(c.industry);
+    const isFbMode = c.channelMode === 'facebook' || !c.phone;
+    const alertedList = String(c.fbAlertedSteps || '').split(',').map(s => s.trim()).filter(Boolean);
 
-    // 1. Day 10+ (Hard Expire)
-    if (daysElapsed >= 9.8 && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
-      if (settings.autoExpire || force) {
+    const step2Reached = isTurbo ? minsElapsed >= 15 : daysElapsed >= 2.6;
+    const step3Reached = isTurbo ? minsElapsed >= 30 : daysElapsed >= 5.6;
+    const step4Reached = isTurbo ? minsElapsed >= 45 : daysElapsed >= 8.6;
+    const step5Reached = isTurbo ? minsElapsed >= 60 : daysElapsed >= 9.8;
+
+    const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views';
+    const step3Done = Boolean(c.step3SentAt) || (c.dealStatus === 'flash_deal' && (!isFbMode || c.nurtureStep === 'day7_deal_active')) || c.nurtureStep === 'aussie_flash_deal_299';
+    const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning';
+    const step5Done = Boolean(c.step5LockedAt) || c.dealStatus === 'expired' || c.dealStatus === 'purged';
+
+    // 1. Step 5: Day 10+ / T+60m (Hard Expire Demo for BOTH SMS and Facebook modes)
+    if (step5Reached && !step5Done) {
+      if (settings.autoExpire || force || isTurbo) {
         const uP = new URLSearchParams();
         uP.append('metadata[deal_status]', 'expired');
-        uP.append('metadata[deal_expires_at]', new Date(now).toISOString());
+        uP.append('metadata[deal_expires_at]', nowIso);
+        uP.append('metadata[step5_locked_at]', nowIso);
         uP.append('metadata[nurture_step]', 'demo_expired');
-        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: uP.toString()
-        }).catch(() => {});
+        uP.append('metadata[fb_due_step]', '');
+        await patchCustAndSync(c.id, uP);
         expiredCount++;
-        reports.push(`[Ngày ${Math.round(daysElapsed)}] Khoá Demo 403: ${biz}`);
+        await recordStudioActivity(env, {
+          type: 'demo_expired',
+          icon: '🔒',
+          title: `Đã Khoá Demo Tự Động (${isTurbo ? 'Test 60p' : 'Ngày 10'}): ${biz}`,
+          message: `Bản Demo (${demoUrl}) đã tự động khoá HTTP 403 sau khi kết thúc chu trình chốt sale.`,
+          clientName: biz,
+          slug: c.demoSlug || ''
+        }, opts.ctx);
+        reports.push(`[${isTurbo ? 'Phút 60' : `Ngày ${Math.round(daysElapsed)}`}] Khoá Demo 403: ${biz}`);
         continue;
       }
     }
 
-    // 2. Day 9 (24h Final Warning SMS)
-    if (daysElapsed >= 8.6 && daysElapsed < 9.8 && c.dealStatus !== 'expired' && c.dealStatus !== 'purged' && c.nurtureStep !== 'day9_warning') {
-      if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
+    // 2. Step 4: Day 9 / T+45m (24h Final Warning)
+    if (step4Reached && !step5Reached && !step4Done && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      if (isFbMode) {
+        if (c.fbDueStep !== 'day9' || !alertedList.includes('day9')) {
+          const nextAlerted = Array.from(new Set([...alertedList, 'day9'])).join(',');
+          const uP = new URLSearchParams();
+          uP.append('metadata[fb_due_step]', 'day9');
+          uP.append('metadata[fb_alerted_steps]', nextAlerted);
+          await patchCustAndSync(c.id, uP);
+          if (!alertedList.includes('day9')) {
+            await recordStudioActivity(env, {
+              type: 'fb_due_day9',
+              icon: '💬',
+              title: `Đến Hạn Gửi FB Bước 4 (24h Cuối): ${biz}`,
+              message: `Đã đến ${isTurbo ? 'phút 45 (Test)' : 'Ngày 9'} cho khách Facebook "${biz}". Mở Admin bấm vào Bước 4 đang sáng xanh để Copy tin nhắc 24h cuối & mở Messenger!`,
+              clientName: biz,
+              slug: c.demoSlug || ''
+            }, opts.ctx);
+          }
+          reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'} - FB] Nhắc Admin gửi tin 24h cuối: ${biz}`);
+        }
+        continue;
+      } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
         const warningMsg = `Hi ${biz}, quick heads up from WynnPages: your website preview (${demoUrl}) closes in 24h. Claim it today if you'd like to keep this design! - Sam`;
         const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
+        let emailSent = false;
+        if (c.email && cfg.resendApiKey) {
+          const mailPayload = buildNurtureStepEmail({ stepKey: 'step4', client: c, demoUrl });
+          if (mailPayload) {
+            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
+            emailSent = Boolean(mRes && mRes.sent);
+          }
+        }
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day9_warning');
-        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: uP.toString()
-        }).catch(() => {});
+        uP.append('metadata[step4_sent_at]', nowIso);
+        uP.append('metadata[fb_due_step]', '');
+        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day9_warning] @ ${nowIso}`.slice(0, 480));
+        if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day9_warning] @ ${nowIso}`.slice(0, 480));
+        await patchCustAndSync(c.id, uP);
         await recordSmsHistory({
           customerId: c.id,
           env,
@@ -5011,77 +5144,63 @@ async function runScheduledAutopilot(env, options = {}) {
           reason: smsRes.reason
         });
         if (smsRes.sent) smsSentCount++;
-        reports.push(`[Ngày 9] Gửi SMS Cảnh báo 24h cuối: ${biz}`);
+        reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'}] Gửi SMS${emailSent ? '+Email' : ''} Cảnh báo 24h cuối: ${biz}`);
         continue;
       }
     }
 
-    // 3. Day 6-8 (Flash Deal 50% Activation / 72h — skip 50% discount SMS if demo has 0 views)
-    if (daysElapsed >= 5.6 && daysElapsed < 8.6 && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
-      if (settings.autoDeal || force) {
-        const cleanSlugC = slugifyName(c.demoSlug || c.businessName || c.name || '');
-        let realViews = Number(c.demoViewCount || 0);
-        if (dbAp) {
-          const rowV = await dbAp.prepare('SELECT view_count FROM clients WHERE id = ?').bind(c.id).first().catch(() => null);
-          if (rowV && rowV.view_count) realViews = Math.max(realViews, Number(rowV.view_count));
-        }
-        if (env && env.WYNN_KV && cleanSlugC) {
-          const kvV = await env.WYNN_KV.get(`demo_views:${cleanSlugC}`, 'json').catch(() => null);
-          if (kvV && kvV.viewCount) realViews = Math.max(realViews, Number(kvV.viewCount));
-        }
-
-        if (realViews === 0) {
-          if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey && c.nurtureStep !== 'day7_nudge_0views') {
-            const nudgeMsg = `Hi ${biz}, Sam from WynnPages here! Just making sure you saw the website preview we built for you: ${demoUrl} No rush, would love your thoughts!`;
-            const smsRes = await sendClickSendSms(c.phone, nudgeMsg, cfg);
-            const uP = new URLSearchParams();
-            uP.append('metadata[nurture_step]', 'day7_nudge_0views');
-            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: uP.toString()
-            }).catch(() => {});
-            await recordSmsHistory({
-              customerId: c.id,
-              env,
-              stripeSecretKey: cfg.stripeSecretKey,
-              type: 'day7_nudge_0views',
-              to: c.phone,
-              text: nudgeMsg,
-              status: smsRes && smsRes.sent,
-              reason: smsRes && smsRes.reason
-            });
-            if (smsRes && smsRes.sent) smsSentCount++;
-            reports.push(`[Ngày 6 - 0 Views] Bỏ qua Deal 50%, gửi nudge kiểm tra link: ${biz}`);
-          } else {
-            reports.push(`[Ngày 6 - 0 Views] Đã bỏ qua Deal 50% (Khách chưa xem demo): ${biz}`);
-          }
-          continue;
-        }
-
+    // 3. Step 3: Day 6 / T+30m (Flash Deal 50% $299 AUD / 72h Activation for BOTH SMS and Facebook)
+    if (step3Reached && !step4Reached && !step3Done && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      if (settings.autoDeal || force || isTurbo) {
         const dealExpiresAt = new Date(now + 72 * 3600 * 1000).toISOString();
         const uP = new URLSearchParams();
         uP.append('metadata[deal_status]', 'flash_deal');
-        uP.append('metadata[deal_activated_at]', new Date(now).toISOString());
+        uP.append('metadata[deal_activated_at]', nowIso);
         uP.append('metadata[deal_expires_at]', dealExpiresAt);
-        uP.append('metadata[nurture_step]', 'day7_deal_active');
 
+        if (isFbMode) {
+          const nextAlerted = Array.from(new Set([...alertedList, 'day6'])).join(',');
+          uP.append('metadata[fb_due_step]', 'day6');
+          uP.append('metadata[fb_alerted_steps]', nextAlerted);
+          await patchCustAndSync(c.id, uP);
+          dealActivatedCount++;
+          if (!alertedList.includes('day6')) {
+            await recordStudioActivity(env, {
+              type: 'fb_due_day6',
+              icon: '⚡',
+              title: `Đã Hạ Giá $299 & Đến Hạn Gửi FB Bước 3: ${biz}`,
+              message: `Web Demo của "${biz}" đã tự động giảm xuống $299 AUD (72h). Mở Admin bấm vào Bước 3 đang sáng xanh để Copy lời chào Deal 50% & gửi qua Messenger!`,
+              clientName: biz,
+              slug: c.demoSlug || ''
+            }, opts.ctx);
+          }
+          reports.push(`[${isTurbo ? 'Phút 30' : 'Ngày 6'} - FB] Hạ Demo $299 AUD (72h) + Nhắc Admin gửi FB: ${biz}`);
+          continue;
+        }
+
+        uP.append('metadata[nurture_step]', 'day7_deal_active');
+        uP.append('metadata[step3_sent_at]', nowIso);
+        uP.append('metadata[fb_due_step]', '');
         let smsSent = false;
         let dealMsg = '';
         let smsRes = null;
-        if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
+        if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
           dealMsg = `Hi ${biz}! 72h offer from WynnPages: claim your custom website for 50% OFF ($299 AUD flat, save $300, $0/mo). Ends in 72h: ${demoUrl} - Sam`;
           smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
           smsSent = Boolean(smsRes && smsRes.sent);
           if (smsSent) smsSentCount++;
+          if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day7_deal] @ ${nowIso}`.slice(0, 480));
         }
-
-        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: uP.toString()
-        }).catch(() => {});
-
+        let emailSent = false;
+        if (c.email && cfg.resendApiKey) {
+          const mailPayload = buildNurtureStepEmail({ stepKey: 'step3', client: c, demoUrl });
+          if (mailPayload) {
+            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
+            emailSent = Boolean(mRes && mRes.sent);
+            if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day7_deal] @ ${nowIso}`.slice(0, 480));
+          }
+        }
+        await patchCustAndSync(c.id, uP);
         if (smsRes) {
           await recordSmsHistory({
             customerId: c.id,
@@ -5094,37 +5213,65 @@ async function runScheduledAutopilot(env, options = {}) {
             reason: smsRes.reason
           });
         }
-
         dealActivatedCount++;
-        reports.push(`[Ngày 6] Kích hoạt Deal 50% ($299 AUD / 72h)${smsSent ? ' + gửi SMS' : ''}: ${biz}`);
+        reports.push(`[${isTurbo ? 'Phút 30' : 'Ngày 6'}] Kích hoạt Deal 50% ($299 AUD / 72h)${smsSent ? ' + gửi SMS' : ''}${emailSent ? '+Email' : ''}: ${biz}`);
         continue;
       }
     }
 
-    // 4. Day 3-5 (Reminder SMS — automatically uses 2+ Views Nudge if client has viewed demo >= 2 times)
-    if (daysElapsed >= 2.6 && daysElapsed < 5.6 && c.nurtureStep !== 'day3_reminder' && c.nurtureStep !== 'aussie_followup_views' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
-      if ((settings.autoSms || force) && c.phone && cfg.clicksendApiKey) {
-        const cleanSlugD3 = slugifyName(c.demoSlug || c.businessName || c.name || '');
-        let d3Views = Number(c.demoViewCount || 0);
-        if (dbAp) {
-          const r3 = await dbAp.prepare('SELECT view_count FROM clients WHERE id = ?').bind(c.id).first().catch(() => null);
-          if (r3 && r3.view_count) d3Views = Math.max(d3Views, Number(r3.view_count));
+    // 4. Step 2: Day 3 / T+15m (Follow-up — adapts to >= 2 views vs < 2 views)
+    if (step2Reached && !step3Reached && !step2Done && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      const cleanSlugD3 = slugifyName(c.demoSlug || c.businessName || c.name || '');
+      let d3Views = Number(c.demoViewCount || 0);
+      if (dbAp) {
+        const r3 = await dbAp.prepare('SELECT view_count FROM clients WHERE id = ?').bind(c.id).first().catch(() => null);
+        if (r3 && r3.view_count) d3Views = Math.max(d3Views, Number(r3.view_count));
+      }
+      if (env && env.WYNN_KV && cleanSlugD3) {
+        const kv3 = await env.WYNN_KV.get(`demo_views:${cleanSlugD3}`, 'json').catch(() => null);
+        if (kv3 && kv3.viewCount) d3Views = Math.max(d3Views, Number(kv3.viewCount));
+      }
+
+      if (isFbMode) {
+        if (c.fbDueStep !== 'day3' || !alertedList.includes('day3')) {
+          const nextAlerted = Array.from(new Set([...alertedList, 'day3'])).join(',');
+          const uP = new URLSearchParams();
+          uP.append('metadata[fb_due_step]', 'day3');
+          uP.append('metadata[fb_alerted_steps]', nextAlerted);
+          await patchCustAndSync(c.id, uP);
+          if (!alertedList.includes('day3')) {
+            await recordStudioActivity(env, {
+              type: 'fb_due_day3',
+              icon: '💬',
+              title: `Đến Hạn Gửi FB Bước 2 (Hỏi Thăm): ${biz}`,
+              message: `Đã đến ${isTurbo ? 'phút 15 (Test)' : 'Ngày 3'} cho khách Facebook "${biz}" (${d3Views} lượt xem Demo). Mở Admin bấm vào Bước 2 đang sáng xanh để Copy lời hỏi thăm & mở Messenger!`,
+              clientName: biz,
+              slug: c.demoSlug || ''
+            }, opts.ctx);
+          }
+          reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'} - FB] Nhắc Admin gửi FB hỏi thăm (${d3Views} views): ${biz}`);
         }
-        if (env && env.WYNN_KV && cleanSlugD3) {
-          const kv3 = await env.WYNN_KV.get(`demo_views:${cleanSlugD3}`, 'json').catch(() => null);
-          if (kv3 && kv3.viewCount) d3Views = Math.max(d3Views, Number(kv3.viewCount));
-        }
+        continue;
+      } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
         const reminderMsg = d3Views >= 2
           ? `Hi ${biz}! Saw you checking out your preview: ${demoUrl} Happy to tweak any prices or photos for you. Claim online anytime ($599 flat, $0/mo) - Sam`
           : `Hi ${biz}, Sam from WynnPages checking in! Did you get a chance to see your website preview? ${demoUrl} ($599 flat, $0/mo). Happy to adjust anything!`;
         const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
+        let emailSent = false;
+        if (c.email && cfg.resendApiKey) {
+          const mailPayload = buildNurtureStepEmail({ stepKey: 'step2', client: c, demoUrl, views: d3Views });
+          if (mailPayload) {
+            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
+            emailSent = Boolean(mRes && mRes.sent);
+          }
+        }
         const uP = new URLSearchParams();
         uP.append('metadata[nurture_step]', 'day3_reminder');
-        await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(c.id)}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: uP.toString()
-        }).catch(() => {});
+        uP.append('metadata[step2_sent_at]', nowIso);
+        uP.append('metadata[fb_due_step]', '');
+        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
+        if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
+        await patchCustAndSync(c.id, uP);
         await recordSmsHistory({
           customerId: c.id,
           env,
@@ -5136,10 +5283,14 @@ async function runScheduledAutopilot(env, options = {}) {
           reason: smsRes.reason
         });
         if (smsRes.sent) smsSentCount++;
-        reports.push(`[Ngày 3] Gửi SMS Hỏi thăm (${d3Views} views): ${biz}`);
+        reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'}] Gửi SMS${emailSent ? '+Email' : ''} Hỏi thăm (${d3Views} views): ${biz}`);
         continue;
       }
     }
+  }
+
+  if (updatedClients.length > 0) {
+    runInBg(opts.ctx, syncClientsKvSnapshot(env));
   }
 
   const lastRunRecord = {
@@ -5151,16 +5302,16 @@ async function runScheduledAutopilot(env, options = {}) {
     reports: reports.slice(0, 50)
   };
   if (dbAp) {
-    if (force || smsSentCount > 0 || dealActivatedCount > 0 || expiredCount > 0) {
+    if (force || smsSentCount > 0 || dealActivatedCount > 0 || expiredCount > 0 || updatedClients.length > 0) {
       await dbAp.prepare(
         'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
       ).bind('studio_autopilot_last_run', JSON.stringify(lastRunRecord), new Date().toISOString()).run().catch(() => {});
     }
-  } else if (env && env.WYNN_KV && (force || smsSentCount > 0 || dealActivatedCount > 0 || expiredCount > 0)) {
+  } else if (env && env.WYNN_KV && (force || smsSentCount > 0 || dealActivatedCount > 0 || expiredCount > 0 || updatedClients.length > 0)) {
     await env.WYNN_KV.put('studio_autopilot_last_run', JSON.stringify(lastRunRecord)).catch(() => {});
   }
 
-  return { ok: true, settings, lastRun: lastRunRecord };
+  return { ok: true, settings, lastRun: lastRunRecord, updatedClients };
 }
 
 export default {
@@ -8209,8 +8360,15 @@ export default {
       if ((bodyKey || providedKey) !== cfg.adminKey) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
       }
-      const result = await processDueScheduledSms(env, ctx);
-      return new Response(JSON.stringify(result), { status: 200, headers: corsHeaders });
+      const [result, autopilot] = await Promise.all([
+        processDueScheduledSms(env, ctx),
+        runScheduledAutopilot(env, { force: true, fromPing: true, ctx }).catch((err) => ({ ok: false, error: err.message }))
+      ]);
+      return new Response(JSON.stringify({
+        ...result,
+        autopilot,
+        updatedClients: (autopilot && Array.isArray(autopilot.updatedClients)) ? autopilot.updatedClients : []
+      }), { status: 200, headers: corsHeaders });
     }
 
     // Google Places Lead Hunter Endpoint (POST /api/admin/lead-hunter)
@@ -8943,16 +9101,20 @@ export default {
           }
 
           let notifyRes = null;
+          let emailRes = null;
           let logMsg = '';
           const uP = new URLSearchParams();
           uP.append('metadata[deal_status]', 'flash_deal');
           uP.append('metadata[deal_activated_at]', dealActivatedAt);
           uP.append('metadata[deal_expires_at]', dealExpiresAt);
           uP.append('metadata[nurture_step]', 'day7_deal_active');
+          uP.append('metadata[step3_sent_at]', dealActivatedAt);
+          uP.append('metadata[fb_due_step]', '');
+
+          const biz = (custToNotify && (custToNotify.businessName || custToNotify.name)) || 'Boutique';
+          const demoLink = (custToNotify && (custToNotify.demoUrl || custToNotify.brandedDemoUrl)) || ( custToNotify && custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${customerId}.wynnpages.com.au`);
 
           if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-            const biz = custToNotify.businessName || custToNotify.name || 'Boutique';
-            const demoLink = custToNotify.demoUrl || custToNotify.brandedDemoUrl || (custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${custToNotify.id}.wynnpages.com.au`);
             const text = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoLink} - Sam`;
             notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
             if (notifyRes) {
@@ -8971,6 +9133,15 @@ export default {
                 status: notifyRes.sent,
                 reason: notifyRes.reason
               });
+            }
+          }
+          if (body.notify && custToNotify && custToNotify.email && effectiveCfg.resendApiKey) {
+            const mailPayload = buildNurtureStepEmail({ stepKey: 'step3', client: custToNotify, demoUrl: demoLink });
+            if (mailPayload) {
+              emailRes = await sendResendEmail({ to: custToNotify.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
+              if (emailRes && emailRes.sent) {
+                uP.append('metadata[last_email_log]', `OK (${custToNotify.email}) [deal_50_active] @ ${dealActivatedAt}`.slice(0, 480));
+              }
             }
           }
 
@@ -9003,7 +9174,9 @@ export default {
           const uP = new URLSearchParams();
           uP.append('metadata[deal_status]', 'expired');
           uP.append('metadata[deal_expires_at]', nowIso);
+          uP.append('metadata[step5_locked_at]', nowIso);
           uP.append('metadata[nurture_step]', 'demo_expired');
+          uP.append('metadata[fb_due_step]', '');
 
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
@@ -9027,6 +9200,7 @@ export default {
           const uP = new URLSearchParams();
           uP.append('metadata[deal_status]', 'standard');
           uP.append('metadata[deal_expires_at]', '');
+          uP.append('metadata[step5_locked_at]', '');
           uP.append('metadata[nurture_step]', 'restored');
 
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
@@ -9112,8 +9286,8 @@ export default {
           });
           if (getRes.ok) cust = await getRes.json();
           const formatted = cust ? formatCustomerRecord(cust) : null;
-          if (!formatted || !formatted.phone) {
-            return new Response(JSON.stringify({ error: 'Khách hàng này chưa có số điện thoại để gửi SMS!' }), { status: 400, headers: corsHeaders });
+          if (!formatted || (!formatted.phone && !formatted.email)) {
+            return new Response(JSON.stringify({ error: 'Khách hàng này chưa có SĐT hoặc Email để gửi!' }), { status: 400, headers: corsHeaders });
           }
 
           let templateKey = body.templateKey || 'day3_reminder';
@@ -9166,20 +9340,140 @@ export default {
             return new Response(JSON.stringify({ error: 'Nội dung tin nhắn trống.' }), { status: 400, headers: corsHeaders });
           }
 
-          const smsRes = await sendClickSendSms({ to: formatted.phone, message: smsText, cfg: effectiveCfg });
           const nowIso = new Date().toISOString();
-          const logMsg = smsRes && smsRes.sent ? `OK (${smsRes.to}) [${templateKey}] @ ${nowIso}` : `ERR: ${(smsRes && smsRes.reason) || 'Failed'}`;
+          let smsRes = { sent: false, reason: 'No phone number' };
+          if (formatted.phone) {
+            smsRes = await sendClickSendSms({ to: formatted.phone, message: smsText, cfg: effectiveCfg });
+          }
+          let emailRes = null;
+          if (formatted.email && effectiveCfg.resendApiKey) {
+            const mailPayload = buildNurtureStepEmail({ stepKey: templateKey, client: formatted, demoUrl, views: realViews });
+            if (mailPayload) {
+              emailRes = await sendResendEmail({ to: formatted.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
+            }
+          }
+
+          const logMsg = formatted.phone
+            ? (smsRes && smsRes.sent ? `OK (${smsRes.to}) [${templateKey}] @ ${nowIso}` : `ERR: ${(smsRes && smsRes.reason) || 'Failed'}`)
+            : '';
 
           const uP = new URLSearchParams();
-          uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+          if (logMsg) uP.append('metadata[last_sms_log]', logMsg.slice(0, 480));
+          if (emailRes && emailRes.sent) {
+            uP.append('metadata[last_email_log]', `OK (${formatted.email}) [${templateKey}] @ ${nowIso}`.slice(0, 480));
+          }
           uP.append('metadata[nurture_step]', templateKey);
+          uP.append('metadata[channel_mode]', 'sms');
+          uP.append('metadata[fb_due_step]', '');
           if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
-            if (!formatted.demoSentAt) {
-              uP.append('metadata[demo_sent_at]', nowIso);
-            }
+            uP.append('metadata[demo_sent_at]', formatted.demoSentAt || nowIso);
+            uP.append('metadata[sequence_started_at]', formatted.sequenceStartedAt || nowIso);
+            uP.append('metadata[step1_sent_at]', nowIso);
             if (!formatted.stage || formatted.stage === 'outbound_pending') {
               uP.append('metadata[stage]', 'outbound_pitched');
             }
+            uP.append('metadata[nurture_auto_enabled]', 'true');
+          } else if (templateKey === 'day3_reminder' || templateKey === 'aussie_followup_views' || templateKey === 'followup_views') {
+            uP.append('metadata[step2_sent_at]', nowIso);
+          } else if (templateKey === 'day7_deal' || templateKey === 'aussie_flash_deal_299' || templateKey === 'flash_deal_299') {
+            uP.append('metadata[step3_sent_at]', nowIso);
+          } else if (templateKey === 'day9_warning') {
+            uP.append('metadata[step4_sent_at]', nowIso);
+          }
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          if (formatted.phone) {
+            await recordSmsHistory({
+              customerId,
+              env,
+              stripeSecretKey: effectiveCfg.stripeSecretKey,
+              type: templateKey,
+              to: formatted.phone,
+              text: smsText,
+              status: smsRes && smsRes.sent,
+              reason: smsRes && smsRes.reason
+            });
+          }
+
+          let updatedCust = formatted;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+          if (updatedCust) {
+            await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
+          }
+
+          return new Response(JSON.stringify({
+            ok: Boolean((smsRes && smsRes.sent) || (emailRes && emailRes.sent)),
+            result: smsRes,
+            emailResult: emailRes,
+            client: updatedCust
+          }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Log Facebook Pitch / Assisted Step Sent (Step 1 Day 1, Step 2 Day 3, Step 3 Day 6, Step 4 Day 9)
+        if ((action === 'log_fb_pitch' || action === 'log_fb_step') && customerId) {
+          const now = new Date().toISOString();
+          const fbUrl = (body.facebookUrl || '').trim();
+          const stepKey = (body.stepKey || 'day1').trim();
+          const uP = new URLSearchParams();
+          uP.append('metadata[channel_mode]', 'facebook');
+          uP.append('metadata[fb_due_step]', '');
+          if (fbUrl) {
+            uP.append('metadata[facebook_url]', fbUrl);
+          }
+          if (stepKey === 'day1' || stepKey === 'step1') {
+            uP.append('metadata[fb_pitched_at]', now);
+            uP.append('metadata[sequence_started_at]', now);
+            uP.append('metadata[step1_sent_at]', now);
+            uP.append('metadata[stage]', 'outbound_pitched');
+            uP.append('metadata[nurture_step]', 'aussie_pitch');
+            uP.append('metadata[nurture_auto_enabled]', 'true');
+          } else if (stepKey === 'day3' || stepKey === 'step2') {
+            uP.append('metadata[step2_sent_at]', now);
+            uP.append('metadata[nurture_step]', 'day3_reminder');
+          } else if (stepKey === 'day6' || stepKey === 'step3') {
+            uP.append('metadata[step3_sent_at]', now);
+            uP.append('metadata[nurture_step]', 'day7_deal_active');
+            uP.append('metadata[deal_status]', 'flash_deal');
+            uP.append('metadata[deal_activated_at]', now);
+            uP.append('metadata[deal_expires_at]', new Date(Date.now() + 72 * 3600 * 1000).toISOString());
+          } else if (stepKey === 'day9' || stepKey === 'step4') {
+            uP.append('metadata[step4_sent_at]', now);
+            uP.append('metadata[nurture_step]', 'day9_warning');
+          }
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          });
+
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
+          }
+          return new Response(JSON.stringify({ ok: true, stepKey, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Toggle 60-Minute Turbo Test Mode Per Client
+        if (action === 'toggle_turbo_test' && customerId) {
+          const enabled = body.enabled !== false && body.enabled !== 'false';
+          const uP = new URLSearchParams();
+          uP.append('metadata[turbo_test_mode]', enabled ? 'true' : 'false');
+          if (enabled) {
             uP.append('metadata[nurture_auto_enabled]', 'true');
           }
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
@@ -9190,51 +9484,93 @@ export default {
             },
             body: uP.toString()
           });
-
-          await recordSmsHistory({
-            customerId,
-            env,
-            stripeSecretKey: effectiveCfg.stripeSecretKey,
-            type: templateKey,
-            to: formatted.phone,
-            text: smsText,
-            status: smsRes && smsRes.sent,
-            reason: smsRes && smsRes.reason
-          });
-
-          let updatedCust = formatted;
+          let updatedCust = null;
           if (patchRes.ok) {
             updatedCust = formatCustomerRecord(await patchRes.json());
-          }
-          if (updatedCust) {
             await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
           }
-
-          return new Response(JSON.stringify({ ok: Boolean(smsRes && smsRes.sent), result: smsRes, client: updatedCust }), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: true, turboTestMode: enabled, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
-        // Action: Log Facebook Pitch Sent
-        if (action === 'log_fb_pitch' && customerId) {
-          const now = new Date().toISOString();
-          const fbUrl = (body.facebookUrl || '').trim();
-          const uP = new URLSearchParams();
-          uP.append('metadata[fb_pitched_at]', now);
-          uP.append('metadata[stage]', 'outbound_pitched');
-          if (fbUrl) {
-            uP.append('metadata[facebook_url]', fbUrl);
+        // Action: Fast-Forward to Next Pending Step in Turbo Test Mode
+        if (action === 'fast_forward_turbo_step' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const c = cust ? formatCustomerRecord(cust) : null;
+          if (!c) {
+            return new Response(JSON.stringify({ error: 'Không tìm thấy khách hàng!' }), { status: 404, headers: corsHeaders });
           }
+
+          const isFbMode = c.channelMode === 'facebook' || !c.phone;
+          const step1Done = Boolean(c.step1SentAt || c.demoSentAt || c.fbPitchedAt);
+          const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || (isFbMode && c.fbDueStep === 'day3');
+          const step3Done = Boolean(c.step3SentAt) || (c.dealStatus === 'flash_deal' && (!isFbMode || c.nurtureStep === 'day7_deal_active' || c.fbDueStep === 'day6')) || c.nurtureStep === 'aussie_flash_deal_299';
+          const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning' || (isFbMode && c.fbDueStep === 'day9');
+
+          let offsetMins = !step1Done ? 0 : (!step2Done ? 15.1 : (!step3Done ? 30.1 : (!step4Done ? 45.1 : 60.1)));
+          let targetStep = !step1Done ? 'step1' : (!step2Done ? 'step2' : (!step3Done ? 'step3' : (!step4Done ? 'step4' : 'step5')));
+
+          const shiftedIso = new Date(Date.now() - Math.round(offsetMins * 60 * 1000)).toISOString();
+          const uP = new URLSearchParams();
+          uP.append('metadata[turbo_test_mode]', 'true');
+          uP.append('metadata[nurture_auto_enabled]', 'true');
+          uP.append('metadata[sequence_started_at]', shiftedIso);
+          if (c.demoSentAt || !c.fbPitchedAt) uP.append('metadata[demo_sent_at]', shiftedIso);
+          if (c.fbPitchedAt) uP.append('metadata[fb_pitched_at]', shiftedIso);
+          if (targetStep === 'step1') {
+            uP.append('metadata[step1_sent_at]', shiftedIso);
+            uP.append('metadata[stage]', 'outbound_pitched');
+            uP.append('metadata[nurture_step]', 'aussie_pitch');
+            if (!isFbMode && c.phone && effectiveCfg.clicksendApiKey) {
+              const biz = c.businessName || c.name || 'Boutique';
+              const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
+              const pitchSms = `Hi ${biz}, Sam from WynnPages here. We built a custom website preview for your salon: ${demoUrl} - Have a look when free!`;
+              const sRes = await sendClickSendSms(c.phone, pitchSms, effectiveCfg);
+              await recordSmsHistory({ customerId: c.id, env, stripeSecretKey: effectiveCfg.stripeSecretKey, type: 'aussie_pitch', to: c.phone, text: pitchSms, status: sRes.sent, reason: sRes.reason });
+            }
+            if (!isFbMode && c.email && effectiveCfg.resendApiKey) {
+              const mailPayload = buildNurtureStepEmail({ stepKey: 'step1', client: c });
+              if (mailPayload) await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
+            }
+          }
+
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
             body: uP.toString()
           });
-
-          let updatedCust = formatted;
+          let updatedCust = null;
           if (patchRes.ok) {
             updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
+          }
+          return new Response(JSON.stringify({ ok: true, targetStep, shiftedIso, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Reset 10-Day / 60-Min Closing Sequence to Clean Start ($599 AUD)
+        if (action === 'reset_closing_sequence' && customerId) {
+          const uP = new URLSearchParams();
+          for (const k of ['deal_activated_at', 'deal_expires_at', 'demo_sent_at', 'fb_pitched_at', 'sequence_started_at', 'step1_sent_at', 'step2_sent_at', 'step3_sent_at', 'step4_sent_at', 'step5_locked_at', 'nurture_step', 'fb_due_step', 'fb_alerted_steps']) {
+            uP.append(`metadata[${k}]`, '');
+          }
+          uP.append('metadata[deal_status]', 'standard');
+          uP.append('metadata[stage]', 'outbound_pending');
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: uP.toString()
+          });
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
           }
           return new Response(JSON.stringify({ ok: true, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
@@ -9685,9 +10021,16 @@ export default {
           }
 
           let notifyRes = null;
-          if (action === 'trigger_stage') {
+          const shouldAutoLaunchOnSave =
+            action === 'save_client' &&
+            body.launchSite !== false &&
+            Boolean(body.liveUrl && String(body.liveUrl).trim().includes('.')) &&
+            (formatted.paymentStatus === 'paid' || body.paymentStatus === 'paid');
+          const effectiveNotifyStage = action === 'trigger_stage' ? stage : (shouldAutoLaunchOnSave ? 'site_launched' : '');
+
+          if (effectiveNotifyStage) {
             notifyRes = await triggerLifecycleNotification({
-              stage,
+              stage: effectiveNotifyStage,
               client: formatted,
               origin: url.origin,
               cfg: effectiveCfg
@@ -9695,12 +10038,16 @@ export default {
 
             // Save delivery logs to Stripe metadata
             const logParams = new URLSearchParams();
+            if (shouldAutoLaunchOnSave) {
+              logParams.append('metadata[stage]', 'launched');
+              logParams.append('metadata[launched_at]', nowIso);
+            }
             const smsSummary = notifyRes.smsResult && notifyRes.smsResult.sent
-              ? `OK (${notifyRes.smsResult.to}) [${stage}] @ ${nowIso}`
-              : `ERR: ${(notifyRes.smsResult && notifyRes.smsResult.reason) || 'Skipped'} [${stage}]`;
+              ? `OK (${notifyRes.smsResult.to}) [${effectiveNotifyStage}] @ ${nowIso}`
+              : `ERR: ${(notifyRes.smsResult && notifyRes.smsResult.reason) || 'Skipped'} [${effectiveNotifyStage}]`;
             const emailSummary = notifyRes.emailResult && notifyRes.emailResult.sent
-              ? `OK (${notifyRes.emailResult.to}) [${stage}] @ ${nowIso}`
-              : `ERR: ${(notifyRes.emailResult && notifyRes.emailResult.reason) || 'Skipped'} [${stage}]`;
+              ? `OK (${notifyRes.emailResult.to}) [${effectiveNotifyStage}] @ ${nowIso}`
+              : `ERR: ${(notifyRes.emailResult && notifyRes.emailResult.reason) || 'Skipped'} [${effectiveNotifyStage}]`;
             logParams.append('metadata[last_sms_log]', smsSummary.slice(0, 480));
             logParams.append('metadata[last_email_log]', emailSummary.slice(0, 480));
 
@@ -9722,7 +10069,7 @@ export default {
                 customerId: formatted.id,
                 env,
                 stripeSecretKey: effectiveCfg.stripeSecretKey,
-                type: `stage_${stage}`,
+                type: `stage_${effectiveNotifyStage}`,
                 to: notifyRes.smsResult.to,
                 text: notifyRes.smsText || (notifyRes.smsResult && notifyRes.smsResult.text) || '',
                 status: notifyRes.smsResult.sent,

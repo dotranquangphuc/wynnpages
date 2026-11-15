@@ -1463,18 +1463,26 @@
     </div>
   </div>
 
-  <!-- Modal: Facebook Messenger Outbound Pitch -->
+  <!-- Modal: Smart Facebook Assisted Copy & Send (Day 1 Pitch, Day 3 Follow-up, Day 6 $299 Deal, Day 9 24h Warning) -->
   <div id="modal-facebook-pitch" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
     <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[90dvh] overflow-y-auto overscroll-contain">
       <div class="flex items-start justify-between gap-2">
         <div class="flex items-center gap-2.5 min-w-0 flex-1">
           <span class="w-9 h-9 rounded-xl bg-[#1877f2]/10 text-[#1877f2] flex items-center justify-center text-lg shrink-0">💬</span>
           <div class="min-w-0 flex-1">
-            <h3 class="text-base font-extrabold text-stone-900 leading-snug">Chào Hàng Qua Facebook Messenger</h3>
+            <h3 id="fb-modal-title" class="text-base font-extrabold text-stone-900 leading-snug">Smart Copy &amp; Send — Facebook Messenger</h3>
             <p id="fb-modal-subtitle" class="text-xs text-stone-500 mt-0.5 wrap-anywhere">Tiếp cận trực tiếp trang Facebook của chủ tiệm</p>
           </div>
         </div>
         <button type="button" id="btn-close-fb-modal" class="touch-close text-stone-400 hover:text-stone-800 font-bold text-lg p-1 shrink-0 rounded-xl">✕</button>
+      </div>
+
+      <!-- Step Selector Pills inside Smart Modal -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-stone-100 p-1.5 rounded-2xl border border-stone-200 text-[11px] font-bold">
+        <button type="button" data-fb-step="day1" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">1. Chào Hàng</button>
+        <button type="button" data-fb-step="day3" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">2. Ngày 3 (Hỏi)</button>
+        <button type="button" data-fb-step="day6" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">3. Ngày 6 ($299)</button>
+        <button type="button" data-fb-step="day9" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">4. Ngày 9 (24h)</button>
       </div>
 
       <div class="space-y-3 text-xs">
@@ -1490,25 +1498,25 @@
 
         <div>
           <div class="flex flex-wrap items-center justify-between gap-1 mb-1">
-            <label class="text-[11px] font-bold text-stone-700 block">Nội dung tin nhắn Facebook (Chuẩn Australian English &amp; Không áp lực):</label>
+            <label id="fb-modal-body-label" class="text-[11px] font-bold text-stone-700 block">Nội dung tin nhắn chuẩn Australian English:</label>
             <span class="text-[10px] text-stone-400 font-mono" id="fb-modal-char-count"></span>
           </div>
           <textarea id="fb-modal-body" rows="7" class="w-full atelier-input rounded-xl p-3 text-xs font-sans leading-relaxed bg-[#fcfbf9] text-stone-800 border border-[#dfd5c3]"></textarea>
         </div>
       </div>
 
-      <div class="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-[11px] text-blue-950 flex items-start gap-2">
+      <div id="fb-modal-hint-box" class="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-[11px] text-blue-950 flex items-start gap-2">
         <span class="shrink-0">💡</span>
-        <span>Mẹo: Bấm <strong>"Copy Lời Chào"</strong>, sau đó bấm <strong>"Mở FB ↗"</strong> để dán trực tiếp vào khung chat Facebook/Messenger và gửi ngay!</span>
+        <span>Bấm nút xanh bên dưới để <strong>tự động Copy nội dung, mở Facebook của khách và đánh dấu "✅ Đã gửi FB"</strong> cho bước này!</span>
       </div>
 
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-[#f0eade]">
-        <button type="button" id="btn-copy-fb-body" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
-          <span>📋 Copy Lời Chào</span>
+        <button type="button" id="btn-copy-fb-body" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+          <span>📋 Chỉ Copy Chữ</span>
         </button>
-        <div class="flex items-center gap-2">
-          <button type="button" id="btn-mark-fb-sent" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1877f2] hover:bg-[#1565c0] text-white text-xs font-extrabold transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer">
-            <span>✅ Đã Gửi Qua Facebook</span>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button type="button" id="btn-mark-fb-sent" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1877f2] hover:bg-[#1565c0] text-white text-xs font-extrabold transition-all shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>📋 Copy Nội Dung &amp; Mở Facebook Khách ↗</span>
           </button>
         </div>
       </div>
@@ -1845,31 +1853,43 @@
         if (!c) return null;
         const isPaid = c.paymentStatus === 'paid' || c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
         if (isPaid) return null;
-        // The 10-day closing countdown ONLY begins after the studio owner actually pitches the client (via SMS or Facebook)
-        const pitchTime = c.demoSentAt || c.fbPitchedAt;
+        const pitchTime = c.sequenceStartedAt || c.demoSentAt || c.fbPitchedAt;
         if (!pitchTime) return null;
         if (c.dealStatus === 'purged') return null;
 
         const pitchMs = parseTimestampMs(pitchTime);
         if (!pitchMs) return null;
-        const daysElapsed = Math.floor((Date.now() - pitchMs) / (1000 * 3600 * 24));
-        if (daysElapsed < 0) return null;
+        const elapsedMs = Math.max(0, Date.now() - pitchMs);
+        const daysElapsed = Math.floor(elapsedMs / (1000 * 3600 * 24));
+        const minsElapsed = elapsedMs / (1000 * 60);
+        const isTurbo = c.turboTestMode === true;
+        const isFbMode = c.channelMode === 'facebook' || !c.phone;
 
-        // Day 10+ Hard Expire (Needs Purge or Expire)
-        if (daysElapsed >= 10 && c.dealStatus !== 'expired') {
-          return { type: 'expire', label: `Quá hạn ${daysElapsed} ngày (Chờ khoá / Dọn KV)`, badge: `❌ Quá hạn (Ngày ${daysElapsed})`, priority: 1, days: daysElapsed };
+        if (isFbMode && c.fbDueStep === 'day9') {
+          return { type: 'day9_warning', label: 'Đến hạn gửi Facebook Bước 4 (Cảnh báo 24h cuối)', badge: '💬 Đến Hạn Gửi FB (Bước 4)', priority: 1, days: daysElapsed, isFb: true };
         }
-        // Day 9 Final 24h Warning SMS
-        if (daysElapsed >= 9 && daysElapsed < 10 && c.dealStatus === 'flash_deal' && c.nurtureStep !== 'day9_warning') {
-          return { type: 'day9_warning', label: 'Hạn 24h cuối: Gửi SMS Cảnh báo thu hồi', badge: '⏳ Hạn Ngày 9 (24h Cuối)', priority: 2, days: daysElapsed };
+        if (isFbMode && c.fbDueStep === 'day6') {
+          return { type: 'day7_deal', label: 'Đến hạn gửi Facebook Bước 3 (Deal $299 AUD — 50% OFF)', badge: '💬 Đến Hạn Gửi FB (Bước 3)', priority: 2, days: daysElapsed, isFb: true };
         }
-        // Day 7 Flash Deal 50%
-        if (daysElapsed >= 7 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired') {
-          return { type: 'day7_deal', label: 'Hạn 7 ngày: Kích hoạt Flash Deal 50% ($299 AUD)', badge: '⚡ Hạn Ngày 7 (Deal 50%)', priority: 3, days: daysElapsed };
+        if (isFbMode && c.fbDueStep === 'day3') {
+          return { type: 'day3_reminder', label: 'Đến hạn gửi Facebook Bước 2 (Hỏi thăm Ngày 3)', badge: '💬 Đến Hạn Gửi FB (Bước 2)', priority: 3, days: daysElapsed, isFb: true };
         }
-        // Day 3 SMS Reminder
-        if (daysElapsed >= 3 && daysElapsed < 7 && c.nurtureStep !== 'day3_reminder' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired') {
-          return { type: 'day3_reminder', label: 'Hạn 3 ngày: Bấm gửi SMS Nhắc xem Demo', badge: '📱 Hạn Ngày 3 (SMS Nhắc)', priority: 4, days: daysElapsed };
+
+        // Day 10+ / T+60m Hard Expire
+        if ((isTurbo ? minsElapsed >= 60 : daysElapsed >= 10) && c.dealStatus !== 'expired') {
+          return { type: 'expire', label: `Quá hạn ${isTurbo ? '60 phút' : `${daysElapsed} ngày`} (Chờ khoá / Dọn KV)`, badge: `❌ Quá hạn (${isTurbo ? '60p' : `Ngày ${daysElapsed}`})`, priority: 1, days: daysElapsed };
+        }
+        // Day 9 / T+45m Final 24h Warning
+        if ((isTurbo ? (minsElapsed >= 45 && minsElapsed < 60) : (daysElapsed >= 9 && daysElapsed < 10)) && !c.step4SentAt && c.nurtureStep !== 'day9_warning') {
+          return { type: 'day9_warning', label: isFbMode ? 'Đến hạn gửi FB Bước 4 (24h cuối)' : 'Hạn 24h cuối: Gửi SMS Cảnh báo thu hồi', badge: isFbMode ? '💬 Hạn FB Bước 4' : '⏳ Hạn Ngày 9 (24h Cuối)', priority: 2, days: daysElapsed, isFb: isFbMode };
+        }
+        // Day 6 / T+30m Flash Deal 50%
+        if ((isTurbo ? (minsElapsed >= 30 && minsElapsed < 45) : (daysElapsed >= 6 && daysElapsed < 9)) && !c.step3SentAt && (c.dealStatus !== 'flash_deal' || isFbMode) && c.dealStatus !== 'expired') {
+          return { type: 'day7_deal', label: isFbMode ? 'Đến hạn gửi FB Bước 3 (Deal $299 AUD)' : 'Hạn Ngày 6: Kích hoạt Flash Deal 50% ($299 AUD)', badge: isFbMode ? '💬 Hạn FB Bước 3' : '⚡ Hạn Ngày 6 (Deal 50%)', priority: 3, days: daysElapsed, isFb: isFbMode };
+        }
+        // Day 3 / T+15m Follow-up
+        if ((isTurbo ? (minsElapsed >= 15 && minsElapsed < 30) : (daysElapsed >= 3 && daysElapsed < 6)) && !c.step2SentAt && c.nurtureStep !== 'day3_reminder' && c.nurtureStep !== 'aussie_followup_views' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired') {
+          return { type: 'day3_reminder', label: isFbMode ? 'Đến hạn gửi FB Bước 2 (Hỏi thăm Ngày 3)' : 'Hạn Ngày 3: Bấm gửi SMS Hỏi thăm', badge: isFbMode ? '💬 Hạn FB Bước 2' : '📱 Hạn Ngày 3 (Hỏi Thăm)', priority: 4, days: daysElapsed, isFb: isFbMode };
         }
         return null;
       }
@@ -2320,18 +2340,26 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       function renderUrgencyClosingSection(c, { hasPhone, isPaid, isPitched, titleName }) {
         if (isPaid) return '';
 
-        let daysElapsed = 0;
-        let daysText = 'Chưa gửi chào hàng';
-        const pitchTime = c.demoSentAt || c.fbPitchedAt;
+        const isTurbo = c.turboTestMode === true;
+        const isFbMode = c.channelMode === 'facebook' || (!hasPhone && Boolean(c.fbPitchedAt));
+        const canSendSmsOrEmail = Boolean(hasPhone || c.email);
+        const pitchTime = c.sequenceStartedAt || c.demoSentAt || c.fbPitchedAt;
         const pitchMs = parseTimestampMs(pitchTime);
+        let daysElapsed = 0;
+        let minsElapsed = 0;
+        let daysText = 'Chưa gửi chào hàng';
         if (pitchTime && pitchMs) {
-          daysElapsed = Math.max(0, Math.floor((Date.now() - pitchMs) / (1000 * 3600 * 24)));
-          daysText = daysElapsed === 0 ? 'Hôm nay (Ngày 1)' : `Ngày thứ ${daysElapsed + 1}`;
+          const elapsedMs = Math.max(0, Date.now() - pitchMs);
+          daysElapsed = Math.floor(elapsedMs / (1000 * 3600 * 24));
+          minsElapsed = Math.floor(elapsedMs / (1000 * 60));
+          daysText = isTurbo
+            ? `Test 60p: Phút thứ ${minsElapsed}/60`
+            : (daysElapsed === 0 ? 'Hôm nay (Ngày 1)' : `Ngày thứ ${daysElapsed + 1}/10`);
         }
 
         const isPurged = c.dealStatus === 'purged';
         const isDealActive = c.dealStatus === 'flash_deal' && c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() > Date.now();
-        const isExpired = c.dealStatus === 'expired' || isPurged || (c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() <= Date.now());
+        const isExpired = c.dealStatus === 'expired' || isPurged || Boolean(c.step5LockedAt) || (c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() <= Date.now());
         const expiresTs = c.dealExpiresAt ? new Date(c.dealExpiresAt).getTime() : 0;
 
         let statusBadge = '';
@@ -2342,49 +2370,74 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         } else if (isDealActive) {
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-xs animate-pulse">⚡ DEAL 50% ($299 AUD) — ĐANG CHẠY</span>`;
         } else if (!pitchTime) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-300">Chưa bắt đầu đếm (Chờ gửi Pitch)</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-300">Chưa bắt đầu đếm (Chờ Bước 1)</span>`;
         } else {
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-200">Chuẩn $599 AUD</span>`;
         }
 
-        const autoEnabled = c.nurtureAutoEnabled !== false;
+        const channelBadge = pitchTime
+          ? (isFbMode
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-[#1877f2] border border-blue-200">💬 Kênh: Facebook Assisted</span>`
+              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">📩 Kênh: SMS + Email Tự Động</span>`)
+          : '';
 
-        // Due Action & Visual Alert
+        const autoEnabled = c.nurtureAutoEnabled !== false;
         const due = getClientDueAction(c);
         let dueBannerHtml = '';
         if (due) {
           dueBannerHtml = `
-            <div class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/10 border-2 border-amber-400 text-stone-900 flex flex-wrap items-center justify-between gap-2 shadow-2xs animate-pulse">
+            <div class="px-3.5 py-2.5 rounded-xl ${due.isFb ? 'bg-blue-50 border-2 border-[#1877f2] text-blue-950' : 'bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/10 border-2 border-amber-400 text-stone-900'} flex flex-wrap items-center justify-between gap-2 shadow-2xs animate-pulse">
               <div class="flex items-center gap-2 min-w-0">
-                <span class="text-base shrink-0">🔔</span>
-                <span class="text-xs font-black text-amber-950 leading-snug">HÔM NAY ĐẾN HẠN: ${escapeHtml(due.label)}</span>
+                <span class="text-base shrink-0">${due.isFb ? '💬' : '🔔'}</span>
+                <span class="text-xs font-black leading-snug">${due.isFb ? 'ĐẾN HẠN GỬI FACEBOOK:' : 'HÔM NAY ĐẾN HẠN:'} ${escapeHtml(due.label)}</span>
               </div>
-              <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shrink-0">Bấm Xử Lý Ngay</span>
+              <span class="px-2.5 py-0.5 rounded-full ${due.isFb ? 'bg-[#1877f2]' : 'bg-rose-600'} text-white text-[10px] font-black uppercase tracking-wider shrink-0">Bấm Xử Lý Ngay</span>
             </div>
           `;
         }
 
-        const step1Done = Boolean(pitchTime) || c.nurtureStep === 'aussie_pitch' || c.nurtureStep === 'pitch' || isPitched;
-        const step2Done = c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views' || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'day9_warning' || isDealActive || isExpired;
-        const step3Done = isDealActive || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'aussie_flash_deal_299' || c.nurtureStep === 'day9_warning' || isExpired;
-        const step4Done = c.nurtureStep === 'day9_warning' || isExpired;
+        const step1Done = Boolean(c.step1SentAt || pitchTime) || c.nurtureStep === 'aussie_pitch' || c.nurtureStep === 'pitch' || isPitched;
+        const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views' || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'day9_warning' || isExpired;
+        const step3Done = Boolean(c.step3SentAt) || (isDealActive && !isFbMode) || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'aussie_flash_deal_299' || c.nurtureStep === 'day9_warning' || isExpired;
+        const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning' || isExpired;
+        const step5Done = isExpired;
 
-        const isDay3Due = Boolean(pitchTime) && daysElapsed >= 3 && daysElapsed < 6 && !step2Done && !isDealActive && !isExpired;
-        const isDay6Due = Boolean(pitchTime) && daysElapsed >= 6 && daysElapsed < 9 && c.dealStatus !== 'flash_deal' && !isExpired;
-        const isDay9Due = Boolean(pitchTime) && daysElapsed >= 9 && daysElapsed < 10 && c.nurtureStep !== 'day9_warning' && !isExpired;
-        const isDay10Due = Boolean(pitchTime) && daysElapsed >= 10 && !isExpired;
+        const isDay3Due = Boolean(pitchTime) && (c.fbDueStep === 'day3' || ((isTurbo ? (minsElapsed >= 15 && minsElapsed < 30) : (daysElapsed >= 3 && daysElapsed < 6)) && !step2Done && !isExpired));
+        const isDay6Due = Boolean(pitchTime) && (c.fbDueStep === 'day6' || ((isTurbo ? (minsElapsed >= 30 && minsElapsed < 45) : (daysElapsed >= 6 && daysElapsed < 9)) && !step3Done && !isExpired));
+        const isDay9Due = Boolean(pitchTime) && (c.fbDueStep === 'day9' || ((isTurbo ? (minsElapsed >= 45 && minsElapsed < 60) : (daysElapsed >= 9 && daysElapsed < 10)) && !step4Done && !isExpired));
+        const isDay10Due = Boolean(pitchTime) && (isTurbo ? minsElapsed >= 60 : daysElapsed >= 10) && !isExpired;
+
+        let nextTurboStep = 0;
+        let nextTurboTargetTs = 0;
+        if (isTurbo && pitchMs && !step5Done) {
+          if (!step2Done && !isDay3Due) {
+            nextTurboStep = 2;
+            nextTurboTargetTs = pitchMs + 15 * 60 * 1000;
+          } else if (step2Done && !step3Done && !isDay6Due) {
+            nextTurboStep = 3;
+            nextTurboTargetTs = pitchMs + 30 * 60 * 1000;
+          } else if (step3Done && !step4Done && !isDay9Due) {
+            nextTurboStep = 4;
+            nextTurboTargetTs = pitchMs + 45 * 60 * 1000;
+          } else if (step4Done && !step5Done && !isDay10Due) {
+            nextTurboStep = 5;
+            nextTurboTargetTs = pitchMs + 60 * 60 * 1000;
+          }
+        }
 
         const viewCount = Number(c.demoViewCount || 0);
+        const demoUrlForModal = c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
 
         return `
-          <div class="bg-gradient-to-br from-[#fcfbf7] to-[#fbf6ed] rounded-2xl p-3.5 border border-[#e2d9c8] space-y-3 shadow-2xs">
+          <div class="bg-gradient-to-br from-[#fcfbf7] to-[#fbf6ed] rounded-2xl p-3.5 border ${isTurbo ? 'border-2 border-purple-500 ring-2 ring-purple-200/70' : 'border-[#e2d9c8]'} space-y-3 shadow-2xs">
             ${dueBannerHtml}
 
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-stone-900">⚡ 2. Chốt SALE &amp; Thu Hồi Tự Động (10-Day Closing Engine):</span>
+                <span class="text-xs font-extrabold text-stone-900">⚡ 2. Chốt SALE &amp; Thu Hồi Tự Động:</span>
                 ${statusBadge}
-                ${pitchTime ? `<span class="px-2 py-0.5 rounded-md ${due ? 'bg-amber-300 text-amber-950 font-black' : 'bg-stone-200/80 text-stone-700 font-bold'} text-[10px]">🕒 ${daysText}</span>` : ''}
+                ${channelBadge}
+                ${pitchTime ? `<span class="px-2 py-0.5 rounded-md ${due ? 'bg-amber-300 text-amber-950 font-black' : (isTurbo ? 'bg-purple-100 text-purple-900 font-black' : 'bg-stone-200/80 text-stone-700 font-bold')} text-[10px]">🕒 ${daysText}</span>` : ''}
               </div>
 
               <div class="flex items-center gap-2 flex-wrap">
@@ -2394,6 +2447,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     <strong class="deal-countdown-display text-rose-700" data-expires="${expiresTs}">--:--:--</strong>
                   </div>
                 ` : ''}
+                <button
+                  type="button"
+                  data-cid="${c.id}"
+                  data-turbo="${isTurbo ? '1' : '0'}"
+                  class="btn-toggle-turbo-test px-2.5 py-1 rounded-xl border text-[11px] font-extrabold transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer ${
+                    isTurbo
+                      ? 'bg-purple-700 hover:bg-purple-800 border-purple-800 text-white ring-2 ring-purple-300 animate-pulse'
+                      : 'bg-purple-50 hover:bg-purple-100 border-purple-300 text-purple-900'
+                  }"
+                  title="Nén chu trình 10 ngày xuống 60 phút (0p, 15p, 30p, 45p, 60p) cho riêng khách này để test trên SĐT/Email cá nhân"
+                >
+                  <span>${isTurbo ? '🧪 Đang Test Nhanh (60 Phút): BẬT' : '🧪 Chạy Test Nhanh (60 Phút)'}</span>
+                </button>
                 <button
                   type="button"
                   data-cid="${c.id}"
@@ -2410,128 +2476,170 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               </div>
             </div>
 
-            <!-- Unified 5-Step Automated Closing Pipeline -->
+            <!-- Unified 5-Step Omni-Channel Automated Closing Pipeline -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-1">
-              <!-- Step 1: Initial Pitch SMS (Starts 10-Day Timer) -->
-              <button
-                type="button"
-                data-cid="${c.id}"
-                data-template="aussie_pitch"
-                data-step-label="Bước 1: SMS Chào Hàng (Bắt đầu 10 ngày)"
-                ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  !hasPhone
-                    ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
-                    : step1Done
-                      ? 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950'
-                      : 'border-2 border-[#96432b] bg-[#fffaf4] hover:bg-[#fbdeb9]/40 text-stone-900'
-                }"
-                title="Gửi SMS Chào Hàng chuẩn Anh Úc và kích hoạt đồng hồ đếm 10 ngày tự động"
-              >
+              <!-- Step 1: Initial Pitch (Launch via SMS+Email OR Facebook) -->
+              <div class="px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1.5 shadow-2xs ${
+                step1Done
+                  ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-emerald-300 bg-emerald-50/80 text-emerald-950')
+                  : 'border-2 border-[#96432b] bg-[#fffaf4] text-stone-900'
+              }">
                 <div class="flex flex-wrap items-center justify-between gap-1 font-extrabold text-[11.5px] leading-snug">
-                  <span>👋 1. SMS Chào Hàng</span>
-                  ${step1Done ? '<span class="text-emerald-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>' : '<span class="text-[#96432b] text-[10px] font-black shrink-0">👆 Mở màn</span>'}
+                  <span>👋 1. Chào Hàng</span>
+                  ${step1Done
+                    ? `<span class="${isFbMode ? 'text-[#1877f2]' : 'text-emerald-700'} text-[10px] font-black shrink-0">${isFbMode ? '✅ Đã gửi FB' : '✅ Đã gửi SMS'}</span>`
+                    : `<span class="text-[#96432b] text-[10px] font-black shrink-0">${isTurbo ? '⏱ T+0p' : '👆 Mở màn'}</span>`
+                  }
                 </div>
-                <span class="text-[10.5px] leading-snug ${step1Done ? 'text-emerald-800' : 'text-stone-600'}">
-                  ${step1Done ? 'Chu trình 10 ngày đã chạy (Bấm gửi lại)' : 'Khởi động 10 ngày tự động'}
-                </span>
-              </button>
+                <div class="grid grid-cols-2 gap-1 pt-0.5">
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-template="aussie_pitch"
+                    data-step-label="Bước 1: Gửi SMS + Email Chào Hàng"
+                    ${!canSendSmsOrEmail ? 'disabled' : ''}
+                    class="btn-nurture-sms px-2 py-1.5 rounded-lg text-[10.5px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                      !canSendSmsOrEmail
+                        ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed'
+                        : 'bg-[#96432b] hover:bg-[#7d3520] text-white shadow-2xs'
+                    }"
+                    title="Gửi SMS + Email chào hàng & bắt đầu chu trình ở chế độ SMS tự động"
+                  >
+                    <span>📩 Gửi SMS + Email</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    data-name="${escapeHtml(titleName)}"
+                    data-slug="${escapeHtml(c.demoSlug || '')}"
+                    data-fb="${escapeHtml(c.facebookUrl || '')}"
+                    data-demo="${escapeHtml(demoUrlForModal)}"
+                    data-step="day1"
+                    class="btn-open-fb-modal px-2 py-1.5 rounded-lg text-[10.5px] font-extrabold bg-[#1877f2] hover:bg-[#1565c0] text-white transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                    title="Copy lời chào Ngày 1, mở Facebook/Messenger của khách & bắt đầu chu trình ở chế độ Facebook"
+                  >
+                    <span>💬 Chào qua Facebook</span>
+                  </button>
+                </div>
+              </div>
 
-              <!-- Step 2: Auto Day 3 Follow-Up (Smart 2+ Views Check) -->
+              <!-- Step 2: Day 3 Follow-Up (Smart 2+ Views Check • Auto SMS or FB Assisted) -->
               <button
                 type="button"
                 data-cid="${c.id}"
                 data-template="day3_reminder"
-                data-early="${(!pitchTime || daysElapsed < 3) ? '1' : '0'}"
-                data-step-label="Bước 2: SMS Hỏi Thăm Ngày 3 (${viewCount >= 2 ? 'Mẫu Đã Xem 2+ Lần' : 'Mẫu Nhắc Xem Nhẹ'})"
-                ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  !hasPhone
-                    ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
-                    : step2Done
-                      ? 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950'
+                data-step="day3"
+                data-name="${escapeHtml(titleName)}"
+                data-fb="${escapeHtml(c.facebookUrl || '')}"
+                data-demo="${escapeHtml(demoUrlForModal)}"
+                data-early="${(!pitchTime || (isTurbo ? minsElapsed < 15 : daysElapsed < 3)) ? '1' : '0'}"
+                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-nurture-sms'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
+                  step2Done
+                    ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950')
+                    : (isDay3Due && (isFbMode || !hasPhone))
+                      ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse'
                       : isDay3Due
                         ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
                         : 'border-[#dcd4c0] bg-white hover:bg-stone-50 text-stone-800'
                 }"
-                title="Tự động dùng mẫu 'Noticed you viewed your preview' nếu khách đã xem >= 2 lần, hoặc mẫu nhắc nhẹ nếu < 2 lần"
+                title="${(isFbMode || !hasPhone) ? 'Bấm mở Smart Copy & Send Modal cho Bước 2 (Hỏi thăm Ngày 3)' : 'Gửi SMS + Email Hỏi Thăm Ngày 3 (Tự chọn mẫu theo lượt xem Demo)'}"
               >
                 <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug">
-                  <span>👀 2. SMS Hỏi Thăm</span>
+                  <span>👀 2. Hỏi Thăm Ngày 3</span>
                   ${step2Done
-                    ? '<span class="text-emerald-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>'
-                    : isDay3Due
-                      ? '<span class="text-amber-800 text-[10px] font-black shrink-0">● Đến hạn!</span>'
-                      : '<span class="text-amber-700 text-[10px] font-bold shrink-0">⏳ Ngày 3</span>'
+                    ? `<span class="${isFbMode ? 'text-[#1877f2]' : 'text-emerald-700'} text-[10px] font-black shrink-0">${isFbMode ? '✅ Đã gửi FB' : '✅ Đã gửi'}</span>`
+                    : (isDay3Due && (isFbMode || !hasPhone))
+                      ? '<span class="px-1.5 py-0.5 rounded bg-[#1877f2] text-white text-[9.5px] font-black shrink-0">💬 ĐẾN HẠN GỬI FB! (Bấm Copy)</span>'
+                      : isDay3Due
+                        ? '<span class="text-amber-800 text-[10px] font-black shrink-0">● Đến hạn!</span>'
+                        : (nextTurboStep === 2
+                            ? `<span class="turbo-step-countdown px-1.5 py-0.5 rounded bg-purple-700 text-white font-mono text-[10px] font-black shrink-0" data-target-ts="${nextTurboTargetTs}">⏱ 15:00</span>`
+                            : `<span class="text-amber-700 text-[10px] font-bold shrink-0">${isTurbo ? '⏳ T+15p' : '⏳ Ngày 3'}</span>`)
                   }
                 </div>
-                <span class="text-[10.5px] leading-snug ${isDay3Due ? 'text-amber-900 font-black' : 'text-stone-500'}">
+                <span class="text-[10.5px] leading-snug ${isDay3Due ? (isFbMode ? 'text-[#1877f2] font-black' : 'text-amber-900 font-black') : 'text-stone-500'}">
                   ${step2Done
-                    ? 'Đã gửi hỏi thăm Ngày 3'
-                    : (viewCount >= 2 ? `Khách xem ${viewCount} lần — Bấm hỏi thăm` : 'Tự chạy Ngày 3 (Hoặc gửi sớm)')
+                    ? (isFbMode ? 'Đã copy & gửi qua Facebook' : 'Đã gửi hỏi thăm Ngày 3')
+                    : (viewCount >= 2 ? `Khách xem ${viewCount} lần — ${isFbMode ? 'Bấm Copy FB' : 'Bấm hỏi thăm'}` : (isFbMode ? 'Bấm Copy lời hỏi thăm FB' : `Tự chạy ${isTurbo ? 'Phút 15' : 'Ngày 3'} (Hoặc bấm gửi)`))
                   }
                 </span>
               </button>
 
-              <!-- Step 3: Auto Day 6 Unified 72h Flash Deal ($299 AUD) -->
+              <!-- Step 3: Day 6 Unified 72h Flash Deal ($299 AUD) -->
               <button
                 type="button"
                 data-cid="${c.id}"
                 data-action="activate_flash_deal"
+                data-step="day6"
+                data-name="${escapeHtml(titleName)}"
+                data-fb="${escapeHtml(c.facebookUrl || '')}"
+                data-demo="${escapeHtml(demoUrlForModal)}"
                 ${(isExpired || isPurged) ? 'disabled' : ''}
-                class="btn-trigger-deal px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  isDealActive
-                    ? 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950'
-                    : isDay6Due
-                      ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
-                      : 'border-amber-300 bg-gradient-to-r from-amber-50/80 to-orange-50/80 hover:from-amber-100 hover:to-orange-100 text-amber-950'
+                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-trigger-deal'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
+                  (isDay6Due && (isFbMode || !hasPhone))
+                    ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse'
+                    : step3Done
+                      ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950')
+                      : isDay6Due
+                        ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
+                        : 'border-amber-300 bg-gradient-to-r from-amber-50/80 to-orange-50/80 hover:from-amber-100 hover:to-orange-100 text-amber-950'
                 }"
-                title="Hạ giá Demo xuống $299 AUD kèm đồng hồ đếm ngược 72h & gửi SMS Flash Deal 50%"
+                title="${(isFbMode || !hasPhone) ? 'Tự động hạ giá Demo $299 AUD (72h) & mở Smart Copy Modal gửi Deal qua Facebook' : 'Hạ giá Demo xuống $299 AUD kèm đồng hồ đếm ngược 72h & gửi SMS + Email Flash Deal 50%'}"
               >
                 <div class="flex flex-wrap items-center justify-between gap-1 font-extrabold text-[11.5px] leading-snug">
-                  <span>⚡ 3. Deal $299 (50%)</span>
-                  ${isDealActive
-                    ? '<span class="text-rose-600 animate-pulse text-[10px] font-black shrink-0">⏳ 72h Active</span>'
-                    : isDay6Due
-                      ? '<span class="text-amber-800 text-[10px] font-black shrink-0">● Đến hạn!</span>'
-                      : '<span class="text-amber-800 text-[10px] font-bold shrink-0">⏳ Ngày 6</span>'
+                  <span>⚡ 3. Deal $299 Ngày 6</span>
+                  ${(isDay6Due && (isFbMode || !hasPhone))
+                    ? '<span class="px-1.5 py-0.5 rounded bg-[#1877f2] text-white text-[9.5px] font-black shrink-0">💬 ĐẾN HẠN GỬI FB! (Bấm Copy)</span>'
+                    : step3Done
+                      ? `<span class="${isFbMode ? 'text-[#1877f2]' : 'text-rose-600 animate-pulse'} text-[10px] font-black shrink-0">${isFbMode ? '✅ Đã gửi FB ($299)' : '⏳ 72h Active'}</span>`
+                      : isDay6Due
+                        ? '<span class="text-amber-800 text-[10px] font-black shrink-0">● Đến hạn!</span>'
+                        : (nextTurboStep === 3
+                            ? `<span class="turbo-step-countdown px-1.5 py-0.5 rounded bg-purple-700 text-white font-mono text-[10px] font-black shrink-0" data-target-ts="${nextTurboTargetTs}">⏱ 15:00</span>`
+                            : `<span class="text-amber-800 text-[10px] font-bold shrink-0">${isTurbo ? '⏳ T+30p' : '⏳ Ngày 6'}</span>`)
                   }
                 </div>
-                <span class="text-[10.5px] leading-snug ${isDay6Due ? 'text-amber-900 font-black' : 'text-amber-800'}">
-                  ${isDealActive ? 'Đang chạy $299 AUD (72h)' : 'Hạ $299 AUD / 72h + bắn SMS'}
+                <span class="text-[10.5px] leading-snug ${isDay6Due ? (isFbMode ? 'text-[#1877f2] font-black' : 'text-amber-900 font-black') : 'text-amber-800'}">
+                  ${isDealActive ? (isFbMode && !c.step3SentAt ? 'Đã hạ $299 AUD — Bấm Copy FB!' : 'Đang chạy $299 AUD (72h)') : `Tự hạ $299 AUD (${isTurbo ? 'Phút 30' : 'Ngày 6'})`}
                 </span>
               </button>
 
-              <!-- Step 4: Auto Day 9 Final 24h Notice -->
+              <!-- Step 4: Day 9 Final 24h Notice -->
               <button
                 type="button"
                 data-cid="${c.id}"
                 data-template="day9_warning"
-                data-early="${(!pitchTime || daysElapsed < 9) ? '1' : '0'}"
-                data-step-label="Bước 4: SMS Ngày 9 (Cảnh Báo 24h Cuối)"
-                ${!hasPhone ? 'disabled' : ''}
-                class="btn-nurture-sms px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  !hasPhone
-                    ? 'border-stone-200 bg-stone-50 text-stone-400 opacity-55 cursor-not-allowed'
+                data-step="day9"
+                data-name="${escapeHtml(titleName)}"
+                data-fb="${escapeHtml(c.facebookUrl || '')}"
+                data-demo="${escapeHtml(demoUrlForModal)}"
+                data-early="${(!pitchTime || (isTurbo ? minsElapsed < 45 : daysElapsed < 9)) ? '1' : '0'}"
+                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-nurture-sms'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
+                  (isDay9Due && (isFbMode || !hasPhone))
+                    ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse'
                     : step4Done
-                      ? 'border-rose-300 bg-rose-50/80 text-rose-950'
+                      ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-rose-300 bg-rose-50/80 text-rose-950')
                       : isDay9Due
                         ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse'
                         : 'border-[#dcd4c0] bg-white hover:bg-rose-50 text-rose-950'
                 }"
-                title="Gửi SMS Ngày 9: Thông báo 24 giờ cuối trước khi khoá & lưu trữ bản preview"
+                title="${(isFbMode || !hasPhone) ? 'Bấm mở Smart Copy & Send Modal cho Bước 4 (Nhắc 24h cuối qua Facebook)' : 'Gửi SMS + Email Ngày 9: Thông báo 24 giờ cuối trước khi khoá & lưu trữ bản preview'}"
               >
                 <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug">
-                  <span>⏳ 4. SMS Ngày 9</span>
-                  ${step4Done
-                    ? '<span class="text-rose-700 text-[10px] font-black shrink-0">✅ Đã gửi</span>'
-                    : isDay9Due
-                      ? '<span class="text-rose-700 text-[10px] font-black shrink-0">● Đến hạn!</span>'
-                      : '<span class="text-rose-700 text-[10px] font-bold shrink-0">🚨 24h Cuối</span>'
+                  <span>⏳ 4. Nhắc 24h Ngày 9</span>
+                  ${(isDay9Due && (isFbMode || !hasPhone))
+                    ? '<span class="px-1.5 py-0.5 rounded bg-[#1877f2] text-white text-[9.5px] font-black shrink-0">💬 ĐẾN HẠN GỬI FB! (Bấm Copy)</span>'
+                    : step4Done
+                      ? `<span class="${isFbMode ? 'text-[#1877f2]' : 'text-rose-700'} text-[10px] font-black shrink-0">${isFbMode ? '✅ Đã gửi FB' : '✅ Đã gửi'}</span>`
+                      : isDay9Due
+                        ? '<span class="text-rose-700 text-[10px] font-black shrink-0">● Đến hạn!</span>'
+                        : (nextTurboStep === 4
+                            ? `<span class="turbo-step-countdown px-1.5 py-0.5 rounded bg-purple-700 text-white font-mono text-[10px] font-black shrink-0" data-target-ts="${nextTurboTargetTs}">⏱ 15:00</span>`
+                            : `<span class="text-rose-700 text-[10px] font-bold shrink-0">${isTurbo ? '🚨 T+45p' : '🚨 24h Cuối'}</span>`)
                   }
                 </div>
-                <span class="text-[10.5px] leading-snug ${isDay9Due ? 'text-rose-900 font-black' : 'text-rose-700'}">
-                  ${step4Done ? 'Đã gửi cảnh báo 24h cuối' : 'Tự chạy Ngày 9 (Hoặc gửi sớm)'}
+                <span class="text-[10.5px] leading-snug ${isDay9Due ? (isFbMode ? 'text-[#1877f2] font-black' : 'text-rose-900 font-black') : 'text-rose-700'}">
+                  ${step4Done ? (isFbMode ? 'Đã gửi cảnh báo FB 24h' : 'Đã gửi cảnh báo 24h cuối') : (isFbMode ? 'Bấm Copy tin nhắc 24h FB' : `Tự chạy ${isTurbo ? 'Phút 45' : 'Ngày 9'} (Hoặc bấm gửi)`)}
                 </span>
               </button>
 
@@ -2586,15 +2694,46 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   title="Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)"
                 >
                   <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug ${isDay10Due ? 'text-white' : 'text-stone-800'}">
-                    <span>🔒 5. Khoá Demo</span>
-                    <span class="text-[10px] ${isDay10Due ? 'text-amber-300 font-black' : 'text-stone-400'} shrink-0">Ngày 10</span>
+                    <span>🔒 5. Khoá Demo Ngày 10</span>
+                    ${nextTurboStep === 5
+                      ? `<span class="turbo-step-countdown px-1.5 py-0.5 rounded bg-purple-700 text-white font-mono text-[10px] font-black shrink-0" data-target-ts="${nextTurboTargetTs}">⏱ 15:00</span>`
+                      : `<span class="text-[10px] ${isDay10Due ? 'text-amber-300 font-black' : 'text-stone-400'} shrink-0">${isTurbo ? 'T+60p' : 'Ngày 10'}</span>`
+                    }
                   </div>
                   <span class="text-[10px] truncate ${isDay10Due ? 'text-stone-300 font-bold' : 'text-stone-500'}">
-                    ${isDay10Due ? '👉 Quá 10 ngày — Bấm khoá' : 'Tự khoá Ngày 10 (Hoặc khoá sớm)'}
+                    ${isDay10Due ? '👉 Quá hạn — Bấm khoá' : `Tự khoá ${isTurbo ? 'Phút 60' : 'Ngày 10'} (Hoặc khoá sớm)`}
                   </span>
                 </button>
               `}
             </div>
+
+            ${isTurbo ? `
+              <!-- 60-Min Turbo Test Mode Control Bar -->
+              <div class="mt-2 pt-2.5 border-t border-purple-200 bg-purple-50/70 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-[11px] font-bold text-purple-950">
+                  <span class="inline-block w-2 h-2 rounded-full bg-purple-600 animate-ping"></span>
+                  <span>🧪 <strong>Chế độ Test Nhanh 60 Phút đang bật:</strong> Tự động ping mỗi 60s (0p → 15p → 30p → 45p → 60p).</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-turbo-fast-forward px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-[11px] font-extrabold shadow-xs transition-all inline-flex items-center gap-1 cursor-pointer"
+                    title="Dịch mốc thời gian và kích hoạt bước tiếp theo ngay lập tức trong 2 giây"
+                  >
+                    <span>⏭ Tua Tới Bước Tiếp Theo Ngay</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-turbo-reset px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-800 border border-rose-300 text-[11px] font-extrabold shadow-2xs transition-all inline-flex items-center gap-1 cursor-pointer"
+                    title="Xoá toàn bộ trạng thái đã gửi (Bước 1..5), mở khoá Demo và đưa giá về lại $599 AUD"
+                  >
+                    <span>🔄 Reset Luồng Test Lại Từ Đầu</span>
+                  </button>
+                </div>
+              </div>
+            ` : ''}
           </div>
         `;
       }
@@ -2672,15 +2811,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-cid="${c.id}"
                 data-paid="${isPaid ? '1' : '0'}"
                 value="${escapeHtml(resolvedLiveUrl)}" 
-                placeholder="${isPaid ? 'Nhập tên miền chính thức (VD: lushnailsbar.com.au) rồi bấm Lưu & Kết Nối...' : 'Sau khi khách thanh toán $599 & chọn tên miền, tên miền sẽ tự điền vào đây...'}" 
+                placeholder="${isPaid ? 'Nhập tên miền chính thức (VD: lushnailsbar.com.au) rồi bấm Lưu & Kết Nối (Báo Lên Sóng Live)...' : 'Sau khi khách thanh toán & chọn tên miền, nhập vào đây để Lưu & Kết Nối...'}" 
                 class="live-url-input atelier-input w-full sm:flex-1 min-w-0 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
               >
               <button 
                 type="button"
                 data-cid="${c.id}"
-                class="btn-save-demo w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-xs font-bold text-emerald-900 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                data-paid="${isPaid ? '1' : '0'}"
+                class="btn-save-demo w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl ${isPaid ? 'bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-800' : 'bg-white border border-[#d8ccb8] hover:border-emerald-700 text-emerald-900'} text-xs font-bold shrink-0 transition-colors shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5"
+                title="Lưu tên miền, kết nối DNS tự động & gửi thông báo Báo Lên Sóng Live (SMS + Email) cho khách đã thanh toán"
               >
-                Lưu &amp; Kết Nối
+                <span>${isPaid ? (isLaunched ? '🚀 Lưu &amp; Báo Lên Sóng Lại' : '🚀 Lưu &amp; Kết Nối (Báo Lên Sóng Live)') : 'Lưu &amp; Kết Nối'}</span>
               </button>
             </div>
 
@@ -3033,13 +3174,14 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       >
                         <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
                       </button>
+                      ${c.revisionStatus === 'submitted' ? '' : `
                       <button
                         type="button"
                         data-cid="${c.id}"
-                        class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl ${c.revisionStatus === 'submitted' ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse' : 'bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300'} text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                        class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300 text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
                         title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
                       >
-                        <span>🤖 ${c.revisionStatus === 'submitted' ? 'AI Sửa Theo Yêu Cầu (1 Vòng)' : 'AI Sửa Web'}</span>
+                        <span>🤖 AI Sửa Web</span>
                       </button>
                       <a
                         href="/revision?cid=${encodeURIComponent(c.id)}&email=${encodeURIComponent(c.email || '')}"
@@ -3050,6 +3192,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                         <span>📝 Portal Sửa</span>
                         <span class="text-[10px]">↗</span>
                       </a>
+                      `}
                     </div>
                   </div>
                   ${renderPaletteSwatchBar(c)}
@@ -3061,77 +3204,6 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
                 <!-- Section 3: Official Live Domain (Unified Smart Concierge Flow) -->
                 ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
-
-                <!-- 4 Outbound Automated Action Buttons (SMS, Facebook Messenger, Follow-up, Launch) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
-                  <!-- Button 1: Pitch Demo SMS / Email -->
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-stage="outbound_pitch"
-                    ${!hasValidDemo ? 'disabled' : ''}
-                    class="btn-action btn-stage-action px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#96432b] hover:bg-[#7d3520] text-white shadow-xs"
-                  >
-                    <span>${hasPhone && c.email ? '📩 1. Gửi SMS + Email' : (hasPhone ? '📱 1. Bắn SMS Chào Hàng' : '📧 1. Gửi Email Chào Hàng')}</span>
-                    <span class="text-[10px] font-normal opacity-90">${
-                      !hasValidDemo
-                        ? '🔒 Nhập Link Demo trước'
-                        : (isPitched ? '✓ Đã gửi chào hàng (Bấm gửi lại)' : (hasPhone ? `Bắn tin nhắn tới ${escapeHtml(c.phone)}` : 'Gửi link Demo + nút Claim $599'))
-                    }</span>
-                  </button>
-
-                  <!-- Button 2b: Chào Hàng Qua Facebook Messenger -->
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-name="${escapeHtml(titleName)}"
-                    data-slug="${escapeHtml(c.demoSlug || '')}"
-                    data-fb="${escapeHtml(c.facebookUrl || '')}"
-                    data-demo="${escapeHtml(previewOverlayUrl)}"
-                    ${!hasValidDemo ? 'disabled' : ''}
-                    class="btn-open-fb-modal px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-[#1877f2] hover:bg-[#1565c0] text-white shadow-xs cursor-pointer"
-                    title="Mở hộp thoại chào hàng qua Facebook Messenger với nội dung Australian English"
-                  >
-                    <span>💬 2b. Chào Qua Facebook</span>
-                    <span class="text-[10px] font-normal opacity-90">${
-                      c.fbPitchedAt ? `✓ Đã gửi FB (${new Date(c.fbPitchedAt).toLocaleDateString('vi-VN')})` : 'Mở Messenger &amp; Copy lời chào'
-                    }</span>
-                  </button>
-
-                  <!-- Button 2: Follow-up -->
-                  <button
-                    type="button"
-                    data-cid="${c.id}"
-                    data-stage="outbound_followup"
-                    ${!hasValidDemo ? 'disabled' : ''}
-                    class="btn-action btn-stage-action px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
-                  >
-                    <span>${hasPhone && c.email ? '⏰ 3. Nhắc SMS + Email' : (hasPhone ? '⏰ 3. Bắn SMS Nhắc Xem' : '⏰ 3. Gửi Email Nhắc Xem')}</span>
-                    <span class="text-[10px] font-normal opacity-90">${
-                      c.reminderCount > 0 ? `Đã nhắc ${c.reminderCount} lần (Bấm nhắc tiếp)` : 'Hỏi thăm chủ tiệm đã xem Demo chưa'
-                    }</span>
-                  </button>
-
-                  <!-- Button 3: Launch Site (ONLY enabled when Client has PAID $599 AND Official Live Domain is entered!) -->
-                  <button
-                    type="button"
-                    id="btn-stage5-${c.id}"
-                    data-cid="${c.id}"
-                    data-paid="${isPaid ? '1' : '0'}"
-                    data-stage="site_launched"
-                    ${(!isPaid || !hasValidLive) ? 'disabled' : ''}
-                    class="btn-action btn-stage-action px-3.5 py-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
-                  >
-                    <span>🚀 4. Báo Lên Sóng Live</span>
-                    <span id="btn-stage5-sub-${c.id}" class="text-[10px] font-normal opacity-90">${
-                      !isPaid
-                        ? '🔒 Chờ khách thanh toán $599 trước'
-                        : (!hasValidLive
-                            ? '🔒 Nhập Tên Miền Chính Thức (Mục 3) trước'
-                            : (isLaunched ? '✅ Đã lên sóng (Bấm gửi lại)' : `Gửi link thật: ${escapeHtml(resolvedLiveUrl)}`))
-                    }</span>
-                  </button>
-                </div>
 
                 <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
                   <div class="flex items-center gap-2 flex-wrap min-w-0">
@@ -3675,15 +3747,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // Open Facebook Messenger Pitch Modal
+        // Open Facebook Messenger Smart Copy & Send Modal (Steps 1..4)
         document.querySelectorAll('.btn-open-fb-modal').forEach((btn) => {
           btn.addEventListener('click', () => {
             const cid = btn.getAttribute('data-cid');
             const client = clientsCache.find(x => x.id === cid);
             const fb = btn.getAttribute('data-fb');
             const demo = btn.getAttribute('data-demo');
+            const stepKey = btn.getAttribute('data-step') || (client && client.fbDueStep) || 'day1';
             if (client) {
-              openFacebookPitchModal(client, fb, demo);
+              openFacebookPitchModal(client, fb, demo, stepKey);
             }
           });
         });
@@ -3868,35 +3941,106 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // 10-Day Closing Engine: Unified 5-Step Pipeline SMS (Step 1 Pitch, Step 2 Day 3, Step 4 Day 9)
+        // 10-Day Closing Engine: Toggle 60-Min Turbo Test Mode per Client
+        document.querySelectorAll('.btn-toggle-turbo-test').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const currentTurbo = btn.getAttribute('data-turbo') === '1';
+            const nextTurbo = !currentTurbo;
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            const res = await runAdminAction({
+              action: 'toggle_turbo_test',
+              customerId: cid,
+              enabled: nextTurbo
+            }, { busyText: nextTurbo ? 'Đang BẬT chế độ Test Nhanh 60 phút...' : 'Đang TẮT chế độ Test Nhanh 60 phút...', skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(nextTurbo
+                ? `🧪 Đã BẬT Test Nhanh 60 Phút cho "${biz}"! (0p → 15p → 30p → 45p → 60p)`
+                : `Đã tắt chế độ Test Nhanh 60 Phút cho "${biz}".`);
+            }
+          });
+        });
+
+        // 60-Min Turbo Test Mode: Fast-Forward to Next Pending Step Immediately
+        document.querySelectorAll('.btn-turbo-fast-forward').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="wynn-spin"></span><span>Đang tua &amp; bắn...</span>';
+            try {
+              const shiftRes = await runAdminAction({
+                action: 'fast_forward_turbo_step',
+                customerId: cid
+              }, { busyText: `Đang tua tới bước tiếp theo cho "${biz}"...`, skipReload: true });
+              if (shiftRes && shiftRes.client) {
+                upsertClientInCache(shiftRes.client);
+              }
+              await pingScheduledSmsRunner(true);
+              showToast(`⏭ Đã kích hoạt ngay bước tiếp theo (${(shiftRes && shiftRes.targetStep) || 'next'}) cho "${biz}"!`);
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = origHtml;
+            }
+          });
+        });
+
+        // 60-Min Turbo Test Mode: Reset Sequence Back to Start ($599 AUD)
+        document.querySelectorAll('.btn-turbo-reset').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const cid = btn.getAttribute('data-cid');
+            const client = clientsCache.find(x => x.id === cid);
+            const biz = (client && (client.businessName || client.name)) || 'khách này';
+            if (!confirm(`Reset toàn bộ luồng chốt sale của "${biz}" lại từ đầu?\n\n• Xoá cờ đã gửi của Bước 1..5.\n• Mở khoá bản Demo (nếu đang khoá).\n• Khôi phục giá chuẩn về $599 AUD.`)) {
+              return;
+            }
+            const res = await runAdminAction({
+              action: 'reset_closing_sequence',
+              customerId: cid
+            }, { busyText: `Đang reset luồng test cho "${biz}"...`, skipReload: true });
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              showToast(`🔄 Đã reset luồng test của "${biz}" về lại từ đầu ($599 AUD)!`);
+            }
+          });
+        });
+
+        // 10-Day Closing Engine: Unified 5-Step Pipeline SMS + Email (Step 1 Pitch, Step 2 Day 3, Step 4 Day 9)
         document.querySelectorAll('.btn-nurture-sms').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
             const tpl = btn.getAttribute('data-template');
             const client = clientsCache.find(x => x.id === cid);
-            if (!client || !client.phone) {
-              showToast('Khách chưa có SĐT để gửi SMS!', true);
+            if (!client || (!client.phone && !client.email)) {
+              showToast('Khách chưa có SĐT hoặc Email để gửi!', true);
               return;
             }
             const biz = client.businessName || client.name || 'tiệm';
             const viewCount = Number(client.demoViewCount || 0);
-            let tplName = 'SMS Chăm Sóc';
+            const targetDest = [client.phone, client.email].filter(Boolean).join(' + ');
+            let tplName = 'SMS + Email Chăm Sóc';
             let subHint = '';
             if (tpl === 'aussie_pitch') {
-              tplName = 'Bước 1: SMS Chào Hàng (Khởi động chu trình 10 ngày)';
-              subHint = '\n• Gửi SMS giới thiệu bản Demo chuẩn giọng Úc.\n• Bắt đầu đếm đồng hồ tự động 10 ngày.';
+              tplName = 'Bước 1: Chào Hàng SMS + Email (Khởi động chu trình)';
+              subHint = '\n• Gửi SMS + Email giới thiệu bản Demo chuẩn giọng Úc.\n• Bắt đầu đếm đồng hồ tự động.';
             } else if (tpl === 'day3_reminder') {
               tplName = viewCount >= 2
-                ? `Bước 2: SMS Hỏi Thăm (Khách đã xem ${viewCount} lần)`
-                : 'Bước 2: SMS Nhắc Xem Demo (Ngày 3)';
+                ? `Bước 2: Hỏi Thăm Ngày 3 (Khách đã xem ${viewCount} lần)`
+                : 'Bước 2: Nhắc Xem Demo (Ngày 3)';
               subHint = viewCount >= 2
                 ? `\n• Tự động chọn mẫu hỏi thăm ấm áp vì khách đã mở xem Demo ${viewCount} lần.`
                 : '\n• Tự động chọn mẫu nhắc nhẹ mở xem bản Preview.';
             } else if (tpl === 'day9_warning') {
-              tplName = 'Bước 4: SMS Ngày 9 (Cảnh Báo 24h Cuối)';
+              tplName = 'Bước 4: Cảnh Báo 24h Cuối (Ngày 9)';
               subHint = '\n• Báo khách bản Preview và mức giá ưu đãi sẽ đóng sau 24 giờ nữa.';
             }
-            if (!confirm(`Bắn ${tplName} tới số ${client.phone} của "${biz}"?${subHint}`)) {
+            if (!confirm(`Gửi ${tplName} tới ${targetDest} của "${biz}"?${subHint}`)) {
               return;
             }
             const res = await runAdminAction({
@@ -3907,7 +4051,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             if (res && res.client) {
               upsertClientInCache(res.client);
               applyFiltersAndRender();
-              showToast(`📱 Đã bắn ${tplName} thành công tới ${client.phone}!`);
+              showToast(`📩 Đã gửi ${tplName} thành công tới ${targetDest}!`);
             }
           });
         });
@@ -4092,10 +4236,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // Save Demo URL & Official Live Domain
+        // Save Demo URL & Official Live Domain (+ Auto Launch Notification when Paid)
         document.querySelectorAll('.btn-save-demo').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
+            const isPaid = btn.getAttribute('data-paid') === '1';
             const demoInput = document.getElementById(`demo-url-${cid}`);
             const liveInput = document.getElementById(`live-url-${cid}`);
             const demoUrl = demoInput ? demoInput.value.trim() : undefined;
@@ -4103,13 +4248,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const origText = btn.innerHTML;
             btn.innerHTML = '<span class="wynn-spin-dark"></span><span class="ml-1.5">Đang lưu...</span>';
             btn.disabled = true;
-            const actionPayload = { action: 'save_client', customerId: cid, liveUrl };
+            const actionPayload = { action: 'save_client', customerId: cid, liveUrl, launchSite: isPaid && Boolean(liveUrl) };
             if (demoUrl) actionPayload.demoUrl = demoUrl;
-            const res = await runAdminAction(actionPayload, { busyText: 'Đang lưu & kết nối tên miền...', skipReload: true });
+            const res = await runAdminAction(actionPayload, { busyText: isPaid && liveUrl ? 'Đang kết nối tên miền & Báo Lên Sóng Live...' : 'Đang lưu & kết nối tên miền...', skipReload: true });
             btn.disabled = false;
             btn.innerHTML = origText;
-            if (res && res.client) upsertClientInCache(res.client);
-            if (res && res.liveDomainBindResult && res.liveDomainBindResult.attached && res.liveDomainBindResult.nameservers) {
+            if (res && res.client) {
+              upsertClientInCache(res.client);
+              applyFiltersAndRender();
+            }
+            if (res && res.notifyRes) {
+              showToast(`🚀 Đã lưu tên miền "${liveUrl}" & gửi thông báo Báo Lên Sóng Live (SMS + Email) cho khách!`);
+            } else if (res && res.liveDomainBindResult && res.liveDomainBindResult.attached && res.liveDomainBindResult.nameservers) {
               showToast(`🎉 Đã kết nối tên miền thành công! NS kỹ thuật cho Admin: ${res.liveDomainBindResult.nameservers}`);
             } else if (res && res.ok) {
               showToast('Đã lưu Tên Miền Chính Thức!');
@@ -5955,10 +6105,12 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       });
 
       // ========================================================
-      // FACEBOOK MESSENGER OUTBOUND PITCH MODAL
+      // SMART COPY & SEND MODAL (FACEBOOK ASSISTED AUTOMATION)
       // ========================================================
       const modalFbPitch = document.getElementById('modal-facebook-pitch');
+      const fbModalTitle = document.getElementById('fb-modal-title');
       const fbModalSubtitle = document.getElementById('fb-modal-subtitle');
+      const fbModalBodyLabel = document.getElementById('fb-modal-body-label');
       const btnCloseFbModal = document.getElementById('btn-close-fb-modal');
       const fbModalUrl = document.getElementById('fb-modal-url');
       const btnVisitFbPage = document.getElementById('btn-visit-fb-page');
@@ -5967,52 +6119,93 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       const btnCopyFbBody = document.getElementById('btn-copy-fb-body');
       const btnMarkFbSent = document.getElementById('btn-mark-fb-sent');
       let currentFbClient = null;
+      let currentFbStepKey = 'day1';
+      let currentFbDemoUrl = '';
+
+      function getTargetFbHref(url, bizName) {
+        const trimmed = (url || '').trim();
+        if (trimmed.startsWith('http')) return trimmed;
+        if (trimmed) return `https://${trimmed}`;
+        return `https://www.facebook.com/search/top?q=${encodeURIComponent(bizName || '')}`;
+      }
 
       function updateFbVisitLink(url, bizName) {
         if (!btnVisitFbPage) return;
-        const trimmed = (url || '').trim();
-        if (trimmed.startsWith('http')) {
-          btnVisitFbPage.href = trimmed;
-        } else {
-          btnVisitFbPage.href = `https://www.facebook.com/search/top?q=${encodeURIComponent(bizName || '')}`;
+        btnVisitFbPage.href = getTargetFbHref(url, bizName);
+      }
+
+      function buildFbStepTemplate(client, stepKey, demoUrl) {
+        const bizName = (client && (client.businessName || client.name)) || 'Boutique';
+        const views = Number((client && client.demoViewCount) || 0);
+        if (stepKey === 'day3' || stepKey === 'step2') {
+          if (views >= 2) {
+            return `Hi ${bizName}! 🌿\n\nSaw you had a chance to check out the custom website preview we crafted for your salon:\n👉 ${demoUrl}\n\nIf you'd like me to tweak any service prices, swap photos, or adjust colours before connecting it to your .com.au domain, I'm more than happy to tailor anything for you ($599 AUD flat one-time, $0 monthly fees).\n\nWarm regards,\nSam — WynnPages Studio`;
+          }
+          return `Hi ${bizName}! 🌿\n\nSam from WynnPages Studio checking in! Did you get a chance to see the custom website preview we hand-crafted for your salon?\n\n👉 ${demoUrl}\n\n($599 AUD flat one-time, $0 monthly fees). Happy to adjust any services or photos for you anytime!\n\nWarm regards,\nSam — WynnPages Studio`;
+        }
+        if (stepKey === 'day6' || stepKey === 'step3') {
+          return `Hi ${bizName}! ⚡\n\nSince we've already finished hand-crafting your custom website design, we'd love to see it go to you rather than archiving the work.\n\nFor the next 72 hours, we've unlocked a 50% OFF Studio Sponsorship on your preview page — you can claim the entire website for a flat $299 AUD one-time (save $300 AUD, with $0 monthly fees forever):\n\n👉 ${demoUrl}\n\nIncludes 1 full round of custom tweaks + free connection to your .com.au domain. Ends in 72h!\n\nWarm regards,\nSam — WynnPages Studio`;
+        }
+        if (stepKey === 'day9' || stepKey === 'step4') {
+          return `Hi ${bizName}, quick heads up from WynnPages Studio! ⏳\n\nYour custom website preview and the $299 AUD (50% OFF) offer is scheduled to close and be archived in 24 hours:\n\n👉 ${demoUrl}\n\nIf you'd like to keep this custom design with $0 monthly fees, please claim it on the preview link today before the slot is released!\n\nWarm regards,\nSam — WynnPages Studio`;
+        }
+        return `Hi ${bizName}! 🌿\n\nI came across your beautiful boutique on Google Maps and created a bespoke, lightning-fast digital website preview for you:\n\n👉 ${demoUrl}\n\n• Zero monthly fees & zero ongoing retainers ($599 AUD one-time, 100% owned by you).\n• Integrated with your real services, Google reviews, and instant appointment booking.\n• Crafted on our Australian High-Speed Network with Grade A speed (<0.35s).\n\nTake a quick look whenever you have a quiet moment — no pressure at all! If you love it, you can claim it right on the preview.\n\nWarm regards,\nSam — WynnPages Studio\nhttps://wynnpages.com.au`;
+      }
+
+      function selectFbStepTab(stepKey) {
+        currentFbStepKey = stepKey || 'day1';
+        if (!currentFbClient) return;
+        const bizName = currentFbClient.businessName || currentFbClient.name || 'Boutique';
+        const views = Number(currentFbClient.demoViewCount || 0);
+        const titles = {
+          day1: 'Bước 1: Chào Hàng Qua Facebook (Khởi động 10 ngày)',
+          day3: `Bước 2: Hỏi Thăm Ngày 3 (${views >= 2 ? `Khách đã xem ${views} lần` : 'Mẫu nhắc xem nhẹ'})`,
+          day6: 'Bước 3: Gửi Deal $299 AUD (50% OFF • 72h)',
+          day9: 'Bước 4: Cảnh Báo 24h Cuối Trước Khi Khoá Demo'
+        };
+        if (fbModalTitle) fbModalTitle.textContent = titles[currentFbStepKey] || titles.day1;
+        if (fbModalSubtitle) fbModalSubtitle.textContent = `Tiệm "${bizName}" • Kênh Facebook Assisted`;
+        if (fbModalBodyLabel) {
+          fbModalBodyLabel.textContent = currentFbStepKey === 'day3'
+            ? `Nội dung Ngày 3 (${views >= 2 ? `Tự động khớp khách đã xem ${views} lần` : 'Tự động khớp khách chưa xem đủ 2 lần'}):`
+            : 'Nội dung tin nhắn chuẩn Australian English:';
+        }
+        document.querySelectorAll('.fb-step-tab').forEach((tab) => {
+          const isMatch = tab.getAttribute('data-fb-step') === currentFbStepKey;
+          tab.className = `fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+            isMatch ? 'bg-[#1877f2] text-white shadow-xs font-extrabold' : 'text-stone-600 hover:bg-stone-200/70'
+          }`;
+        });
+        const msg = buildFbStepTemplate(currentFbClient, currentFbStepKey, currentFbDemoUrl);
+        if (fbModalBody) {
+          fbModalBody.value = msg;
+          if (fbModalCharCount) fbModalCharCount.textContent = `${msg.length} ký tự`;
         }
       }
 
-      function openFacebookPitchModal(client, explicitFb, explicitDemo) {
+      document.querySelectorAll('.fb-step-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          selectFbStepTab(tab.getAttribute('data-fb-step') || 'day1');
+        });
+      });
+
+      function openFacebookPitchModal(client, explicitFb, explicitDemo, stepKey = 'day1') {
         currentFbClient = client;
         if (!modalFbPitch || !client) return;
         const bizName = client.businessName || client.name || 'Boutique';
         const slug = client.demoSlug || client.id;
-        const demoUrl = explicitDemo || client.brandedDemoUrl || `https://${slug}.wynnpages.com.au`;
+        currentFbDemoUrl = explicitDemo || client.brandedDemoUrl || `https://${slug}.wynnpages.com.au`;
         const fbUrl = explicitFb || client.facebookUrl || '';
 
-        if (fbModalSubtitle) fbModalSubtitle.textContent = `Tiếp cận trực tiếp tiệm "${bizName}" qua Facebook`;
         if (fbModalUrl) {
           fbModalUrl.value = fbUrl;
           updateFbVisitLink(fbUrl, bizName);
         }
 
-        const pitchText = `Hi ${bizName}! 🌿
-
-I came across your beautiful boutique on Google Maps and created a bespoke, lightning-fast digital website preview for you:
-
-👉 ${demoUrl}
-
-• Zero monthly fees & zero ongoing retainers ($599 AUD one-time, 100% owned by you).
-• Integrated with your real services, Google reviews, and instant appointment booking.
-• Crafted on our Australian High-Speed Network with Grade A speed (<0.35s).
-
-Take a quick look whenever you have a quiet moment — no pressure at all! If you love it, you can claim it right on the preview.
-
-Warm regards,
-WynnPages Studio — Australian Digital Web Atelier
-https://wynnpages.com.au`;
-
-        if (fbModalBody) {
-          fbModalBody.value = pitchText;
-          if (fbModalCharCount) fbModalCharCount.textContent = `${pitchText.length} ký tự`;
+        selectFbStepTab(stepKey || 'day1');
+        if (fbModalBody && fbModalBody.value) {
+          navigator.clipboard.writeText(fbModalBody.value).catch(() => {});
         }
-
         modalFbPitch.classList.remove('hidden');
       }
 
@@ -6041,8 +6234,8 @@ https://wynnpages.com.au`;
       if (btnCopyFbBody) {
         btnCopyFbBody.addEventListener('click', () => {
           if (fbModalBody) {
-            copyToClipboard(fbModalBody.value, '📋 Đã copy lời chào Facebook! Giờ bấm "Mở FB ↗" để dán gửi cho tiệm.');
-            flashCopySuccess(btnCopyFbBody, 'Đã Copy Lời Chào!');
+            copyToClipboard(fbModalBody.value, '📋 Đã copy nội dung Facebook vào bộ nhớ tạm!');
+            flashCopySuccess(btnCopyFbBody, 'Đã Copy!');
           }
         });
       }
@@ -6050,21 +6243,30 @@ https://wynnpages.com.au`;
         btnMarkFbSent.addEventListener('click', async () => {
           if (!currentFbClient) return;
           const cid = currentFbClient.id;
+          const bizName = currentFbClient.businessName || currentFbClient.name || 'Boutique';
           const fbUrl = fbModalUrl ? fbModalUrl.value.trim() : '';
+          const textToCopy = fbModalBody ? fbModalBody.value : '';
+          if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy).catch(() => {});
+          }
+          const targetHref = getTargetFbHref(fbUrl, bizName);
+          window.open(targetHref, '_blank', 'noopener');
+
           const origHtml = btnMarkFbSent.innerHTML;
           btnMarkFbSent.disabled = true;
           btnMarkFbSent.innerHTML = '<span class="wynn-spin"></span><span>Đang ghi nhận...</span>';
           try {
             const res = await runAdminAction({
-              action: 'log_fb_pitch',
+              action: 'log_fb_step',
               customerId: cid,
+              stepKey: currentFbStepKey,
               facebookUrl: fbUrl
-            }, { busyText: 'Đang ghi nhận đã chào hàng qua Facebook...', skipReload: true });
+            }, { busyText: 'Đang đánh dấu Đã gửi FB...', skipReload: true });
 
             if (res && res.client) {
               upsertClientInCache(res.client);
               applyFiltersAndRender();
-              showToast(`✅ Đã ghi nhận đã chào hàng qua Facebook cho "${res.client.businessName || res.client.name}"!`);
+              showToast(`✅ Đã copy nội dung, mở Facebook & đánh dấu Đã gửi FB (${currentFbStepKey.toUpperCase()}) cho "${bizName}"!`);
               closeFacebookPitchModal();
             } else {
               showToast('Không lưu được trạng thái Facebook.', true);
@@ -7438,7 +7640,44 @@ https://wynnpages.com.au`;
           .replace(/"/g, '&quot;');
       }
 
-      // 1-second Interval for Real-time Deal Countdown in Admin Cards
+      // Helper: Ping /api/run-scheduled-sms (for 60-Min Turbo Test Mode auto-poll & fast-forward)
+      let _isPingingSchedSms = false;
+      let _lastTurboZeroTriggerAt = 0;
+      async function pingScheduledSmsRunner(forceRender = false) {
+        if (_isPingingSchedSms || !adminKey) return;
+        _isPingingSchedSms = true;
+        try {
+          const res = await fetch('/api/run-scheduled-sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+            body: JSON.stringify({ adminKey })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.updatedClients) && data.updatedClients.length > 0) {
+              data.updatedClients.forEach((uc) => upsertClientInCache(uc));
+              applyFiltersAndRender();
+              updateMetrics(clientsCache);
+            } else if (forceRender) {
+              await loadClients('Đang đồng bộ bước tiếp theo...');
+            }
+          }
+        } catch (_) {
+        } finally {
+          _isPingingSchedSms = false;
+        }
+      }
+
+      // 60-Second Auto-Ping while admin.html is open with any client in turbo_test_mode
+      setInterval(() => {
+        if (!Array.isArray(clientsCache)) return;
+        const hasTurboClient = clientsCache.some((c) => c && c.turboTestMode === true);
+        if (hasTurboClient) {
+          pingScheduledSmsRunner(false);
+        }
+      }, 60000);
+
+      // 1-second Interval for Real-time Deal Countdown & Turbo MM:SS Step Countdown in Admin Cards
       setInterval(() => {
         const displays = document.querySelectorAll('.deal-countdown-display');
         const now = Date.now();
@@ -7461,6 +7700,26 @@ https://wynnpages.com.au`;
             (secs < 10 ? '0' : '') + secs + 's';
           el.textContent = text;
         });
+
+        const turboBadges = document.querySelectorAll('.turbo-step-countdown');
+        let anyReachedZero = false;
+        turboBadges.forEach((badge) => {
+          const targetTs = parseInt(badge.getAttribute('data-target-ts') || '0', 10);
+          if (!targetTs) return;
+          const diffMs = targetTs - now;
+          if (diffMs <= 0) {
+            badge.textContent = '⏱ 00:00 (Đang bắn...)';
+            anyReachedZero = true;
+            return;
+          }
+          const mins = Math.floor(diffMs / 60000);
+          const secs = Math.floor((diffMs % 60000) / 1000);
+          badge.textContent = `⏱ ${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        });
+        if (anyReachedZero && now - _lastTurboZeroTriggerAt > 12000) {
+          _lastTurboZeroTriggerAt = now;
+          pingScheduledSmsRunner(false);
+        }
       }, 1000);
 
       // ================================================================
