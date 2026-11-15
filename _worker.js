@@ -1494,6 +1494,10 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
     uParams.append('metadata[studio]', 'WynnPages Australia');
     uParams.append('metadata[payment_status]', 'paid');
     uParams.append('metadata[deal_status]', 'claimed');
+    uParams.append('metadata[deal_expires_at]', '');
+    uParams.append('metadata[nurture_auto_enabled]', 'false');
+    uParams.append('metadata[turbo_test_mode]', 'false');
+    uParams.append('metadata[fb_due_step]', '');
     uParams.append('metadata[flow_type]', resolvedFlow);
     uParams.append('metadata[checkout_session_id]', sid);
     if (effectiveInvoiceUrl) uParams.append('metadata[invoice_url]', effectiveInvoiceUrl.slice(0, 490));
@@ -1519,6 +1523,10 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
     if (!cust.metadata) cust.metadata = {};
     cust.metadata.payment_status = 'paid';
     cust.metadata.deal_status = 'claimed';
+    cust.metadata.deal_expires_at = '';
+    cust.metadata.nurture_auto_enabled = 'false';
+    cust.metadata.turbo_test_mode = 'false';
+    cust.metadata.fb_due_step = '';
     cust.metadata.flow_type = resolvedFlow;
     cust.metadata.checkout_session_id = sid;
     cust.metadata.payment_notified = 'true';
@@ -5087,7 +5095,7 @@ async function runScheduledAutopilot(env, options = {}) {
           message: `Bản Demo (${demoUrl}) đã tự động khoá HTTP 403 sau khi kết thúc chu trình chốt sale.`,
           clientName: biz,
           slug: c.demoSlug || ''
-        }, opts.ctx);
+        }, options.ctx);
         reports.push(`[${isTurbo ? 'Phút 60' : `Ngày ${Math.round(daysElapsed)}`}] Khoá Demo 403: ${biz}`);
         continue;
       }
@@ -5110,7 +5118,7 @@ async function runScheduledAutopilot(env, options = {}) {
               message: `Đã đến ${isTurbo ? 'phút 45 (Test)' : 'Ngày 9'} cho khách Facebook "${biz}". Mở Admin bấm vào Bước 4 đang sáng xanh để Copy tin nhắc 24h cuối & mở Messenger!`,
               clientName: biz,
               slug: c.demoSlug || ''
-            }, opts.ctx);
+            }, options.ctx);
           }
           reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'} - FB] Nhắc Admin gửi tin 24h cuối: ${biz}`);
         }
@@ -5172,7 +5180,7 @@ async function runScheduledAutopilot(env, options = {}) {
               message: `Web Demo của "${biz}" đã tự động giảm xuống $299 AUD (72h). Mở Admin bấm vào Bước 3 đang sáng xanh để Copy lời chào Deal 50% & gửi qua Messenger!`,
               clientName: biz,
               slug: c.demoSlug || ''
-            }, opts.ctx);
+            }, options.ctx);
           }
           reports.push(`[${isTurbo ? 'Phút 30' : 'Ngày 6'} - FB] Hạ Demo $299 AUD (72h) + Nhắc Admin gửi FB: ${biz}`);
           continue;
@@ -5247,7 +5255,7 @@ async function runScheduledAutopilot(env, options = {}) {
               message: `Đã đến ${isTurbo ? 'phút 15 (Test)' : 'Ngày 3'} cho khách Facebook "${biz}" (${d3Views} lượt xem Demo). Mở Admin bấm vào Bước 2 đang sáng xanh để Copy lời hỏi thăm & mở Messenger!`,
               clientName: biz,
               slug: c.demoSlug || ''
-            }, opts.ctx);
+            }, options.ctx);
           }
           reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'} - FB] Nhắc Admin gửi FB hỏi thăm (${d3Views} views): ${biz}`);
         }
@@ -5290,7 +5298,7 @@ async function runScheduledAutopilot(env, options = {}) {
   }
 
   if (updatedClients.length > 0) {
-    runInBg(opts.ctx, syncClientsKvSnapshot(env));
+    runInBg(options.ctx, syncClientsKvSnapshot(env));
   }
 
   const lastRunRecord = {
@@ -9449,6 +9457,9 @@ export default {
           } else if (stepKey === 'day9' || stepKey === 'step4') {
             uP.append('metadata[step4_sent_at]', now);
             uP.append('metadata[nurture_step]', 'day9_warning');
+          } else if (stepKey === 'launched' || stepKey === 'site_launched') {
+            uP.append('metadata[stage]', 'launched');
+            uP.append('metadata[launched_at]', now);
           }
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
@@ -10023,7 +10034,7 @@ export default {
           let notifyRes = null;
           const shouldAutoLaunchOnSave =
             action === 'save_client' &&
-            body.launchSite !== false &&
+            body.launchSite === true &&
             Boolean(body.liveUrl && String(body.liveUrl).trim().includes('.')) &&
             (formatted.paymentStatus === 'paid' || body.paymentStatus === 'paid');
           const effectiveNotifyStage = action === 'trigger_stage' ? stage : (shouldAutoLaunchOnSave ? 'site_launched' : '');
@@ -10035,6 +10046,19 @@ export default {
               origin: url.origin,
               cfg: effectiveCfg
             });
+
+            if (effectiveNotifyStage === 'site_launched') {
+              const bizLaunch = formatted.businessName || formatted.name || 'Boutique';
+              const cleanHost = extractCleanHost(formatted.liveUrl || '') || formatted.liveUrl || '';
+              await recordStudioActivity(env, {
+                type: 'site_launched',
+                icon: '🚀',
+                title: `Website Chính Thức Đã Lên Sóng Live: ${bizLaunch}`,
+                message: `Tên miền chính thức https://${cleanHost} của "${bizLaunch}" đã được báo lên sóng Live thành công!`,
+                clientName: bizLaunch,
+                slug: formatted.demoSlug || ''
+              }, ctx);
+            }
 
             // Save delivery logs to Stripe metadata
             const logParams = new URLSearchParams();

@@ -1478,11 +1478,12 @@
       </div>
 
       <!-- Step Selector Pills inside Smart Modal -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-stone-100 p-1.5 rounded-2xl border border-stone-200 text-[11px] font-bold">
-        <button type="button" data-fb-step="day1" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">1. Chào Hàng</button>
-        <button type="button" data-fb-step="day3" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">2. Ngày 3 (Hỏi)</button>
-        <button type="button" data-fb-step="day6" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">3. Ngày 6 ($299)</button>
-        <button type="button" data-fb-step="day9" class="fb-step-tab px-2.5 py-1.5 rounded-xl transition-all cursor-pointer text-center">4. Ngày 9 (24h)</button>
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 bg-stone-100 p-1.5 rounded-2xl border border-stone-200 text-[11px] font-bold">
+        <button type="button" data-fb-step="day1" class="fb-step-tab px-2 py-1.5 rounded-xl transition-all cursor-pointer text-center">1. Chào Hàng</button>
+        <button type="button" data-fb-step="day3" class="fb-step-tab px-2 py-1.5 rounded-xl transition-all cursor-pointer text-center">2. Ngày 3 (Hỏi)</button>
+        <button type="button" data-fb-step="day6" class="fb-step-tab px-2 py-1.5 rounded-xl transition-all cursor-pointer text-center">3. Ngày 6 ($299)</button>
+        <button type="button" data-fb-step="day9" class="fb-step-tab px-2 py-1.5 rounded-xl transition-all cursor-pointer text-center">4. Ngày 9 (24h)</button>
+        <button type="button" data-fb-step="launched" class="fb-step-tab col-span-2 sm:col-span-1 px-2 py-1.5 rounded-xl transition-all cursor-pointer text-center">🚀 Lên Sóng</button>
       </div>
 
       <div class="space-y-3 text-xs">
@@ -2533,16 +2534,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-fb="${escapeHtml(c.facebookUrl || '')}"
                 data-demo="${escapeHtml(demoUrlForModal)}"
                 data-early="${(!pitchTime || (isTurbo ? minsElapsed < 15 : daysElapsed < 3)) ? '1' : '0'}"
-                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-nurture-sms'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  step2Done
-                    ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950')
-                    : (isDay3Due && (isFbMode || !hasPhone))
-                      ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse'
-                      : isDay3Due
-                        ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
-                        : 'border-[#dcd4c0] bg-white hover:bg-stone-50 text-stone-800'
+                ${(autoEnabled && !step2Done && !isDay3Due) ? 'disabled style="opacity: 0.38; pointer-events: none;"' : 'style="opacity: 1;"'}
+                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-nurture-sms'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs ${
+                  (autoEnabled && !step2Done && !isDay3Due)
+                    ? 'border-stone-200 bg-stone-100/70 text-stone-400 select-none cursor-not-allowed'
+                    : step2Done
+                      ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950 cursor-pointer' : 'border-emerald-300 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-950 cursor-pointer')
+                      : (isDay3Due && (isFbMode || !hasPhone))
+                        ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse cursor-pointer'
+                        : isDay3Due
+                          ? 'border-2 border-amber-500 bg-amber-100/95 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse cursor-pointer'
+                          : 'border-[#dcd4c0] bg-white hover:bg-stone-50 text-stone-800 cursor-pointer'
                 }"
-                title="${(isFbMode || !hasPhone) ? 'Bấm mở Smart Copy & Send Modal cho Bước 2 (Hỏi thăm Ngày 3)' : 'Gửi SMS + Email Hỏi Thăm Ngày 3 (Tự chọn mẫu theo lượt xem Demo)'}"
+                title="${(autoEnabled && !step2Done && !isDay3Due) ? 'Đang chờ tự động chạy (Tắt Tự động chạy nếu muốn bấm tay sớm)' : ((isFbMode || !hasPhone) ? 'Bấm mở Smart Copy & Send Modal cho Bước 2 (Hỏi thăm Ngày 3)' : 'Gửi SMS + Email Hỏi Thăm Ngày 3 (Tự chọn mẫu theo lượt xem Demo)')}"
               >
                 <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug">
                   <span>👀 2. Hỏi Thăm Ngày 3</span>
@@ -2560,7 +2564,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 <span class="text-[10.5px] leading-snug ${isDay3Due ? (isFbMode ? 'text-[#1877f2] font-black' : 'text-amber-900 font-black') : 'text-stone-500'}">
                   ${step2Done
                     ? (isFbMode ? 'Đã copy & gửi qua Facebook' : 'Đã gửi hỏi thăm Ngày 3')
-                    : (viewCount >= 2 ? `Khách xem ${viewCount} lần — ${isFbMode ? 'Bấm Copy FB' : 'Bấm hỏi thăm'}` : (isFbMode ? 'Bấm Copy lời hỏi thăm FB' : `Tự chạy ${isTurbo ? 'Phút 15' : 'Ngày 3'} (Hoặc bấm gửi)`))
+                    : ((autoEnabled && !isDay3Due)
+                        ? `🤖 Tự chạy ${isTurbo ? 'Phút 15' : 'Ngày 3'}`
+                        : (viewCount >= 2 ? `Khách xem ${viewCount} lần — ${isFbMode ? 'Bấm Copy FB' : 'Bấm hỏi thăm'}` : (isFbMode ? '👆 Bấm Copy lời hỏi thăm FB' : '👆 Bấm gửi SMS + Email ngay')))
                   }
                 </span>
               </button>
@@ -2574,17 +2580,20 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-name="${escapeHtml(titleName)}"
                 data-fb="${escapeHtml(c.facebookUrl || '')}"
                 data-demo="${escapeHtml(demoUrlForModal)}"
-                ${(isExpired || isPurged) ? 'disabled' : ''}
-                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-trigger-deal'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  (isDay6Due && (isFbMode || !hasPhone))
-                    ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse'
-                    : step3Done
-                      ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950')
-                      : isDay6Due
-                        ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse'
-                        : 'border-amber-300 bg-gradient-to-r from-amber-50/80 to-orange-50/80 hover:from-amber-100 hover:to-orange-100 text-amber-950'
+                ${(isExpired || isPurged || (autoEnabled && !step3Done && !isDealActive && !isDay6Due)) ? 'disabled' : ''}
+                style="${(autoEnabled && !step3Done && !isDealActive && !isDay6Due) ? 'opacity: 0.38; pointer-events: none;' : 'opacity: 1;'}"
+                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-trigger-deal'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs ${
+                  (autoEnabled && !step3Done && !isDealActive && !isDay6Due)
+                    ? 'border-stone-200 bg-stone-100/70 text-stone-400 select-none cursor-not-allowed'
+                    : (isDay6Due && (isFbMode || !hasPhone))
+                      ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse cursor-pointer'
+                      : step3Done
+                        ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950 cursor-pointer' : 'border-2 border-rose-400 bg-gradient-to-r from-rose-50 to-amber-50 text-rose-950 cursor-pointer')
+                        : isDay6Due
+                          ? 'border-2 border-amber-500 bg-gradient-to-r from-amber-200 to-orange-200 text-amber-950 ring-2 ring-amber-400 font-extrabold animate-pulse cursor-pointer'
+                          : 'border-amber-300 bg-gradient-to-r from-amber-50/80 to-orange-50/80 hover:from-amber-100 hover:to-orange-100 text-amber-950 cursor-pointer'
                 }"
-                title="${(isFbMode || !hasPhone) ? 'Tự động hạ giá Demo $299 AUD (72h) & mở Smart Copy Modal gửi Deal qua Facebook' : 'Hạ giá Demo xuống $299 AUD kèm đồng hồ đếm ngược 72h & gửi SMS + Email Flash Deal 50%'}"
+                title="${(autoEnabled && !step3Done && !isDealActive && !isDay6Due) ? 'Đang chờ tự động kích hoạt Deal $299 (Tắt Tự động chạy nếu muốn kích hoạt sớm)' : ((isFbMode || !hasPhone) ? 'Tự động hạ giá Demo $299 AUD (72h) & mở Smart Copy Modal gửi Deal qua Facebook' : 'Hạ giá Demo xuống $299 AUD kèm đồng hồ đếm ngược 72h & gửi SMS + Email Flash Deal 50%')}"
               >
                 <div class="flex flex-wrap items-center justify-between gap-1 font-extrabold text-[11.5px] leading-snug">
                   <span>⚡ 3. Deal $299 Ngày 6</span>
@@ -2600,7 +2609,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   }
                 </div>
                 <span class="text-[10.5px] leading-snug ${isDay6Due ? (isFbMode ? 'text-[#1877f2] font-black' : 'text-amber-900 font-black') : 'text-amber-800'}">
-                  ${isDealActive ? (isFbMode && !c.step3SentAt ? 'Đã hạ $299 AUD — Bấm Copy FB!' : 'Đang chạy $299 AUD (72h)') : `Tự hạ $299 AUD (${isTurbo ? 'Phút 30' : 'Ngày 6'})`}
+                  ${isDealActive ? (isFbMode && !c.step3SentAt ? 'Đã hạ $299 AUD — Bấm Copy FB!' : 'Đang chạy $299 AUD (72h)') : ((autoEnabled && !isDay6Due) ? `🤖 Tự hạ $299 (${isTurbo ? 'Phút 30' : 'Ngày 6'})` : '👆 Bấm hạ $299 AUD / 72h ngay')}
                 </span>
               </button>
 
@@ -2614,16 +2623,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-fb="${escapeHtml(c.facebookUrl || '')}"
                 data-demo="${escapeHtml(demoUrlForModal)}"
                 data-early="${(!pitchTime || (isTurbo ? minsElapsed < 45 : daysElapsed < 9)) ? '1' : '0'}"
-                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-nurture-sms'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                  (isDay9Due && (isFbMode || !hasPhone))
-                    ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse'
-                    : step4Done
-                      ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950' : 'border-rose-300 bg-rose-50/80 text-rose-950')
-                      : isDay9Due
-                        ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse'
-                        : 'border-[#dcd4c0] bg-white hover:bg-rose-50 text-rose-950'
+                ${(autoEnabled && !step4Done && !isDay9Due) ? 'disabled style="opacity: 0.38; pointer-events: none;"' : 'style="opacity: 1;"'}
+                class="${(isFbMode || !hasPhone) ? 'btn-open-fb-modal' : 'btn-nurture-sms'} px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs ${
+                  (autoEnabled && !step4Done && !isDay9Due)
+                    ? 'border-stone-200 bg-stone-100/70 text-stone-400 select-none cursor-not-allowed'
+                    : (isDay9Due && (isFbMode || !hasPhone))
+                      ? 'border-2 border-[#1877f2] bg-blue-100/95 text-blue-950 ring-2 ring-[#1877f2]/50 font-extrabold animate-pulse cursor-pointer'
+                      : step4Done
+                        ? (isFbMode ? 'border-blue-300 bg-blue-50/70 text-blue-950 cursor-pointer' : 'border-rose-300 bg-rose-50/80 text-rose-950 cursor-pointer')
+                        : isDay9Due
+                          ? 'border-2 border-rose-500 bg-rose-100 text-rose-950 ring-2 ring-rose-400 font-extrabold animate-pulse cursor-pointer'
+                          : 'border-[#dcd4c0] bg-white hover:bg-rose-50 text-rose-950 cursor-pointer'
                 }"
-                title="${(isFbMode || !hasPhone) ? 'Bấm mở Smart Copy & Send Modal cho Bước 4 (Nhắc 24h cuối qua Facebook)' : 'Gửi SMS + Email Ngày 9: Thông báo 24 giờ cuối trước khi khoá & lưu trữ bản preview'}"
+                title="${(autoEnabled && !step4Done && !isDay9Due) ? 'Đang chờ tự động nhắc 24h cuối (Tắt Tự động chạy nếu muốn bấm gửi sớm)' : ((isFbMode || !hasPhone) ? 'Bấm mở Smart Copy & Send Modal cho Bước 4 (Nhắc 24h cuối qua Facebook)' : 'Gửi SMS + Email Ngày 9: Thông báo 24 giờ cuối trước khi khoá & lưu trữ bản preview')}"
               >
                 <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug">
                   <span>⏳ 4. Nhắc 24h Ngày 9</span>
@@ -2639,7 +2651,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   }
                 </div>
                 <span class="text-[10.5px] leading-snug ${isDay9Due ? (isFbMode ? 'text-[#1877f2] font-black' : 'text-rose-900 font-black') : 'text-rose-700'}">
-                  ${step4Done ? (isFbMode ? 'Đã gửi cảnh báo FB 24h' : 'Đã gửi cảnh báo 24h cuối') : (isFbMode ? 'Bấm Copy tin nhắc 24h FB' : `Tự chạy ${isTurbo ? 'Phút 45' : 'Ngày 9'} (Hoặc bấm gửi)`)}
+                  ${step4Done ? (isFbMode ? 'Đã gửi cảnh báo FB 24h' : 'Đã gửi cảnh báo 24h cuối') : ((autoEnabled && !isDay9Due) ? `🤖 Tự chạy ${isTurbo ? 'Phút 45' : 'Ngày 9'}` : (isFbMode ? '👆 Bấm Copy tin nhắc 24h FB' : '👆 Bấm gửi cảnh báo 24h ngay'))}
                 </span>
               </button>
 
@@ -2686,12 +2698,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                   type="button"
                   data-cid="${c.id}"
                   data-action="expire_demo"
-                  class="btn-expire-demo px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs cursor-pointer ${
-                    isDay10Due
-                      ? 'border-2 border-stone-800 bg-stone-900 text-white font-extrabold animate-pulse'
-                      : 'border-stone-300 bg-white hover:bg-stone-100 text-stone-700'
+                  ${(autoEnabled && !isDay10Due) ? 'disabled style="opacity: 0.38; pointer-events: none;"' : 'style="opacity: 1;"'}
+                  class="btn-expire-demo px-3 py-2.5 rounded-xl border transition-all text-left flex flex-col justify-between gap-1 shadow-2xs ${
+                    (autoEnabled && !isDay10Due)
+                      ? 'border-stone-200 bg-stone-100/70 text-stone-400 select-none cursor-not-allowed'
+                      : isDay10Due
+                        ? 'border-2 border-stone-800 bg-stone-900 text-white font-extrabold animate-pulse cursor-pointer'
+                        : 'border-stone-300 bg-white hover:bg-stone-100 text-stone-700 cursor-pointer'
                   }"
-                  title="Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)"
+                  title="${(autoEnabled && !isDay10Due) ? 'Đang chờ tự động khoá Demo (Tắt Tự động chạy nếu muốn khoá tay sớm)' : 'Khoá và thu hồi link demo ngay lập tức (trả về trang Hết Hạn HTTP 403)'}"
                 >
                   <div class="flex flex-wrap items-center justify-between gap-1 font-bold text-[11.5px] leading-snug ${isDay10Due ? 'text-white' : 'text-stone-800'}">
                     <span>🔒 5. Khoá Demo Ngày 10</span>
@@ -2701,7 +2716,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     }
                   </div>
                   <span class="text-[10px] truncate ${isDay10Due ? 'text-stone-300 font-bold' : 'text-stone-500'}">
-                    ${isDay10Due ? '👉 Quá hạn — Bấm khoá' : `Tự khoá ${isTurbo ? 'Phút 60' : 'Ngày 10'} (Hoặc khoá sớm)`}
+                    ${isDay10Due ? '👉 Quá hạn — Bấm khoá' : ((autoEnabled && !isDay10Due) ? `🤖 Tự khoá ${isTurbo ? 'Phút 60' : 'Ngày 10'}` : '👆 Bấm khoá Demo ngay')}
                   </span>
                 </button>
               `}
@@ -2811,18 +2826,39 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 data-cid="${c.id}"
                 data-paid="${isPaid ? '1' : '0'}"
                 value="${escapeHtml(resolvedLiveUrl)}" 
-                placeholder="${isPaid ? 'Nhập tên miền chính thức (VD: lushnailsbar.com.au) rồi bấm Lưu & Kết Nối (Báo Lên Sóng Live)...' : 'Sau khi khách thanh toán & chọn tên miền, nhập vào đây để Lưu & Kết Nối...'}" 
+                placeholder="${isPaid ? 'Nhập tên miền chính thức (VD: lushnailsbar.com.au) rồi bấm Lưu & Kết Nối...' : 'Sau khi khách thanh toán $599 & chọn tên miền, nhập vào đây để Lưu & Kết Nối...'}" 
                 class="live-url-input atelier-input w-full sm:flex-1 min-w-0 rounded-xl px-3.5 py-2 text-xs font-mono bg-white"
               >
-              <button 
-                type="button"
-                data-cid="${c.id}"
-                data-paid="${isPaid ? '1' : '0'}"
-                class="btn-save-demo w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl ${isPaid ? 'bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-800' : 'bg-white border border-[#d8ccb8] hover:border-emerald-700 text-emerald-900'} text-xs font-bold shrink-0 transition-colors shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5"
-                title="Lưu tên miền, kết nối DNS tự động & gửi thông báo Báo Lên Sóng Live (SMS + Email) cho khách đã thanh toán"
-              >
-                <span>${isPaid ? (isLaunched ? '🚀 Lưu &amp; Báo Lên Sóng Lại' : '🚀 Lưu &amp; Kết Nối (Báo Lên Sóng Live)') : 'Lưu &amp; Kết Nối'}</span>
-              </button>
+              <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto shrink-0">
+                <button 
+                  type="button"
+                  data-cid="${c.id}"
+                  data-paid="${isPaid ? '1' : '0'}"
+                  class="btn-save-demo flex-1 sm:flex-none px-3.5 py-2.5 sm:py-2 rounded-xl bg-white border border-[#d8ccb8] hover:border-emerald-700 text-emerald-900 text-xs font-bold shrink-0 transition-colors shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1"
+                  title="Lưu tên miền chính thức & tự động tạo Zone / kết nối DNS"
+                >
+                  <span>Lưu &amp; Kết Nối</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-stage5-${c.id}"
+                  data-cid="${c.id}"
+                  data-paid="${isPaid ? '1' : '0'}"
+                  data-stage="site_launched"
+                  ${(!isPaid || !isValidUrl(resolvedLiveUrl)) ? 'disabled' : ''}
+                  class="btn-action btn-stage-action flex-1 sm:flex-none px-3.5 py-2.5 sm:py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-45 disabled:cursor-not-allowed text-white text-xs font-extrabold shrink-0 transition-all shadow-xs cursor-pointer inline-flex flex-col items-center justify-center leading-tight"
+                  title="Gửi thông báo Báo Lên Sóng Live (SMS + Email + Telegram, hoặc mở khung Copy FB nếu không có SĐT) & hoàn tất Bước 4"
+                >
+                  <span>🚀 Báo Lên Sóng Live</span>
+                  <span id="btn-stage5-sub-${c.id}" class="text-[9.5px] font-normal opacity-90">${
+                    !isPaid
+                      ? '🔒 Chờ khách thanh toán'
+                      : (!isValidUrl(resolvedLiveUrl)
+                          ? '🔒 Nhập tên miền trước'
+                          : (isLaunched ? '✅ Đã lên sóng (Bấm gửi lại)' : `Gửi link: ${escapeHtml(resolvedLiveUrl)}`))
+                  }</span>
+                </button>
+              </div>
             </div>
 
             ${c.cfNameservers ? `
@@ -2948,7 +2984,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const resolvedLiveUrl = (c.liveUrl || '').trim();
           const hasValidLive = isValidUrl(resolvedLiveUrl);
           const isPaid = c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched';
-          const isPitched = Boolean(c.demoSentAt) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
+          const isPitched = Boolean(c.demoSentAt || c.fbPitchedAt || c.step1SentAt) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
           const isLaunched = c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
           const canOpenLiveWeb = hasValidLive && isLaunched;
 
@@ -2975,18 +3011,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             },
             {
               label: '2. Gửi Chào Hàng (Pitch)',
-              sub: isPitched ? (c.reminderCount > 0 ? `Đã gửi & nhắc ${c.reminderCount} lần` : 'Đã gửi cho chủ tiệm') : 'Chờ gửi SMS / Email',
+              sub: isPitched ? (c.channelMode === 'facebook' ? 'Đã chào qua Facebook ✓' : 'Đã gửi cho chủ tiệm ✓') : 'Chờ gửi SMS / FB',
               done: isPitched,
               waiting: false
             },
             {
               label: '3. Khách Mua $599',
-              sub: isPaid ? 'Đã thanh toán $599 ✓' : 'Chờ khách bấm Claim $599',
+              sub: isPaid ? 'Đã thanh toán ✓' : 'Chờ khách bấm Claim',
               done: isPaid,
               waiting: false
             },
             {
-              label: '4. Lên Sóng Chính Thức',
+              label: isLaunched ? '4. Lên Sóng Chính Thức ✓' : '4. Lên Sóng Chính Thức',
               sub: isLaunched
                 ? `Đã lên sóng: ${resolvedLiveUrl || 'Live'}`
                 : (isPaid
@@ -3144,59 +3180,77 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                       </button>
                     </div>
 
-                    <!-- Action buttons for Demo -->
-                    <div class="flex items-center gap-1.5 flex-wrap">
+                    ${!hasValidDemo ? `
                       <button
                         type="button"
                         data-cid="${c.id}"
                         data-slug="${escapeHtml(c.demoSlug || '')}"
                         data-name="${escapeHtml(titleName)}"
-                        class="btn-open-upload-modal px-3 py-1.5 rounded-xl ${c.demoSourceType === 'kv' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-[#96432b] hover:bg-[#7d3520]'} text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                        title="Dựng khung Nails Atelier 1-Click hoặc tải gói source code HTML/ZIP"
+                        class="btn-open-upload-modal px-3 py-1.5 rounded-xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
                       >
-                        <span>🎨 ${c.demoSourceType === 'kv' ? `Đổi Khung / Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Dựng Khung Nails / Tải Code'}</span>
+                        <span>🎨 Dựng Khung Nails / Tải Code</span>
                       </button>
-                      <button
-                        type="button"
-                        data-cid="${c.id}"
-                        data-slug="${escapeHtml(c.demoSlug || '')}"
-                        class="btn-copy-ag-cmd px-2 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-semibold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
-                        title="Copy lệnh mở folder riêng clients/<slug>/ trên Antigravity để sửa sâu"
-                      >
-                        <span>⚡ Lệnh Antigravity</span>
-                      </button>
-                      <button
-                        type="button"
-                        data-cid="${c.id}"
-                        data-name="${escapeHtml(titleName)}"
-                        class="btn-copy-oil-prompt px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                        title="Copy Prompt tiếng Anh chuẩn để đưa 4 ảnh Google của tiệm vào AI vẽ thành tranh sơn dầu"
-                      >
-                        <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
-                      </button>
-                      ${c.revisionStatus === 'submitted' ? '' : `
-                      <button
-                        type="button"
-                        data-cid="${c.id}"
-                        class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300 text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
-                        title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
-                      >
-                        <span>🤖 AI Sửa Web</span>
-                      </button>
-                      <a
-                        href="/revision?cid=${encodeURIComponent(c.id)}&email=${encodeURIComponent(c.email || '')}"
-                        target="_blank"
-                        class="px-2 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-colors inline-flex items-center gap-1"
-                        title="Mở cổng Revision Portal của khách"
-                      >
-                        <span>📝 Portal Sửa</span>
-                        <span class="text-[10px]">↗</span>
-                      </a>
-                      `}
-                    </div>
+                    ` : ''}
                   </div>
-                  ${renderPaletteSwatchBar(c)}
-                  ${renderClientPhotosStrip(Array.isArray(c.photos) ? c.photos : [])}
+
+                  <details class="group pt-0.5">
+                    <summary class="cursor-pointer list-none inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100/90 hover:bg-stone-200/80 border border-stone-200/80 text-[11px] font-bold text-stone-700 select-none transition-colors">
+                      <span>⚙️ Công cụ Code &amp; Đổi Màu ▾</span>
+                    </summary>
+                    <div class="mt-2.5 pt-2.5 border-t border-[#f0eade] space-y-2.5">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          data-slug="${escapeHtml(c.demoSlug || '')}"
+                          data-name="${escapeHtml(titleName)}"
+                          class="btn-open-upload-modal px-3 py-1.5 rounded-xl ${c.demoSourceType === 'kv' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-[#96432b] hover:bg-[#7d3520]'} text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                          title="Dựng khung Nails Atelier 1-Click hoặc tải gói source code HTML/ZIP"
+                        >
+                          <span>🎨 ${c.demoSourceType === 'kv' ? `Đổi Khung / Cập Nhật Code (${c.demoFilesCount || 1}f)` : 'Dựng Khung Nails / Tải Code'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          data-slug="${escapeHtml(c.demoSlug || '')}"
+                          class="btn-copy-ag-cmd px-2 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-xs font-semibold text-[#96432b] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          title="Copy lệnh mở folder riêng clients/<slug>/ trên Antigravity để sửa sâu"
+                        >
+                          <span>⚡ Lệnh Antigravity</span>
+                        </button>
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          data-name="${escapeHtml(titleName)}"
+                          class="btn-copy-oil-prompt px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          title="Copy Prompt tiếng Anh chuẩn để đưa 4 ảnh Google của tiệm vào AI vẽ thành tranh sơn dầu"
+                        >
+                          <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
+                        </button>
+                        ${c.revisionStatus === 'submitted' ? '' : `
+                        <button
+                          type="button"
+                          data-cid="${c.id}"
+                          class="btn-open-ai-rev-modal px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#efe7d8] text-amber-950 border border-amber-300 text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                          title="Xem chi tiết sửa đổi &amp; Chạy Gemini AI tự động sửa code"
+                        >
+                          <span>🤖 AI Sửa Web</span>
+                        </button>
+                        <a
+                          href="/revision?cid=${encodeURIComponent(c.id)}&email=${encodeURIComponent(c.email || '')}"
+                          target="_blank"
+                          class="px-2 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#d8cca6] text-stone-700 text-xs font-bold transition-colors inline-flex items-center gap-1"
+                          title="Mở cổng Revision Portal của khách"
+                        >
+                          <span>📝 Portal Sửa</span>
+                          <span class="text-[10px]">↗</span>
+                        </a>
+                        `}
+                      </div>
+                      ${renderPaletteSwatchBar(c)}
+                      ${renderClientPhotosStrip(Array.isArray(c.photos) ? c.photos : [])}
+                    </div>
+                  </details>
                 </div>
 
                 <!-- Section 2: Urgency & Closing Engine (10-Day Automated Pipeline) -->
@@ -3205,20 +3259,23 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 <!-- Section 3: Official Live Domain (Unified Smart Concierge Flow) -->
                 ${renderSmartDomainSection(c, { isPaid, isLaunched, canOpenLiveWeb, resolvedLiveUrl, titleName })}
 
-                <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500">
-                  <div class="flex items-center gap-2 flex-wrap min-w-0">
-                    <span class="wrap-anywhere">📱 <strong>Lịch sử SMS:</strong> ${escapeHtml(c.lastSmsLog || 'Chưa gửi')}</span>
-                    <button
-                      type="button"
-                      data-cid="${c.id}"
-                      class="btn-view-sms-history px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer shrink-0"
-                      title="Mở toàn bộ chuỗi tin nhắn SMS đã gửi cho khách này"
-                    >
-                      <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
-                    </button>
+                <!-- Compact Single-Line Activity & Delivery Summary -->
+                <div class="pt-2 border-t border-[#e5dec9] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-600">
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+                    <span>👀 <strong>Demo:</strong> ${c.demoViewCount > 0 ? `<strong class="text-emerald-700">${c.demoViewCount} lượt xem</strong> (${c.demoViewerDevice || 'Mobile'}${c.demoLastViewedAt ? `, ${new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}` : ''})` : '<span class="text-stone-400">0 xem</span>'}${c.claimClickCount > 0 ? ` • <strong class="text-amber-800">💳 Claim: ${c.claimClickCount}</strong>` : ''}</span>
+                    <span>•</span>
+                    <span>📱 <strong>SMS:</strong> ${c.lastSmsLog ? (c.lastSmsLog.startsWith('OK') ? `<span class="text-emerald-700 font-bold">✓ Đã gửi</span>` : `<span class="text-rose-700 font-bold">⚠️ Lỗi</span>`) : '<span class="text-stone-400">Chưa gửi</span>'}</span>
+                    <span>•</span>
+                    <span>📧 <strong>Email:</strong> ${c.lastEmailLog ? (c.lastEmailLog.startsWith('OK') ? `<span class="text-emerald-700 font-bold">✓ Đã gửi</span>` : `<span class="text-stone-500">Bỏ qua</span>`) : '<span class="text-stone-400">Chưa gửi</span>'}</span>
                   </div>
-                  <span class="wrap-anywhere">👀 <strong>Lượt xem Demo:</strong> ${c.demoViewCount > 0 ? `<span class="text-emerald-700 font-extrabold">Đã xem ${c.demoViewCount} lần (${c.demoViewerDevice || 'Thiết bị'}, lần cuối: ${c.demoLastViewedAt ? new Date(c.demoLastViewedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'})</span>` : '<span class="text-stone-400">Khách chưa bấm mở link</span>'}${c.claimClickCount > 0 ? ` &bull; <span class="text-amber-800 font-extrabold">💳 Bấm Claim: ${c.claimClickCount}</span>` : ''}</span>
-                  <span class="wrap-anywhere">📧 <strong>Lịch sử Email:</strong> ${escapeHtml(c.lastEmailLog || 'Chưa gửi')}</span>
+                  <button
+                    type="button"
+                    data-cid="${c.id}"
+                    class="btn-view-sms-history px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer shrink-0"
+                    title="Mở toàn bộ chuỗi tin nhắn SMS đã gửi cho khách này"
+                  >
+                    <span>📜 Xem Toàn Bộ Lịch Sử (${Array.isArray(c.smsHistory) ? c.smsHistory.length : (c.lastSmsLog ? 1 : 0)})</span>
+                  </button>
                 </div>
               </div>
               </div><!-- /card-details-${c.id} -->
@@ -4236,11 +4293,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // Save Demo URL & Official Live Domain (+ Auto Launch Notification when Paid)
+        // Save Demo URL & Official Live Domain
         document.querySelectorAll('.btn-save-demo').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const cid = btn.getAttribute('data-cid');
-            const isPaid = btn.getAttribute('data-paid') === '1';
             const demoInput = document.getElementById(`demo-url-${cid}`);
             const liveInput = document.getElementById(`live-url-${cid}`);
             const demoUrl = demoInput ? demoInput.value.trim() : undefined;
@@ -4248,18 +4304,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const origText = btn.innerHTML;
             btn.innerHTML = '<span class="wynn-spin-dark"></span><span class="ml-1.5">Đang lưu...</span>';
             btn.disabled = true;
-            const actionPayload = { action: 'save_client', customerId: cid, liveUrl, launchSite: isPaid && Boolean(liveUrl) };
+            const actionPayload = { action: 'save_client', customerId: cid, liveUrl, launchSite: false };
             if (demoUrl) actionPayload.demoUrl = demoUrl;
-            const res = await runAdminAction(actionPayload, { busyText: isPaid && liveUrl ? 'Đang kết nối tên miền & Báo Lên Sóng Live...' : 'Đang lưu & kết nối tên miền...', skipReload: true });
+            const res = await runAdminAction(actionPayload, { busyText: 'Đang lưu & kết nối tên miền...', skipReload: true });
             btn.disabled = false;
             btn.innerHTML = origText;
             if (res && res.client) {
               upsertClientInCache(res.client);
               applyFiltersAndRender();
             }
-            if (res && res.notifyRes) {
-              showToast(`🚀 Đã lưu tên miền "${liveUrl}" & gửi thông báo Báo Lên Sóng Live (SMS + Email) cho khách!`);
-            } else if (res && res.liveDomainBindResult && res.liveDomainBindResult.attached && res.liveDomainBindResult.nameservers) {
+            if (res && res.liveDomainBindResult && res.liveDomainBindResult.attached && res.liveDomainBindResult.nameservers) {
               showToast(`🎉 Đã kết nối tên miền thành công! NS kỹ thuật cho Admin: ${res.liveDomainBindResult.nameservers}`);
             } else if (res && res.ok) {
               showToast('Đã lưu Tên Miền Chính Thức!');
@@ -4376,6 +4430,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
             if (res && res.client) {
               upsertClientInCache(res.client);
+              applyFiltersAndRender();
+              updateMetrics(clientsCache);
             }
 
             if (res && res.notifyRes) {
@@ -4388,14 +4444,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                 ? `Email: Đã gửi tới ${res.notifyRes.emailResult.to} ✅`
                 : `Email: ${res.notifyRes.emailResult ? res.notifyRes.emailResult.reason : 'Bỏ qua'}`;
 
-              showToast(`Kết quả [${stage}] → ${smsStatus} | ${emailStatus}`, !smsOk && !emailOk);
-
-              if (!smsOk && res.notifyRes.phone && res.notifyRes.smsText) {
-                openMacSmsModal({
-                  phone: res.notifyRes.phone,
-                  text: res.notifyRes.smsText,
-                  reason: (res.notifyRes.smsResult && res.notifyRes.smsResult.reason) || 'ClickSend chưa gửi được hoặc tài khoản hết số dư'
-                });
+              if (stage === 'site_launched' && (!res.notifyRes.phone || (res.client && res.client.channelMode === 'facebook'))) {
+                const updatedClient = (res && res.client) || client;
+                showToast(`🚀 Đã cập nhật Bước 4 (Lên Sóng Chính Thức ✓) & mở khung Copy lời báo Live qua Facebook!`);
+                openFacebookPitchModal(updatedClient, updatedClient ? updatedClient.facebookUrl : '', demoUrl, 'launched');
+              } else {
+                showToast(`Kết quả [${stage}] → ${smsStatus} | ${emailStatus}`, !smsOk && !emailOk);
+                if (!smsOk && res.notifyRes.phone && res.notifyRes.smsText) {
+                  openMacSmsModal({
+                    phone: res.notifyRes.phone,
+                    text: res.notifyRes.smsText,
+                    reason: (res.notifyRes.smsResult && res.notifyRes.smsResult.reason) || 'ClickSend chưa gửi được hoặc tài khoản hết số dư'
+                  });
+                }
               }
             } else {
               btn.disabled = false;
@@ -6149,6 +6210,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (stepKey === 'day9' || stepKey === 'step4') {
           return `Hi ${bizName}, quick heads up from WynnPages Studio! ⏳\n\nYour custom website preview and the $299 AUD (50% OFF) offer is scheduled to close and be archived in 24 hours:\n\n👉 ${demoUrl}\n\nIf you'd like to keep this custom design with $0 monthly fees, please claim it on the preview link today before the slot is released!\n\nWarm regards,\nSam — WynnPages Studio`;
         }
+        if (stepKey === 'launched' || stepKey === 'site_launched') {
+          const rawLive = (client && client.liveUrl) ? String(client.liveUrl).trim() : '';
+          const liveHref = rawLive ? (rawLive.startsWith('http') ? rawLive : `https://${rawLive}`) : demoUrl;
+          return `Congratulations ${bizName}! 🎉🍾\n\nYour bespoke website is now officially LIVE on your custom domain:\n\n👉 ${liveHref}\n\n• 100% owned by you with $0 ongoing monthly fees.\n• Hosted on our Australian High-Speed Network with full SSL security.\n\nThank you so much for trusting WynnPages Studio with your salon's digital presence!\n\nWarm regards,\nSam — WynnPages Studio`;
+        }
         return `Hi ${bizName}! 🌿\n\nI came across your beautiful boutique on Google Maps and created a bespoke, lightning-fast digital website preview for you:\n\n👉 ${demoUrl}\n\n• Zero monthly fees & zero ongoing retainers ($599 AUD one-time, 100% owned by you).\n• Integrated with your real services, Google reviews, and instant appointment booking.\n• Crafted on our Australian High-Speed Network with Grade A speed (<0.35s).\n\nTake a quick look whenever you have a quiet moment — no pressure at all! If you love it, you can claim it right on the preview.\n\nWarm regards,\nSam — WynnPages Studio\nhttps://wynnpages.com.au`;
       }
 
@@ -6161,7 +6227,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           day1: 'Bước 1: Chào Hàng Qua Facebook (Khởi động 10 ngày)',
           day3: `Bước 2: Hỏi Thăm Ngày 3 (${views >= 2 ? `Khách đã xem ${views} lần` : 'Mẫu nhắc xem nhẹ'})`,
           day6: 'Bước 3: Gửi Deal $299 AUD (50% OFF • 72h)',
-          day9: 'Bước 4: Cảnh Báo 24h Cuối Trước Khi Khoá Demo'
+          day9: 'Bước 4: Cảnh Báo 24h Cuối Trước Khi Khoá Demo',
+          launched: '🚀 Báo Lên Sóng Chính Thức Qua Facebook (Bước 4 Live)'
         };
         if (fbModalTitle) fbModalTitle.textContent = titles[currentFbStepKey] || titles.day1;
         if (fbModalSubtitle) fbModalSubtitle.textContent = `Tiệm "${bizName}" • Kênh Facebook Assisted`;
