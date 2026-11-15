@@ -57,19 +57,16 @@
 
   <!-- Header -->
   <header class="w-full border-b border-[#dbc1ba]/40 bg-[#fcf9f3]/90 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-4xl mx-auto px-5 sm:px-6 py-4 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3 group">
-        <img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages" class="w-8 h-8 rounded-lg shadow-xs">
+    <div class="max-w-4xl mx-auto px-5 sm:px-6 py-4 flex items-center justify-between gap-3">
+      <a href="/" class="flex items-center gap-2.5 group shrink-0">
+        <img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages" class="w-8 h-8 rounded-lg shadow-xs shrink-0">
         <span class="font-editorial text-2xl font-bold tracking-tight text-stone-900 group-hover:text-[#96432b] transition-colors">
           WynnPages
         </span>
-        <span class="text-[10px] uppercase tracking-widest text-[#96432b] font-bold bg-[#fbdeb9]/60 px-2.5 py-0.5 rounded-full border border-[#96432b]/20">
-          Domain Concierge
-        </span>
       </a>
-      <a href="mailto:hello@wynnpages.com.au" class="text-xs font-bold text-[#96432b] hover:underline flex items-center gap-1.5">
-        <span>Need help? hello@wynnpages.com.au</span>
-      </a>
+      <span class="text-[10px] uppercase tracking-widest text-[#96432b] font-bold bg-[#fbdeb9]/60 px-3 py-1 rounded-full border border-[#96432b]/20 shrink-0 whitespace-nowrap">
+        Domain Concierge
+      </span>
     </div>
   </header>
 
@@ -87,26 +84,6 @@
       <p id="personalized-subtitle" class="text-stone-600 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
         To ensure your business retains <strong>100% direct legal ownership with transparent annual auto-renewals (~$15–$20 AUD/year)</strong>, WynnPages recommends Australia's leading accredited registrar, <strong>VentraIP Australia</strong>. Zero DNS or tech knowledge required!
       </p>
-    </div>
-
-    <!-- Step 0: Copy Studio Email Box -->
-    <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#96432b]/30 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-      <div class="space-y-1">
-        <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#96432b] block flex items-center gap-1.5">
-          <span>🔑 WynnPages Technical Delegation Email</span>
-        </span>
-        <div class="flex items-center gap-2 flex-wrap">
-          <code id="delegate-email-text" class="text-base sm:text-lg font-extrabold font-mono text-stone-900 bg-[#fcf9f3] px-3 py-1 rounded-xl border border-[#e5dec9]">hello@wynnpages.com.au</code>
-          <span class="text-xs text-stone-500">(Name: <strong>WynnPages Studio</strong>)</span>
-        </div>
-      </div>
-      <button
-        type="button"
-        id="btn-copy-email"
-        class="px-5 py-3 rounded-2xl bg-[#96432b] hover:bg-[#7d3520] text-white text-xs sm:text-sm font-extrabold shadow-md transition-all shrink-0 flex items-center justify-center gap-2 active:scale-95"
-      >
-        <span>📋 Copy Email</span>
-      </button>
     </div>
 
     <!-- 3 Core Principles -->
@@ -1030,56 +1007,74 @@
         });
       }
 
-      // Pre-fill fields across both tabs
-      if (dom) {
-        const s1 = document.getElementById('mockup-domain-search');
-        const s2 = document.getElementById('mockup-domain-display');
-        const s3 = document.getElementById('mockup-cart-domain');
-        if (s1) s1.textContent = dom;
-        if (s2) s2.textContent = dom;
-        if (s3) s3.textContent = dom;
+      function applyPrefill({ domVal, nameVal, emailVal, nsVal }) {
+        if (domVal) {
+          const s1 = document.getElementById('mockup-domain-search');
+          const s2 = document.getElementById('mockup-domain-display');
+          const s3 = document.getElementById('mockup-cart-domain');
+          if (s1) s1.textContent = domVal;
+          if (s2) s2.textContent = domVal;
+          if (s3) s3.textContent = domVal;
 
-        const newDom = document.getElementById('new-domain');
-        if (newDom) newDom.value = dom;
-        const existDom = document.getElementById('existing-domain');
-        if (existDom) existDom.value = dom;
-      }
-
-      if (name) {
-        const newBiz = document.getElementById('new-biz-name');
-        if (newBiz) newBiz.value = name;
-        const existBiz = document.getElementById('existing-biz-name');
-        if (existBiz) existBiz.value = name;
-      }
-
-      if (email) {
-        const newMail = document.getElementById('new-email');
-        if (newMail) newMail.value = email;
-        const existMail = document.getElementById('existing-email');
-        if (existMail) existMail.value = email;
-      }
-
-      // Nameserver setup
-      if (ns) {
-        const parts = ns.split(',').map(s => s.trim()).filter(Boolean);
-        const nsCard1 = document.getElementById('ns-card-1');
-        const nsCard2 = document.getElementById('ns-card-2');
-        const itNsDetails = document.getElementById('it-ns-details');
-        if (parts[0] && nsCard1) nsCard1.textContent = parts[0];
-        if (parts[1] && nsCard2) nsCard2.textContent = parts[1];
-        if (parts[0] && itNsDetails) itNsDetails.classList.remove('hidden');
-
-        // Top banner in Tab 2
-        const topBanner = document.getElementById('ns-top-banner');
-        const bannerDom = document.getElementById('ns-banner-domain');
-        const b1 = document.getElementById('banner-ns-1');
-        const b2 = document.getElementById('banner-ns-2');
-        if (topBanner && parts[0]) {
-          topBanner.classList.remove('hidden');
-          if (bannerDom) bannerDom.textContent = dom || 'your domain';
-          if (b1) b1.textContent = parts[0];
-          if (b2) b2.textContent = parts[1] || parts[0];
+          const newDom = document.getElementById('new-domain');
+          if (newDom && !newDom.value) newDom.value = domVal;
+          const existDom = document.getElementById('existing-domain');
+          if (existDom && !existDom.value) existDom.value = domVal;
         }
+
+        if (nameVal) {
+          const newBiz = document.getElementById('new-biz-name');
+          if (newBiz && !newBiz.value) newBiz.value = nameVal;
+          const existBiz = document.getElementById('existing-biz-name');
+          if (existBiz && !existBiz.value) existBiz.value = nameVal;
+        }
+
+        if (emailVal) {
+          const newMail = document.getElementById('new-email');
+          if (newMail && !newMail.value) newMail.value = emailVal;
+          const existMail = document.getElementById('existing-email');
+          if (existMail && !existMail.value) existMail.value = emailVal;
+        }
+
+        if (nsVal) {
+          const parts = nsVal.split(',').map(s => s.trim()).filter(Boolean);
+          const nsCard1 = document.getElementById('ns-card-1');
+          const nsCard2 = document.getElementById('ns-card-2');
+          const itNsDetails = document.getElementById('it-ns-details');
+          if (parts[0] && nsCard1) nsCard1.textContent = parts[0];
+          if (parts[1] && nsCard2) nsCard2.textContent = parts[1];
+          if (parts[0] && itNsDetails) itNsDetails.classList.remove('hidden');
+
+          const topBanner = document.getElementById('ns-top-banner');
+          const bannerDom = document.getElementById('ns-banner-domain');
+          const b1 = document.getElementById('banner-ns-1');
+          const b2 = document.getElementById('banner-ns-2');
+          if (topBanner && parts[0]) {
+            topBanner.classList.remove('hidden');
+            if (bannerDom) bannerDom.textContent = domVal || dom || 'your domain';
+            if (b1) b1.textContent = parts[0];
+            if (b2) b2.textContent = parts[1] || parts[0];
+          }
+        }
+      }
+
+      applyPrefill({ domVal: dom, nameVal: name, emailVal: email, nsVal: ns });
+
+      if (cid && (!dom || !name || !email)) {
+        fetch(`/api/revision-info?cid=${encodeURIComponent(cid)}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(info => {
+            if (!info || !info.ok) return;
+            const resolvedDom = (info.liveUrl || info.existingDomain || info.desiredDomains || (info.savedDraft && info.savedDraft.domainName) || '').trim();
+            const cleanDom = (resolvedDom && resolvedDom.toUpperCase() !== 'TBD') ? resolvedDom : '';
+            applyPrefill({
+              domVal: dom || cleanDom,
+              nameVal: name || info.businessName || '',
+              emailVal: email || info.email || '',
+              nsVal: ns || info.cfNameservers || ''
+            });
+          })
+          .catch(() => {});
       }
 
       function switchTab(mode) {

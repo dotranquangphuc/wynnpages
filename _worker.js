@@ -91,6 +91,39 @@ function toGsmSafeAscii(str) {
     .replace(/[‘’]/g, "'");
 }
 
+function sanitizeSmsUrlsForClickSend(str) {
+  if (!str) return '';
+  let out = String(str);
+  // 1. Clean query parameters on any wynnpages.com.au URL so client domains/emails never leak in URL params
+  out = out.replace(/https?:\/\/(?:[a-z0-9-]+\.)*wynnpages\.com\.au(?:\/[^\s)]*)?/gi, (fullUrl) => {
+    try {
+      const u = new URL(fullUrl);
+      for (const k of ['domain', 'email', 'ns', 'name']) {
+        u.searchParams.delete(k);
+      }
+      return u.toString();
+    } catch (_) {
+      return fullUrl;
+    }
+  });
+  // 2. Temporarily tokenize legitimate wynnpages.com.au URLs and bare domains so they are untouched
+  const safeTokens = [];
+  out = out.replace(/(?:https?:\/\/)?(?:[a-z0-9-]+\.)*wynnpages\.com\.au(?:\/[^\s)]*)?/gi, (match) => {
+    const idx = safeTokens.length;
+    safeTokens.push(match);
+    return `__WYNN_SAFE_URL_${idx}__`;
+  });
+  // 3. Remove any email addresses
+  out = out.replace(/\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g, 'our studio email');
+  // 4. Remove any non-wynnpages URLs (http:// or https://...)
+  out = out.replace(/https?:\/\/[^\s)]+/gi, 'your domain');
+  // 5. Remove any bare client/third-party domain names (e.g. cafe.com.au, salon.com, shop.au) so ClickSend never blocks the SMS
+  out = out.replace(/\b[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.(?:com\.au|net\.au|org\.au|id\.au|asn\.au|edu\.au|gov\.au|au|com|net|org|co|io|biz|info|me|site|online|store|shop|beauty|salon|studio|melbourne|sydney)\b/gi, 'your domain');
+  // 6. Restore legitimate wynnpages.com.au URLs
+  out = out.replace(/__WYNN_SAFE_URL_(\d+)__/g, (_, idx) => safeTokens[Number(idx)] || '');
+  return out;
+}
+
 async function sendClickSendSms(toPhone, bodyText, cfg) {
   if (typeof toPhone === 'object' && toPhone !== null) {
     cfg = toPhone.cfg || cfg;
@@ -98,7 +131,7 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
     toPhone = toPhone.to || toPhone.phone;
   }
   const formattedTo = normalizeAuPhone(toPhone);
-  const safeBody = toGsmSafeAscii(bodyText);
+  const safeBody = toGsmSafeAscii(sanitizeSmsUrlsForClickSend(bodyText));
   if (!formattedTo) {
     return { sent: false, reason: 'Missing recipient phone number' };
   }
@@ -1548,9 +1581,13 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
       isOutbound
     });
 
+    const smsPortalUrl = isOutbound
+      ? `${origin}/revision?client_id=${encodeURIComponent(resolvedCid)}`
+      : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic`;
+
     const smsText = isOutbound
-      ? `Thank you ${resolvedBiz}! Your website is officially yours (${amountAudShort}). Review your details & pick your domain here: ${portalUrl} - WynnPages`
-      : `Welcome to WynnPages, ${resolvedBiz}! Payment (${amountAudShort}) confirmed. Fill in your quick 2-min business details here: ${portalUrl}`;
+      ? `Thank you ${resolvedBiz}! Your website is officially yours (${amountAudShort}). Review your details & pick your domain here: ${smsPortalUrl} - WynnPages`
+      : `Welcome to WynnPages, ${resolvedBiz}! Payment (${amountAudShort}) confirmed. Fill in your quick 2-min business details here: ${smsPortalUrl}`;
 
     const tgMessage = [
       `🏢 Khách hàng: ${resolvedBiz}`,
@@ -1672,7 +1709,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   if (stage === 'payment_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
     const paidLabel = client.dealStatus === 'flash_deal' || client.dealType === 'flash_deal_50' ? '$299 AUD' : '$599 AUD';
-    smsText = `Welcome to WynnPages, ${bizLabel}! Payment (${paidLabel}) confirmed. Fill in your quick 2-min business details here: ${onboardingBriefUrl}`;
+    const smsOnboardingUrl = `${origin}/onboarding?client_id=${encodeURIComponent(client.id || '')}&type=organic`;
+    smsText = `Welcome to WynnPages, ${bizLabel}! Payment (${paidLabel}) confirmed. Fill in your quick 2-min business details here: ${smsOnboardingUrl}`;
     emailSubject = `Tax Invoice & Welcome: Let's Build Your ${bizLabel} Website`;
     emailHtml = buildTaxInvoiceEmailHtml({
       businessName: bizLabel,
@@ -1699,9 +1737,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       tab: hasExisting ? 'existing' : 'new',
       ns: isSelfNs ? (client.cfNameservers || '') : ''
     });
+    const smsDomainGuideUrl = `${origin}/domain-guide?cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
 
     if (isAlreadyDelegated) {
-      smsText = `Got it, ${firstName}! Our team is connecting ${domainInfo} for you right now. We'll text & email you as soon as your website is live! - WynnPages`;
+      smsText = `Got it, ${firstName}! Your preferred domain details have been received and our team is preparing your launch right now. We'll text you as soon as your website is live! - WynnPages`;
       emailSubject = `All Set! Our Engineers Are Connecting ${domainInfo}`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Studio Active • Hands-Free Domain Setup Underway',
@@ -1723,7 +1762,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       });
     } else if (isSelfNs) {
       const nsParts = String(client.cfNameservers || '').split(',').map((s) => s.trim()).filter(Boolean);
-      smsText = `Thanks ${firstName}! Your WynnPages nameservers for ${domainInfo}: ${nsParts.join(', ')}. Full guide emailed to you: ${domainGuideUrl}`;
+      smsText = `Thanks ${firstName}! Your preferred domain details have been received. Full network nameservers & setup guide emailed to you: ${smsDomainGuideUrl} - WynnPages`;
       emailSubject = `Details Received! Your Network Nameservers for ${domainInfo}`;
       emailHtml = buildAtelierEmailHtml({
         preheader: `Nameservers Ready for ${domainInfo}`,
@@ -1747,7 +1786,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         }
       });
     } else if (hasExisting) {
-      smsText = `Thanks ${firstName}! We've got your details. Final step to connect ${domainInfo}: follow this easy 2-min guide: ${domainGuideUrl} - WynnPages`;
+      smsText = `Thanks ${firstName}! Your preferred domain details have been received. Final step to connect your domain: follow this easy 2-min guide: ${smsDomainGuideUrl} - WynnPages`;
       emailSubject = `Details Received! Next Step: Connect Your Domain (${domainInfo})`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Studio Active • Free Concierge Domain Connection',
@@ -1775,7 +1814,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         }
       });
     } else {
-      smsText = `Thanks ${firstName}! We've got your details. Final step to register ${domainInfo}: follow this easy 2-min guide: ${domainGuideUrl} - WynnPages`;
+      smsText = `Thanks ${firstName}! Your preferred domain details have been received. Final step to set up your domain: follow this easy 2-min guide: ${smsDomainGuideUrl} - WynnPages`;
       emailSubject = `Details Received! Next Step: 2-Minute Domain Setup (${domainInfo})`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Studio Active • 2-Minute Domain Setup Guide Inside',
@@ -1873,8 +1912,9 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'outbound_paid_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
     const revisionUrl = `${origin}/revision?client_id=${encodeURIComponent(client.id || '')}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
+    const smsRevisionUrl = `${origin}/revision?client_id=${encodeURIComponent(client.id || '')}`;
     const paidLabel = client.dealStatus === 'flash_deal' || client.dealType === 'flash_deal_50' ? '$299.00 AUD' : '$599.00 AUD';
-    smsText = `Thank you ${bizLabel}! Your website is officially yours. Review your details & pick your domain name here: ${revisionUrl} (Live in 48h!) - WynnPages`;
+    smsText = `Thank you ${bizLabel}! Your website is officially yours. Review your details & pick your domain name here: ${smsRevisionUrl} (Live in 48h!) - WynnPages`;
     emailSubject = `Tax Invoice & Next Step: Finalise Your ${bizLabel} Website`;
     emailHtml = buildTaxInvoiceEmailHtml({
       businessName: bizLabel,
@@ -1898,9 +1938,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const guideNewUrl = buildDomainGuideUrl({ origin, client, tab: 'new' });
     const guideExistingUrl = buildDomainGuideUrl({ origin, client, tab: 'existing' });
     const defaultGuideUrl = hasExisting ? guideExistingUrl : guideNewUrl;
+    const smsGuideUrl = `${origin}/domain-guide?cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
 
     if (client.domainDelegated || client.domainConciergeRequested) {
-      smsText = `Got it, ${bizLabel}! We've received your updates & domain request (${domainLabel}). We'll text you as soon as your site is live! - WynnPages`;
+      smsText = `Got it, ${bizLabel}! Your website updates and preferred domain details have been received, and our team is preparing your launch. We'll text you as soon as your site is live! - WynnPages`;
       emailSubject = `Updates Received! We Are Preparing ${bizLabel} For Launch`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Website Updates Locked • Preparing Official Launch',
@@ -1916,7 +1957,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         }
       });
     } else {
-      smsText = `Thanks ${bizLabel}! We've got your updates. Final step to launch ${domainLabel}: follow this easy 2-min domain guide: ${defaultGuideUrl} - WynnPages`;
+      smsText = `Thanks ${bizLabel}! Your website updates and preferred domain details have been received. Final step to connect your domain: follow this easy 2-min guide: ${smsGuideUrl} - WynnPages`;
       emailSubject = `Updates Received! Final Step: Connect Your Domain (${bizLabel})`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Updates Locked • 2-Minute Domain Guide Inside',
@@ -1971,7 +2012,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'site_launched') {
     const rawLiveDomain = (client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
     const liveUrl = rawLiveDomain.startsWith('http') ? rawLiveDomain : `https://${rawLiveDomain}`;
-    smsText = `Congrats ${firstName}! Your new website is officially LIVE at ${liveUrl} — 100% yours with $0 monthly fees. Thank you for choosing WynnPages!`;
+    smsText = `Congrats ${firstName}! Your new custom website is officially LIVE on your domain — 100% yours with $0 monthly fees. Check your email for your live launch link or view here: ${shortDemoUrl} - WynnPages`;
     emailSubject = `Congratulations! Your WynnPages Website is Officially Live`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Officially Launched on the WynnPages Australian High-Speed Network',
@@ -2147,8 +2188,8 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
       if (newConfig.images.biabFeature) {
         updated = updated.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.biabFeature}$2`);
       }
-      if (newConfig.images.pedicureFeature) {
-        updated = updated.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.pedicureFeature}$2`);
+      if (newConfig.images.beforeNail) {
+        updated = updated.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.beforeNail}$2`);
       }
     }
   }
