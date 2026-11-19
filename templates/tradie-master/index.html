@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WynnPages | Tradie Master Engine</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons (Lightweight SVG icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-builder"> <!-- Đổi class thành theme-plumber, theme-electrician để test -->
+
+    <!-- Global Noise Texture (Cảm giác vật liệu thủ công) -->
+    <div class="global-noise"></div>
+
+    <!-- Header / Nav -->
+    <header class="header glass-panel">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon"><i class="ph-bold ph-hard-hat"></i></span>
+                <span class="logo-text">ELITE BUILDERS</span>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="#services">Services</a>
+                <a href="#projects">Projects</a>
+                <a href="#reviews">Reviews</a>
+            </nav>
+            
+            <div class="nav-cta">
+                <a href="tel:1800123456" class="btn btn-primary magnetic" data-strength="20">
+                    <span class="btn-text">
+                        <i class="ph-fill ph-phone-call"></i> 
+                        1800 123 456
+                    </span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-glow"></div>
+            <div class="container hero-layout">
+                <div class="hero-content">
+                    <div class="hero-badge reveal">
+                        <div class="badge-dot"></div>
+                        Fully Licensed & Insured • QBCC 1234567
+                    </div>
+                    
+                    <h1 class="hero-title reveal delay-1">
+                        Master <span class="text-accent">Craftsmanship</span><br>
+                        Built to Last.
+                    </h1>
+                    
+                    <p class="hero-desc reveal delay-2">
+                        Award-winning custom home builders and renovation specialists serving the Greater Region for over 20 years. Uncompromising quality, transparent pricing.
+                    </p>
+                    
+                    <div class="hero-actions reveal delay-3">
+                        <a href="#quote" class="btn btn-primary btn-lg magnetic" data-strength="30">
+                            <span class="btn-text">Request a Free Quote</span>
+                        </a>
+                        <div class="hero-trust">
+                            <div class="google-rating">
+                                <span class="stars">★★★★★</span>
+                                <span class="rating-text">4.9/5 from 150+ Google Reviews</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Graphic -->
+                <div class="hero-visual reveal delay-2">
+                    <div class="visual-card glass-panel interactive-card">
+                        <div class="card-glow"></div>
+                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Luxury Home Construction" class="visual-img">
+                        <div class="floating-badge top-right">
+                            <i class="ph-fill ph-seal-check"></i> Master Builder
+                        </div>
+                        <div class="floating-badge bottom-left">
+                            <span class="stat-number">20+</span>
+                            <span class="stat-label">Years<br>Experience</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Trust Marquee -->
+        <section class="trust-marquee">
+            <div class="marquee-track">
+                <div class="marquee-content">
+                    <span class="trust-item"><i class="ph-bold ph-check"></i> Master Builders Association</span>
+                    <span class="trust-item"><i class="ph-bold ph-check"></i> $20M Public Liability Insured</span>
+                    <span class="trust-item"><i class="ph-bold ph-check"></i> HIA Member</span>
+                    <span class="trust-item"><i class="ph-bold ph-check"></i> Lifetime Structural Guarantee</span>
+                    <!-- Duplicate for infinite loop -->
+                    <span class="trust-item" aria-hidden="true"><i class="ph-bold ph-check"></i> Master Builders Association</span>
+                    <span class="trust-item" aria-hidden="true"><i class="ph-bold ph-check"></i> $20M Public Liability Insured</span>
+                    <span class="trust-item" aria-hidden="true"><i class="ph-bold ph-check"></i> HIA Member</span>
+                    <span class="trust-item" aria-hidden="true"><i class="ph-bold ph-check"></i> Lifetime Structural Guarantee</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services with Mouse Spotlight Effect -->
+        <section id="services" class="services section-padding">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 class="section-title">Our <span class="text-accent">Expertise</span></h2>
+                    <p class="section-desc">Precision engineering meets architectural beauty. We handle everything from concept to handover.</p>
+                </div>
+
+                <div class="services-grid" id="spotlight-grid">
+                    <!-- Card 1 -->
+                    <div class="service-card glass-panel interactive-card reveal">
+                        <div class="card-glow"></div>
+                        <div class="card-content">
+                            <div class="service-icon"><i class="ph-light ph-house-line"></i></div>
+                            <h3 class="service-title">Custom Homes</h3>
+                            <p class="service-desc">Architecturally designed homes built with meticulous attention to detail and premium materials.</p>
+                            <a href="#" class="service-link">View Portfolio <i class="ph-bold ph-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="service-card glass-panel interactive-card reveal delay-1">
+                        <div class="card-glow"></div>
+                        <div class="card-content">
+                            <div class="service-icon"><i class="ph-light ph-hammer"></i></div>
+                            <h3 class="service-title">Major Renovations</h3>
+                            <p class="service-desc">Transforming existing properties into modern masterpieces without compromising structural integrity.</p>
+                            <a href="#" class="service-link">Learn More <i class="ph-bold ph-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="service-card glass-panel interactive-card reveal delay-2">
+                        <div class="card-glow"></div>
+                        <div class="card-content">
+                            <div class="service-icon"><i class="ph-light ph-buildings"></i></div>
+                            <h3 class="service-title">Commercial Fitouts</h3>
+                            <p class="service-desc">High-end retail and office fitouts delivered on time to minimize your business downtime.</p>
+                            <a href="#" class="service-link">View Specs <i class="ph-bold ph-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1651,18 +1651,19 @@
         </div>
 
         <!-- Interactive Split Slider Container -->
-        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[16/10] sm:aspect-[16/9] select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
+        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[3/4] sm:aspect-[5/4] max-w-2xl mx-auto select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
           <!-- AFTER Layer (Underneath - Full Width) -->
           <img
             id="ba-after-img"
             src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
             alt="After BIAB structured overlay and Russian cuticle refinement"
             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style="object-position: 50% 56%;"
             loading="lazy"
             decoding="async"
           >
-          <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
-            AFTER: Structured BIAB Overlay
+          <div class="absolute top-3.5 right-3.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.16em] font-bold text-white bg-black/55 backdrop-blur-md pointer-events-none border border-white/25 shadow-sm">
+            AFTER
           </div>
 
           <!-- BEFORE Layer (Top - Clipped 1:1 without distortion via clip-path) -->
@@ -1672,12 +1673,12 @@
               src="https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg"
               alt="Before natural unpolished fingernails prior to BIAB restoration"
               class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
-              style="width: 100%; height: 100%; object-fit: cover;"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 56%;"
               loading="lazy"
               decoding="async"
             >
-            <div class="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
-              BEFORE: Fragile Natural Plate
+            <div class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.16em] font-bold text-white bg-black/55 backdrop-blur-md pointer-events-none border border-white/25 shadow-sm">
+              BEFORE
             </div>
           </div>
 
@@ -2163,6 +2164,44 @@
       const cfg = window.ATELIER_CONFIG || {};
       const menu = Array.isArray(window.SALON_MENU_DATA) ? window.SALON_MENU_DATA : [];
       const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // 0. Client-Side Expired Demo 48-Hour Self-Unlock Gate (when ATELIER_CONFIG.dealStatus === 'expired')
+      const qsParams = new URLSearchParams(window.location.search);
+      if (cfg.dealStatus === 'expired' && !qsParams.get('preview') && !qsParams.get('admin') && !qsParams.get('unlocked')) {
+        const expOverlay = document.createElement('div');
+        expOverlay.id = 'atelier-expired-overlay';
+        expOverlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(251,249,244,0.97);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Plus Jakarta Sans",sans-serif;';
+        const slugVal = (cfg.slug || window.location.hostname.split('.')[0] || '').replace(/[^a-z0-9-]/gi, '');
+        const bName = cfg.salonName || 'Your Boutique';
+        expOverlay.innerHTML = `
+          <div style="background:#fff;border:1px solid #e7dfcc;border-radius:28px;max-width:560px;width:100%;padding:40px 30px;text-align:center;box-shadow:0 25px 60px -15px rgba(150,67,43,0.14);">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:4px 14px;border-radius:9999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">● Demo Preview Archived</div>
+            <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:700;color:#1c1917;margin-bottom:10px;">This Bespoke Preview Has <em style="color:#96432b;">Expired</em></h2>
+            <p style="font-size:13px;line-height:1.65;color:#57534e;margin-bottom:22px;">Prepared exclusively for <strong>${bName}</strong>. Click below to unlock <strong>48-hour live preview access</strong> instantly.</p>
+            <button type="button" id="tpl-self-unlock-48h" style="width:100%;background:linear-gradient(135deg,#15803d 0%,#166534 100%);color:#fff;border:0;padding:15px 22px;border-radius:14px;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 12px 24px rgba(22,101,52,0.25);">🔓 I'm the Business Owner — Unlock 48-Hour Preview</button>
+            <div id="tpl-unlock-status" style="font-size:12px;font-weight:600;color:#166534;margin-top:8px;min-height:18px;"></div>
+          </div>
+        `;
+        document.body.appendChild(expOverlay);
+        const uBtn = document.getElementById('tpl-self-unlock-48h');
+        const uStat = document.getElementById('tpl-unlock-status');
+        if (uBtn) {
+          uBtn.addEventListener('click', () => {
+            uBtn.disabled = true;
+            uBtn.textContent = '⏳ Unlocking Your 48-Hour Preview...';
+            fetch('/api/track?slug=' + encodeURIComponent(slugVal) + '&type=self_unlock_48h', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ slug: slugVal, clientId: cfg.clientId || '', businessName: bName, eventType: 'self_unlock_48h' })
+            }).then(() => {
+              if (uStat) uStat.textContent = 'Unlocked for 48 hours! Loading preview...';
+              expOverlay.remove();
+            }).catch(() => {
+              expOverlay.remove();
+            });
+          });
+        }
+      }
 
       // 1. Apply Haute Couture Palette (supports ?palette=01|02|03|04|05 live preview override)
       const VALID_PALETTES = ['01', '02', '03', '04', '05'];

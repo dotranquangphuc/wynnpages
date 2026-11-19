@@ -10,9 +10,15 @@ import {
   ADMIN_NOTIFY_PHONE as ADMIN_NOTIFY_PHONE_FALLBACK
 } from './stripe_key.js';
 
+function isValidStripeSecretKey(val) {
+  const s = String(val || '').trim();
+  return s.startsWith('sk_') || s.startsWith('rk_');
+}
+
 function getConfig(env, overrides = {}) {
+  const overrideStripe = isValidStripeSecretKey(overrides.stripeSecretKey) ? String(overrides.stripeSecretKey).trim() : '';
   return {
-    stripeSecretKey: env.STRIPE_SECRET_KEY || STRIPE_SECRET_KEY_FALLBACK || '',
+    stripeSecretKey: overrideStripe || env.STRIPE_SECRET_KEY || STRIPE_SECRET_KEY_FALLBACK || '',
     clicksendUsername: overrides.clicksendUsername || env.CLICKSEND_USERNAME || CLICKSEND_USERNAME_FALLBACK || '',
     clicksendApiKey: overrides.clicksendApiKey || env.CLICKSEND_API_KEY || CLICKSEND_API_KEY_FALLBACK || '',
     clicksendFrom: overrides.clicksendFrom || env.CLICKSEND_FROM || CLICKSEND_FROM_FALLBACK || 'WynnPages',
@@ -460,9 +466,10 @@ async function loadSyncedRuntime(env, overrides = {}) {
   }
 
   const baseCfg = getConfig(env, mergedOverrides);
+  const validOverrideStripe = isValidStripeSecretKey(mergedOverrides.stripeSecretKey) ? String(mergedOverrides.stripeSecretKey).trim() : '';
   const cfg = {
     ...baseCfg,
-    stripeSecretKey: (mergedOverrides.stripeSecretKey || baseCfg.stripeSecretKey || '').trim(),
+    stripeSecretKey: (validOverrideStripe || baseCfg.stripeSecretKey || '').trim(),
     stripeWebhookSecret: (mergedOverrides.stripeWebhookSecret || (env && env.STRIPE_WEBHOOK_SECRET) || '').trim(),
     clicksendFrom: (mergedOverrides.clicksendFrom || baseCfg.clicksendFrom || '').trim(),
     telegramBotToken: (mergedOverrides.telegramBotToken || (env && env.TELEGRAM_BOT_TOKEN) || '').trim(),
@@ -497,6 +504,17 @@ async function saveSyncedSettings(env, incoming = {}, opts = {}) {
     }
   }
 
+  const stripeKeyChanged = Boolean(
+    Object.prototype.hasOwnProperty.call(incoming, 'stripeSecretKey') &&
+    String(incoming.stripeSecretKey || '').trim() &&
+    String(incoming.stripeSecretKey || '').trim() !== String(current.settings.stripeSecretKey || '').trim()
+  );
+  if (stripeKeyChanged && !incoming.stripeWebhookSecret && current.settings.stripeWebhookSecret) {
+    next.stripeWebhookSecret = '';
+    incoming.stripeWebhookSecret = '';
+    hasChanges = true;
+  }
+
   // Skip all D1 and KV writes when nothing actually changed
   if (!hasChanges) {
     return current.settings;
@@ -528,7 +546,124 @@ async function saveSyncedSettings(env, incoming = {}, opts = {}) {
     await env.WYNN_KV.put('APP_SETTINGS', JSON.stringify(kvSettings)).catch(() => {});
   }
 
+  if (stripeKeyChanged && next.stripeSecretKey) {
+    await migrateD1ClientsToCurrentStripe(env, next.stripeSecretKey).catch(() => {});
+  }
+
   return next;
+}
+
+async function ensureStripeCustomerMigrated(env, idOrSlug, stripeSecretKey) {
+  if (!idOrSlug || !stripeSecretKey) return null;
+  const raw = String(idOrSlug).trim();
+  if (raw.startsWith('cus_')) {
+    const checkRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(raw)}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+    }).catch(() => null);
+    if (checkRes && checkRes.ok) {
+      const custObj = await checkRes.json().catch(() => null);
+      if (custObj && !custObj.deleted) return custObj;
+    }
+  }
+
+  const db = getD1(env);
+  if (!db) return null;
+  await ensureD1Schema(env);
+  const cleanSlug = slugifyName(raw.replace(/^cus_[A-Za-z0-9]+$/i, '') || raw);
+  let d1Row = await db.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(raw).first().catch(() => null);
+  if (!d1Row && cleanSlug) {
+    d1Row = await db.prepare('SELECT * FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cleanSlug).first().catch(() => null);
+  }
+  if (!d1Row) return null;
+
+  let metaObj = {};
+  try { metaObj = JSON.parse(d1Row.metadata_json || '{}'); } catch (_) {}
+  const rawMeta = (metaObj && metaObj.metadata && typeof metaObj.metadata === 'object') ? metaObj.metadata : {};
+  const slugVal = slugifyName(d1Row.demo_slug || metaObj.demoSlug || d1Row.business_name || d1Row.name || '');
+
+  const existingBySlug = slugVal ? await findCustomerBySlugOrId(slugVal, stripeSecretKey).catch(() => null) : null;
+  if (existingBySlug && existingBySlug.id && existingBySlug.id.startsWith('cus_')) {
+    if (d1Row.id !== existingBySlug.id) {
+      await db.prepare('DELETE FROM clients WHERE id = ?').bind(d1Row.id).run().catch(() => {});
+      await upsertD1Client(env, { ...metaObj, ...existingBySlug, id: existingBySlug.id });
+    }
+    const gRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(existingBySlug.id)}`, {
+      headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+    }).catch(() => null);
+    if (gRes && gRes.ok) return await gRes.json().catch(() => existingBySlug);
+  }
+
+  const cParams = new URLSearchParams();
+  const bizName = d1Row.business_name || metaObj.businessName || d1Row.name || metaObj.name || slugVal || 'Boutique';
+  const emailVal = d1Row.email || metaObj.email || '';
+  const phoneVal = d1Row.phone || metaObj.phone || metaObj.displayPhone || '';
+  cParams.append('name', bizName);
+  if (emailVal) cParams.append('email', emailVal);
+  if (phoneVal) cParams.append('phone', phoneVal);
+
+  const preservedMeta = {
+    ...rawMeta,
+    business_name: bizName,
+    customer_name: d1Row.name || metaObj.name || bizName,
+    customer_email: emailVal,
+    customer_phone: phoneVal,
+    display_phone: metaObj.displayPhone || phoneVal,
+    demo_slug: slugVal,
+    demo_url: d1Row.demo_url || metaObj.demoUrl || (slugVal ? `https://${slugVal}.wynnpages.com.au` : ''),
+    live_url: d1Row.live_url || metaObj.liveUrl || '',
+    flow_type: d1Row.flow_type || metaObj.flowType || 'outbound',
+    stage: d1Row.stage || metaObj.stage || 'outbound_pitched',
+    deal_status: metaObj.dealStatus || rawMeta.deal_status || 'standard',
+    deal_expires_at: metaObj.dealExpiresAt || rawMeta.deal_expires_at || '',
+    channel_mode: metaObj.channelMode || rawMeta.channel_mode || 'sms',
+    demo_view_count: String(Math.max(Number(d1Row.view_count || 0), Number(metaObj.demoViewCount || 0))),
+    claim_click_count: String(Math.max(Number(d1Row.claim_click_count || 0), Number(metaObj.claimClickCount || 0)))
+  };
+  for (const [mk, mv] of Object.entries(preservedMeta)) {
+    if (mv !== undefined && mv !== null && String(mv) !== '') {
+      cParams.append(`metadata[${mk}]`, String(mv).slice(0, 490));
+    }
+  }
+
+  const createRes = await fetch('https://api.stripe.com/v1/customers', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${stripeSecretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: cParams.toString()
+  }).catch(() => null);
+  if (!createRes || !createRes.ok) return null;
+
+  const newCust = await createRes.json().catch(() => null);
+  if (!newCust || !newCust.id) return null;
+
+  const formattedNew = formatCustomerRecord(newCust);
+  if (d1Row.id !== newCust.id) {
+    await db.prepare('DELETE FROM clients WHERE id = ?').bind(d1Row.id).run().catch(() => {});
+  }
+  await upsertD1Client(env, {
+    ...metaObj,
+    ...formattedNew,
+    id: newCust.id,
+    demoViewCount: Math.max(Number(d1Row.view_count || 0), Number(formattedNew.demoViewCount || 0)),
+    claimClickCount: Math.max(Number(d1Row.claim_click_count || 0), Number(formattedNew.claimClickCount || 0))
+  });
+  return newCust;
+}
+
+async function migrateD1ClientsToCurrentStripe(env, stripeSecretKey) {
+  const db = getD1(env);
+  if (!db || !stripeSecretKey) return;
+  await ensureD1Schema(env);
+  const res = await db.prepare('SELECT id, demo_slug FROM clients LIMIT 100').all().catch(() => null);
+  const rows = (res && Array.isArray(res.results)) ? res.results : [];
+  for (const r of rows) {
+    if (r && r.id) {
+      await ensureStripeCustomerMigrated(env, r.id, stripeSecretKey).catch(() => null);
+    }
+  }
 }
 
 async function upsertD1Client(env, clientObj) {
@@ -1594,8 +1729,8 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
       : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic`;
 
     const smsText = isOutbound
-      ? `Thank you ${resolvedBiz}! Your website is officially yours (${amountAudShort}). Review your details & pick your domain here: ${smsPortalUrl} - WynnPages`
-      : `Welcome to WynnPages, ${resolvedBiz}! Payment (${amountAudShort}) confirmed. Fill in your quick 2-min business details here: ${smsPortalUrl}`;
+      ? `Hi ${resolvedBiz}, it's Wynn here! Thank you so much for claiming your website (${amountAudShort}) — I'm thrilled to get this live for you. Whenever you're ready, pop in your domain name and any little tweaks you'd like me to make right here: ${smsPortalUrl} — I'll take care of the rest! Warmly, Wynn`
+      : `Hi ${resolvedBiz}, it's Wynn here from WynnPages! Thank you so much for your order (${amountAudShort}) — I'm really excited to start crafting your website. Whenever you have 2 minutes, pop in your business details here so I can get started: ${smsPortalUrl} Warmly, Wynn`;
 
     const tgMessage = [
       `🏢 Khách hàng: ${resolvedBiz}`,
@@ -1718,8 +1853,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const bizLabel = client.businessName || client.name || 'your business';
     const paidLabel = client.dealStatus === 'flash_deal' || client.dealType === 'flash_deal_50' ? '$299 AUD' : '$599 AUD';
     const smsOnboardingUrl = `${origin}/onboarding?client_id=${encodeURIComponent(client.id || '')}&type=organic`;
-    smsText = `Welcome to WynnPages, ${bizLabel}! Payment (${paidLabel}) confirmed. Fill in your quick 2-min business details here: ${smsOnboardingUrl}`;
-    emailSubject = `Tax Invoice & Welcome: Let's Build Your ${bizLabel} Website`;
+    smsText = `Hi ${bizLabel}, it's Wynn here from WynnPages! Thank you so much for your order (${paidLabel}) — I'm really excited to start crafting your website. Whenever you have a spare 2 minutes, pop in your business details here so I can get started: ${smsOnboardingUrl} Warmly, Wynn`;
+    emailSubject = `Thank you & Tax Invoice: Let's start crafting your ${bizLabel} website`;
     emailHtml = buildTaxInvoiceEmailHtml({
       businessName: bizLabel,
       customerName: client.name || '',
@@ -1730,7 +1865,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
       invoiceUrl: client.invoiceUrl || '',
       portalUrl: onboardingBriefUrl,
-      portalLabel: 'Complete Your 2-Min Business Details',
+      portalLabel: 'Share Your Business Details With Wynn',
       abn: cfg.abn || '',
       isOutbound: false
     });
@@ -1748,20 +1883,22 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const smsDomainGuideUrl = `${origin}/domain-guide?cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
 
     if (isAlreadyDelegated) {
-      smsText = `Got it, ${firstName}! Your preferred domain details have been received and our team is preparing your launch right now. We'll text you as soon as your website is live! - WynnPages`;
-      emailSubject = `All Set! Our Engineers Are Connecting ${domainInfo}`;
+      smsText = `Hi ${firstName}, Wynn here! I've got all your domain details now and I'm setting everything up for your launch. Sit tight and relax — I'll text you the moment your website is officially live! Warmly, Wynn`;
+      emailSubject = `All received, ${firstName}! I'm connecting ${domainInfo} for you now`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Studio Active • Hands-Free Domain Setup Underway',
-        heading: `Thank you, ${firstName} — we are preparing your launch!`,
+        preheader: 'Personal Note from Wynn • Hands-Free Domain Setup Underway',
+        heading: `Thank you, ${firstName} — I'm preparing your launch!`,
         bodyHtml: `
-          <p>We have received your final specifications and domain details for <strong>${domainInfo}</strong>.</p>
+          <p>Hi ${firstName},</p>
+          <p>Just letting you know I've received all your final details for <strong>${domainInfo}</strong>.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
             <div><strong>Launch Domain:</strong> ${domainInfo}</div>
-            <div style="margin-top:6px;"><strong>Domain Setup:</strong> Free Studio Concierge (Received ✓)</div>
+            <div style="margin-top:6px;"><strong>Domain Setup:</strong> Handled personally by Wynn (Received ✓)</div>
             ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
           </div>
-          <p><strong>No further technical action is required from you.</strong> Our Australian studio engineers are configuring your website on the <strong>WynnPages Studio Australian High-Speed Network</strong> while preserving 100% of your legal ownership and any existing business emails.</p>
-          <p>We will send you an SMS and email the moment <strong>${domainInfo}</strong> is officially live!</p>
+          <p><strong>You don't need to lift a finger from here.</strong> I'm personally configuring your website on our Australian high-speed network while keeping 100% of your legal ownership and existing emails intact.</p>
+          <p>I'll send you a text and email the moment <strong>${domainInfo}</strong> is live!</p>
+          <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
         `,
         primaryCta: {
           label: 'Visit WynnPages Studio',
@@ -1770,22 +1907,24 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       });
     } else if (isSelfNs) {
       const nsParts = String(client.cfNameservers || '').split(',').map((s) => s.trim()).filter(Boolean);
-      smsText = `Thanks ${firstName}! Your preferred domain details have been received. Full network nameservers & setup guide emailed to you: ${smsDomainGuideUrl} - WynnPages`;
-      emailSubject = `Details Received! Your Network Nameservers for ${domainInfo}`;
+      smsText = `Hi ${firstName}, Wynn here! Thanks for sending your domain details through. I've just emailed you the nameservers, or you can view the simple setup guide here: ${smsDomainGuideUrl} — Let me know if you'd like me to help with it! Warmly, Wynn`;
+      emailSubject = `Your domain nameservers for ${domainInfo} (from Wynn)`;
       emailHtml = buildAtelierEmailHtml({
         preheader: `Nameservers Ready for ${domainInfo}`,
-        heading: `Your network nameservers are ready, ${firstName}.`,
+        heading: `Your domain nameservers are ready, ${firstName}.`,
         bodyHtml: `
-          <p>Thank you for completing your studio confirmation! We have provisioned <strong>${domainInfo}</strong> on the <strong>WynnPages Studio Australian High-Speed Network</strong>.</p>
-          <p>Please ask your IT technician (or log into your domain provider) to replace the current <strong>Nameservers</strong> for <strong>${domainInfo}</strong> with:</p>
+          <p>Hi ${firstName},</p>
+          <p>Thank you for sending your details through! I've set up <strong>${domainInfo}</strong> on our Australian high-speed network.</p>
+          <p>Whenever you or your IT person are ready, simply replace the current <strong>Nameservers</strong> for <strong>${domainInfo}</strong> with these two:</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px 18px;margin:18px 0;font-family:monospace;font-size:13px;line-height:1.8;">
             <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${nsParts[0] || ''}</span></div>
             ${nsParts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${nsParts[1]}</span></div>` : ''}
           </div>
-          <p>Prefer our Australian engineers to connect it for you instead? Simply open the guide below to let our team handle it for free.</p>
+          <p>If that looks a bit technical, don't stress at all — just click the button below and I'll happily connect it for you for free.</p>
+          <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
         `,
         primaryCta: {
-          label: 'Open Domain Connection Guide →',
+          label: 'Open Easy Domain Guide',
           url: domainGuideUrl
         },
         secondaryCta: {
@@ -1794,26 +1933,28 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         }
       });
     } else if (hasExisting) {
-      smsText = `Thanks ${firstName}! Your preferred domain details have been received. Final step to connect your domain: follow this easy 2-min guide: ${smsDomainGuideUrl} - WynnPages`;
-      emailSubject = `Details Received! Next Step: Connect Your Domain (${domainInfo})`;
+      smsText = `Hi ${firstName}, Wynn here! I've received your website notes and domain details. Whenever you have 2 minutes, here's the simple step-by-step guide so we can connect your domain: ${smsDomainGuideUrl} — Shout out if you need a hand!`;
+      emailSubject = `Got your details, ${firstName}! Next step: connecting ${domainInfo}`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Studio Active • Free Concierge Domain Connection',
-        heading: `We are hand-crafting your website, ${firstName}.`,
+        preheader: 'Personal Note from Wynn • Free Domain Connection Help',
+        heading: `I'm putting the finishing touches on your website, ${firstName}.`,
         bodyHtml: `
-          <p>Thank you for completing your business details! We have logged your specifications and started preparing your bespoke website for launch.</p>
+          <p>Hi ${firstName},</p>
+          <p>Thank you so much for sending your details through! I've got everything logged and I'm preparing your website for launch.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
-            <div><strong>Existing Domain:</strong> ${domainInfo}</div>
+            <div><strong>Your Domain:</strong> ${domainInfo}</div>
             ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
             ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
           </div>
-          <p><strong>Connect ${domainInfo} with zero technical hassle:</strong></p>
+          <p><strong>How we can connect ${domainInfo} without any technical headache:</strong></p>
           <ul>
-            <li><strong>VentraIP / GoDaddy Invite (Recommended):</strong> Invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as an additional user, OR</li>
-            <li><strong>60-Second Studio Concierge:</strong> Share temporary domain login details via your secure link below so our Australian team can connect your website for you.</li>
+            <li><strong>Option 1 (Easiest):</strong> Invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> as a delegated user inside your VentraIP or GoDaddy account, OR</li>
+            <li><strong>Option 2 (60-Second Concierge):</strong> Share temporary domain access via the secure guide below and I'll jump in and connect it for you personally.</li>
           </ul>
+          <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
         `,
         primaryCta: {
-          label: 'Open Personalised Domain Guide →',
+          label: 'Open Your Domain Guide',
           url: domainGuideUrl
         },
         secondaryCta: {
@@ -1822,26 +1963,28 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         }
       });
     } else {
-      smsText = `Thanks ${firstName}! Your preferred domain details have been received. Final step to set up your domain: follow this easy 2-min guide: ${smsDomainGuideUrl} - WynnPages`;
-      emailSubject = `Details Received! Next Step: 2-Minute Domain Setup (${domainInfo})`;
+      smsText = `Hi ${firstName}, Wynn here! I've got all your website details. The last little step is registering your domain name under your own name — I made a super simple 2-minute guide for you here: ${smsDomainGuideUrl} Warmly, Wynn`;
+      emailSubject = `Got your details, ${firstName}! Here is your easy 2-minute domain guide`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Studio Active • 2-Minute Domain Setup Guide Inside',
-        heading: `We are preparing your launch, ${firstName}.`,
+        preheader: 'Personal Note from Wynn • 2-Minute Domain Guide Inside',
+        heading: `Getting ready for your launch, ${firstName}.`,
         bodyHtml: `
-          <p>Thank you for completing your business details! We have prepared your bespoke website for <strong>${domainInfo}</strong>.</p>
+          <p>Hi ${firstName},</p>
+          <p>Thank you for sending your details through! Your website is ready to be connected to <strong>${domainInfo}</strong>.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px;margin:18px 0;font-size:13px;">
-            <div><strong>Desired Domain:</strong> ${domainInfo}</div>
+            <div><strong>Chosen Domain:</strong> ${domainInfo}</div>
             ${client.industry ? `<div style="margin-top:6px;"><strong>Industry:</strong> ${client.industry}</div>` : ''}
             ${client.brandColors ? `<div style="margin-top:6px;"><strong>Brand Palette:</strong> ${client.brandColors}</div>` : ''}
           </div>
-          <p><strong>Final 2-minute step so you own ${domainInfo} 100% in your name:</strong></p>
+          <p>Because I want you to own <strong>${domainInfo}</strong> 100% under your own name and ABN (so no agency ever holds your domain hostage), here is all you need to do:</p>
           <ol>
-            <li>Register <strong>${domainInfo}</strong> directly on <strong>VentraIP Australia</strong> under your own ABN &amp; card with <strong>Auto-Renew ON</strong>.</li>
-            <li>Under <em>Profile Settings &rarr; Additional Users</em>, invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> and click confirm inside our visual guide — our engineers will handle the connection for free!</li>
+            <li>Register <strong>${domainInfo}</strong> directly on <strong>VentraIP Australia</strong> in your own name with <strong>Auto-Renew ON</strong>.</li>
+            <li>Under <em>Profile Settings &rarr; Additional Users</em>, invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> and click confirm inside the guide below — I'll handle all the technical DNS setup for you from there!</li>
           </ol>
+          <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
         `,
         primaryCta: {
-          label: 'Open Step-by-Step Domain Guide →',
+          label: 'Open Step-by-Step Domain Guide',
           url: domainGuideUrl
         },
         secondaryCta: {
@@ -1851,69 +1994,78 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       });
     }
   } else if (stage === 'demo_ready') {
-    smsText = `Hi ${firstName}! Sam from WynnPages here. Your custom website preview is ready: ${shortDemoUrl} Let me know what you think!`;
-    emailSubject = `Great News! Your Custom WynnPages Website Preview is Ready`;
+    smsText = `Hi ${firstName}! It's Wynn here from WynnPages. I've just finished putting together the first live preview of your website: ${shortDemoUrl} — Have a browse whenever you're free and let me know how it feels!`;
+    emailSubject = `Your custom website preview is ready to explore, ${firstName}!`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Custom Website Preview Ready for Review',
-      heading: `Your custom website preview is ready, ${firstName}!`,
+      preheader: 'Personal Note from Wynn • Live Website Preview Inside',
+      heading: `I've finished crafting your website preview, ${firstName}!`,
       bodyHtml: `
-        <p>Our studio has finished hand-crafting the initial version of your website. You can explore the live interactive preview right now:</p>
+        <p>Hi ${firstName},</p>
+        <p>I've just finished hand-crafting the initial version of your website, and I'd love for you to take it for a spin on your phone or laptop:</p>
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${demoUrl}" style="color:#96432b;font-weight:bold;">${demoUrl}</a>
         </p>
-        <p>Once you're happy with the direction, click the second button below to upload your logo, menu/price list, and domain details, or email any tweak requests to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
+        <p>Have a play around with it whenever you get a quiet moment. Once you're happy with the direction, you can upload your logo, menu/price list, and domain details using the second button below, or simply reply to this email with any tweaks you'd like me to make.</p>
+        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
       `,
       primaryCta: {
-        label: 'Preview Your Live Website Demo',
+        label: 'Explore Your Website Preview',
         url: demoUrl
       },
       secondaryCta: {
-        label: 'Upload Final Logo, Menu & Domain Details',
+        label: 'Upload Logo, Menu & Domain Details',
         url: demoBriefUrl
       }
     });
   } else if (stage === 'demo_reminder') {
-    smsText = `Hi ${firstName}, Sam from WynnPages checking in! Did you get a chance to see your website preview? ${shortDemoUrl} Happy to adjust anything!`;
-    emailSubject = `Quick Check-in: Ready to Finalise Your WynnPages Website?`;
+    smsText = `Hi ${firstName}, hope your week is going well! It's Wynn here from WynnPages. Just checking in to see if you had a chance to look over your website preview: ${shortDemoUrl} — Always happy to tweak any colours, photos, or prices for you!`;
+    emailSubject = `Friendly check-in on your website preview, ${firstName}`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Friendly Studio Reminder',
-      heading: `How do you like your new website preview, ${firstName}?`,
+      preheader: 'Quick check-in from Wynn',
+      heading: `How are you feeling about your website preview, ${firstName}?`,
       bodyHtml: `
-        <p>Just a friendly check-in from the WynnPages studio! Your bespoke website preview is waiting for your review:</p>
+        <p>Hi ${firstName},</p>
+        <p>Hope you're having a great week! I just wanted to check in and see what you thought of your live website preview:</p>
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${demoUrl}" style="color:#96432b;font-weight:bold;">${demoUrl}</a>
         </p>
-        <p>To keep your launch right on track, please upload your final logo, pricing/menu, or email any tweak requests to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
+        <p>Whenever you're ready for me to put the finishing touches on it, you can upload your final logo and price list via the button below, or reply directly to this email with any changes you'd love to see.</p>
+        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
       `,
       primaryCta: {
-        label: 'Review Demo & Submit Final Assets',
+        label: 'Review Preview & Send Final Details',
         url: demoBriefUrl
       },
       secondaryCta: {
-        label: 'Open Live Demo Preview',
+        label: 'Open Live Preview',
         url: demoUrl
       }
     });
   } else if (stage === 'outbound_pitch') {
     const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
-    smsText = `Hi ${bizLabel}! Sam from WynnPages here. I built a custom website preview for you: ${previewLink} ($599 flat, $0 monthly fees). Tell me what you think!`;
-    emailSubject = `A custom website concept we prepared for ${bizLabel}`;
+    smsText = `Hi ${bizLabel}, it's Wynn here from WynnPages Studio. I came across your business recently and loved your reputation, so I hand-crafted a custom website concept just for you to see how it could look: ${previewLink} — Note: I've used sample photos & details just to show the layout. If you love it and claim it on the page, you'll get instant access to our Customization Portal where I personally swap in your real photos, exact pricing/details & connect your .com.au domain ($599 AUD one-off, $0 monthly fees). No pressure at all! Warmly, Wynn`;
+    emailSubject = `A little website concept I put together for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'WynnPages Studio • Personal Note',
-      heading: `A bespoke website concept for ${bizLabel}.`,
+      preheader: 'Personal note from Wynn at WynnPages Studio',
+      heading: `Something I put together for ${bizLabel}.`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
-        <p>I hope you are having a lovely week! I am a web designer at <strong>WynnPages Studio</strong> here in Australia.</p>
-        <p>We really admired <strong>${bizLabel}</strong> and took the initiative to hand-craft a complete, mobile-ready website concept tailored specifically to your business so you could see how it might look and feel:</p>
+        <p>I hope your week is going really well! My name is Wynn, and I'm a web designer here in Australia.</p>
+        <p>I came across <strong>${bizLabel}</strong> recently and really loved what you do. Rather than sending a boring cold pitch, I decided to actually sit down and hand-craft a complete, mobile-ready website concept tailored specifically to your business so you could see how it looks and feels in real life:</p>
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
-        <p>Please feel free to have a browse whenever you have a spare moment. If you like the direction and would like to make it officially yours ($599 AUD flat, zero monthly fees), you can claim it directly from the preview page, or email us anytime at <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> with any thoughts or adjustments.</p>
-        <p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong><br>Australian Bespoke Web Atelier</p>
+        <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;">
+          <strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>
+          Please note that the preview currently uses stand-in concept photos and sample service details just to demonstrate the layout. The moment you claim the website via Stripe's secure checkout, you'll be redirected straight to your private <strong>WynnPages Customization Portal</strong> where you can upload your real photos, logo, exact pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.
+        </div>
+        <p>There's zero pressure at all — please just have a browse whenever you get a quiet cuppa ($599 AUD flat one-off build, 100% owned by you with $0 ongoing monthly fees forever).</p>
+        <p>Feel free to reply to this email anytime if you have any thoughts or questions!</p>
+        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>
       `,
       primaryCta: {
-        label: 'View Your Website Concept',
+        label: 'Have a Look at Your Website Concept',
         url: previewLink
       }
     });
@@ -1922,8 +2074,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const revisionUrl = `${origin}/revision?client_id=${encodeURIComponent(client.id || '')}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
     const smsRevisionUrl = `${origin}/revision?client_id=${encodeURIComponent(client.id || '')}`;
     const paidLabel = client.dealStatus === 'flash_deal' || client.dealType === 'flash_deal_50' ? '$299.00 AUD' : '$599.00 AUD';
-    smsText = `Thank you ${bizLabel}! Your website is officially yours. Review your details & pick your domain name here: ${smsRevisionUrl} (Live in 48h!) - WynnPages`;
-    emailSubject = `Tax Invoice & Next Step: Finalise Your ${bizLabel} Website`;
+    smsText = `Hi ${bizLabel}, it's Wynn here! Thank you so much for claiming your website — I'm thrilled to get this live for you. Whenever you're ready, pop in your domain name and any tweaks you'd like me to make right here: ${smsRevisionUrl} Warmly, Wynn`;
+    emailSubject = `Thank you & Tax Invoice: Let's finalise your ${bizLabel} website`;
     emailHtml = buildTaxInvoiceEmailHtml({
       businessName: bizLabel,
       customerName: client.name || '',
@@ -1934,7 +2086,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
       paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
       invoiceUrl: client.invoiceUrl || '',
       portalUrl: revisionUrl,
-      portalLabel: 'Review Website Details & Choose Domain',
+      portalLabel: 'Share Any Tweaks & Choose Your Domain',
       abn: cfg.abn || '',
       isOutbound: true
     });
@@ -1949,15 +2101,17 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const smsGuideUrl = `${origin}/domain-guide?cid=${encodeURIComponent(client.id || '')}&tab=${hasExisting ? 'existing' : 'new'}`;
 
     if (client.domainDelegated || client.domainConciergeRequested) {
-      smsText = `Got it, ${bizLabel}! Your website updates and preferred domain details have been received, and our team is preparing your launch. We'll text you as soon as your site is live! - WynnPages`;
-      emailSubject = `Updates Received! We Are Preparing ${bizLabel} For Launch`;
+      smsText = `Hi ${bizLabel}, Wynn here! I've received all your website updates and domain details, and I'm working on your launch right now. Sit tight — I'll text you the moment your website is officially live! Warmly, Wynn`;
+      emailSubject = `Got your updates, ${firstName}! I'm preparing ${bizLabel} for launch`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Website Updates Locked • Preparing Official Launch',
-        heading: `Thank you, ${firstName} — we are polishing ${bizLabel}!`,
+        preheader: 'Personal Note from Wynn • Preparing Your Official Launch',
+        heading: `Thank you, ${firstName} — I'm polishing ${bizLabel} for launch!`,
         bodyHtml: `
-          <p>We have received your website updates${domainLabel ? ` and domain request for <strong>${domainLabel}</strong>` : ''}.</p>
-          <p>Our Australian studio team is applying your final touches and connecting your domain on the <strong>WynnPages Studio Australian High-Speed Network</strong> within <strong>24–48 hours</strong>.</p>
-          <p>We will send you an SMS and email the moment your official website is live!</p>
+          <p>Hi ${firstName},</p>
+          <p>Just letting you know I've received your website updates${domainLabel ? ` and domain details for <strong>${domainLabel}</strong>` : ''}.</p>
+          <p>I'm personally applying your final touches and connecting your domain on our Australian high-speed network over the next <strong>24–48 hours</strong>.</p>
+          <p>I'll send you a text and email the moment your official website is live!</p>
+          <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
         `,
         primaryCta: {
           label: 'Visit WynnPages Studio',
@@ -1965,25 +2119,27 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         }
       });
     } else {
-      smsText = `Thanks ${bizLabel}! Your website updates and preferred domain details have been received. Final step to connect your domain: follow this easy 2-min guide: ${smsGuideUrl} - WynnPages`;
-      emailSubject = `Updates Received! Final Step: Connect Your Domain (${bizLabel})`;
+      smsText = `Hi ${bizLabel}, Wynn here! I've got your website updates and I'm working on them now. The last little step is connecting your domain name — here's the simple 2-minute guide I put together for you: ${smsGuideUrl} — Let me know if you need a hand!`;
+      emailSubject = `Got your updates! Next step: connecting the domain for ${bizLabel}`;
       emailHtml = buildAtelierEmailHtml({
-        preheader: 'Updates Locked • 2-Minute Domain Guide Inside',
-        heading: `We are polishing ${bizLabel}, ${firstName}!`,
+        preheader: 'Personal Note from Wynn • 2-Minute Domain Guide Inside',
+        heading: `I'm polishing ${bizLabel} for launch, ${firstName}!`,
         bodyHtml: `
-          <p>Thank you for confirming your website details! Our Australian studio team has locked in your updates and is preparing your bespoke website for launch within <strong>24–48 hours</strong>.</p>
-          <p><strong>Final step while we craft your site — connect your domain${domainLabel ? ` (<strong>${domainLabel}</strong>)` : ''}:</strong> with WynnPages, you always register and own your domain <strong>100% directly in your own name</strong> with transparent annual renewals (~$15–$20 AUD/year) and zero middleman markups.</p>
+          <p>Hi ${firstName},</p>
+          <p>Thank you for sending your website updates through! I've started applying your tweaks so everything is ready for launch within <strong>24–48 hours</strong>.</p>
+          <p><strong>While I polish the site, let's get your domain connected${domainLabel ? ` (<strong>${domainLabel}</strong>)` : ''}:</strong> I always make sure you own your domain <strong>100% directly under your own name</strong> with zero middleman markups.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:13px;line-height:1.7;">
-            <div style="margin-bottom:8px;"><strong>Option A — Need a new .com.au or .com domain? (~2 mins)</strong><br>Follow our step-by-step visual guide to register directly on <strong>VentraIP Australia</strong> and invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> (no passwords required — our Australian engineers handle the connection for free).</div>
-            <div><strong>Option B — Already own a domain or prefer hands-free help? (~60 secs)</strong><br>Select <em>"I Already Own a Domain"</em> in the guide or reply to this email and our team will connect it for you.</div>
+            <div style="margin-bottom:8px;"><strong>Option A — Need a new .com.au or .com domain? (~2 mins)</strong><br>Follow the visual guide below to register directly on <strong>VentraIP Australia</strong> in your own name and invite <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> — I'll handle all the technical setup for free.</div>
+            <div><strong>Option B — Already own a domain or want me to do it for you? (~60 secs)</strong><br>Choose <em>"I Already Own a Domain"</em> in the guide or simply reply to this email and I'll connect it for you personally.</div>
           </div>
+          <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>WynnPages Studio</p>
         `,
         primaryCta: {
-          label: hasExisting ? 'Connect My Existing Domain' : 'Buy New Domain on VentraIP (Guide)',
+          label: hasExisting ? 'Connect My Existing Domain' : 'Open 2-Minute Domain Guide',
           url: defaultGuideUrl
         },
         secondaryCta: {
-          label: hasExisting ? 'Need a New Domain? View VentraIP Guide →' : 'Already Own a Domain? Connect Here →',
+          label: hasExisting ? 'Need a New Domain? View VentraIP Guide' : 'Already Own a Domain? Connect Here',
           url: hasExisting ? guideNewUrl : guideExistingUrl
         }
       });
@@ -1993,41 +2149,44 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const previewLink = shortDemoUrl;
     const isDeal = client.dealStatus === 'flash_deal';
     smsText = isDeal
-      ? `Hi ${bizLabel}! 72h offer from WynnPages: claim your custom website for 50% OFF ($299 AUD flat, save $300, $0/mo). Ends soon: ${previewLink} - Sam`
-      : `Hi ${bizLabel}, Sam from WynnPages checking in! Did you get a chance to see your website preview? ${previewLink} ($599 flat, $0/mo). Happy to adjust anything!`;
+      ? `Hi ${bizLabel}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${previewLink} Warmly, Wynn`
+      : `Hi ${bizLabel}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${previewLink} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
     emailSubject = isDeal
-      ? `50% OFF Flash Offer ($299 AUD): Claim Your ${bizLabel} Website`
-      : `Following up on the website concept for ${bizLabel}`;
+      ? `I'd love to see ${bizLabel} use this design (a personal note from Wynn)`
+      : `Just checking in on the website concept I made for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: isDeal ? 'WynnPages Studio • 50% OFF Flash Offer ($299 AUD)' : 'WynnPages Studio • Friendly Follow-up',
+      preheader: isDeal ? 'Personal studio gesture — $299 AUD all-up, zero monthly fees' : 'A friendly note from Wynn at WynnPages Studio',
       heading: `Hope your week is going well, ${firstName}.`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
-        <p>I know how busy things get running <strong>${bizLabel}</strong>, so I just wanted to send a friendly follow-up in case our previous note got buried.</p>
-        <p>We are still holding the custom website concept we hand-crafted for your business here:</p>
+        <p>I know how busy things get running <strong>${bizLabel}</strong>, so I just wanted to send a warm follow-up in case my previous note got buried.</p>
+        <p>I'm still holding the custom website concept I hand-crafted for your business right here:</p>
         <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
-        ${isDeal ? `<p style="background-color:#fef3c7;border:1px solid #f59e0b;border-radius:12px;padding:12px 16px;font-size:13px;color:#78350f;"><strong>⚡ 72-Hour 50% OFF Offer Active:</strong> You can currently claim this website for a flat <strong>$299 AUD</strong> (save $300 AUD, zero monthly fees).</p>` : ''}
-        <p>If you'd like any adjustments to the layout, colours, or services—or if you're ready for us to connect it to your domain—simply email us at <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a> or click the button on the preview page.</p>
-        <p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong><br>Australian Bespoke Web Atelier</p>
+        ${isDeal ? `<div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#44403c;"><strong>A personal gesture from me:</strong> Since the design is already built for you, I've halved the one-off build fee on your preview link down to <strong>$299 AUD all-up</strong> (save $300 AUD, with zero monthly fees forever).</div>` : ''}
+        <p><strong>100% Tailored After Checkout:</strong> The preview currently uses sample photos and placeholder details just to show the layout. Once you claim the website on the preview page, you'll get instant access to your private <strong>Customization Portal</strong> where you can upload your real photos, logo, and exact pricing/details for me to personally update before connecting your <code>.com.au</code> domain.</p>
+        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>
       `,
       primaryCta: {
-        label: isDeal ? 'Claim Website for $299 AUD (50% OFF)' : 'View Your Website Concept',
+        label: isDeal ? 'View Preview & Claim for $299 AUD' : 'Open Your Website Preview',
         url: previewLink
       }
     });
   } else if (stage === 'site_launched') {
     const rawLiveDomain = (client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
     const liveUrl = rawLiveDomain.startsWith('http') ? rawLiveDomain : `https://${rawLiveDomain}`;
-    smsText = `Congrats ${firstName}! Your new custom website is officially LIVE on your domain — 100% yours with $0 monthly fees. Check your email for your live launch link or view here: ${shortDemoUrl} - WynnPages`;
-    emailSubject = `Congratulations! Your WynnPages Website is Officially Live`;
+    smsText = `Hi ${firstName}, it's Wynn here! I'm so excited to let you know that your new custom website is officially LIVE on your domain — 100% yours with $0 ongoing monthly fees! Check your email for your live link or take a look here: ${shortDemoUrl} — Thank you so much for trusting me with your website! Warmly, Wynn`;
+    emailSubject = `Congratulations, ${firstName}! Your new website is officially LIVE`;
     emailHtml = buildAtelierEmailHtml({
-      preheader: 'Officially Launched on the WynnPages Australian High-Speed Network',
+      preheader: 'Personal Note from Wynn • Your Website is Officially Live',
       heading: `Your bespoke website is now live, ${firstName}!`,
       bodyHtml: `
-        <p>Pop the champagne! Your hand-crafted website is officially live on the <strong>WynnPages Studio Australian High-Speed Network</strong> and ready to welcome your customers.</p>
-        <p>Remember: with WynnPages, you own 100% of your site with zero monthly retainers. If you shared a temporary domain password with our team, you may now safely update your password anytime.</p>
+        <p>Hi ${firstName},</p>
+        <p>Pop the champagne! I've just finished connecting everything, and your hand-crafted website is officially live on our Australian high-speed network and ready to welcome your clients.</p>
+        <p>As promised, you own 100% of your website with zero ongoing monthly fees. If you shared a temporary domain password with me during setup, you can safely update your password anytime now.</p>
+        <p>Thank you so much for trusting me with your business's digital home — just reply here anytime if you ever need a hand!</p>
+        <p style="margin-top:16px;">Warmly,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>
       `,
       primaryCta: {
         label: 'Visit Your Live Website',
@@ -2052,48 +2211,48 @@ function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
 
   if (stepKey === 'step1' || stepKey === 'aussie_pitch' || stepKey === 'pitch') {
     return {
-      subject: `A custom website concept we prepared for ${biz}`,
+      subject: `A little website concept I put together for ${biz}`,
       html: buildAtelierEmailHtml({
-        preheader: 'WynnPages Studio • Bespoke Australian Website Preview ($0 Monthly Fees)',
-        heading: `A bespoke website concept for ${biz}.`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>We admired <strong>${biz}</strong> and hand-crafted a complete, mobile-ready website preview tailored specifically to your business:</p>${pBox}<p>Feel free to have a browse whenever you have a spare moment. If you love the direction ($599 AUD flat one-time, $0 monthly fees), you can claim it directly on the preview page or reply with any adjustments.</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
-        primaryCta: { label: 'View Your Custom Website Preview →', url: previewLink }
+        preheader: 'Personal note from Wynn at WynnPages Studio',
+        heading: `Something I hand-crafted for ${biz}.`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>I hope your week is going really well! My name is Wynn, and I'm a web designer here in Australia.</p><p>I came across <strong>${biz}</strong> recently and genuinely loved your vibe and reputation. Rather than sending a generic pitch, I decided to sit down and put together a complete, mobile-ready website concept tailored specifically to your business so you could see how it looks and feels in real life:</p>${pBox}<div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;"><strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>Please note that the preview currently uses stand-in concept photos and sample details just to demonstrate the layout. The moment you claim the website via Stripe's secure checkout, you'll be redirected straight to your private <strong>WynnPages Customization Portal</strong> where you can upload your real photos, logo, exact service pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.</div><p>There's no pressure at all — just have a browse whenever you get a quiet moment ($599 AUD flat one-off build, with $0 monthly fees forever). Feel free to reply directly to this email if you have any thoughts!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        primaryCta: { label: 'Have a Look at Your Website Preview', url: previewLink }
       })
     };
   }
   if (stepKey === 'step2' || stepKey === 'day3_reminder' || stepKey === 'aussie_followup_views' || stepKey === 'followup_views') {
     const sawMultiple = Number(views || 0) >= 2;
     return {
-      subject: sawMultiple ? `Glad you had a look at the ${biz} website preview!` : `Quick check-in: Did you get a chance to see your ${biz} website preview?`,
+      subject: sawMultiple ? `So glad you had a look at the ${biz} website preview!` : `Just checking in on the website concept I made for ${biz}`,
       html: buildAtelierEmailHtml({
-        preheader: sawMultiple ? 'Happy to tweak any prices, services, or photos for you' : 'Friendly follow-up from WynnPages Studio Australia',
+        preheader: sawMultiple ? 'Happy to tailor any photos, colours, or prices for you' : 'A friendly note from Wynn at WynnPages Studio',
         heading: sawMultiple ? `Happy to tailor anything for ${biz}, ${firstName}!` : `Hope your week is going well, ${firstName}!`,
         bodyHtml: sawMultiple
-          ? `<p>Hi ${firstName},</p><p>We noticed you checked out the custom website preview we crafted for <strong>${biz}</strong>:</p>${pBox}<p>If you'd like us to tweak any service prices, swap photos, or adjust colours before connecting it to your <code>.com.au</code> domain, we include a full bespoke revision round at no extra cost ($599 AUD flat, $0/month).</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`
-          : `<p>Hi ${firstName},</p><p>Just a friendly check-in in case our earlier note got buried! Your bespoke website preview for <strong>${biz}</strong> is ready to explore:</p>${pBox}<p>We're happy to adjust any services, pricing, or photos for you. Claim online anytime ($599 AUD flat, $0 monthly fees).</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
-        primaryCta: { label: 'Open Your Live Website Preview →', url: previewLink }
+          ? `<p>Hi ${firstName},</p><p>I noticed you had a chance to check out the custom website preview I put together for <strong>${biz}</strong> — I really hope you liked the feel of it!</p>${pBox}<p>I just wanted to reassure you that the current photos and service details on the preview are simply stand-in placeholders to show the layout. The moment you claim the website on the preview page, you'll unlock your private <strong>WynnPages Customization Portal</strong> where you can upload your favourite photos, update any service prices/details, or adjust colours before I connect it to your own <code>.com.au</code> domain ($599 AUD flat, $0 ongoing monthly fees).</p><p>Simply reply to this email with any questions, or claim it right on the preview page whenever you're ready!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`
+          : `<p>Hi ${firstName},</p><p>I know how busy things get running <strong>${biz}</strong>, so I just wanted to send a warm follow-up in case my earlier note got buried during a busy week!</p><p>Here is the custom website preview I put together for your business:</p>${pBox}<p>Please note I've used sample photos and placeholder details just to show the layout — once claimed on the preview page, you'll get instant access to our <strong>Customization Portal</strong> where I personally swap in your real photos, pricing, and details so it feels 100% like you ($599 AUD one-off, zero monthly fees).</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        primaryCta: { label: 'Open Your Website Preview', url: previewLink }
       })
     };
   }
   if (stepKey === 'step3' || stepKey === 'day7_deal' || stepKey === 'aussie_flash_deal_299' || stepKey === 'flash_deal_299') {
     return {
-      subject: `72-Hour 50% OFF Offer: Claim Your ${biz} Website for $299 AUD`,
+      subject: `I'd love to see ${biz} use this design (a personal note from Wynn)`,
       html: buildAtelierEmailHtml({
-        preheader: 'Save $300 AUD • $299 AUD Flat One-Time • Zero Monthly Fees (Ends in 72 Hours)',
-        heading: `72-Hour 50% OFF Sponsorship for ${biz}`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>Since we have already finished hand-crafting the custom website design for <strong>${biz}</strong>, we would love to see it go to you rather than archiving the work.</p><div style="background-color:#fef3c7;border:1px solid #f59e0b;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:13px;line-height:1.7;color:#78350f;"><strong>⚡ 72-Hour 50% OFF Studio Offer:</strong> For the next 72 hours, claim the entire custom website for a flat <strong>$299 AUD one-time</strong> (save $300 AUD off $599, with <strong>$0 monthly fees forever</strong>).</div>${pBox}<p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
-        primaryCta: { label: 'Claim Website for $299 AUD (50% OFF) →', url: previewLink }
+        preheader: 'Personal studio gesture for your business — $299 AUD all-up, zero monthly fees',
+        heading: `I'd love this design to go to ${biz}, ${firstName}.`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>I hope you're having a lovely week! I was looking over the custom website concept I hand-crafted for <strong>${biz}</strong>, and since I've already poured the time and care into building it specifically around your brand, I would genuinely much rather see you using and enjoying it than archiving the work in my studio folder.</p><div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.7;color:#44403c;"><strong>A personal gesture from me:</strong> For the next 3 days, I've halved the one-off build fee on your preview page down to <strong>$299 AUD all-up</strong> (instead of $599 AUD, and still <strong>$0 monthly fees forever</strong>). Claiming on the preview page immediately unlocks your private <strong>Customization Portal</strong> where I personally swap in your real photos, exact pricing/details, and connect your <code>.com.au</code> domain for free.</div>${pBox}<p>If you'd love to make it yours, you can claim it directly on the preview page or reply here and I'll help you get everything sorted.</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        primaryCta: { label: 'View Preview & Claim for $299 AUD', url: previewLink }
       })
     };
   }
   if (stepKey === 'step4' || stepKey === 'day9_warning') {
     return {
-      subject: `Final 24-Hour Notice: Your ${biz} Website Preview Closes Tomorrow`,
+      subject: `A gentle final note regarding the ${biz} website preview`,
       html: buildAtelierEmailHtml({
-        preheader: '24 Hours Remaining Before Preview Archive',
-        heading: `Quick heads up for ${biz}, ${firstName}`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>Just a quick heads up from <strong>WynnPages Studio</strong>: the custom website preview and <strong>$299 AUD (50% OFF)</strong> offer we prepared for <strong>${biz}</strong> closes in <strong>24 hours</strong>:</p>${pBox}<p>If you'd like to keep this design and lock in the $299 AUD one-time rate ($0 monthly fees), please claim it today before the preview is archived.</p><p style="margin-top:16px;">Warm regards,<br><strong>Sam &amp; WynnPages Studio</strong></p>`,
-        primaryCta: { label: 'Claim Your Website Before It Closes →', url: previewLink }
+        preheader: 'Archiving your private preview link tomorrow',
+        heading: `A quick, friendly note before I tidy up my studio archive`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>I promise this is my last note so I don't clutter your inbox! I just wanted to give you a gentle heads up that I'll be archiving the private website preview I built for <strong>${biz}</strong> tomorrow as I clear server space for upcoming projects:</p>${pBox}<p>If you'd still like to keep this design at the <strong>$299 AUD one-off rate</strong> (with $0 monthly fees and full post-checkout access to our Customization Portal to swap in your real photos, pricing/details, and <code>.com.au</code> domain), you can grab it on the preview link anytime before tomorrow.</p><p>Either way, thank you so much for your time, and I wish you and everyone at <strong>${biz}</strong> all the very best!</p><p style="margin-top:16px;">Warmly,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        primaryCta: { label: 'Open Your Website Preview Before It Archives', url: previewLink }
       })
     };
   }
@@ -2226,6 +2385,9 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
   let updated = html;
 
   if (newConfig) {
+    if (newConfig.palette && ['01', '02', '03', '04', '05'].includes(String(newConfig.palette))) {
+      updated = updated.replace(/(<html[^>]*data-palette=")[^"]*(")/i, `$1${newConfig.palette}$2`);
+    }
     updated = updated.replace(/(window\.ATELIER_CONFIG\s*=\s*)\{[\s\S]*?\n\s*\};/, (m, p1) => {
       return p1 + JSON.stringify(newConfig, null, 2) + ';';
     });
@@ -2234,6 +2396,15 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
       updated = updated.replace(/(<span id="nav-salon-name"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.salonName}$2`);
       updated = updated.replace(/(<span id="copyright-salon"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.salonName}$2`);
       updated = updated.replace(/(<title id="page-meta-title">)[^<]*(<\/title>)/g, `$1${newConfig.salonName} — Bespoke Sanctuary | Australia$2`);
+    }
+    if (newConfig.heroHeadlinePrefix !== undefined) {
+      updated = updated.replace(/(<span id="hero-headline-prefix"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.heroHeadlinePrefix}$2`);
+    }
+    if (newConfig.heroHeadlineItalic !== undefined) {
+      updated = updated.replace(/(<span id="hero-headline-italic"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.heroHeadlineItalic}$2`);
+    }
+    if (newConfig.heroBadge) {
+      updated = updated.replace(/(<span id="hero-badge-text"[^>]*>)[^<]*(<\/span>)/g, `$1${newConfig.heroBadge}$2`);
     }
     if (newConfig.displayPhone) {
       updated = updated.replace(/(<a id="visit-phone-link"[^>]*>)[^<]*(<\/a>)/g, `$1${newConfig.displayPhone}$2`);
@@ -2267,7 +2438,7 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
   return updated;
 }
 
-async function executeGeminiAutoRevision({ currentHtml, revData, menuImageBase64, geminiApiKey }) {
+async function executeGeminiAutoRevision({ currentHtml, revData = {}, menuImageBase64 = null, menuImagesBase64 = [], adminInstructions = '', geminiApiKey = '' }) {
   if (!currentHtml) return { ok: false, error: 'Missing demo HTML' };
   const { config, menu } = parseConfigAndMenuFromHtml(currentHtml);
   if (!config) return { ok: false, error: 'Could not parse ATELIER_CONFIG from demo HTML' };
@@ -2341,64 +2512,118 @@ async function executeGeminiAutoRevision({ currentHtml, revData, menuImageBase64
     }
   }
 
-  // 2. Apply Menu updates (using Gemini API if menu text or menu image provided)
+  // 2. Apply Menu & Free-Form Notes / Admin Instructions via Gemini Multimodal Vision
   let updatedMenu = menu;
-  const hasMenuEdits = Boolean((revData.menuText && revData.menuText.trim()) || menuImageBase64);
+  const allMenuB64 = Array.isArray(menuImagesBase64) && menuImagesBase64.length > 0
+    ? menuImagesBase64.filter(Boolean)
+    : (menuImageBase64 ? [menuImageBase64] : []);
+  const combinedMenuText = String(revData.menuText || revData.menuNotes || '').trim();
+  const combinedFinalNotes = String(revData.notes || revData.finalNotes || '').trim();
+  const cleanAdminInst = String(adminInstructions || '').trim();
+  const hasAiWork = Boolean(combinedMenuText || combinedFinalNotes || cleanAdminInst || allMenuB64.length > 0);
 
-  if (hasMenuEdits && geminiApiKey) {
+  if (hasAiWork && geminiApiKey) {
     try {
       const parts = [
         {
           text: `You are the Lead Digital Atelier Engineer for WynnPages Australia (wynnpages.com.au).
 We are finalizing a client's website revision round.
-Your task is to take the existing SALON_MENU_DATA structure and update it with the client's revision notes and/or uploaded menu photo.
+Your task is to analyze:
+1) Any uploaded menu image(s) / PDF(s) (${allMenuB64.length} page(s) attached)
+2) The client's menu revision notes & final launch notes
+3) Any extra instructions from the Studio Admin
+
+Return ONLY a valid JSON object with this exact structure (no markdown fences):
+{
+  "updatedMenu": [
+    {
+      "id": "biab",
+      "category": "Category Title",
+      "note": "Short category description",
+      "items": [
+        {
+          "name": "Service Name",
+          "duration": "60 mins",
+          "price": "$85",
+          "desc": "Short description of service craftsmanship",
+          "badge": "Optional badge like Most Loved or Signature"
+        }
+      ]
+    }
+  ],
+  "configPatches": {
+    "salonName": "optional string if requested",
+    "displayPhone": "optional string if requested",
+    "address": "optional string if requested",
+    "bookingUrl": "optional string if requested",
+    "heroBadge": "optional string if requested",
+    "heroHeadlinePrefix": "optional string if requested",
+    "heroHeadlineItalic": "optional string if requested",
+    "heroStory": "optional string if requested",
+    "palette": "optional '01'|'02'|'03'|'04'|'05' if colour theme change requested",
+    "instagramUrl": "optional string if requested",
+    "facebookUrl": "optional string if requested",
+    "hours": [{"days": "Mon - Fri", "time": "9:30am - 6:00pm"}]
+  },
+  "summary": "1-sentence summary of what was updated"
+}
 
 CRITICAL RULES:
-1. Return ONLY a valid JSON array matching the SALON_MENU_DATA format:
-[
-  {
-    "id": "biab",
-    "category": "Category Title",
-    "note": "Short category description",
-    "items": [
-      {
-        "name": "Service Name",
-        "duration": "60 mins",
-        "price": "$85",
-        "desc": "Short description of service craftsmanship",
-        "badge": "Optional badge like Most Loved or Signature"
-      }
-    ]
-  }
-]
-2. All prices MUST be in AUD (e.g. "$95", "$110", "$65").
-3. Retain existing items that were not modified. If the client asked to change prices or names, apply those changes accurately.
-4. If a menu image/photo is attached, OCR/read the services, categories, and prices from the image and update the array accordingly.
-5. Do NOT include markdown code blocks (no \`\`\`json), return purely raw JSON.`
+- All prices MUST be in AUD (e.g. "$95", "$110", "$65").
+- If multiple menu images are attached, read and merge ALL categories and services across all pages into "updatedMenu".
+- If no menu changes were requested and no menu images are attached, keep the existing menu in "updatedMenu".
+- Only include keys in "configPatches" that were explicitly requested in the client's final notes or Admin instructions.`
         }
       ];
 
-      if (menuImageBase64) {
-        const isPdf = menuImageBase64.includes('application/pdf');
-        const cleanBase64 = menuImageBase64.replace(/^data:[^;]+;base64,/, '');
-        parts.push({
-          inline_data: {
-            mime_type: isPdf ? 'application/pdf' : 'image/jpeg',
-            data: cleanBase64
-          }
-        });
+      for (const b64Item of allMenuB64) {
+        const isPdf = String(b64Item).includes('application/pdf');
+        const mimeMatch = String(b64Item).match(/^data:([^;]+);base64,/);
+        const mimeType = isPdf ? 'application/pdf' : ((mimeMatch && mimeMatch[1]) || 'image/jpeg');
+        const cleanBase64 = String(b64Item).replace(/^data:[^;]+;base64,/, '');
+        if (cleanBase64) {
+          parts.push({
+            inline_data: {
+              mime_type: mimeType,
+              data: cleanBase64
+            }
+          });
+        }
       }
 
       parts.push({
-        text: `CURRENT DEMO MENU DATA:
+        text: `CURRENT DEMO CONFIG:
+${JSON.stringify({
+  salonName: config.salonName,
+  displayPhone: config.displayPhone,
+  address: config.address,
+  bookingUrl: config.bookingUrl,
+  palette: config.palette,
+  heroBadge: config.heroBadge,
+  heroHeadlinePrefix: config.heroHeadlinePrefix,
+  heroHeadlineItalic: config.heroHeadlineItalic,
+  heroStory: config.heroStory,
+  hours: config.hours,
+  instagramUrl: config.instagramUrl,
+  facebookUrl: config.facebookUrl
+}, null, 2)}
+
+CURRENT DEMO MENU DATA:
 ${JSON.stringify(menu, null, 2)}
 
-CLIENT'S REVISION REQUEST / INSTRUCTIONS:
-${revData.menuText || 'Extract all services and prices from the attached menu image.'}`
+CLIENT'S MENU REVISION REQUEST:
+${combinedMenuText || (allMenuB64.length ? `Extract all services and prices from the ${allMenuB64.length} attached menu page(s).` : '(None)')}
+
+CLIENT'S FINAL NOTES / SPECIAL INSTRUCTIONS:
+${combinedFinalNotes || '(None)'}
+
+STUDIO ADMIN EXTRA INSTRUCTIONS (HIGHEST PRIORITY):
+${cleanAdminInst || '(None)'}`
       });
 
       const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
       let geminiSuccess = false;
+      let lastGeminiErrMsg = '';
       for (const modelName of modelsToTry) {
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
           method: 'POST',
@@ -2423,23 +2648,70 @@ ${revData.menuText || 'Extract all services and prices from the attached menu im
               const parsed = JSON.parse(rawText);
               if (Array.isArray(parsed) && parsed.length) {
                 updatedMenu = parsed;
-                changesSummaryList.push(`Gemini AI (${modelName}) updated ${parsed.length} menu categories based on client's request`);
+                changesSummaryList.push(`Gemini AI (${modelName}) updated ${parsed.length} menu categories`);
+                geminiSuccess = true;
+                break;
+              } else if (parsed && typeof parsed === 'object') {
+                if (Array.isArray(parsed.updatedMenu) && parsed.updatedMenu.length) {
+                  updatedMenu = parsed.updatedMenu;
+                }
+                if (parsed.configPatches && typeof parsed.configPatches === 'object') {
+                  const cp = parsed.configPatches;
+                  if (cp.salonName) config.salonName = String(cp.salonName).trim();
+                  if (cp.displayPhone) {
+                    config.displayPhone = String(cp.displayPhone).trim();
+                    config.smsPhone = String(cp.displayPhone).trim();
+                  }
+                  if (cp.address) {
+                    config.address = String(cp.address).trim();
+                    config.mapsQuery = `${config.address}, Australia`;
+                  }
+                  if (cp.bookingUrl) config.bookingUrl = String(cp.bookingUrl).trim();
+                  if (cp.heroBadge) config.heroBadge = String(cp.heroBadge).trim();
+                  if (cp.heroHeadlinePrefix !== undefined) config.heroHeadlinePrefix = String(cp.heroHeadlinePrefix).trim();
+                  if (cp.heroHeadlineItalic !== undefined) config.heroHeadlineItalic = String(cp.heroHeadlineItalic).trim();
+                  if (cp.heroStory) config.heroStory = String(cp.heroStory).trim();
+                  if (cp.palette && ['01', '02', '03', '04', '05'].includes(String(cp.palette))) {
+                    config.palette = String(cp.palette);
+                  }
+                  if (cp.instagramUrl) config.instagramUrl = String(cp.instagramUrl).trim();
+                  if (cp.facebookUrl) config.facebookUrl = String(cp.facebookUrl).trim();
+                  if (Array.isArray(cp.hours) && cp.hours.length) {
+                    config.hours = cp.hours;
+                  }
+                }
+                changesSummaryList.push(parsed.summary || `Gemini AI (${modelName}) updated ${Array.isArray(updatedMenu) ? updatedMenu.length : 0} menu categories${allMenuB64.length ? ` (${allMenuB64.length} menu page(s) OCR'd)` : ''}`);
                 geminiSuccess = true;
                 break;
               }
             } catch (_) {}
           }
+        } else {
+          const errJson = await geminiRes.json().catch(() => null);
+          lastGeminiErrMsg = (errJson && errJson.error && errJson.error.message) || `HTTP ${geminiRes.status}`;
         }
       }
-      if (!geminiSuccess && revData.menuText && updatedMenu) {
-        changesSummaryList.push('Applied fallback text menu notes');
+      if (!geminiSuccess) {
+        // Deterministic fallback parser for palette/price instructions when Gemini API is restricted or not configured
+        const allDirectives = `${combinedMenuText}\n${combinedFinalNotes}\n${cleanAdminInst}`;
+        const palMatch = allDirectives.match(/(?:palette|bảng\s*màu|màu\s*số)\s*#?\s*(0?[1-5])\b/i);
+        if (palMatch) {
+          const pNum = palMatch[1].padStart(2, '0');
+          config.palette = pNum;
+          changesSummaryList.push(`Switched palette to ${pNum}`);
+        }
+        if (allMenuB64.length > 0 && lastGeminiErrMsg.includes('blocked')) {
+          changesSummaryList.push('⚠️ Lưu ý: Key Google hiện tại chỉ bật Places API (chưa bật Gemini Vision OCR). Hãy dán Gemini API Key (từ aistudio.google.com/apikey) vào mục ⚙️ Cấu hình API để AI tự động đọc chữ từ ảnh Menu!');
+        } else if (combinedMenuText && updatedMenu) {
+          changesSummaryList.push('Applied text menu notes');
+        }
       }
     } catch (gErr) {
-      if (revData.menuText && updatedMenu) {
+      if (combinedMenuText && updatedMenu) {
         changesSummaryList.push('Applied fallback price tweaks to menu');
       }
     }
-  } else if (hasMenuEdits && revData.menuText && updatedMenu) {
+  } else if (hasAiWork && combinedMenuText && updatedMenu) {
     changesSummaryList.push('Applied text menu directives');
   }
 
@@ -2653,7 +2925,7 @@ function formatCustomerRecord(cust) {
     sequenceStartedAt: m.sequence_started_at || m.demo_sent_at || m.fb_pitched_at || '',
     step1SentAt: m.step1_sent_at || m.demo_sent_at || m.fb_pitched_at || '',
     step2SentAt: m.step2_sent_at || '',
-    step3SentAt: m.step3_sent_at || m.deal_activated_at || '',
+    step3SentAt: m.step3_sent_at || (m.deal_status === 'flash_deal' ? (m.deal_activated_at || '') : ''),
     step4SentAt: m.step4_sent_at || '',
     step5LockedAt: m.step5_locked_at || (m.deal_status === 'expired' ? (m.deal_expires_at || 'true') : ''),
     fbDueStep: m.fb_due_step || '',
@@ -3060,13 +3332,48 @@ function buildExpiredDemoHtml(client) {
       gap: 12px;
       margin-top: 10px;
     }
-    @media (min-width: 520px) {
+    @media (min-width: 560px) {
       .btn-group {
         flex-direction: row;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         justify-content: center;
         align-items: center;
       }
+    }
+    .btn-unlock {
+      width: 100%;
+      background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+      color: #ffffff;
+      border: 1px solid rgba(187, 247, 208, 0.35);
+      padding: 15px 24px;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 13.5px;
+      line-height: 1.25;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 12px 24px rgba(22, 101, 52, 0.26);
+      transition: all 0.2s;
+      margin-bottom: 4px;
+    }
+    .btn-unlock:hover:not(:disabled) {
+      transform: translateY(-1.5px);
+      box-shadow: 0 16px 30px rgba(22, 101, 52, 0.36);
+    }
+    .btn-unlock:disabled {
+      opacity: 0.75;
+      cursor: wait;
+    }
+    .unlock-status {
+      font-size: 12px;
+      font-weight: 600;
+      color: #166534;
+      margin-top: 8px;
+      min-height: 18px;
     }
     .btn-primary {
       background: linear-gradient(135deg, #96432b 0%, #7d3520 100%);
@@ -3130,8 +3437,12 @@ function buildExpiredDemoHtml(client) {
     <p class="expired-desc">
       The preview hold and exclusive studio offer for <strong>${bizName}</strong> concluded on <strong>${expDateStr}</strong>.<br><br>
       To protect brand exclusivity and keep every client design private on the <strong>WynnPages Studio Australian High-Speed Network</strong>, this website preview has been moved to our private archive.
-      If you are the business owner and would like to unlock, customise, or claim this website for a flat <strong>$599 AUD</strong> (100% ownership, zero monthly retainers), please email our studio directly below.
+      If you are the business owner, you can unlock <strong>48-hour live preview access</strong> instantly with one click below, or email our studio to customise and claim this website ($599 AUD flat, 100% ownership, zero monthly retainers).
     </p>
+    <button type="button" id="btn-self-unlock-48h" class="btn-unlock">
+      <span>🔓 I'm the Business Owner — Unlock 48-Hour Preview</span>
+    </button>
+    <div id="unlock-status-msg" class="unlock-status" aria-live="polite"></div>
     <div class="btn-group">
       <a href="${mailtoHref}" class="btn-primary">
         <span>✉️ Email Studio to Reactivate</span>
@@ -3142,6 +3453,52 @@ function buildExpiredDemoHtml(client) {
     </div>
     <p class="footer-note">WynnPages Studio — Australian Bespoke Web Atelier • Flat $599 AUD • Zero Monthly Retainers</p>
   </div>
+  <script>
+    (function() {
+      var btn = document.getElementById('btn-self-unlock-48h');
+      var statusEl = document.getElementById('unlock-status-msg');
+      if (!btn) return;
+      var slug = ${JSON.stringify(demoSlug)};
+      var cid = ${JSON.stringify(clientId)};
+      var biz = ${JSON.stringify(bizName)};
+      btn.addEventListener('click', function() {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Unlocking Your 48-Hour Preview...</span>';
+        if (statusEl) statusEl.textContent = 'Restoring private preview access on WynnPages Australian Network...';
+        fetch('/api/track?slug=' + encodeURIComponent(slug || '') + '&type=self_unlock_48h', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug: slug,
+            clientId: cid,
+            businessName: biz,
+            eventType: 'self_unlock_48h'
+          })
+        })
+          .then(function(r) { return r.json().catch(function() { return { ok: r.ok }; }); })
+          .then(function(data) {
+            if (data && data.ok !== false) {
+              btn.innerHTML = "<span>✅ Unlocked for 48 Hours! Loading Preview...</span>";
+              if (statusEl) statusEl.textContent = "Success! Redirecting to your live interactive website preview...";
+              setTimeout(function() {
+                var u = new URL(window.location.href);
+                u.searchParams.set("unlocked", String(Date.now()));
+                window.location.replace(u.toString());
+              }, 350);
+            } else {
+              btn.disabled = false;
+              btn.innerHTML = "<span>🔓 I'm the Business Owner — Unlock 48-Hour Preview</span>";
+              if (statusEl) statusEl.textContent = (data && data.error) || "Could not auto-unlock. Please click Email Studio below.";
+            }
+          })
+          .catch(function() {
+            var u = new URL(window.location.href);
+            u.searchParams.set("unlocked", String(Date.now()));
+            window.location.replace(u.toString());
+          });
+      });
+    })();
+  </script>
 </body>
 </html>`;
 }
@@ -3468,12 +3825,26 @@ function buildClaimBarSnippet(client) {
     .claim-bar.deal-active {
       border: 1.5px solid rgba(232, 185, 72, 0.75);
       box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(232, 185, 72, 0.35);
-      padding-top: 16px;
+      padding-top: 40px;
+    }
+    .claim-bar.deal-active .claim-collapse-btn {
+      top: 15px;
+      z-index: 30;
+      opacity: 0.85;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 9999px;
+      padding: 3px 14px;
+    }
+    .claim-bar.deal-active .claim-collapse-btn:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.16);
     }
     .claim-deal-floating-seal {
       position: absolute;
       top: -15px;
-      left: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       display: inline-flex;
       align-items: center;
       gap: 7px;
@@ -3513,11 +3884,11 @@ function buildClaimBarSnippet(client) {
     }
     @keyframes seal-float-pulse {
       0%, 100% {
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
         box-shadow: 0 8px 22px rgba(200, 138, 27, 0.5), 0 2px 6px rgba(0,0,0,0.4);
       }
       50% {
-        transform: translateY(-3px);
+        transform: translateX(-50%) translateY(-2.5px);
         box-shadow: 0 12px 30px rgba(200, 138, 27, 0.75), 0 3px 8px rgba(0,0,0,0.5), 0 0 16px rgba(255, 243, 209, 0.7);
       }
     }
@@ -3588,6 +3959,21 @@ function buildClaimBarSnippet(client) {
       font-size: 16.5px; font-weight: 800; color: #ffffff;
       letter-spacing: -0.01em; text-shadow: 0 1px 4px rgba(0,0,0,0.6);
       overflow: hidden; text-overflow: ellipsis;
+    }
+    .claim-reassure {
+      font-size: 10.5px;
+      color: #d6cfc2;
+      font-weight: 500;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      line-height: 1.3;
+    }
+    .claim-reassure-check {
+      color: #34d399;
+      font-weight: 800;
+      flex-shrink: 0;
     }
     .claim-countdown-wrap {
       display: inline-flex;
@@ -3718,18 +4104,19 @@ function buildClaimBarSnippet(client) {
         overflow: visible;
       }
       .claim-bar.deal-active {
-        padding-top: 32px;
+        padding-top: 42px;
       }
       .claim-bar.deal-active .claim-collapse-btn {
-        top: 10px;
+        top: 15px;
       }
       .claim-deal-floating-seal {
         top: -15px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 11px;
-        padding: 5px 14px;
-        gap: 6px;
+        font-size: 10.5px;
+        padding: 4.5px 12px;
+        gap: 5px;
+        max-width: calc(100% - 16px);
       }
       @keyframes seal-float-pulse {
         0%, 100% {
@@ -3832,8 +4219,12 @@ function buildClaimBarSnippet(client) {
             `}
           </div>
           <div class="claim-title">
-            <span class="claim-for-text">Crafted exclusively for</span>
+            <span class="claim-for-text">Exclusively for</span>
             <strong class="claim-biz-highlight">${bizName}</strong>
+          </div>
+          <div class="claim-reassure">
+            <span class="claim-reassure-check">✓</span>
+            <span>Sample photos/info shown &mdash; customize 100% with your real photos &amp; details after checkout</span>
           </div>
           ${isFlashDeal ? `
             <div class="claim-countdown-wrap">
@@ -4231,8 +4622,31 @@ function ensureClientHtmlSeoTags(rawHtml, client, reqUrl, isPathDemo = false, sl
   return html;
 }
 
-// Record in-app activity feed event in KV and broadcast instant push (Telegram Bot + Web Push)
-async function recordActivityAndNotify({ type, title, message, clientName, slug, dedupeKey = '', dedupeTtl = 86400, env, ctx }) {
+function escapeTelegramHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+async function recordStudioActivity(env, payload = {}, ctx = null) {
+  if (!env || !payload) return null;
+  return recordActivityAndNotify({
+    type: payload.type || 'system',
+    icon: payload.icon || '',
+    title: payload.title || 'WynnPages Studio Activity',
+    message: payload.message || '',
+    clientName: payload.clientName || '',
+    slug: payload.slug || '',
+    dedupeKey: payload.dedupeKey || '',
+    dedupeTtl: payload.dedupeTtl || 3600,
+    env,
+    ctx
+  });
+}
+
+// Record in-app activity feed event in D1/KV and broadcast instant push (Telegram Bot)
+async function recordActivityAndNotify({ type, icon: customIcon = '', title, message, clientName, slug, dedupeKey = '', dedupeTtl = 86400, env, ctx }) {
   if (!env) return null;
   if (dedupeKey) {
     const acquired = await acquireD1RateLock(env, dedupeKey, dedupeTtl);
@@ -4241,12 +4655,16 @@ async function recordActivityAndNotify({ type, title, message, clientName, slug,
   const nowIso = new Date().toISOString();
   const eventId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
 
-  let icon = '🔔';
-  if (type === 'demo_viewed') icon = '👀';
-  else if (type === 'claim_clicked') icon = '💳';
-  else if (type === 'payment_received') icon = '💰';
-  else if (type === 'revision_submitted' || type === 'brief_completed') icon = '📝';
-  else if (type === 'domain_updated') icon = '🌐';
+  let icon = customIcon || '🔔';
+  if (!customIcon) {
+    if (type === 'demo_viewed') icon = '👀';
+    else if (type === 'claim_clicked') icon = '💳';
+    else if (type === 'payment_received') icon = '💰';
+    else if (type === 'revision_submitted' || type === 'brief_completed') icon = '📝';
+    else if (type === 'domain_updated') icon = '🌐';
+    else if (type === 'demo_self_unlocked') icon = '🔓';
+    else if (type === 'ai_revision_applied') icon = '🤖';
+  }
 
   const newEvent = {
     id: eventId,
@@ -4274,25 +4692,45 @@ async function recordActivityAndNotify({ type, title, message, clientName, slug,
     } catch (_) {}
   }
 
-  // 2. Dispatch Telegram Bot Alert (reads D1 settings -> KV -> env) inside ctx.waitUntil
+  // 2. Dispatch Telegram Bot Alert (HTML parse_mode + automatic plain-text fallback so underscores/filenames never fail)
   const sendTelegram = async () => {
     try {
       const rt = await loadSyncedRuntime(env);
       const botToken = rt.cfg.telegramBotToken || '';
       const chatId = rt.cfg.telegramChatId || '';
       if (botToken && chatId) {
-        const cleanTitle = String(title || '').replace(/[*_`[\]]/g, '');
-        const text = `${icon} *${cleanTitle}*\n\n${message}\n\n🕒 _${formatAuDateTime(new Date(), AU_TIMEZONE)}_\n👉 [Mở Studio Command](https://wynnpages.com.au/admin)`;
-        await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
+        const cleanSlugLink = slug && slug !== 'test' ? `https://${slugifyName(slug)}.wynnpages.com.au` : '';
+        const timeStr = formatAuDateTime(new Date(), AU_TIMEZONE);
+        const htmlLinks = [
+          cleanSlugLink ? `<a href="${cleanSlugLink}">🌐 Xem Web Demo</a>` : '',
+          `<a href="https://wynnpages.com.au/admin">🛠 Mở Studio Admin</a>`
+        ].filter(Boolean).join('  •  ');
+        const htmlText = `${icon} <b>${escapeTelegramHtml(title || 'WynnPages Activity')}</b>\n\n${escapeTelegramHtml(message || '')}\n\n🕒 <i>${escapeTelegramHtml(timeStr)}</i>\n👉 ${htmlLinks}`;
+
+        const tgUrl = `https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`;
+        const res = await fetch(tgUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chat_id: chatId,
-            text,
-            parse_mode: 'Markdown',
+            text: htmlText,
+            parse_mode: 'HTML',
             disable_web_page_preview: true
           })
         });
+        if (!res.ok) {
+          // Plain-text fallback guarantee
+          const plainText = `${icon} ${title || 'WynnPages Activity'}\n\n${message || ''}\n\n🕒 ${timeStr}\n👉 https://wynnpages.com.au/admin${cleanSlugLink ? `\n🌐 ${cleanSlugLink}` : ''}`;
+          await fetch(tgUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: plainText,
+              disable_web_page_preview: true
+            })
+          }).catch(() => {});
+        }
       }
     } catch (tgErr) {
       console.error('[Telegram notify error]', tgErr);
@@ -4444,7 +4882,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
       }
 
       const isPaid = resolvedClient && (resolvedClient.paymentStatus === 'paid' || resolvedClient.stage === 'launched');
-      const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
+      const bypass = url.searchParams.get('preview') || url.searchParams.get('admin') || url.searchParams.get('unlocked');
       const isDealExpired = resolvedClient && (resolvedClient.dealStatus === 'expired' || resolvedClient.dealStatus === 'purged');
       if (!isLiveDomain && !isPaid && isDealExpired && !bypass) {
         return new Response(buildExpiredDemoHtml(resolvedClient), {
@@ -5067,104 +5505,138 @@ async function runScheduledAutopilot(env, options = {}) {
     const isFbMode = c.channelMode === 'facebook' || !c.phone;
     const alertedList = String(c.fbAlertedSteps || '').split(',').map(s => s.trim()).filter(Boolean);
 
-    const step2Reached = isTurbo ? minsElapsed >= 15 : daysElapsed >= 2.6;
-    const step3Reached = isTurbo ? minsElapsed >= 30 : daysElapsed >= 5.6;
-    const step4Reached = isTurbo ? minsElapsed >= 45 : daysElapsed >= 8.6;
-    const step5Reached = isTurbo ? minsElapsed >= 60 : daysElapsed >= 9.8;
+    const parseMs = (val) => {
+      if (!val) return 0;
+      const t = typeof val === 'number' ? (val < 1e11 ? val * 1000 : val) : new Date(val).getTime();
+      return (t && !isNaN(t)) ? t : 0;
+    };
+    const rawStep2Ms = parseMs(c.step2SentAt);
+    const rawStep3Ms = parseMs(c.step3SentAt || c.dealActivatedAt);
+    const rawStep4Ms = parseMs(c.step4SentAt);
 
-    const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views';
-    const step3Done = Boolean(c.step3SentAt) || (c.dealStatus === 'flash_deal' && (!isFbMode || c.nurtureStep === 'day7_deal_active')) || c.nurtureStep === 'aussie_flash_deal_299';
-    const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning';
-    const step5Done = Boolean(c.step5LockedAt) || c.dealStatus === 'expired' || c.dealStatus === 'purged';
+    // Ignore stale step timestamps from an older test cycle if sequenceStartedAt was restarted more recently
+    const step2SentMs = (rawStep2Ms && rawStep2Ms >= sentTimeMs - 5000) ? rawStep2Ms : 0;
+    const step3SentMs = (rawStep3Ms && rawStep3Ms >= sentTimeMs - 5000) ? rawStep3Ms : 0;
+    const step4SentMs = (rawStep4Ms && rawStep4Ms >= sentTimeMs - 5000) ? rawStep4Ms : 0;
 
-    // 1. Step 5: Day 10+ / T+60m (Hard Expire Demo for BOTH SMS and Facebook modes)
-    if (step5Reached && !step5Done) {
-      if (settings.autoExpire || force || isTurbo) {
-        const uP = new URLSearchParams();
-        uP.append('metadata[deal_status]', 'expired');
-        uP.append('metadata[deal_expires_at]', nowIso);
-        uP.append('metadata[step5_locked_at]', nowIso);
-        uP.append('metadata[nurture_step]', 'demo_expired');
-        uP.append('metadata[fb_due_step]', '');
-        await patchCustAndSync(c.id, uP);
-        expiredCount++;
-        await recordStudioActivity(env, {
-          type: 'demo_expired',
-          icon: '🔒',
-          title: `Đã Khoá Demo Tự Động (${isTurbo ? 'Test 60p' : 'Ngày 10'}): ${biz}`,
-          message: `Bản Demo (${demoUrl}) đã tự động khoá HTTP 403 sau khi kết thúc chu trình chốt sale.`,
-          clientName: biz,
-          slug: c.demoSlug || ''
-        }, options.ctx);
-        reports.push(`[${isTurbo ? 'Phút 60' : `Ngày ${Math.round(daysElapsed)}`}] Khoá Demo 403: ${biz}`);
-        continue;
+    const step2Done = Boolean(step2SentMs) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views' || (isFbMode && alertedList.includes('day3'));
+    const step3Done = Boolean(step3SentMs) || (c.dealStatus === 'flash_deal' && (!isFbMode || c.nurtureStep === 'day7_deal_active' || alertedList.includes('day6'))) || c.nurtureStep === 'aussie_flash_deal_299';
+    const step4Done = Boolean(step4SentMs) || c.nurtureStep === 'day9_warning' || (isFbMode && alertedList.includes('day9'));
+    let step5Done = Boolean(c.step5LockedAt) || c.dealStatus === 'expired' || c.dealStatus === 'purged';
+
+    // 0. Auto-Heal Step-Skipping Bug: If a client (e.g. cus_VVRo44StsdaaN / cafe) jumped to Step 5 expired before Steps 2, 3, or 4 were sent, reset its prematurely locked state so the sequence runs sequentially
+    const skippedPriorSteps = !step2Done || !step3Done || !step4Done;
+    if (
+      c.dealStatus !== 'purged' &&
+      skippedPriorSteps &&
+      (step5Done || c.nurtureStep === 'demo_expired' || c.nurtureStep === 'done_expired' || c.id === 'cus_VVRo44StsdaaN' || c.demoSlug === 'cafe')
+    ) {
+      if (step5Done || c.nurtureStep === 'demo_expired' || c.nurtureStep === 'done_expired') {
+        const healParams = new URLSearchParams();
+        const restoredDealStatus = step3Done ? 'flash_deal' : 'standard';
+        const restoredNurtureStep = step4Done
+          ? 'day9_warning'
+          : (step3Done ? 'day7_deal_active' : (step2Done ? 'day3_reminder' : 'aussie_pitch'));
+        healParams.append('metadata[deal_status]', restoredDealStatus);
+        healParams.append('metadata[step5_locked_at]', '');
+        healParams.append('metadata[deal_expires_at]', step3Done ? new Date(now + 72 * 3600 * 1000).toISOString() : '');
+        healParams.append('metadata[nurture_step]', restoredNurtureStep);
+        await patchCustAndSync(c.id, healParams);
+        c.dealStatus = restoredDealStatus;
+        c.step5LockedAt = '';
+        c.nurtureStep = restoredNurtureStep;
+        step5Done = false;
+        reports.push(`[Auto-Heal] Khôi phục trạng thái nhảy cóc Step 5 cho: ${biz}`);
       }
     }
 
-    // 2. Step 4: Day 9 / T+45m (24h Final Warning)
-    if (step4Reached && !step5Reached && !step4Done && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+    // 1. Step 2: Day 3 / T+15m (Follow-up) — MUST run first if unsent!
+    const step2Due = !step2Done && (isTurbo ? minsElapsed >= 15 : daysElapsed >= 2.6);
+    if (step2Due && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+      const cleanSlugD3 = slugifyName(c.demoSlug || c.businessName || c.name || '');
+      let d3Views = Number(c.demoViewCount || 0);
+      if (dbAp) {
+        const r3 = await dbAp.prepare('SELECT view_count FROM clients WHERE id = ?').bind(c.id).first().catch(() => null);
+        if (r3 && r3.view_count) d3Views = Math.max(d3Views, Number(r3.view_count));
+      }
+      if (env && env.WYNN_KV && cleanSlugD3) {
+        const kv3 = await env.WYNN_KV.get(`demo_views:${cleanSlugD3}`, 'json').catch(() => null);
+        if (kv3 && kv3.viewCount) d3Views = Math.max(d3Views, Number(kv3.viewCount));
+      }
+
       if (isFbMode) {
-        if (c.fbDueStep !== 'day9' || !alertedList.includes('day9')) {
-          const nextAlerted = Array.from(new Set([...alertedList, 'day9'])).join(',');
+        if (c.fbDueStep !== 'day3' || !alertedList.includes('day3')) {
+          const nextAlerted = Array.from(new Set([...alertedList, 'day3'])).join(',');
           const uP = new URLSearchParams();
-          uP.append('metadata[fb_due_step]', 'day9');
+          uP.append('metadata[fb_due_step]', 'day3');
           uP.append('metadata[fb_alerted_steps]', nextAlerted);
+          uP.append('metadata[step2_sent_at]', nowIso);
           await patchCustAndSync(c.id, uP);
-          if (!alertedList.includes('day9')) {
+          if (!alertedList.includes('day3')) {
             await recordStudioActivity(env, {
-              type: 'fb_due_day9',
+              type: 'fb_due_day3',
               icon: '💬',
-              title: `Đến Hạn Gửi FB Bước 4 (24h Cuối): ${biz}`,
-              message: `Đã đến ${isTurbo ? 'phút 45 (Test)' : 'Ngày 9'} cho khách Facebook "${biz}". Mở Admin bấm vào Bước 4 đang sáng xanh để Copy tin nhắc 24h cuối & mở Messenger!`,
+              title: `Đến Hạn Gửi FB Bước 2 (Hỏi Thăm): ${biz}`,
+              message: `Đã đến ${isTurbo ? 'phút 15 (Test)' : 'Ngày 3'} cho khách Facebook "${biz}" (${d3Views} lượt xem Demo). Mở Admin bấm vào Bước 2 đang sáng xanh để Copy lời hỏi thăm & mở Messenger!`,
               clientName: biz,
               slug: c.demoSlug || ''
             }, options.ctx);
           }
-          reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'} - FB] Nhắc Admin gửi tin 24h cuối: ${biz}`);
+          reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'} - FB] Nhắc Admin gửi FB hỏi thăm (${d3Views} views): ${biz}`);
         }
         continue;
       } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-        const warningMsg = `Hi ${biz}, quick heads up from WynnPages: your website preview (${demoUrl}) closes in 24h. Claim it today if you'd like to keep this design! - Sam`;
-        const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
+        const reminderMsg = d3Views >= 2
+          ? `Hi ${biz}, Wynn here from WynnPages. I noticed you had a quick look at the website preview I put together for you (${demoUrl}) — I really hope you liked the feel of it! Just so you know, the current photos and details are only placeholders to show the layout. Once claimed on the preview page, it unlocks your private Customization Portal where you can upload your real photos, logo & exact prices/details for me to tailor 100% to your business before connecting your .com.au domain. Warmly, Wynn`
+          : `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoUrl} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
+        const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
         let emailSent = false;
         if (c.email && cfg.resendApiKey) {
-          const mailPayload = buildNurtureStepEmail({ stepKey: 'step4', client: c, demoUrl });
+          const mailPayload = buildNurtureStepEmail({ stepKey: 'step2', client: c, demoUrl, views: d3Views });
           if (mailPayload) {
             const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
             emailSent = Boolean(mRes && mRes.sent);
           }
         }
         const uP = new URLSearchParams();
-        uP.append('metadata[nurture_step]', 'day9_warning');
-        uP.append('metadata[step4_sent_at]', nowIso);
+        uP.append('metadata[nurture_step]', 'day3_reminder');
+        uP.append('metadata[step2_sent_at]', nowIso);
         uP.append('metadata[fb_due_step]', '');
-        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day9_warning] @ ${nowIso}`.slice(0, 480));
-        if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day9_warning] @ ${nowIso}`.slice(0, 480));
+        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
+        if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
         await patchCustAndSync(c.id, uP);
         await recordSmsHistory({
           customerId: c.id,
           env,
           stripeSecretKey: cfg.stripeSecretKey,
-          type: 'day9_warning',
+          type: 'day3_reminder',
           to: c.phone,
-          text: warningMsg,
+          text: reminderMsg,
           status: smsRes.sent,
           reason: smsRes.reason
         });
         if (smsRes.sent) smsSentCount++;
-        reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'}] Gửi SMS${emailSent ? '+Email' : ''} Cảnh báo 24h cuối: ${biz}`);
+        reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'}] Gửi SMS${emailSent ? '+Email' : ''} Hỏi thăm (${d3Views} views): ${biz}`);
         continue;
       }
     }
 
-    // 3. Step 3: Day 6 / T+30m (Flash Deal 50% $299 AUD / 72h Activation for BOTH SMS and Facebook)
-    if (step3Reached && !step4Reached && !step3Done && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
+    // 2. Step 3: Day 6 / T+30m (Flash Deal 50% $299 AUD / 72h Activation) — ONLY after Step 2 is done!
+    const minsSinceStep2 = step2SentMs ? (now - step2SentMs) / (1000 * 60) : minsElapsed;
+    const daysSinceStep2 = step2SentMs ? (now - step2SentMs) / (1000 * 3600 * 24) : daysElapsed;
+    const step3Due = step2Done && !step3Done && (
+      isTurbo
+        ? (step2SentMs ? minsSinceStep2 >= 15 : minsElapsed >= 30)
+        : (step2SentMs ? daysSinceStep2 >= 2.6 : daysElapsed >= 5.6)
+    );
+    if (step3Due && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
       if (settings.autoDeal || force || isTurbo) {
         const dealExpiresAt = new Date(now + 72 * 3600 * 1000).toISOString();
         const uP = new URLSearchParams();
         uP.append('metadata[deal_status]', 'flash_deal');
         uP.append('metadata[deal_activated_at]', nowIso);
         uP.append('metadata[deal_expires_at]', dealExpiresAt);
+        uP.append('metadata[step3_sent_at]', nowIso);
 
         if (isFbMode) {
           const nextAlerted = Array.from(new Set([...alertedList, 'day6'])).join(',');
@@ -5187,13 +5659,12 @@ async function runScheduledAutopilot(env, options = {}) {
         }
 
         uP.append('metadata[nurture_step]', 'day7_deal_active');
-        uP.append('metadata[step3_sent_at]', nowIso);
         uP.append('metadata[fb_due_step]', '');
         let smsSent = false;
         let dealMsg = '';
         let smsRes = null;
         if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-          dealMsg = `Hi ${biz}! 72h offer from WynnPages: claim your custom website for 50% OFF ($299 AUD flat, save $300, $0/mo). Ends in 72h: ${demoUrl} - Sam`;
+          dealMsg = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoUrl} Warmly, Wynn`;
           smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
           smsSent = Boolean(smsRes && smsRes.sent);
           if (smsSent) smsSentCount++;
@@ -5227,71 +5698,98 @@ async function runScheduledAutopilot(env, options = {}) {
       }
     }
 
-    // 4. Step 2: Day 3 / T+15m (Follow-up — adapts to >= 2 views vs < 2 views)
-    if (step2Reached && !step3Reached && !step2Done && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
-      const cleanSlugD3 = slugifyName(c.demoSlug || c.businessName || c.name || '');
-      let d3Views = Number(c.demoViewCount || 0);
-      if (dbAp) {
-        const r3 = await dbAp.prepare('SELECT view_count FROM clients WHERE id = ?').bind(c.id).first().catch(() => null);
-        if (r3 && r3.view_count) d3Views = Math.max(d3Views, Number(r3.view_count));
-      }
-      if (env && env.WYNN_KV && cleanSlugD3) {
-        const kv3 = await env.WYNN_KV.get(`demo_views:${cleanSlugD3}`, 'json').catch(() => null);
-        if (kv3 && kv3.viewCount) d3Views = Math.max(d3Views, Number(kv3.viewCount));
-      }
-
+    // 3. Step 4: Day 9 / T+45m (24h Final Warning) — ONLY after Steps 2 & 3 are done!
+    const minsSinceStep3 = step3SentMs ? (now - step3SentMs) / (1000 * 60) : minsElapsed;
+    const daysSinceStep3 = step3SentMs ? (now - step3SentMs) / (1000 * 3600 * 24) : daysElapsed;
+    const step4Due = step2Done && step3Done && !step4Done && (
+      isTurbo
+        ? (step3SentMs ? minsSinceStep3 >= 15 : minsElapsed >= 45)
+        : (step3SentMs ? daysSinceStep3 >= 2.5 : daysElapsed >= 8.6)
+    );
+    if (step4Due && c.dealStatus !== 'expired' && c.dealStatus !== 'purged') {
       if (isFbMode) {
-        if (c.fbDueStep !== 'day3' || !alertedList.includes('day3')) {
-          const nextAlerted = Array.from(new Set([...alertedList, 'day3'])).join(',');
+        if (c.fbDueStep !== 'day9' || !alertedList.includes('day9')) {
+          const nextAlerted = Array.from(new Set([...alertedList, 'day9'])).join(',');
           const uP = new URLSearchParams();
-          uP.append('metadata[fb_due_step]', 'day3');
+          uP.append('metadata[fb_due_step]', 'day9');
           uP.append('metadata[fb_alerted_steps]', nextAlerted);
+          uP.append('metadata[step4_sent_at]', nowIso);
           await patchCustAndSync(c.id, uP);
-          if (!alertedList.includes('day3')) {
+          if (!alertedList.includes('day9')) {
             await recordStudioActivity(env, {
-              type: 'fb_due_day3',
+              type: 'fb_due_day9',
               icon: '💬',
-              title: `Đến Hạn Gửi FB Bước 2 (Hỏi Thăm): ${biz}`,
-              message: `Đã đến ${isTurbo ? 'phút 15 (Test)' : 'Ngày 3'} cho khách Facebook "${biz}" (${d3Views} lượt xem Demo). Mở Admin bấm vào Bước 2 đang sáng xanh để Copy lời hỏi thăm & mở Messenger!`,
+              title: `Đến Hạn Gửi FB Bước 4 (24h Cuối): ${biz}`,
+              message: `Đã đến ${isTurbo ? 'phút 45 (Test)' : 'Ngày 9'} cho khách Facebook "${biz}". Mở Admin bấm vào Bước 4 đang sáng xanh để Copy tin nhắc 24h cuối & mở Messenger!`,
               clientName: biz,
               slug: c.demoSlug || ''
             }, options.ctx);
           }
-          reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'} - FB] Nhắc Admin gửi FB hỏi thăm (${d3Views} views): ${biz}`);
+          reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'} - FB] Nhắc Admin gửi tin 24h cuối: ${biz}`);
         }
         continue;
       } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-        const reminderMsg = d3Views >= 2
-          ? `Hi ${biz}! Saw you checking out your preview: ${demoUrl} Happy to tweak any prices or photos for you. Claim online anytime ($599 flat, $0/mo) - Sam`
-          : `Hi ${biz}, Sam from WynnPages checking in! Did you get a chance to see your website preview? ${demoUrl} ($599 flat, $0/mo). Happy to adjust anything!`;
-        const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
+        const warningMsg = `Hi ${biz}, Wynn here from WynnPages — I promise this is my last message so I don't clutter your phone! Just a gentle heads up that I'll be archiving the private preview link I made for you (${demoUrl}) tomorrow as I tidy up my studio server. If you'd still like to keep the design at the $299 AUD one-off rate (including full customization of your real photos, pricing/details & .com.au domain setup via our Revision Portal after checkout), you can claim it on the preview page anytime before tomorrow. Wishing you all the very best! Warmly, Wynn`;
+        const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
         let emailSent = false;
         if (c.email && cfg.resendApiKey) {
-          const mailPayload = buildNurtureStepEmail({ stepKey: 'step2', client: c, demoUrl, views: d3Views });
+          const mailPayload = buildNurtureStepEmail({ stepKey: 'step4', client: c, demoUrl });
           if (mailPayload) {
             const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
             emailSent = Boolean(mRes && mRes.sent);
           }
         }
         const uP = new URLSearchParams();
-        uP.append('metadata[nurture_step]', 'day3_reminder');
-        uP.append('metadata[step2_sent_at]', nowIso);
+        uP.append('metadata[nurture_step]', 'day9_warning');
+        uP.append('metadata[step4_sent_at]', nowIso);
         uP.append('metadata[fb_due_step]', '');
-        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
-        if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
+        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day9_warning] @ ${nowIso}`.slice(0, 480));
+        if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day9_warning] @ ${nowIso}`.slice(0, 480));
         await patchCustAndSync(c.id, uP);
         await recordSmsHistory({
           customerId: c.id,
           env,
           stripeSecretKey: cfg.stripeSecretKey,
-          type: 'day3_reminder',
+          type: 'day9_warning',
           to: c.phone,
-          text: reminderMsg,
+          text: warningMsg,
           status: smsRes.sent,
           reason: smsRes.reason
         });
         if (smsRes.sent) smsSentCount++;
-        reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'}] Gửi SMS${emailSent ? '+Email' : ''} Hỏi thăm (${d3Views} views): ${biz}`);
+        reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'}] Gửi SMS${emailSent ? '+Email' : ''} Cảnh báo 24h cuối: ${biz}`);
+        continue;
+      }
+    }
+
+    // 4. Step 5: Day 10+ / T+60m (Hard Expire Demo) — ONLY after Steps 2, 3, and 4 have all been sent!
+    const minsSinceStep4 = step4SentMs ? (now - step4SentMs) / (1000 * 60) : minsElapsed;
+    const daysSinceStep4 = step4SentMs ? (now - step4SentMs) / (1000 * 3600 * 24) : daysElapsed;
+    const hasActiveSelfUnlockWindow = (c.nurtureStep === 'self_unlocked_48h' || c.nurtureStep === 'restored') && c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() > now;
+    const step5Due = step2Done && step3Done && step4Done && !step5Done && !hasActiveSelfUnlockWindow && (
+      isTurbo
+        ? (step4SentMs ? minsSinceStep4 >= 15 : minsElapsed >= 60)
+        : (step4SentMs ? daysSinceStep4 >= 0.9 : daysElapsed >= 9.8)
+    );
+    if (step5Due) {
+      if (settings.autoExpire || force || isTurbo) {
+        const uP = new URLSearchParams();
+        uP.append('metadata[deal_status]', 'expired');
+        uP.append('metadata[deal_expires_at]', nowIso);
+        uP.append('metadata[step5_locked_at]', nowIso);
+        uP.append('metadata[nurture_step]', 'demo_expired');
+        uP.append('metadata[fb_due_step]', '');
+        await patchCustAndSync(c.id, uP);
+        expiredCount++;
+        await recordStudioActivity(env, {
+          type: 'demo_expired',
+          icon: '🔒',
+          title: `Đã Khoá Demo Tự Động (${isTurbo ? 'Test 60p' : 'Ngày 10'}): ${biz}`,
+          message: `Bản Demo (${demoUrl}) đã tự động khoá HTTP 403 sau khi kết thúc chu trình chốt sale.`,
+          clientName: biz,
+          slug: c.demoSlug || ''
+        }, options.ctx);
+        reports.push(`[${isTurbo ? 'Phút 60' : `Ngày ${Math.round(daysElapsed)}`}] Khoá Demo 403: ${biz}`);
         continue;
       }
     }
@@ -5322,6 +5820,8 @@ async function runScheduledAutopilot(env, options = {}) {
   return { ok: true, settings, lastRun: lastRunRecord, updatedClients };
 }
 
+let _lastBgSchedulerTickMs = 0;
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -5351,6 +5851,21 @@ export default {
     const { cfg: syncedCfg } = await loadSyncedRuntime(env);
     let runtimeCreds = syncedCfg;
     const cfg = syncedCfg;
+
+    // 1b. Background Auto-Scheduler Tick (throttled once per 60s via memory + D1 rate lock so scheduled SMS & 5-step sequence fire even when admin.html is closed)
+    if (url.pathname !== '/api/run-scheduled-sms' && Date.now() - _lastBgSchedulerTickMs >= 60000) {
+      _lastBgSchedulerTickMs = Date.now();
+      runInBg(ctx, (async () => {
+        try {
+          const acquired = await acquireD1RateLock(env, 'bg_auto_scheduler_60s', 55);
+          if (!acquired) return;
+          await Promise.allSettled([
+            processDueScheduledSms(env, ctx),
+            runScheduledAutopilot(env, { force: false, fromPing: true, ctx })
+          ]);
+        } catch (_) {}
+      })());
+    }
 
     // 1a. Wildcard Subdomain Demo (`https://lushnailbar.wynnpages.com.au`), Clean Path (`/d/lushnailbar`), & Custom Official Client Domains
     const hostLower = url.hostname.toLowerCase();
@@ -5434,7 +5949,7 @@ export default {
             return Response.redirect(cleanLive, 302);
           }
           const isPaid = (client.paymentStatus === 'paid' || client.stage === 'launched');
-          const bypass = url.searchParams.get('preview') || url.searchParams.get('admin');
+          const bypass = url.searchParams.get('preview') || url.searchParams.get('admin') || url.searchParams.get('unlocked');
           const isDealExpired = (client.dealStatus === 'expired' || client.dealStatus === 'purged');
           if (!isPaid && isDealExpired && !bypass) {
             return new Response(buildExpiredDemoHtml(client), {
@@ -5450,7 +5965,7 @@ export default {
           }
           const html = (client.stage === 'launched' && !forceBar)
             ? buildCleanLiveHtml(client, url.origin)
-            : buildBrandedPreviewHtml(client);
+            : buildBrandedPreviewHtml(client, { bypass: Boolean(bypass) });
           return new Response(html, {
             status: 200,
             headers: {
@@ -5595,6 +6110,11 @@ export default {
           });
           if (cRes.ok) {
             cust = await cRes.json();
+          } else {
+            cust = await ensureStripeCustomerMigrated(env, cid, cfg.stripeSecretKey);
+            if (cust && cust.id) cid = cust.id;
+          }
+          if (cust) {
             if (!email) email = cust.email || (cust.metadata && cust.metadata.customer_email) || '';
             if (!bizName) bizName = (cust.metadata && cust.metadata.business_name) || cust.name || '';
             if (!demoUrl) demoUrl = (cust.metadata && cust.metadata.demo_url) || '';
@@ -5602,6 +6122,17 @@ export default {
         } else if (email) {
           cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
           if (cust) cid = cust.id;
+        }
+        if (!cust && (demoUrl || bizName)) {
+          const fallbackSlug = slugifyName(extractCleanHost(demoUrl).replace(/\.wynnpages\.com\.au$/i, '') || bizName);
+          if (fallbackSlug) {
+            cust = await ensureStripeCustomerMigrated(env, fallbackSlug, cfg.stripeSecretKey);
+            if (cust && cust.id) {
+              cid = cust.id;
+              if (!email) email = cust.email || (cust.metadata && cust.metadata.customer_email) || '';
+              if (!bizName) bizName = (cust.metadata && cust.metadata.business_name) || cust.name || '';
+            }
+          }
         }
 
         const origin = url.origin;
@@ -7042,6 +7573,7 @@ export default {
 
         if (Array.isArray(body.menuFiles)) {
           const nextMenuFiles = [];
+          const menuB64List = [];
           const incomingMenus = body.menuFiles.slice(0, 4);
           for (let i = 0; i < incomingMenus.length; i++) {
             const item = incomingMenus[i];
@@ -7058,14 +7590,18 @@ export default {
               await env.WYNN_KV.put(mKey, binaryBuf.buffer, {
                 metadata: { mimeType, contentType: mimeType }
               }).catch(() => {});
+              menuB64List.push(item.dataUrl);
               if (i === 0) {
                 await env.WYNN_KV.put(`revision_file:${resolvedClientId}:menu`, item.dataUrl).catch(() => {});
               }
               const publicUrl = `https://${cleanSlug}.wynnpages.com.au${assetPath}?t=${Date.now()}`;
-              nextMenuFiles.push({ name: rawName, url: publicUrl, type: mimeType });
+              nextMenuFiles.push({ name: rawName, url: publicUrl, assetPath, type: mimeType });
             } else if (item.url) {
               nextMenuFiles.push({ name: rawName, url: String(item.url), type: item.type || 'image/jpeg' });
             }
+          }
+          if (menuB64List.length > 0 && env && env.WYNN_KV) {
+            await env.WYNN_KV.put(`revision_file:${resolvedClientId}:menu_list`, JSON.stringify(menuB64List)).catch(() => {});
           }
           savedMenuFiles = nextMenuFiles;
           savedMenuUrl = (savedMenuFiles[0] && savedMenuFiles[0].url) || '';
@@ -7190,14 +7726,28 @@ export default {
         if (revPayload.notes) summaryParts.push(`Notes: ${revPayload.notes}`);
         const revSummary = summaryParts.join(' • ') || 'Comprehensive 1-round revisions submitted';
 
-        // Notify Studio Admin (App/Telegram) immediately
+        // Notify Studio Admin (App/Telegram) immediately with detailed breakdown
         const notifyBizName = revPayload.bizName || clientRecord.businessName || 'Khách hàng';
+        const tgDetails = [
+          `🏢 Tiệm: ${notifyBizName}`,
+          revPayload.phone ? `📞 SĐT hiển thị: ${revPayload.phone}` : '',
+          revPayload.address ? `📍 Địa chỉ: ${revPayload.address}` : '',
+          revPayload.hours ? `🕒 Giờ mở cửa: ${revPayload.hours}` : '',
+          savedMenuFiles.length ? `📋 Ảnh Menu tải lên: ${savedMenuFiles.length} trang (${revPayload.menuFileName})` : '',
+          revPayload.menuText ? `✏️ Ghi chú sửa giá: ${revPayload.menuText.slice(0, 160)}` : '',
+          savedSalonPhotos.length ? `📸 Ảnh tiệm tải lên: ${savedSalonPhotos.length} ảnh` : '',
+          revPayload.desiredDomain ? `🌐 Tên miền mong muốn: ${revPayload.desiredDomain}` : '',
+          revPayload.domainConciergeRequested ? `🆘 KHÁCH NHỜ STUDIO CÀI ĐẶT TÊN MIỀN HỘ A–Z!` : '',
+          revPayload.notes ? `💬 Chỉ đạo cuối: ${revPayload.notes.slice(0, 200)}` : '',
+          `\n👉 Mở Admin bấm nút "🤖 Sửa Đổi & AI" để Gemini tự động cập nhật ngay!`
+        ].filter(Boolean).join('\n');
+
         await recordActivityAndNotify({
           type: 'revision_submitted',
           title: revPayload.domainConciergeRequested
             ? '🆘 Khách Gửi Sửa Web + Nhờ Cài Tên Miền A–Z!'
             : '📝 Khách Đã Gửi Sửa Web (1 Vòng)!',
-          message: `${notifyBizName} đã gửi thông tin chỉnh sửa web${savedSalonPhotos.length ? ` (${savedSalonPhotos.length} ảnh)` : ''}${revPayload.domainConciergeRequested ? ` + nhờ hỗ trợ tên miền (${revPayload.desiredDomain || 'Gọi hỗ trợ'})` : ''}. Mở app để chạy AI!`,
+          message: tgDetails,
           clientName: notifyBizName,
           slug: cleanSlug,
           env,
@@ -7206,8 +7756,17 @@ export default {
         await upsertD1Client(env, {
           ...clientRecord,
           id: resolvedClientId,
+          businessName: revPayload.bizName || clientRecord.businessName,
+          displayPhone: revPayload.phone || clientRecord.displayPhone,
+          businessAddress: revPayload.address || clientRecord.businessAddress,
+          desiredDomains: revPayload.desiredDomain || clientRecord.desiredDomains,
+          domainConciergeRequested: Boolean(revPayload.domainConciergeRequested),
           revisionStatus: 'submitted',
           revisionSubmittedAt: nowIso,
+          revisionSummary: revSummary,
+          revisionMenuFileName: revPayload.menuFileName || '',
+          revisionMenuFileUrl: savedMenuUrl || '',
+          revisionPhotosFileName: revPayload.photosFileName || '',
           revisionData: revPayload
         });
 
@@ -7465,7 +8024,306 @@ export default {
       }
     }
 
-    // 4g. Admin 1-Click Gemini AI Auto-Editor (POST /api/admin/apply-ai-revision)
+    // 4g-0. Admin 1-Click Cloud AI Oil Painting & Google Photos Applier (POST /api/admin/generate-ai-art)
+    if (url.pathname === '/api/admin/generate-ai-art' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ ok: false, error: auth.error }), { status: auth.status, headers: corsHeaders });
+        }
+        const cid = String(body.cid || '').trim();
+        const reqSlug = slugifyName(body.slug || cid);
+        const mode = String(body.mode || 'ai_oil_painting').trim();
+        const customPrompt = String(body.customPrompt || '').trim();
+        if (!cid && !reqSlug) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing cid or slug' }), { status: 400, headers: corsHeaders });
+        }
+
+        let clientRecord = null;
+        const dbArt = getD1(env);
+        if (dbArt) {
+          await ensureD1Schema(env);
+          let aRow = await dbArt.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(cid).first().catch(() => null);
+          if (!aRow && reqSlug) {
+            aRow = await dbArt.prepare('SELECT * FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(reqSlug).first().catch(() => null);
+          }
+          if (aRow) {
+            let aMeta = {};
+            try { aMeta = JSON.parse(aRow.metadata_json || '{}'); } catch (_) {}
+            clientRecord = {
+              ...aMeta,
+              id: aRow.id,
+              businessName: aRow.business_name || aMeta.businessName || aRow.name,
+              demoSlug: aRow.demo_slug || aMeta.demoSlug || slugifyName(aRow.business_name || aRow.name || '')
+            };
+          }
+        }
+        if (cfg.stripeSecretKey) {
+          const sRec = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey).catch(() => null);
+          if (sRec) clientRecord = { ...(clientRecord || {}), ...sRec };
+        }
+        if (!clientRecord) {
+          return new Response(JSON.stringify({ ok: false, error: 'Client not found' }), { status: 404, headers: corsHeaders });
+        }
+
+        const cleanSlug = slugifyName(clientRecord.demoSlug || clientRecord.businessName || '');
+        if (!cleanSlug || !env || !env.WYNN_KV) {
+          return new Response(JSON.stringify({ ok: false, error: 'Demo slug or KV unavailable' }), { status: 400, headers: corsHeaders });
+        }
+
+        const currentHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/index.html`, 'text').catch(() => null);
+        if (!currentHtml) {
+          return new Response(JSON.stringify({ ok: false, error: 'Chưa có file HTML Demo trong KV cho tiệm này.' }), { status: 404, headers: corsHeaders });
+        }
+
+        const { config, menu } = parseConfigAndMenuFromHtml(currentHtml);
+        if (!config) {
+          return new Response(JSON.stringify({ ok: false, error: 'Không đọc được ATELIER_CONFIG từ bản Demo.' }), { status: 400, headers: corsHeaders });
+        }
+
+        const activePal = ['01', '02', '03', '04', '05'].includes(String(config.palette || clientRecord.demoPalette))
+          ? String(config.palette || clientRecord.demoPalette)
+          : '01';
+        const vaultBase = 'https://wynnpages.com.au/assets/atelier/nails';
+        const vaultMap = {
+          '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, biab: `${vaultBase}/biab-artistry.jpg`, pedi: `${vaultBase}/botanical-pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-gilded-french.jpg`, `${vaultBase}/lookbook-pearl-glaze.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/biab-artistry.jpg`] },
+          '02': { hero: `${vaultBase}/p02/hero.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg`, lookbook: [`${vaultBase}/p02/lookbook-1.jpg`, `${vaultBase}/p02/lookbook-2.jpg`, `${vaultBase}/p02/biab.jpg`, `${vaultBase}/p02/pedicure.jpg`] },
+          '03': { hero: `${vaultBase}/p03/hero.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg`, lookbook: [`${vaultBase}/p03/biab.jpg`, `${vaultBase}/p03/lookbook-1.jpg`, `${vaultBase}/p03/lookbook-2.jpg`, `${vaultBase}/p03/pedicure.jpg`] },
+          '04': { hero: `${vaultBase}/p04/hero.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg`, lookbook: [`${vaultBase}/p04/lookbook-1.jpg`, `${vaultBase}/p04/biab.jpg`, `${vaultBase}/p04/lookbook-2.jpg`, `${vaultBase}/p04/pedicure.jpg`] },
+          '05': { hero: `${vaultBase}/p05/hero.jpg`, biab: `${vaultBase}/p05/biab.jpg`, pedi: `${vaultBase}/p05/pedicure.jpg`, lookbook: [`${vaultBase}/p05/lookbook-1.jpg`, `${vaultBase}/p05/biab.jpg`, `${vaultBase}/p05/lookbook-2.jpg`, `${vaultBase}/p05/pedicure.jpg`] }
+        };
+        const pv = vaultMap[activePal] || vaultMap['01'];
+        const photosList = Array.isArray(clientRecord.placesPhotos) && clientRecord.placesPhotos.length
+          ? clientRecord.placesPhotos
+          : (Array.isArray(body.photos) ? body.photos : []);
+
+        await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.pre-ai-backup.html`, currentHtml).catch(() => {});
+        if (mode === 'restore_vault') {
+          config.images = config.images || {};
+          config.images.hero = pv.hero;
+          config.images.biabFeature = pv.biab;
+          config.images.pedicureFeature = pv.pedi;
+          if (Array.isArray(config.images.lookbook)) {
+            config.images.lookbook = config.images.lookbook.map((it, idx) => ({ ...it, src: pv.lookbook[idx % pv.lookbook.length] }));
+          }
+          const updatedHtml = updateHtmlWithConfigAndMenu(currentHtml, config, menu);
+          await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, updatedHtml);
+          return new Response(JSON.stringify({
+            ok: true,
+            mode,
+            previewUrl: `https://${cleanSlug}.wynnpages.com.au`,
+            summary: `Đã khôi phục bộ tranh sơn dầu mặc định (Bảng màu ${activePal})!`
+          }), { status: 200, headers: corsHeaders });
+        }
+
+        if (mode === 'apply_google_photos') {
+          if (!photosList.length) {
+            return new Response(JSON.stringify({ ok: false, error: 'Tiệm này chưa có ảnh Google Maps được lưu trong hồ sơ.' }), { status: 400, headers: corsHeaders });
+          }
+          const photoUrls = photosList.slice(0, 6).map((ref) =>
+            String(ref).startsWith('http') ? String(ref) : `https://wynnpages.com.au/api/places-photo?ref=${encodeURIComponent(ref)}&maxWidth=1200`
+          );
+          config.images = config.images || {};
+          if (photoUrls[0]) config.images.hero = photoUrls[0];
+          if (photoUrls[1]) config.images.biabFeature = photoUrls[1];
+          if (photoUrls[2]) config.images.pedicureFeature = photoUrls[2];
+          if (Array.isArray(config.images.lookbook) && config.images.lookbook.length) {
+            config.images.lookbook = config.images.lookbook.map((it, idx) => ({
+              ...it,
+              src: photoUrls[idx % photoUrls.length]
+            }));
+          }
+          const updatedHtml = updateHtmlWithConfigAndMenu(currentHtml, config, menu);
+          await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, updatedHtml);
+          return new Response(JSON.stringify({
+            ok: true,
+            mode,
+            previewUrl: `https://${cleanSlug}.wynnpages.com.au`,
+            appliedPhotos: photoUrls,
+            summary: `Đã áp dụng ${photoUrls.length} ảnh thật Google Maps của tiệm lên trang Demo!`
+          }), { status: 200, headers: corsHeaders });
+        }
+
+        const geminiApiKey = String(body.geminiApiKey || cfg.geminiApiKey || '').trim();
+        if (!geminiApiKey) {
+          return new Response(JSON.stringify({
+            ok: false,
+            error: 'Chưa có Gemini API Key! Hãy tạo miễn phí tại aistudio.google.com/apikey và dán vào mục ⚙️ Cấu hình API để vẽ tranh trực tiếp trên Cloud.'
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        const paletteLabelMap = {
+          '01': 'Terracotta Gold, warm travertine cream, champagne, and 24k gold leaf',
+          '02': 'Rose Silk, soft camellia blush, warm alabaster, and rose-gold leaf',
+          '03': 'Botanical Sage, eucalyptus green, warm travertine stone, and antique brass gold leaf',
+          '04': 'Espresso Cashmere, warm cedar, smoked pearl, and brushed 24k gold leaf',
+          '05': 'Coastal Pearl, oyster limestone, mineral sea-glass, and champagne gold leaf'
+        };
+        const palDesc = paletteLabelMap[activePal] || paletteLabelMap['01'];
+        const bizLabel = config.salonName || clientRecord.businessName || 'Australian Nail Sanctuary';
+
+        let refPhotoBase64 = '';
+        let refPhotoMime = 'image/jpeg';
+        if (photosList[0] && cfg.googlePlacesApiKey) {
+          try {
+            const cleanRef = String(photosList[0]).replace(/^\/+/, '');
+            const gUrl = String(photosList[0]).startsWith('http')
+              ? String(photosList[0])
+              : `https://places.googleapis.com/v1/${cleanRef}/media?maxWidthPx=800&maxHeightPx=800&key=${cfg.googlePlacesApiKey}`;
+            const pRes = await fetch(gUrl, { redirect: 'follow' });
+            if (pRes.ok) {
+              refPhotoMime = pRes.headers.get('content-type') || 'image/jpeg';
+              const buf = await pRes.arrayBuffer();
+              if (buf && buf.byteLength > 0) {
+                refPhotoBase64 = arrayBufferToBase64(buf);
+              }
+            }
+          } catch (_) {}
+        }
+
+        const artPrompt = customPrompt || `Transform this luxury Australian nail & beauty sanctuary ("${bizLabel}") into a museum-grade French Impressionist oil painting on fine woven linen canvas with visible impasto brushstrokes and delicate 24k Kintsugi gold-leaf accents. Color palette: ${palDesc}. Sunlit serene architectural interior, unhurried quiet luxury atmosphere, zero text or watermarks.`;
+        let generatedBase64 = '';
+        let generatedMime = 'image/png';
+        let usedModel = '';
+        let lastApiError = '';
+
+        const imgGenModels = ['gemini-2.0-flash-preview-image-generation', 'gemini-2.0-flash-exp-image-generation'];
+        for (const mName of imgGenModels) {
+          const reqParts = [];
+          if (refPhotoBase64) {
+            reqParts.push({ inline_data: { mime_type: refPhotoMime, data: refPhotoBase64 } });
+          }
+          reqParts.push({ text: artPrompt });
+
+          const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: reqParts }],
+              generationConfig: {
+                responseModalities: ['TEXT', 'IMAGE']
+              }
+            })
+          }).catch(() => null);
+
+          if (gRes && gRes.ok) {
+            const gJson = await gRes.json().catch(() => null);
+            const cParts = gJson?.candidates?.[0]?.content?.parts || [];
+            const imgPart = cParts.find((p) => p && (p.inlineData || p.inline_data));
+            const inlineObj = imgPart && (imgPart.inlineData || imgPart.inline_data);
+            if (inlineObj && inlineObj.data) {
+              generatedBase64 = inlineObj.data;
+              generatedMime = inlineObj.mimeType || inlineObj.mime_type || 'image/png';
+              usedModel = mName;
+              break;
+            }
+          } else if (gRes) {
+            const eJson = await gRes.json().catch(() => null);
+            lastApiError = (eJson && eJson.error && eJson.error.message) || `HTTP ${gRes.status}`;
+          }
+        }
+
+        if (!generatedBase64) {
+          const imRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${encodeURIComponent(geminiApiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              instances: [{ prompt: artPrompt }],
+              parameters: { sampleCount: 1, aspectRatio: '3:4', outputOptions: { mimeType: 'image/jpeg' } }
+            })
+          }).catch(() => null);
+          if (imRes && imRes.ok) {
+            const imJson = await imRes.json().catch(() => null);
+            const pred = imJson?.predictions?.[0];
+            if (pred && pred.bytesBase64Encoded) {
+              generatedBase64 = pred.bytesBase64Encoded;
+              generatedMime = pred.mimeType || 'image/jpeg';
+              usedModel = 'imagen-3.0-generate-002';
+            }
+          } else if (imRes && !lastApiError) {
+            const eJson = await imRes.json().catch(() => null);
+            lastApiError = (eJson && eJson.error && eJson.error.message) || `HTTP ${imRes.status}`;
+          }
+        }
+
+        if (!generatedBase64) {
+          return new Response(JSON.stringify({
+            ok: false,
+            error: lastApiError.includes('blocked')
+              ? 'Key hiện tại bị khoá quyền gọi Gemini API (API_KEY_SERVICE_BLOCKED). Hãy tạo 1 Gemini API Key miễn phí tại aistudio.google.com/apikey và dán vào mục ⚙️ Cấu hình API!'
+              : `Không tạo được tranh từ Gemini API (${lastApiError || 'Kiểm tra lại Gemini API Key tại aistudio.google.com/apikey'}).`
+          }), { status: 400, headers: corsHeaders });
+        }
+
+        const ext = generatedMime.includes('png') ? 'png' : 'jpg';
+        const assetPath = `/assets/ai-oil-hero.${ext}`;
+        const binaryBuf = Uint8Array.from(atob(generatedBase64), (c) => c.charCodeAt(0));
+        await env.WYNN_KV.put(`site_asset:${cleanSlug}:${assetPath}`, binaryBuf.buffer, {
+          metadata: { mimeType: generatedMime, contentType: generatedMime }
+        });
+
+        const publicArtUrl = `https://${cleanSlug}.wynnpages.com.au${assetPath}?t=${Date.now()}`;
+        config.images = config.images || {};
+        config.images.hero = publicArtUrl;
+
+        const updatedHtml = updateHtmlWithConfigAndMenu(currentHtml, config, menu);
+        await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, updatedHtml);
+
+        return new Response(JSON.stringify({
+          ok: true,
+          mode,
+          model: usedModel,
+          artworkUrl: publicArtUrl,
+          previewUrl: `https://${cleanSlug}.wynnpages.com.au`,
+          summary: `Đã vẽ tranh sơn dầu bằng ${usedModel}${refPhotoBase64 ? ' (dịch từ ảnh Google Maps thực tế của tiệm)' : ''} và cập nhật trực tiếp lên trang Demo!`
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 4g. Admin 1-Click Gemini AI Auto-Editor (POST /api/admin/apply-ai-revision) & Undo (POST /api/admin/undo-ai-revision)
+    if (url.pathname === '/api/admin/undo-ai-revision' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ ok: false, error: auth.error }), { status: auth.status, headers: corsHeaders });
+        }
+        const cid = (body.cid || '').trim();
+        if (!cid) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing cid' }), { status: 400, headers: corsHeaders });
+        }
+        let cleanSlug = '';
+        const dbU = getD1(env);
+        if (dbU) {
+          await ensureD1Schema(env);
+          const uRow = await dbU.prepare('SELECT demo_slug, business_name FROM clients WHERE id = ? LIMIT 1').bind(cid).first().catch(() => null);
+          if (uRow) cleanSlug = slugifyName(uRow.demo_slug || uRow.business_name || '');
+        }
+        if (!cleanSlug && cfg.stripeSecretKey) {
+          const cRec = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
+          if (cRec) cleanSlug = slugifyName(cRec.demoSlug || cRec.businessName || '');
+        }
+        if (!cleanSlug || !env || !env.WYNN_KV) {
+          return new Response(JSON.stringify({ ok: false, error: 'Client demo slug not found.' }), { status: 404, headers: corsHeaders });
+        }
+        const backupHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/index.pre-ai-backup.html`, 'text').catch(() => null);
+        if (!backupHtml) {
+          return new Response(JSON.stringify({ ok: false, error: 'Chưa có bản sao lưu trước khi chạy AI cho tiệm này.' }), { status: 404, headers: corsHeaders });
+        }
+        await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, backupHtml);
+        return new Response(JSON.stringify({
+          ok: true,
+          message: 'Restored pre-AI backup HTML successfully!',
+          previewUrl: `https://${cleanSlug}.wynnpages.com.au`
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     if (url.pathname === '/api/admin/apply-ai-revision' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
@@ -7475,40 +8333,57 @@ export default {
         }
 
         const cid = (body.cid || '').trim();
-        if (!cid) {
+        const reqSlug = slugifyName(body.slug || cid);
+        const adminInstructions = String(body.adminInstructions || '').trim();
+        if (!cid && !reqSlug) {
           return new Response(JSON.stringify({ ok: false, error: 'Missing cid' }), { status: 400, headers: corsHeaders });
         }
 
-        const cust = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey);
-        if (!cust) {
-          return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), { status: 404, headers: corsHeaders });
-        }
-
-        const clientRecord = formatCustomerRecord(cust);
-        const cleanSlug = slugifyName(clientRecord.demoSlug);
-
-        // Read revision data (D1 fallback + KV + Stripe metadata)
+        // Resolve client from D1 first, then Stripe (avoiding double formatCustomerRecord)
+        let clientRecord = null;
         let revData = null;
         const dbAi = getD1(env);
         if (dbAi) {
           await ensureD1Schema(env);
-          const aiRow = await dbAi.prepare('SELECT metadata_json FROM clients WHERE id = ? LIMIT 1').bind(cust.id).first().catch(() => null);
-          if (aiRow && aiRow.metadata_json) {
-            try {
-              const aiMeta = JSON.parse(aiRow.metadata_json);
-              if (aiMeta && aiMeta.revisionData) revData = aiMeta.revisionData;
-            } catch (_) {}
+          let aiRow = await dbAi.prepare('SELECT * FROM clients WHERE id = ? LIMIT 1').bind(cid).first().catch(() => null);
+          if (!aiRow && reqSlug) {
+            aiRow = await dbAi.prepare('SELECT * FROM clients WHERE LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(reqSlug).first().catch(() => null);
+          }
+          if (aiRow) {
+            let aiMeta = {};
+            try { aiMeta = JSON.parse(aiRow.metadata_json || '{}'); } catch (_) {}
+            if (aiMeta && aiMeta.revisionData) revData = aiMeta.revisionData;
+            clientRecord = {
+              ...aiMeta,
+              id: aiRow.id,
+              businessName: aiRow.business_name || aiMeta.businessName || aiRow.name,
+              demoSlug: aiRow.demo_slug || aiMeta.demoSlug || slugifyName(aiRow.business_name || aiRow.name || '')
+            };
           }
         }
+        if (cfg.stripeSecretKey) {
+          const stripeRec = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey).catch(() => null);
+          if (stripeRec) {
+            clientRecord = { ...(clientRecord || {}), ...stripeRec };
+          }
+        }
+        if (!clientRecord) {
+          return new Response(JSON.stringify({ ok: false, error: 'Customer not found' }), { status: 404, headers: corsHeaders });
+        }
+
+        const resolvedClientId = clientRecord.id || cid;
+        const cleanSlug = slugifyName(clientRecord.demoSlug || clientRecord.businessName || '');
+
         if (!revData && env && env.WYNN_KV) {
-          revData = await env.WYNN_KV.get(`revision_data:${cust.id}`, 'json').catch(() => null);
+          revData = await env.WYNN_KV.get(`revision_data:${resolvedClientId}`, 'json').catch(() => null);
         }
-        if (!revData && cust.metadata && cust.metadata.revision_json) {
-          try { revData = JSON.parse(cust.metadata.revision_json); } catch (_) {}
+        if (!revData && clientRecord.metadata && clientRecord.metadata.revision_json) {
+          try { revData = JSON.parse(clientRecord.metadata.revision_json); } catch (_) {}
         }
-        if (!revData) {
-          return new Response(JSON.stringify({ ok: false, error: 'No revision data found for this client.' }), { status: 400, headers: corsHeaders });
+        if (!revData && !adminInstructions) {
+          return new Response(JSON.stringify({ ok: false, error: 'No revision data or admin instructions found for this client.' }), { status: 400, headers: corsHeaders });
         }
+        if (!revData) revData = {};
 
         // Read current HTML
         let currentHtml = '';
@@ -7519,10 +8394,27 @@ export default {
           return new Response(JSON.stringify({ ok: false, error: 'Live demo HTML not found in KV.' }), { status: 400, headers: corsHeaders });
         }
 
-        // Read menu image base64 if available
-        let menuImageBase64 = null;
+        // Read all uploaded menu pages (up to 4 pages) for Gemini Vision OCR
+        let menuImagesBase64 = [];
         if (env && env.WYNN_KV) {
-          menuImageBase64 = await env.WYNN_KV.get(`revision_file:${cust.id}:menu`, 'text').catch(() => null);
+          const listJson = await env.WYNN_KV.get(`revision_file:${resolvedClientId}:menu_list`, 'json').catch(() => null);
+          if (Array.isArray(listJson) && listJson.length > 0) {
+            menuImagesBase64 = listJson.filter(Boolean);
+          } else {
+            const singleMenu = await env.WYNN_KV.get(`revision_file:${resolvedClientId}:menu`, 'text').catch(() => null);
+            if (singleMenu) menuImagesBase64.push(singleMenu);
+            for (let idx = 2; idx <= 4; idx++) {
+              for (const ext of ['jpg', 'jpeg', 'png', 'pdf']) {
+                const buf = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/assets/menu-revision-${idx}.${ext}`, 'arrayBuffer').catch(() => null);
+                if (buf && buf.byteLength > 0) {
+                  const b64 = arrayBufferToBase64(buf);
+                  const mime = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
+                  menuImagesBase64.push(`data:${mime};base64,${b64}`);
+                  break;
+                }
+              }
+            }
+          }
         }
 
         // Determine Gemini Key
@@ -7532,7 +8424,9 @@ export default {
         const applyRes = await executeGeminiAutoRevision({
           currentHtml,
           revData,
-          menuImageBase64,
+          menuImageBase64: menuImagesBase64[0] || null,
+          menuImagesBase64,
+          adminInstructions,
           geminiApiKey
         });
 
@@ -7540,14 +8434,15 @@ export default {
           return new Response(JSON.stringify({ ok: false, error: applyRes.error || 'AI revision failed' }), { status: 500, headers: corsHeaders });
         }
 
-        // Save updated HTML to KV
+        // Save pre-AI backup snapshot + Save updated HTML to KV
         if (env && env.WYNN_KV && cleanSlug) {
+          await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.pre-ai-backup.html`, currentHtml).catch(() => {});
           await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, applyRes.updatedHtml).catch(() => {});
         }
 
         // Update Stripe metadata
         const nowIso = new Date().toISOString();
-        if (cfg.stripeSecretKey) {
+        if (cfg.stripeSecretKey && resolvedClientId.startsWith('cus_')) {
           const uP = new URLSearchParams();
           uP.append('metadata[revision_status]', 'applied');
           uP.append('metadata[revision_applied_at]', nowIso);
@@ -7555,7 +8450,7 @@ export default {
           if (revData.phone) uP.append('metadata[display_phone]', revData.phone.slice(0, 480));
           if (revData.address) uP.append('metadata[business_address]', revData.address.slice(0, 480));
 
-          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(resolvedClientId)}`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${cfg.stripeSecretKey}`,
@@ -7565,15 +8460,28 @@ export default {
           }).catch(() => {});
         }
 
+        const finalBizName = revData.bizName || clientRecord.businessName || cleanSlug;
         const updatedClientForD1 = {
           ...clientRecord,
-          businessName: revData.bizName || clientRecord.businessName,
+          id: resolvedClientId,
+          businessName: finalBizName,
           displayPhone: revData.phone || clientRecord.displayPhone,
           businessAddress: revData.address || clientRecord.businessAddress,
           revisionStatus: 'applied',
           revisionAppliedAt: nowIso
         };
         await upsertD1Client(env, updatedClientForD1);
+
+        runInBg(ctx, recordActivityAndNotify({
+          type: 'ai_revision_applied',
+          icon: '🤖',
+          title: `Gemini AI Đã Cập Nhật Website: ${finalBizName}`,
+          message: `Tóm tắt thay đổi: ${applyRes.changesSummary || 'Đã cập nhật cấu hình & bảng giá.'}\n(Đã tự động lưu bản Backup trước khi sửa để hoàn tác bất cứ lúc nào).`,
+          clientName: finalBizName,
+          slug: cleanSlug,
+          env,
+          ctx
+        }));
 
         return new Response(JSON.stringify({
           ok: true,
@@ -7612,9 +8520,62 @@ export default {
         headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
       });
       const data = await res.json().catch(() => ({}));
-      const rawList = data.data || [];
+      let rawList = Array.isArray(data.data) ? data.data.filter(c => c && !c.deleted) : [];
+
+      // Auto-migrate any customers from legacy env.STRIPE_SECRET_KEY (e.g. sk_test_) into active cfg.stripeSecretKey (sk_live_) & D1
+      const envStripeKey = String((env && env.STRIPE_SECRET_KEY) || '').trim();
+      if (envStripeKey && isValidStripeSecretKey(envStripeKey) && envStripeKey !== cfg.stripeSecretKey && !filterEmail) {
+        try {
+          const legacyRes = await fetch('https://api.stripe.com/v1/customers?limit=100', {
+            headers: { 'Authorization': `Bearer ${envStripeKey}` }
+          }).catch(() => null);
+          if (legacyRes && legacyRes.ok) {
+            const legacyData = await legacyRes.json().catch(() => ({}));
+            const legacyCustomers = Array.isArray(legacyData.data) ? legacyData.data.filter(c => c && !c.deleted) : [];
+            const activeSlugs = new Set(rawList.map(c => slugifyName((c.metadata && c.metadata.demo_slug) || (c.metadata && c.metadata.business_name) || c.name || '')));
+            for (const oldC of legacyCustomers) {
+              const oldFormatted = formatCustomerRecord(oldC);
+              const oldSlug = slugifyName(oldFormatted.demoSlug || oldFormatted.businessName || oldFormatted.name || '');
+              if (oldSlug && !activeSlugs.has(oldSlug)) {
+                await upsertD1Client(env, oldFormatted);
+                const migrated = await ensureStripeCustomerMigrated(env, oldFormatted.id, cfg.stripeSecretKey).catch(() => null);
+                if (migrated && migrated.id) {
+                  rawList.push(migrated);
+                  activeSlugs.add(oldSlug);
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
 
       const clients = rawList.map(formatCustomerRecord);
+
+      // Also merge any D1 clients that are not yet in rawList so the Admin list is never blank
+      const d1FallbackIdx = await getD1ClientsIndex(env);
+      const existingIds = new Set(clients.map(c => c.id));
+      const existingSlugs = new Set(clients.map(c => slugifyName(c.demoSlug || c.businessName || c.name || '')).filter(Boolean));
+      for (const r of d1FallbackIdx.rows) {
+        const rSlug = slugifyName(r.demo_slug || r.business_name || r.name || '');
+        if (!existingIds.has(r.id) && (!rSlug || !existingSlugs.has(rSlug))) {
+          let parsedMeta = {};
+          try { parsedMeta = JSON.parse(r.metadata_json || '{}'); } catch (_) {}
+          clients.push({
+            ...parsedMeta,
+            id: r.id,
+            email: r.email || parsedMeta.email || '',
+            name: r.name || parsedMeta.name || '',
+            businessName: r.business_name || parsedMeta.businessName || '',
+            phone: r.phone || parsedMeta.phone || '',
+            demoSlug: r.demo_slug || parsedMeta.demoSlug || '',
+            demoUrl: r.demo_url || parsedMeta.demoUrl || '',
+            liveUrl: r.live_url || parsedMeta.liveUrl || '',
+            stage: r.stage || parsedMeta.stage || 'outbound_pitched',
+            paymentStatus: r.payment_status || parsedMeta.paymentStatus || 'unpaid',
+            flowType: r.flow_type || parsedMeta.flowType || 'outbound'
+          });
+        }
+      }
 
       // Real-time Stripe Checkout Session & Charge Auto-Reconciliation
       // If a client completed checkout (e.g. on live demo link), auto-sync their status to 'paid'
@@ -8065,7 +9026,10 @@ export default {
       }
       const rawSlug = (body.slug || body.cid || url.searchParams.get('slug') || url.searchParams.get('cid') || '').trim();
       const rawCid = (body.clientId || body.cid || url.searchParams.get('cid') || '').trim();
-      const eventType = ((body.eventType || body.type || url.searchParams.get('type') || 'demo_view') === 'claim_click') ? 'claim_click' : 'demo_view';
+      const rawType = String(body.eventType || body.type || url.searchParams.get('type') || 'demo_view').trim();
+      const eventType = (rawType === 'self_unlock_48h' || rawType === 'unlock_demo')
+        ? 'self_unlock_48h'
+        : (rawType === 'claim_click' ? 'claim_click' : 'demo_view');
       const cleanSlug = slugifyName(rawSlug);
       if (!cleanSlug && !rawCid) {
         return new Response(JSON.stringify({ error: 'Missing slug or clientId' }), { status: 400, headers: corsHeaders });
@@ -8078,15 +9042,17 @@ export default {
         return new Response(JSON.stringify({ ok: true, ignored: 'bot' }), { status: 200, headers: corsHeaders });
       }
 
-      // 2. Strict Admin Exclusion (Cross-subdomain cookie + ?preview=admin + recorded admin IPs)
+      // 2. Strict Admin Exclusion (Cross-subdomain cookie + ?preview=admin + recorded admin IPs) — except for explicit 48h self-unlock action
       const clientIp = getRequestClientIp(request);
       const previewFlag = (body.preview || body.admin || url.searchParams.get('preview') || url.searchParams.get('admin') || '').toString().trim();
       if (
-        requestHasAdminCookie(request) ||
-        previewFlag === 'admin' ||
-        previewFlag === '1' ||
-        body.isAdmin === true ||
-        (clientIp && Array.isArray(cfg.adminIpList) && cfg.adminIpList.includes(clientIp))
+        eventType !== 'self_unlock_48h' && (
+          requestHasAdminCookie(request) ||
+          previewFlag === 'admin' ||
+          previewFlag === '1' ||
+          body.isAdmin === true ||
+          (clientIp && Array.isArray(cfg.adminIpList) && cfg.adminIpList.includes(clientIp))
+        )
       ) {
         return new Response(JSON.stringify({ ok: true, ignored: 'admin' }), { status: 200, headers: corsHeaders });
       }
@@ -8130,17 +9096,118 @@ export default {
       if (
         !effectiveClient ||
         effectiveClient.deleted ||
-        effectiveClient.dealStatus === 'expired' ||
-        effectiveClient.dealStatus === 'purged'
+        effectiveClient.dealStatus === 'purged' ||
+        (effectiveClient.dealStatus === 'expired' && eventType !== 'self_unlock_48h')
       ) {
         return new Response(JSON.stringify({ ok: false, error: 'Client not found or demo inactive' }), { status: 404, headers: corsHeaders });
       }
 
       const resolvedSlug = slugifyName(effectiveClient.demoSlug || cleanSlug);
       const device = body.device || (/iphone|ipad|ipod|android|mobile/.test(ua) ? 'Mobile' : 'Desktop');
+      const ipSafe = (clientIp || 'unknown').replace(/[^a-zA-Z0-9._:-]/g, '_');
+
+      // 3b. Handle 1-Click 48-Hour Self-Unlock from Expired Demo Screen
+      if (eventType === 'self_unlock_48h') {
+        const nowIso = new Date().toISOString();
+        const unlockExpiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+        const bizName = effectiveClient.businessName || effectiveClient.name || body.businessName || resolvedSlug;
+
+        let updatedCust = null;
+        if (effectiveClient.id && String(effectiveClient.id).startsWith('cus_') && cfg.stripeSecretKey) {
+          const uP = new URLSearchParams();
+          uP.append('metadata[deal_status]', 'standard');
+          uP.append('metadata[deal_expires_at]', unlockExpiresAt);
+          uP.append('metadata[step5_locked_at]', '');
+          uP.append('metadata[nurture_step]', 'self_unlocked_48h');
+          uP.append('metadata[self_unlocked_at]', nowIso);
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(effectiveClient.id)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uP.toString()
+          }).catch(() => null);
+          if (patchRes && patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+          }
+        }
+
+          let existingD1Meta = {};
+          if (d1Client && d1Client.metadata_json) {
+            try { existingD1Meta = JSON.parse(d1Client.metadata_json); } catch (_) {}
+          }
+          const mergedClient = updatedCust || {
+            ...existingD1Meta,
+            ...effectiveClient,
+            dealStatus: 'standard',
+            dealExpiresAt: unlockExpiresAt,
+            step5LockedAt: '',
+            nurtureStep: 'self_unlocked_48h',
+            selfUnlockedAt: nowIso
+          };
+          await upsertD1Client(env, mergedClient);
+
+          if (db) {
+            const rowsToUnlock = await db.prepare('SELECT id, metadata_json FROM clients WHERE id = ? OR LOWER(demo_slug) = LOWER(?)')
+              .bind(String(effectiveClient.id || rawCid || ''), resolvedSlug).all().catch(() => null);
+            const matchRows = (rowsToUnlock && Array.isArray(rowsToUnlock.results)) ? rowsToUnlock.results : [];
+            for (const r of matchRows) {
+              let metaObj = {};
+              try { metaObj = JSON.parse(r.metadata_json || '{}'); } catch (_) {}
+              metaObj.dealStatus = 'standard';
+              metaObj.dealExpiresAt = unlockExpiresAt;
+              metaObj.step5LockedAt = '';
+              metaObj.nurtureStep = 'self_unlocked_48h';
+              metaObj.selfUnlockedAt = nowIso;
+              if (metaObj.metadata && typeof metaObj.metadata === 'object') {
+                metaObj.metadata.deal_status = 'standard';
+                metaObj.metadata.deal_expires_at = unlockExpiresAt;
+                metaObj.metadata.step5_locked_at = '';
+                metaObj.metadata.nurture_step = 'self_unlocked_48h';
+              }
+              await db.prepare('UPDATE clients SET metadata_json = ?, updated_at = ? WHERE id = ?')
+                .bind(JSON.stringify(metaObj), nowIso, r.id).run().catch(() => {});
+            }
+          }
+
+        runInBg(ctx, (async () => {
+          try {
+            await recordD1TrackingEvent(env, {
+              slug: resolvedSlug,
+              clientId: effectiveClient.id || rawCid,
+              eventType: 'demo_view',
+              device,
+              userAgent: ua,
+              businessName: bizName,
+              knownClient: mergedClient
+            });
+            await recordActivityAndNotify({
+              type: 'demo_self_unlocked',
+              title: '🔓 Khách Tự Mở Khoá Demo (48 Giờ)!',
+              message: `${bizName} vừa tự bấm nút Mở Khoá Xem Lại Demo 48 Giờ trên màn hình Expired (${device})! Khách đang rất quan tâm — hãy liên hệ chốt sale ngay!`,
+              clientName: bizName,
+              slug: resolvedSlug,
+              dedupeKey: `self_unlock_lock:${resolvedSlug}:${ipSafe}`,
+              dedupeTtl: 60,
+              env,
+              ctx
+            });
+            await syncClientsKvSnapshot(env);
+          } catch (_) {}
+        })());
+
+        return new Response(JSON.stringify({
+          ok: true,
+          unlocked: true,
+          dealStatus: 'standard',
+          dealExpiresAt: unlockExpiresAt,
+          slug: resolvedSlug,
+          clientId: effectiveClient.id
+        }), { status: 200, headers: corsHeaders });
+      }
 
       // 4. Rate-limit demo_view to max 1 count + Telegram alert per unique IP per client every 6 hours (stored in D1 rate_locks — zero KV writes!)
-      const ipSafe = (clientIp || 'unknown').replace(/[^a-zA-Z0-9._:-]/g, '_');
       if (eventType === 'demo_view' && resolvedSlug) {
         const ipLockKey = `demo_view_ip_lock:${resolvedSlug}:${ipSafe}`;
         const acquired = await acquireD1RateLock(env, ipLockKey, 21600);
@@ -8253,27 +9320,28 @@ export default {
       }), { status: 200, headers: corsHeaders });
     }
 
-    // 5b-3. Stripe Webhook Receiver (POST /api/stripe-webhook)
-    if (url.pathname === '/api/stripe-webhook' && request.method === 'POST') {
+    // 5b-3. Stripe Webhook Receiver (POST /api/stripe-webhook or /api/webhook)
+    if ((url.pathname === '/api/stripe-webhook' || url.pathname === '/api/webhook') && request.method === 'POST') {
       const rawBody = await request.text();
       const sigHeader = request.headers.get('stripe-signature') || '';
-      if (cfg.stripeWebhookSecret) {
-        const validSig = await verifyStripeWebhookSig(rawBody, sigHeader, cfg.stripeWebhookSecret);
-        if (!validSig) {
-          return new Response(JSON.stringify({ error: 'Invalid Stripe webhook signature' }), { status: 400, headers: corsHeaders });
-        }
-      }
-
       const event = (() => { try { return JSON.parse(rawBody); } catch (_) { return null; } })();
       if (!event || !event.type) {
         return new Response(JSON.stringify({ error: 'Invalid event payload' }), { status: 400, headers: corsHeaders });
+      }
+
+      if (cfg.stripeWebhookSecret) {
+        const validSig = await verifyStripeWebhookSig(rawBody, sigHeader, cfg.stripeWebhookSecret);
+        // If signature fails (e.g. stale test whsec_ after switching to sk_live_), allow checkout.session.completed to proceed only because finalizeStripePaymentAndNotify verifies the session ID directly against Stripe API using cfg.stripeSecretKey
+        if (!validSig && event.type !== 'checkout.session.completed') {
+          return new Response(JSON.stringify({ error: 'Invalid Stripe webhook signature' }), { status: 400, headers: corsHeaders });
+        }
       }
 
       if (event.type === 'checkout.session.completed' && event.data && event.data.object) {
         const sessionObj = event.data.object;
         runInBg(ctx, finalizeStripePaymentAndNotify({
           sessionId: sessionObj.id,
-          sessionObj,
+          sessionObj: null, // Force direct verification from Stripe API via cfg.stripeSecretKey
           origin: url.origin,
           env,
           ctx,
@@ -8950,7 +10018,13 @@ export default {
         }
         const effectiveCfg = getConfig(env, { ...runtimeCreds, ...(body.credentials || {}) });
         const action = body.action || '';
-        const customerId = (body.customerId || '').trim();
+        let customerId = (body.customerId || '').trim();
+        if (customerId && action !== 'delete_client' && effectiveCfg.stripeSecretKey) {
+          const migratedCust = await ensureStripeCustomerMigrated(env, customerId, effectiveCfg.stripeSecretKey).catch(() => null);
+          if (migratedCust && migratedCust.id) {
+            customerId = migratedCust.id;
+          }
+        }
 
         // Action 0: Delete Client Record
         if (action === 'save_cf_token') {
@@ -9068,7 +10142,7 @@ export default {
             const uP0 = new URLSearchParams();
             uP0.append('metadata[nurture_step]', 'day7_nudge_0views');
             if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-              nudgeText = `Hi ${biz}, Sam at WynnPages here. Just making sure you saw the website preview we built for you: ${demoLink}`;
+              nudgeText = `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoLink} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
               nudgeRes = await sendClickSendSms({ to: custToNotify.phone, message: nudgeText, cfg: effectiveCfg });
               if (nudgeRes) {
                 const nowIso0 = new Date().toISOString();
@@ -9123,7 +10197,7 @@ export default {
           const demoLink = (custToNotify && (custToNotify.demoUrl || custToNotify.brandedDemoUrl)) || ( custToNotify && custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${customerId}.wynnpages.com.au`);
 
           if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-            const text = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoLink} - Sam`;
+            const text = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoLink} Warmly, Wynn`;
             notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
             if (notifyRes) {
               const nowIso = new Date().toISOString();
@@ -9319,27 +10393,27 @@ export default {
           if (body.customMessage && String(body.customMessage).trim()) {
             smsText = String(body.customMessage).trim();
           } else if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
-            smsText = `Hi ${biz}, Sam from WynnPages here. We built a custom website preview for your salon: ${demoUrl} - Have a look when free!`;
+            smsText = `Hi ${biz}, it's Wynn here from WynnPages Studio. I came across your business recently and loved your reputation, so I hand-crafted a custom website concept just for you to see how it could look: ${demoUrl} — Note: I've used sample photos & details just to show the layout. If you love it and claim it on the page, you'll get instant access to our Customization Portal where I personally swap in your real photos, exact pricing/details & connect your .com.au domain ($599 AUD one-off, $0 monthly fees). No pressure at all! Warmly, Wynn`;
           } else if (templateKey === 'aussie_followup_views' || templateKey === 'followup_views') {
-            smsText = `Hi ${biz}, noticed you viewed your website preview! Happy to tweak any prices or photos. Claim it for $599 AUD ($0/mo): ${demoUrl}`;
+            smsText = `Hi ${biz}, Wynn here from WynnPages. I noticed you had a quick look at the website preview I put together for you (${demoUrl}) — I really hope you liked the feel of it! Just so you know, the current photos and details are only placeholders to show the layout. Once claimed on the preview page, it unlocks your private Customization Portal where you can upload your real photos, logo & exact prices/details for me to tailor 100% to your business before connecting your .com.au domain. Warmly, Wynn`;
           } else if (templateKey === 'aussie_flash_deal_299' || templateKey === 'flash_deal_299') {
-            smsText = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoUrl} - Sam`;
+            smsText = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoUrl} Warmly, Wynn`;
           } else if (templateKey === 'day3_reminder') {
             if (realViews >= 2) {
               templateKey = 'aussie_followup_views';
-              smsText = `Hi ${biz}, noticed you viewed your website preview! Happy to tweak any prices or photos. Claim it for $599 AUD ($0/mo): ${demoUrl}`;
+              smsText = `Hi ${biz}, Wynn here from WynnPages. I noticed you had a quick look at the website preview I put together for you (${demoUrl}) — I really hope you liked the feel of it! Just so you know, the current photos and details are only placeholders to show the layout. Once claimed on the preview page, it unlocks your private Customization Portal where you can upload your real photos, logo & exact prices/details for me to tailor 100% to your business before connecting your .com.au domain. Warmly, Wynn`;
             } else {
-              smsText = `Hi ${biz}, Sam at WynnPages checking in! Did you get a chance to see the custom website preview we made for you? ${demoUrl}`;
+              smsText = `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoUrl} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
             }
           } else if (templateKey === 'day7_deal') {
             if (realViews === 0 && body.onlyIfViewed === true) {
               templateKey = 'day7_nudge_0views';
-              smsText = `Hi ${biz}, Sam at WynnPages here. Just making sure you saw the website preview we built for you: ${demoUrl}`;
+              smsText = `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoUrl} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
             } else {
-              smsText = `Hi ${biz}, 72h offer from WynnPages: claim your custom website for $299 AUD (50% off, $0 monthly fees): ${demoUrl} - Sam`;
+              smsText = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoUrl} Warmly, Wynn`;
             }
           } else if (templateKey === 'day9_warning') {
-            smsText = `Hi ${biz}, quick heads up from WynnPages: your website preview (${demoUrl}) closes in 24h. Claim it today if you'd like to keep this design! - Sam`;
+            smsText = `Hi ${biz}, Wynn here from WynnPages — I promise this is my last message so I don't clutter your phone! Just a gentle heads up that I'll be archiving the private preview link I made for you (${demoUrl}) tomorrow as I tidy up my studio server. If you'd still like to keep the design at the $299 AUD one-off rate (including full customization of your real photos, pricing/details & .com.au domain setup via our Revision Portal after checkout), you can claim it on the preview page anytime before tomorrow. Wishing you all the very best! Warmly, Wynn`;
           } else {
             smsText = (body.customMessage || '').trim();
           }
@@ -9374,9 +10448,19 @@ export default {
           uP.append('metadata[channel_mode]', 'sms');
           uP.append('metadata[fb_due_step]', '');
           if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
-            uP.append('metadata[demo_sent_at]', formatted.demoSentAt || nowIso);
-            uP.append('metadata[sequence_started_at]', formatted.sequenceStartedAt || nowIso);
+            uP.append('metadata[demo_sent_at]', nowIso);
+            uP.append('metadata[sequence_started_at]', nowIso);
             uP.append('metadata[step1_sent_at]', nowIso);
+            uP.append('metadata[step2_sent_at]', '');
+            uP.append('metadata[step3_sent_at]', '');
+            uP.append('metadata[step4_sent_at]', '');
+            uP.append('metadata[step5_locked_at]', '');
+            uP.append('metadata[deal_status]', 'standard');
+            uP.append('metadata[deal_activated_at]', '');
+            uP.append('metadata[deal_expires_at]', '');
+            if (body.turboTestMode !== undefined) {
+              uP.append('metadata[turbo_test_mode]', body.turboTestMode ? 'true' : 'false');
+            }
             if (!formatted.stage || formatted.stage === 'outbound_pending') {
               uP.append('metadata[stage]', 'outbound_pitched');
             }
@@ -9526,12 +10610,21 @@ export default {
           let targetStep = !step1Done ? 'step1' : (!step2Done ? 'step2' : (!step3Done ? 'step3' : (!step4Done ? 'step4' : 'step5')));
 
           const shiftedIso = new Date(Date.now() - Math.round(offsetMins * 60 * 1000)).toISOString();
+          const prevStepShiftedIso = new Date(Date.now() - Math.round(15.5 * 60 * 1000)).toISOString();
           const uP = new URLSearchParams();
           uP.append('metadata[turbo_test_mode]', 'true');
           uP.append('metadata[nurture_auto_enabled]', 'true');
           uP.append('metadata[sequence_started_at]', shiftedIso);
           if (c.demoSentAt || !c.fbPitchedAt) uP.append('metadata[demo_sent_at]', shiftedIso);
           if (c.fbPitchedAt) uP.append('metadata[fb_pitched_at]', shiftedIso);
+          if (targetStep === 'step3' && step2Done) {
+            uP.append('metadata[step2_sent_at]', prevStepShiftedIso);
+          } else if (targetStep === 'step4' && step3Done) {
+            uP.append('metadata[step3_sent_at]', prevStepShiftedIso);
+            uP.append('metadata[deal_activated_at]', prevStepShiftedIso);
+          } else if (targetStep === 'step5' && step4Done) {
+            uP.append('metadata[step4_sent_at]', prevStepShiftedIso);
+          }
           if (targetStep === 'step1') {
             uP.append('metadata[step1_sent_at]', shiftedIso);
             uP.append('metadata[stage]', 'outbound_pitched');
@@ -9539,7 +10632,7 @@ export default {
             if (!isFbMode && c.phone && effectiveCfg.clicksendApiKey) {
               const biz = c.businessName || c.name || 'Boutique';
               const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
-              const pitchSms = `Hi ${biz}, Sam from WynnPages here. We built a custom website preview for your salon: ${demoUrl} - Have a look when free!`;
+              const pitchSms = `Hi ${biz}, it's Wynn here from WynnPages. I came across your place recently and really loved your vibe, so I spent a bit of time putting together a custom website concept just for you to see how it could look: ${demoUrl} — No pressure at all, just thought I'd share it with you. Have a look whenever you get a quiet moment and let me know what you think! Warmly, Wynn`;
               const sRes = await sendClickSendSms(c.phone, pitchSms, effectiveCfg);
               await recordSmsHistory({ customerId: c.id, env, stripeSecretKey: effectiveCfg.stripeSecretKey, type: 'aussie_pitch', to: c.phone, text: pitchSms, status: sRes.sent, reason: sRes.reason });
             }
@@ -10208,11 +11301,9 @@ export default {
     return fetch(request);
   },
   async scheduled(event, env, ctx) {
-    const dueSmsPromise = processDueScheduledSms(env, ctx);
-    const shouldRunDailyAutopilot = !event || !event.cron || event.cron === '0 23 * * *';
-    const combinedJob = Promise.all([
-      dueSmsPromise,
-      shouldRunDailyAutopilot ? runScheduledAutopilot(env) : Promise.resolve(null)
+    const combinedJob = Promise.allSettled([
+      processDueScheduledSms(env, ctx),
+      runScheduledAutopilot(env, { force: false, fromPing: true, ctx })
     ]);
     if (ctx && typeof ctx.waitUntil === 'function') {
       ctx.waitUntil(combinedJob);

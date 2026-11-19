@@ -1651,18 +1651,19 @@
         </div>
 
         <!-- Interactive Split Slider Container -->
-        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[16/10] sm:aspect-[16/9] select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
+        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[3/4] sm:aspect-[5/4] max-w-2xl mx-auto select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
           <!-- AFTER Layer (Underneath - Full Width) -->
           <img
             id="ba-after-img"
             src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
             alt="After BIAB structured overlay and Russian cuticle refinement"
             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style="object-position: 50% 56%;"
             loading="lazy"
             decoding="async"
           >
-          <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
-            AFTER: Structured BIAB Overlay
+          <div class="absolute top-3.5 right-3.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.16em] font-bold text-white bg-black/55 backdrop-blur-md pointer-events-none border border-white/25 shadow-sm">
+            AFTER
           </div>
 
           <!-- BEFORE Layer (Top - Clipped 1:1 without distortion via clip-path) -->
@@ -1672,12 +1673,12 @@
               src="https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg"
               alt="Before natural unpolished fingernails prior to BIAB restoration"
               class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
-              style="width: 100%; height: 100%; object-fit: cover;"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 56%;"
               loading="lazy"
               decoding="async"
             >
-            <div class="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/60 backdrop-blur-md pointer-events-none border border-white/20">
-              BEFORE: Fragile Natural Plate
+            <div class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.16em] font-bold text-white bg-black/55 backdrop-blur-md pointer-events-none border border-white/25 shadow-sm">
+              BEFORE
             </div>
           </div>
 

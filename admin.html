@@ -645,12 +645,21 @@
           <div class="lg:col-span-3">
             <label class="text-[11px] font-bold text-[#96432b] block mb-1">🎨 Tự Động Dựng Khung Web</label>
             <select id="qo-auto-template" class="atelier-input w-full rounded-xl px-3 py-2.5 text-xs font-bold text-stone-800">
-              <option value="nails-01">Nails • 01 Terracotta Gold (Tự dựng ngay)</option>
-              <option value="nails-02">Nails • 02 Rose Silk (Tự dựng ngay)</option>
-              <option value="nails-03">Nails • 03 Botanical Sage (Tự dựng ngay)</option>
-              <option value="nails-04">Nails • 04 Espresso Cashmere (Tự dựng ngay)</option>
-              <option value="nails-05">Nails • 05 Coastal Pearl (Tự dựng ngay)</option>
-              <option value="manual">Chưa dựng (Tự tải file ZIP/HTML sau)</option>
+              <optgroup label="💅 Ngành Nails &amp; Beauty Atelier">
+                <option value="nails-01">Nails • 01 Terracotta Gold (Tự dựng ngay)</option>
+                <option value="nails-02">Nails • 02 Rose Silk (Tự dựng ngay)</option>
+                <option value="nails-03">Nails • 03 Botanical Sage (Tự dựng ngay)</option>
+                <option value="nails-04">Nails • 04 Espresso Cashmere (Tự dựng ngay)</option>
+                <option value="nails-05">Nails • 05 Coastal Pearl (Tự dựng ngay)</option>
+              </optgroup>
+              <optgroup label="🔧 Ngành Tradie (Xây Dựng, Điện, Nước, B2B)">
+                <option value="tradie-emergency">🚨 Tradie • 01 Thợ Nước / Điện 24/7 (Tự dựng ngay)</option>
+                <option value="tradie-luxury">🏡 Tradie • 02 Luxury Custom Builder (Tự dựng ngay)</option>
+                <option value="tradie-b2b">🏗️ Tradie • 03 Nhà Thầu B2B / Tiling (Tự dựng ngay)</option>
+              </optgroup>
+              <optgroup label="📁 Tải File Thủ Công">
+                <option value="manual">Chưa dựng (Tự tải file ZIP/HTML sau)</option>
+              </optgroup>
             </select>
           </div>
           <div class="lg:col-span-2 flex items-end">
@@ -926,12 +935,25 @@
             <span>⚡ Tự Động Sửa Code Bằng Gemini AI:</span>
           </span>
           <span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded shrink-0">
-            Multimodal OCR Vision
+            Multimodal Multi-Page OCR + Backup
           </span>
         </div>
         <p class="text-[11px] text-stone-600 leading-relaxed">
-          Gemini sẽ phân tích các trường chỉnh sửa của khách, đọc hình ảnh Menu thật nếu có, cập nhật đúng giá AUD và bảo tồn 100% giao diện Haute Couture của website.
+          Gemini sẽ đọc toàn bộ các trường sửa đổi, chỉ đạo cuối cùng của khách và tất cả các trang ảnh Menu đính kèm, đồng thời tự động lưu bản sao lưu (Backup) trước khi sửa để bạn có thể hoàn tác 1-Click bất cứ lúc nào.
         </p>
+
+        <!-- Admin Extra Instructions Input -->
+        <div class="space-y-1">
+          <label for="ai-rev-admin-instructions" class="block text-[11px] font-extrabold text-stone-800">
+            ✍️ Chỉ đạo thêm của Admin cho AI (Tuỳ chọn — Tiếng Việt hoặc Tiếng Anh):
+          </label>
+          <textarea
+            id="ai-rev-admin-instructions"
+            rows="2"
+            placeholder="Ví dụ: Đổi sang bảng màu 02 hồng phấn, giữ nguyên mục BIAB, thêm dịch vụ Gel-X $95..."
+            class="atelier-input w-full rounded-xl px-3 py-2 text-xs bg-white"
+          ></textarea>
+        </div>
 
         <div id="ai-rev-status-box" class="hidden p-3 rounded-xl bg-white border border-amber-300 text-xs font-semibold text-stone-800 flex items-center gap-2">
           <div class="w-4 h-4 rounded-full border-2 border-[#96432b] border-t-transparent animate-spin shrink-0"></div>
@@ -946,7 +968,15 @@
           </a>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-1">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+          <button
+            type="button"
+            id="btn-undo-ai-revision"
+            class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1.5"
+            title="Khôi phục lại nguyên trạng bản HTML trước khi chạy Gemini AI"
+          >
+            <span>⏪ Hoàn Tác Bản Trước Khi AI Sửa (Undo)</span>
+          </button>
           <button
             type="button"
             id="btn-run-ai-revision"
@@ -956,6 +986,84 @@
             <span>→</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cloud AI Oil Painting & Salon Photo Studio -->
+  <div id="ai-art-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-7 shadow-2xl border border-[#e5dec9] space-y-4 max-h-[90dvh] overflow-y-auto overscroll-contain">
+      <div class="flex items-start justify-between gap-2 border-b border-[#f0eade] pb-3">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-2xl bg-amber-100 border border-amber-300 text-[#96432b] flex items-center justify-center text-lg shrink-0">🎨</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-lg sm:text-xl font-extrabold text-stone-900 leading-snug">Studio Dịch Tranh Sơn Dầu AI &amp; Ảnh Tiệm</h3>
+            <p class="text-xs text-stone-500 mt-0.5 wrap-anywhere">Tiệm: <strong id="ai-art-biz-name" class="text-stone-800">Tiệm</strong> • Bảng màu: <strong id="ai-art-palette-label" class="text-[#96432b]">01</strong></p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-ai-art" class="touch-close text-stone-400 hover:text-stone-800 font-bold cursor-pointer text-lg p-1 shrink-0 rounded-xl">✕</button>
+      </div>
+
+      <!-- Google Maps Photos Strip -->
+      <div id="ai-art-photos-box" class="p-3.5 rounded-2xl bg-[#faf6ee] border border-[#e5dec9] space-y-2 text-xs">
+        <div class="font-extrabold text-stone-900 flex items-center justify-between gap-2">
+          <span>📸 Ảnh Thực Tế Từ Google Maps Của Tiệm:</span>
+          <span id="ai-art-photos-count" class="text-[11px] font-bold text-emerald-800">0 ảnh</span>
+        </div>
+        <div id="ai-art-photos-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1"></div>
+      </div>
+
+      <!-- Prompt Preview & Editable Box -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <label for="ai-art-prompt-input" class="text-xs font-extrabold text-stone-800">🖌️ Prompt Dịch Tranh Sơn Dầu Chuẩn Haute Couture (Có thể chỉnh sửa):</label>
+          <button type="button" id="btn-copy-ai-art-prompt-modal" class="px-2.5 py-1 rounded-lg bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] font-bold text-[11px] cursor-pointer">
+            📋 Copy Prompt
+          </button>
+        </div>
+        <textarea id="ai-art-prompt-input" rows="4" class="atelier-input w-full rounded-xl px-3 py-2 text-xs font-mono leading-relaxed bg-stone-50"></textarea>
+      </div>
+
+      <!-- Status & Result Box -->
+      <div id="ai-art-status-box" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-300 text-xs font-semibold text-stone-800 flex items-center gap-2">
+        <div class="w-4 h-4 rounded-full border-2 border-[#96432b] border-t-transparent animate-spin shrink-0"></div>
+        <span id="ai-art-status-text" class="wrap-anywhere">Đang xử lý...</span>
+      </div>
+
+      <div id="ai-art-result-box" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-bold text-emerald-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <span id="ai-art-result-text" class="wrap-anywhere">✓ Đã cập nhật thành công!</span>
+        <a id="ai-art-preview-btn" href="#" target="_blank" class="px-3 py-2 rounded-lg bg-emerald-700 text-white font-bold text-xs inline-flex items-center justify-center gap-1 shrink-0">
+          <span>👁️ Mở Xem Web Demo</span>
+          <span>↗</span>
+        </a>
+      </div>
+
+      <!-- 3 Cloud Action Buttons (Zero Antigravity Required) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+        <button
+          type="button"
+          id="btn-cloud-generate-oil"
+          class="p-3 rounded-xl bg-gradient-to-r from-[#96432b] to-[#7d3520] hover:from-[#7d3520] hover:to-[#632817] text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex flex-col items-center justify-center gap-1 text-center"
+        >
+          <span>🎨 1. Gemini AI Vẽ Tranh Sơn Dầu</span>
+          <span class="text-[10px] font-medium opacity-85">Dịch từ ảnh tiệm &amp; áp thẳng lên Web</span>
+        </button>
+        <button
+          type="button"
+          id="btn-cloud-apply-real-photos"
+          class="p-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow-sm transition-all cursor-pointer flex flex-col items-center justify-center gap-1 text-center"
+        >
+          <span>📸 2. Dùng Ảnh Thật Google Maps</span>
+          <span class="text-[10px] font-medium opacity-85">Đưa ảnh thật của tiệm lên Web Demo</span>
+        </button>
+        <button
+          type="button"
+          id="btn-cloud-restore-vault"
+          class="p-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 font-bold text-xs transition-all cursor-pointer flex flex-col items-center justify-center gap-1 text-center"
+        >
+          <span>🏛️ 3. Khôi Phục Tranh Mặc Định</span>
+          <span class="text-[10px] font-medium text-stone-500">Về bộ tranh chuẩn theo Bảng Màu</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1221,10 +1329,10 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p class="font-extrabold text-stone-900 text-sm flex items-center gap-1.5">
-                <span>✨ 1-Click Dựng Khung Xương Nails Atelier (Sơn Dầu &amp; Ánh Kim)</span>
+                <span>✨ 1-Click Dựng Khung Giao Diện (Templates)</span>
               </p>
               <p class="text-[11px] text-stone-600 mt-0.5">
-                Tự động khắc dấu sáp vàng chữ cái đầu tên tiệm, gắn 6 bức sơn dầu độc quyền &amp; Menu mẫu chuẩn Úc trong 2 giây.
+                Tự động chèn Tên, SĐT, Địa chỉ của khách vào các giao diện mẫu chuẩn 2026.
               </p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
@@ -1248,8 +1356,19 @@
             </div>
           </div>
 
+          <!-- Template Selection -->
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">1. Chọn Giao Diện Mẫu</label>
+            <select id="atelier-template-type" class="w-full atelier-input rounded-xl px-3 py-2.5 text-xs font-bold text-[#96432b] mb-3">
+              <option value="nails-atelier">💅 Nails Atelier (Sơn Dầu & Ánh Kim)</option>
+              <option value="tradie-emergency">🚨 Tradie: Thợ Nước/Điện (Khẩn Cấp)</option>
+              <option value="tradie-luxury">🏡 Tradie: Builder (Luxury/Thẩm Mỹ)</option>
+              <option value="tradie-b2b">🏗️ Tradie: Nhà Thầu B2B (Kỹ Thuật)</option>
+            </select>
+          </div>
+
           <!-- 5 Fixed Haute Couture Palettes (with Matched Oil-Painting Vaults) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="atelier-palette-container">
             <label class="atelier-palette-card cursor-pointer rounded-xl border-2 border-[#96432b] bg-white p-2.5 flex items-center gap-2.5 transition-all" data-pal-card="01">
               <input type="radio" name="atelier-palette" value="01" checked class="accent-[#96432b]">
               <span class="flex -space-x-1.5 shrink-0">
@@ -1333,7 +1452,7 @@
             id="btn-generate-nails-atelier"
             class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-[#96432b] text-[#fcf9f3] text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>
+            <span>✨ Áp Dụng Dữ Liệu &amp; Khởi Tạo Giao Diện Ngay</span>
           </button>
         </div>
 
@@ -1876,21 +1995,25 @@
           return { type: 'day3_reminder', label: 'Đến hạn gửi Facebook Bước 2 (Hỏi thăm Ngày 3)', badge: '💬 Đến Hạn Gửi FB (Bước 2)', priority: 3, days: daysElapsed, isFb: true };
         }
 
-        // Day 10+ / T+60m Hard Expire
-        if ((isTurbo ? minsElapsed >= 60 : daysElapsed >= 10) && c.dealStatus !== 'expired') {
-          return { type: 'expire', label: `Quá hạn ${isTurbo ? '60 phút' : `${daysElapsed} ngày`} (Chờ khoá / Dọn KV)`, badge: `❌ Quá hạn (${isTurbo ? '60p' : `Ngày ${daysElapsed}`})`, priority: 1, days: daysElapsed };
+        const s2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views';
+        const s3Done = Boolean(c.step3SentAt) || (c.dealStatus === 'flash_deal' && (!isFbMode || c.nurtureStep === 'day7_deal_active')) || c.nurtureStep === 'aussie_flash_deal_299';
+        const s4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning';
+
+        // Day 3 / T+15m Follow-up (Sequential Step 2)
+        if (!s2Done && (isTurbo ? minsElapsed >= 15 : daysElapsed >= 3) && c.dealStatus !== 'expired') {
+          return { type: 'day3_reminder', label: isFbMode ? 'Đến hạn gửi FB Bước 2 (Hỏi thăm Ngày 3)' : 'Hạn Ngày 3: Bấm gửi SMS Hỏi thăm', badge: isFbMode ? '💬 Hạn FB Bước 2' : '📱 Hạn Ngày 3 (Hỏi Thăm)', priority: 4, days: daysElapsed, isFb: isFbMode };
         }
-        // Day 9 / T+45m Final 24h Warning
-        if ((isTurbo ? (minsElapsed >= 45 && minsElapsed < 60) : (daysElapsed >= 9 && daysElapsed < 10)) && !c.step4SentAt && c.nurtureStep !== 'day9_warning') {
-          return { type: 'day9_warning', label: isFbMode ? 'Đến hạn gửi FB Bước 4 (24h cuối)' : 'Hạn 24h cuối: Gửi SMS Cảnh báo thu hồi', badge: isFbMode ? '💬 Hạn FB Bước 4' : '⏳ Hạn Ngày 9 (24h Cuối)', priority: 2, days: daysElapsed, isFb: isFbMode };
-        }
-        // Day 6 / T+30m Flash Deal 50%
-        if ((isTurbo ? (minsElapsed >= 30 && minsElapsed < 45) : (daysElapsed >= 6 && daysElapsed < 9)) && !c.step3SentAt && (c.dealStatus !== 'flash_deal' || isFbMode) && c.dealStatus !== 'expired') {
+        // Day 6 / T+30m Flash Deal 50% (Sequential Step 3)
+        if (s2Done && !s3Done && (isTurbo ? minsElapsed >= 30 : daysElapsed >= 6) && c.dealStatus !== 'expired') {
           return { type: 'day7_deal', label: isFbMode ? 'Đến hạn gửi FB Bước 3 (Deal $299 AUD)' : 'Hạn Ngày 6: Kích hoạt Flash Deal 50% ($299 AUD)', badge: isFbMode ? '💬 Hạn FB Bước 3' : '⚡ Hạn Ngày 6 (Deal 50%)', priority: 3, days: daysElapsed, isFb: isFbMode };
         }
-        // Day 3 / T+15m Follow-up
-        if ((isTurbo ? (minsElapsed >= 15 && minsElapsed < 30) : (daysElapsed >= 3 && daysElapsed < 6)) && !c.step2SentAt && c.nurtureStep !== 'day3_reminder' && c.nurtureStep !== 'aussie_followup_views' && c.dealStatus !== 'flash_deal' && c.dealStatus !== 'expired') {
-          return { type: 'day3_reminder', label: isFbMode ? 'Đến hạn gửi FB Bước 2 (Hỏi thăm Ngày 3)' : 'Hạn Ngày 3: Bấm gửi SMS Hỏi thăm', badge: isFbMode ? '💬 Hạn FB Bước 2' : '📱 Hạn Ngày 3 (Hỏi Thăm)', priority: 4, days: daysElapsed, isFb: isFbMode };
+        // Day 9 / T+45m Final 24h Warning (Sequential Step 4)
+        if (s2Done && s3Done && !s4Done && (isTurbo ? minsElapsed >= 45 : daysElapsed >= 9) && c.dealStatus !== 'expired') {
+          return { type: 'day9_warning', label: isFbMode ? 'Đến hạn gửi FB Bước 4 (24h cuối)' : 'Hạn 24h cuối: Gửi SMS Cảnh báo thu hồi', badge: isFbMode ? '💬 Hạn FB Bước 4' : '⏳ Hạn Ngày 9 (24h Cuối)', priority: 2, days: daysElapsed, isFb: isFbMode };
+        }
+        // Day 10+ / T+60m Hard Expire (Sequential Step 5)
+        if (s2Done && s3Done && s4Done && (isTurbo ? minsElapsed >= 60 : daysElapsed >= 10) && c.dealStatus !== 'expired') {
+          return { type: 'expire', label: `Quá hạn ${isTurbo ? '60 phút' : `${daysElapsed} ngày`} (Chờ khoá / Dọn KV)`, badge: `❌ Quá hạn (${isTurbo ? '60p' : `Ngày ${daysElapsed}`})`, priority: 1, days: daysElapsed };
         }
         return null;
       }
@@ -2262,36 +2385,76 @@
           { id: '04', name: '04 Espresso Cashmere', bg: '#DFD5CD', dot: '#7A533E' },
           { id: '05', name: '05 Coastal Pearl', bg: '#DCE5E8', dot: '#4B6B7C' }
         ];
+        const tradieTemplates = [
+          { id: 'tradie-emergency', name: '🚨 01 Thợ Nước/Điện 24/7', dot: '#EF4444' },
+          { id: 'tradie-luxury', name: '🏡 02 Luxury Builder', dot: '#D4AF37' },
+          { id: 'tradie-b2b', name: '🏗️ 03 Nhà Thầu B2B', dot: '#1EA33A' }
+        ];
 
         return `
-          <div class="flex items-center gap-2 pt-2.5 mt-1 border-t border-[#f0eade] flex-wrap text-xs">
-            <span class="font-bold text-stone-700 inline-flex items-center gap-1.5 shrink-0">
-              <span>🎨 Đổi Chuẩn Màu (Giữ Nguyên Menu):</span>
-            </span>
-            <div class="inline-flex items-center gap-1 p-1 bg-[#fcf9f3] rounded-xl border border-[#e2d9c8] flex-wrap">
-              ${palettes.map(p => {
-                const isActive = (p.id === currentPal);
-                return `
-                  <button
-                    type="button"
-                    data-switch-palette="${p.id}"
-                    data-cid="${c.id}"
-                    data-slug="${escapeHtml(c.demoSlug || '')}"
-                    class="palette-swatch-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-white shadow-xs ring-2 ring-[#96432b] text-stone-900 font-extrabold'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 font-medium'
-                    }"
-                    title="Đổi sang Bộ Màu ${p.name} (Giữ 100% Menu & dữ liệu tiệm)"
-                  >
-                    <span class="w-3 h-3 rounded-full shrink-0 border border-black/15 shadow-2xs" style="background-color: ${p.dot};"></span>
-                    <span>${p.name}</span>
-                    ${isActive ? '<span class="text-emerald-700 text-[10px]">✓</span>' : ''}
-                  </button>
-                `;
-              }).join('')}
+          <div class="space-y-2 pt-2.5 mt-1 border-t border-[#f0eade] text-xs">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-bold text-stone-700 inline-flex items-center gap-1.5 shrink-0">
+                <span>💅 Đổi Chuẩn Màu Nails (Giữ Nguyên Menu):</span>
+              </span>
+              <div class="inline-flex items-center gap-1 p-1 bg-[#fcf9f3] rounded-xl border border-[#e2d9c8] flex-wrap">
+                ${palettes.map(p => {
+                  const isActive = (p.id === currentPal);
+                  return `
+                    <button
+                      type="button"
+                      data-switch-palette="${p.id}"
+                      data-cid="${c.id}"
+                      data-slug="${escapeHtml(c.demoSlug || '')}"
+                      class="palette-swatch-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-white shadow-xs ring-2 ring-[#96432b] text-stone-900 font-extrabold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 font-medium'
+                      }"
+                      title="Đổi sang Bộ Màu ${p.name} (Giữ 100% Menu & dữ liệu tiệm)"
+                    >
+                      <span class="w-3 h-3 rounded-full shrink-0 border border-black/15 shadow-2xs" style="background-color: ${p.dot};"></span>
+                      <span>${p.name}</span>
+                      ${isActive ? '<span class="text-emerald-700 text-[10px]">✓</span>' : ''}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
             </div>
-            <span class="text-[11px] text-stone-500 italic">(Đổi chuẩn màu tức thì mà không mất menu thật &amp; logo)</span>
+
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-bold text-stone-700 inline-flex items-center gap-1.5 shrink-0">
+                <span>🔧 Đổi Nhanh Giao Diện Tradie (1-Click):</span>
+              </span>
+              <div class="inline-flex items-center gap-1 p-1 bg-[#fcf9f3] rounded-xl border border-[#e2d9c8] flex-wrap">
+                ${tradieTemplates.map(t => {
+                  const isActive = (t.id === currentPal);
+                  return `
+                    <button
+                      type="button"
+                      data-switch-tradie="${t.id}"
+                      data-cid="${c.id}"
+                      data-slug="${escapeHtml(c.demoSlug || '')}"
+                      class="tradie-switch-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-white shadow-xs ring-2 ring-[#96432b] text-stone-900 font-extrabold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 font-medium'
+                      }"
+                      title="Dựng ngay giao diện ${t.name} cho khách hàng này"
+                    >
+                      <span class="w-3 h-3 rounded-full shrink-0 border border-black/15 shadow-2xs" style="background-color: ${t.dot};"></span>
+                      <span>${t.name}</span>
+                      ${isActive ? '<span class="text-emerald-700 text-[10px]">✓</span>' : ''}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+              <a href="/templates/tradie-master/1-emergency-plumber.html" target="_blank" class="text-[11px] font-bold text-[#96432b] hover:underline">Xem mẫu 01 ↗</a>
+              <span class="text-stone-300">•</span>
+              <a href="/templates/tradie-master/2-luxury-builder.html" target="_blank" class="text-[11px] font-bold text-[#96432b] hover:underline">Xem mẫu 02 ↗</a>
+              <span class="text-stone-300">•</span>
+              <a href="/templates/tradie-master/3-b2b-contractor.html" target="_blank" class="text-[11px] font-bold text-[#96432b] hover:underline">Xem mẫu 03 ↗</a>
+            </div>
           </div>
         `;
       }
@@ -2398,15 +2561,19 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         }
 
         const step1Done = Boolean(c.step1SentAt || pitchTime) || c.nurtureStep === 'aussie_pitch' || c.nurtureStep === 'pitch' || isPitched;
-        const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views' || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'day9_warning' || isExpired;
-        const step3Done = Boolean(c.step3SentAt) || (isDealActive && !isFbMode) || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'aussie_flash_deal_299' || c.nurtureStep === 'day9_warning' || isExpired;
-        const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning' || isExpired;
+        const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views';
+        const step3Done = Boolean(c.step3SentAt) || (isDealActive && !isFbMode) || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'aussie_flash_deal_299';
+        const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning';
         const step5Done = isExpired;
 
-        const isDay3Due = Boolean(pitchTime) && (c.fbDueStep === 'day3' || ((isTurbo ? (minsElapsed >= 15 && minsElapsed < 30) : (daysElapsed >= 3 && daysElapsed < 6)) && !step2Done && !isExpired));
-        const isDay6Due = Boolean(pitchTime) && (c.fbDueStep === 'day6' || ((isTurbo ? (minsElapsed >= 30 && minsElapsed < 45) : (daysElapsed >= 6 && daysElapsed < 9)) && !step3Done && !isExpired));
-        const isDay9Due = Boolean(pitchTime) && (c.fbDueStep === 'day9' || ((isTurbo ? (minsElapsed >= 45 && minsElapsed < 60) : (daysElapsed >= 9 && daysElapsed < 10)) && !step4Done && !isExpired));
-        const isDay10Due = Boolean(pitchTime) && (isTurbo ? minsElapsed >= 60 : daysElapsed >= 10) && !isExpired;
+        const s2Ms = c.step2SentAt ? new Date(c.step2SentAt).getTime() : 0;
+        const s3Ms = (c.step3SentAt || c.dealActivatedAt) ? new Date(c.step3SentAt || c.dealActivatedAt).getTime() : 0;
+        const s4Ms = c.step4SentAt ? new Date(c.step4SentAt).getTime() : 0;
+
+        const isDay3Due = Boolean(pitchTime) && !step2Done && !isExpired && (c.fbDueStep === 'day3' || (isTurbo ? minsElapsed >= 15 : daysElapsed >= 3));
+        const isDay6Due = Boolean(pitchTime) && step2Done && !step3Done && !isExpired && (c.fbDueStep === 'day6' || (isTurbo ? (s2Ms ? (Date.now() - s2Ms) >= 15 * 60 * 1000 : minsElapsed >= 30) : daysElapsed >= 6));
+        const isDay9Due = Boolean(pitchTime) && step2Done && step3Done && !step4Done && !isExpired && (c.fbDueStep === 'day9' || (isTurbo ? (s3Ms ? (Date.now() - s3Ms) >= 15 * 60 * 1000 : minsElapsed >= 45) : daysElapsed >= 9));
+        const isDay10Due = Boolean(pitchTime) && step2Done && step3Done && step4Done && !isExpired && (isTurbo ? (s4Ms ? (Date.now() - s4Ms) >= 15 * 60 * 1000 : minsElapsed >= 60) : daysElapsed >= 10);
 
         let nextTurboStep = 0;
         let nextTurboTargetTs = 0;
@@ -2416,13 +2583,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             nextTurboTargetTs = pitchMs + 15 * 60 * 1000;
           } else if (step2Done && !step3Done && !isDay6Due) {
             nextTurboStep = 3;
-            nextTurboTargetTs = pitchMs + 30 * 60 * 1000;
+            nextTurboTargetTs = (s2Ms || pitchMs + 15 * 60 * 1000) + 15 * 60 * 1000;
           } else if (step3Done && !step4Done && !isDay9Due) {
             nextTurboStep = 4;
-            nextTurboTargetTs = pitchMs + 45 * 60 * 1000;
+            nextTurboTargetTs = (s3Ms || pitchMs + 30 * 60 * 1000) + 15 * 60 * 1000;
           } else if (step4Done && !step5Done && !isDay10Due) {
             nextTurboStep = 5;
-            nextTurboTargetTs = pitchMs + 60 * 60 * 1000;
+            nextTurboTargetTs = (s4Ms || pitchMs + 45 * 60 * 1000) + 15 * 60 * 1000;
           }
         }
 
@@ -3223,9 +3390,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                           data-cid="${c.id}"
                           data-name="${escapeHtml(titleName)}"
                           class="btn-copy-oil-prompt px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                          title="Copy Prompt tiếng Anh chuẩn để đưa 4 ảnh Google của tiệm vào AI vẽ thành tranh sơn dầu"
+                          title="Mở Studio Dịch Tranh Sơn Dầu AI (Vẽ trực tiếp bằng Gemini API, Áp ảnh Google Maps thật, hoặc Copy Prompt)"
                         >
-                          <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
+                          <span>🎨 Dịch Tranh AI (${(Array.isArray(c.placesPhotos) && c.placesPhotos.length) ? c.placesPhotos.length : (Array.isArray(c.photos) ? c.photos.length : 0)} ảnh)</span>
                         </button>
                         ${c.revisionStatus === 'submitted' ? '' : `
                         <button
@@ -3579,9 +3746,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                         data-cid="${c.id}"
                         data-name="${escapeHtml(titleName)}"
                         class="btn-copy-oil-prompt px-2.5 py-1.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 border border-[#d8ccb8] text-[#96432b] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                        title="Copy Prompt tiếng Anh chuẩn để đưa 4 ảnh Google của tiệm vào AI vẽ thành tranh sơn dầu"
+                        title="Mở Studio Dịch Tranh Sơn Dầu AI (Vẽ trực tiếp bằng Gemini API, Áp ảnh Google Maps thật, hoặc Copy Prompt)"
                       >
-                        <span>🎨 Copy Prompt Dịch Tranh (${Array.isArray(c.photos) ? c.photos.length : 0} ảnh)</span>
+                        <span>🎨 Dịch Tranh AI (${(Array.isArray(c.placesPhotos) && c.placesPhotos.length) ? c.placesPhotos.length : (Array.isArray(c.photos) ? c.photos.length : 0)} ảnh)</span>
                       </button>
                       <button
                         type="button"
@@ -3883,6 +4050,39 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
+        // 1-Click Tradie Template Switcher right inside Client Card
+        document.querySelectorAll('.tradie-switch-btn').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const tradieKey = btn.getAttribute('data-switch-tradie');
+            const cid = btn.getAttribute('data-cid');
+            const slug = btn.getAttribute('data-slug');
+            if (!tradieKey || !cid) return;
+
+            const client = clientsCache.find(x => x.id === cid || x.demoSlug === slug);
+            if (!client) return;
+
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="inline-block animate-spin text-[10px]">↻</span> Đang dựng...`;
+
+            try {
+              const data = await deployTradieTemplateForClient(client, tradieKey);
+              if (data && data.client) {
+                upsertClientInCache(data.client);
+              } else {
+                client.demoPalette = tradieKey;
+                client.demoSourceType = 'kv';
+              }
+              showToast(`🔧 Đã chuyển sang giao diện ${tradieKey} cho "${client.businessName || client.name || slug}" thành công!`);
+              applyFiltersAndRender();
+            } catch (err) {
+              showToast(`❌ Lỗi dựng giao diện Tradie: ${err.message}`, true);
+              btn.disabled = false;
+              btn.innerHTML = origHtml;
+            }
+          });
+        });
+
         // Outbound Sales: Copy Demo Preview Link (with Floating "Claim This Website - $599" Bar)
         document.querySelectorAll('.btn-copy-preview').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -4136,28 +4336,13 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           });
         });
 
-        // 10-Day Closing Engine: Copy AI Fine-Art Prompt for Outbound Card (Cách 2)
-        document.querySelectorAll('.btn-copy-art-card').forEach((btn) => {
+        // 10-Day Closing Engine: Open Cloud AI Oil Painting & Photo Studio Modal (or Copy Prompt)
+        document.querySelectorAll('.btn-copy-art-card, .btn-copy-oil-prompt').forEach((btn) => {
           btn.addEventListener('click', () => {
             const cid = btn.getAttribute('data-cid');
             const client = clientsCache.find(x => x.id === cid);
             if (!client) return;
-            let ph = (client.placesPhotos && Array.isArray(client.placesPhotos)) ? client.placesPhotos : [];
-            if (!ph.length && typeof allStoredLeads !== 'undefined' && Array.isArray(allStoredLeads)) {
-              const matchL = allStoredLeads.find(l => (client.googlePlaceId && (l.placeId || l.id) === client.googlePlaceId) || (l.name && l.name.toLowerCase() === (client.businessName || client.name || '').toLowerCase()));
-              if (matchL && Array.isArray(matchL.photos) && matchL.photos.length) {
-                ph = matchL.photos;
-              }
-            }
-            copyAiFineArtPromptHelper({
-              name: client.businessName || client.name,
-              suburb: client.businessAddress,
-              address: client.businessAddress,
-              industry: client.industry,
-              palette: client.demoPalette,
-              photos: ph
-            });
-            flashCopySuccess(btn, 'Đã Copy Prompt!');
+            openAiArtStudioModal(client);
           });
         });
 
@@ -4578,6 +4763,79 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const data = await upRes.json().catch(() => ({}));
         if (!upRes.ok || !data.ok) {
           throw new Error(data.error || 'Không thể lưu bản dựng lên hệ thống');
+        }
+        return data;
+      }
+
+      // Helper to auto-deploy Tradie Master Engine template (01 Emergency, 02 Luxury Builder, 03 B2B Contractor)
+      async function deployTradieTemplateForClient(clientObj, tradieKey = 'tradie-emergency', customAddr = undefined, customSoc = undefined) {
+        const templatePaths = {
+          'tradie-emergency': '1-emergency-plumber.html',
+          'tradie-luxury': '2-luxury-builder.html',
+          'tradie-b2b': '3-b2b-contractor.html'
+        };
+        const tplName = templatePaths[tradieKey] || '1-emergency-plumber.html';
+        const [tplRes, cssRes, jsRes] = await Promise.all([
+          fetch(`/templates/tradie-master/${tplName}`, { cache: 'no-cache' }),
+          fetch('/templates/tradie-master/style.css', { cache: 'no-cache' }),
+          fetch('/templates/tradie-master/script.js', { cache: 'no-cache' })
+        ]);
+        if (!tplRes.ok) throw new Error(`Không tải được khung mẫu /templates/tradie-master/${tplName}`);
+        let html = await tplRes.text();
+        const css = cssRes.ok ? await cssRes.text() : '';
+        const scriptJS = jsRes.ok ? await jsRes.text() : '';
+
+        const bizName = (clientObj && (clientObj.businessName || clientObj.name)) || 'WynnPages Tradie';
+        const safeBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const dPhone = (clientObj && (clientObj.displayPhone || clientObj.phone)) || '1300 999 999';
+        const sPhone = ((clientObj && (clientObj.phone || clientObj.displayPhone)) || '1300999999').replace(/[^0-9+]/g, '');
+        const address = (customAddr !== undefined ? customAddr : (clientObj && clientObj.businessAddress)) || '';
+        const parsedAddr = parseAuAddressBrowser(address);
+        const shortLoc = [parsedAddr.suburb, parsedAddr.state].filter(Boolean).join(', ') || '';
+
+        html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${safeBiz} | Official Website</title>`);
+        html = html.replace(/RAPID PLUMBING|AURA ARCHITECTURE|APEX COMM-TILING|ELITE BUILDERS/g, safeBiz);
+        html = html.replace(/1300 999 999|1800 123 456/g, dPhone);
+        html = html.replace(/tel:1300999999|tel:1800123456/g, `tel:${sPhone}`);
+        if (shortLoc) {
+          html = html.replace(/across Queensland|serving the Greater Region/gi, `across ${shortLoc}`);
+        }
+
+        // Inline CSS & JS into index.html so it works 100% standalone on both subdomain and /d/slug
+        if (css) {
+          html = html.replace(/<link[^>]+href=["']style\.css["'][^>]*>/i, `<style>\n${css}\n</style>`);
+        }
+        if (scriptJS) {
+          html = html.replace(/<script[^>]+src=["']script\.js["'][^>]*><\/script>/i, `<script>\n${scriptJS}\n</script>`);
+        }
+
+        const seoAssets = await generateClientSeoAssetsBrowser(clientObj, '01', customAddr);
+        const bundleFiles = [
+          { path: '/index.html', type: 'text/html; charset=utf-8', text: html },
+          { path: '/style.css', type: 'text/css; charset=utf-8', text: css },
+          { path: '/script.js', type: 'application/javascript; charset=utf-8', text: scriptJS },
+          ...seoAssets
+        ];
+
+        const upRes = await fetch('/api/upload-demo-bundle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': adminKey
+          },
+          body: JSON.stringify({
+            adminKey,
+            customerId: clientObj.id,
+            slug: clientObj.demoSlug,
+            businessName: bizName,
+            palette: tradieKey,
+            files: bundleFiles,
+            credentials: localCreds
+          })
+        });
+        const data = await upRes.json().catch(() => ({}));
+        if (!upRes.ok || !data.ok) {
+          throw new Error(data.error || 'Không thể lưu bản dựng Tradie lên hệ thống');
         }
         return data;
       }
@@ -5534,6 +5792,24 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             } finally {
               endGlobalBusy();
             }
+          } else if (autoTpl && autoTpl.startsWith('tradie-')) {
+            submitBtn.innerHTML = '<span class="wynn-spin"></span><span>Đang dựng Web Tradie...</span>';
+            beginGlobalBusy(`Đang dựng Khung Tradie (${autoTpl}) cho "${bizName}"...`);
+            try {
+              const built = await deployTradieTemplateForClient(finalClient, autoTpl);
+              if (built && built.client) finalClient = built.client;
+              upsertClientInCache(finalClient);
+              await loadClients('Đang đồng bộ danh sách...').catch(() => {});
+              const previewUrl = finalClient.brandedDemoUrl || `https://${encodeURIComponent(finalClient.demoSlug || finalClient.id)}.wynnpages.com.au`;
+              navigator.clipboard.writeText(previewUrl).catch(() => {});
+              showToast(`🎉 Đã tạo & lên sóng ngay Web Tradie (${autoTpl}) cho "${bizName}" tại ${previewUrl} (Đã tự copy link)!`);
+            } catch (err) {
+              upsertClientInCache(finalClient);
+              await loadClients('Đang đồng bộ danh sách...').catch(() => {});
+              showToast(`Đã tạo khách nhưng dựng khung Tradie gặp lỗi: ${err.message}`, true);
+            } finally {
+              endGlobalBusy();
+            }
           } else {
             upsertClientInCache(finalClient);
             await loadClients('Đang đồng bộ danh sách...').catch(() => {});
@@ -5668,8 +5944,18 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const cfgTgToken = document.getElementById('cfg-telegram-bot-token');
           const cfgTgChat = document.getElementById('cfg-telegram-chat-id');
 
+          const rawStripeVal = cfgStripeKey ? cfgStripeKey.value.trim() : '';
+          if (rawStripeVal.startsWith('pk_')) {
+            showToast('⚠️ Bạn vừa dán Publishable Key (pk_live_...). Vui lòng copy mã Secret Key (bắt đầu bằng sk_live_...) trong Stripe Dashboard!', true);
+            if (saveBtn) {
+              saveBtn.disabled = false;
+              saveBtn.innerHTML = origHtml;
+            }
+            return;
+          }
+
           const settingsPayload = {
-            stripeSecretKey: cfgStripeKey ? cfgStripeKey.value.trim() : '',
+            stripeSecretKey: rawStripeVal,
             stripeWebhookSecret: cfgStripeWebhook ? cfgStripeWebhook.value.trim() : '',
             clicksendUsername: cfgClicksendUser.value.trim(),
             clicksendApiKey: cfgClicksendKey.value.trim(),
@@ -6200,22 +6486,22 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const views = Number((client && client.demoViewCount) || 0);
         if (stepKey === 'day3' || stepKey === 'step2') {
           if (views >= 2) {
-            return `Hi ${bizName}! 🌿\n\nSaw you had a chance to check out the custom website preview we crafted for your salon:\n👉 ${demoUrl}\n\nIf you'd like me to tweak any service prices, swap photos, or adjust colours before connecting it to your .com.au domain, I'm more than happy to tailor anything for you ($599 AUD flat one-time, $0 monthly fees).\n\nWarm regards,\nSam — WynnPages Studio`;
+            return `Hi ${bizName}! 🌿\n\nIt's Wynn here again. I noticed you had a quick look at the website preview I put together for your business — I really hope you liked the feel of it!\n👉 ${demoUrl}\n\nJust wanted to reassure you that the current photos and details are only stand-in placeholders to show the layout. The moment you claim the site on the preview page, it unlocks your private Customization Portal where I personally swap in your favourite photos, exact pricing/details, and connect your own .com.au domain (it's a simple $599 AUD one-off build with $0 ongoing monthly fees).\n\nNo rush at all, just let me know if you have any questions!\n\nWarmly,\nWynn — WynnPages Studio`;
           }
-          return `Hi ${bizName}! 🌿\n\nSam from WynnPages Studio checking in! Did you get a chance to see the custom website preview we hand-crafted for your salon?\n\n👉 ${demoUrl}\n\n($599 AUD flat one-time, $0 monthly fees). Happy to adjust any services or photos for you anytime!\n\nWarm regards,\nSam — WynnPages Studio`;
+          return `Hi ${bizName}! 🌿\n\nHope your week is going really well! It's Wynn here from WynnPages Studio. I know how busy things get, so I just wanted to gently follow up in case my earlier message got buried.\n\nHere is the custom website preview I hand-crafted for you:\n👉 ${demoUrl}\n\nNote: I've used sample photos & details just to demonstrate the layout — once claimed on the preview page, you'll get instant access to our Customization Portal where I personally update all photos, pricing, and details to your exact liking.\n\nWhenever you get a quiet cuppa, have a little browse!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
         if (stepKey === 'day6' || stepKey === 'step3') {
-          return `Hi ${bizName}! ⚡\n\nSince we've already finished hand-crafting your custom website design, we'd love to see it go to you rather than archiving the work.\n\nFor the next 72 hours, we've unlocked a 50% OFF Studio Sponsorship on your preview page — you can claim the entire website for a flat $299 AUD one-time (save $300 AUD, with $0 monthly fees forever):\n\n👉 ${demoUrl}\n\nIncludes 1 full round of custom tweaks + free connection to your .com.au domain. Ends in 72h!\n\nWarm regards,\nSam — WynnPages Studio`;
+          return `Hi ${bizName}! 🌿\n\nHope you're having a lovely week! It's Wynn here. Since I've already poured the time into hand-crafting the custom website design for your business, I'd honestly much rather see you using and enjoying it than letting it sit in my studio archive.\n\nSo for the next 3 days, I've halved the one-off build fee on your preview page down to $299 AUD all-up (instead of $599 AUD, and still $0 monthly fees forever):\n\n👉 ${demoUrl}\n\nClaiming on the preview page immediately unlocks your private Customization Portal where I personally swap in your real photos, exact pricing/details, and connect your .com.au domain for free. Would love to make it yours if you like it!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
         if (stepKey === 'day9' || stepKey === 'step4') {
-          return `Hi ${bizName}, quick heads up from WynnPages Studio! ⏳\n\nYour custom website preview and the $299 AUD (50% OFF) offer is scheduled to close and be archived in 24 hours:\n\n👉 ${demoUrl}\n\nIf you'd like to keep this custom design with $0 monthly fees, please claim it on the preview link today before the slot is released!\n\nWarm regards,\nSam — WynnPages Studio`;
+          return `Hi ${bizName}, Wynn here — I promise this is my last message so I don't clutter your inbox! 🌿\n\nJust a gentle heads up that I'll be archiving the private website preview I built for you tomorrow as I tidy up my studio server for new projects:\n\n👉 ${demoUrl}\n\nIf you'd still like to keep the design at the $299 AUD one-off rate (with $0 monthly fees and full access to our Customization Portal after checkout to swap in your real photos, pricing/details & .com.au domain), you can grab it right on the preview link anytime before tomorrow.\n\nEither way, wishing you and the team all the very best!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
         if (stepKey === 'launched' || stepKey === 'site_launched') {
           const rawLive = (client && client.liveUrl) ? String(client.liveUrl).trim() : '';
           const liveHref = rawLive ? (rawLive.startsWith('http') ? rawLive : `https://${rawLive}`) : demoUrl;
-          return `Congratulations ${bizName}! 🎉🍾\n\nYour bespoke website is now officially LIVE on your custom domain:\n\n👉 ${liveHref}\n\n• 100% owned by you with $0 ongoing monthly fees.\n• Hosted on our Australian High-Speed Network with full SSL security.\n\nThank you so much for trusting WynnPages Studio with your salon's digital presence!\n\nWarm regards,\nSam — WynnPages Studio`;
+          return `Congratulations ${bizName}! 🎉🍾\n\nIt's Wynn here — I'm so excited to let you know that your bespoke website is now officially LIVE on your custom domain:\n\n👉 ${liveHref}\n\n• 100% owned by you with $0 ongoing monthly fees.\n• Hosted on our Australian High-Speed Network with full SSL security.\n\nThank you so much for trusting me with your business's digital home — let me know if you ever need a hand with anything!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
-        return `Hi ${bizName}! 🌿\n\nI came across your beautiful boutique on Google Maps and created a bespoke, lightning-fast digital website preview for you:\n\n👉 ${demoUrl}\n\n• Zero monthly fees & zero ongoing retainers ($599 AUD one-time, 100% owned by you).\n• Integrated with your real services, Google reviews, and instant appointment booking.\n• Crafted on our Australian High-Speed Network with Grade A speed (<0.35s).\n\nTake a quick look whenever you have a quiet moment — no pressure at all! If you love it, you can claim it right on the preview.\n\nWarm regards,\nSam — WynnPages Studio\nhttps://wynnpages.com.au`;
+        return `Hi ${bizName}! 🌿\n\nIt's Wynn here — I'm a web designer based here in Australia. I came across your business recently and really loved your reputation, so instead of sending a generic message, I spent some time hand-crafting a custom website concept just for you to see how it could look:\n\n👉 ${demoUrl}\n\n• Note: I've used sample concept photos and placeholder details just to show the layout — once claimed on the page, you'll get instant access to our Customization Portal where I personally swap in your real photos, exact pricing/details, and connect your .com.au domain.\n• Simple one-off build ($599 AUD flat, 100% owned by you with $0 ongoing monthly fees).\n\nNo pressure at all — just thought I'd share it with you! Have a look whenever you get a quiet moment.\n\nWarmly,\nWynn — WynnPages Studio\nhttps://wynnpages.com.au`;
       }
 
       function selectFbStepTab(stepKey) {
@@ -6438,6 +6724,29 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (previewBtn) {
           previewBtn.href = `/templates/nails-atelier?palette=${encodeURIComponent(selected)}`;
         }
+      }
+
+      const atelierTemplateType = document.getElementById('atelier-template-type');
+      const atelierPaletteContainer = document.getElementById('atelier-palette-container');
+      if (atelierTemplateType && atelierPaletteContainer) {
+        atelierTemplateType.addEventListener('change', (e) => {
+          const val = e.target.value;
+          const previewBtn = document.getElementById('btn-preview-palette-live');
+          if (val === 'nails-atelier') {
+            atelierPaletteContainer.style.display = 'grid';
+            syncPaletteCardHighlight();
+          } else {
+            atelierPaletteContainer.style.display = 'none';
+            const tplPreviewMap = {
+              'tradie-emergency': '/templates/tradie-master/1-emergency-plumber.html',
+              'tradie-luxury': '/templates/tradie-master/2-luxury-builder.html',
+              'tradie-b2b': '/templates/tradie-master/3-b2b-contractor.html'
+            };
+            if (previewBtn && tplPreviewMap[val]) {
+              previewBtn.href = tplPreviewMap[val];
+            }
+          }
+        });
       }
 
       document.querySelectorAll('input[name="atelier-palette"]').forEach((r) => {
@@ -7015,7 +7324,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         demoFilesBreakdown.innerHTML = '';
         if (btnGenerateNailsAtelier) {
           btnGenerateNailsAtelier.disabled = false;
-          btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>';
+          btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Dữ Liệu &amp; Khởi Tạo Giao Diện Ngay</span>';
         }
       }
 
@@ -7049,10 +7358,11 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const palette = (document.querySelector('input[name="atelier-palette"]:checked') || {}).value || '01';
           const customAddr = atelierQuickAddress ? atelierQuickAddress.value.trim() : '';
           const customSoc = atelierQuickSocials ? atelierQuickSocials.value.trim() : '';
+          const selectedTpl = document.getElementById('atelier-template-type')?.value || 'nails-atelier';
 
           btnGenerateNailsAtelier.disabled = true;
-          btnGenerateNailsAtelier.innerHTML = '<span class="wynn-spin"></span><span>Đang dựng khung, tạo Favicon &amp; ảnh SEO Share...</span>';
-          beginGlobalBusy(`Đang dựng khung Nails Atelier (Màu ${palette}) & tạo ảnh SEO cho "${targetClient.businessName || targetClient.name}"...`);
+          btnGenerateNailsAtelier.innerHTML = '<span class="wynn-spin"></span><span>Đang dựng khung mẫu, tạo Favicon &amp; ảnh SEO...</span>';
+          beginGlobalBusy(`Đang xử lý giao diện (${selectedTpl}) cho "${targetClient.businessName || targetClient.name}"...`);
 
           try {
             // Persist quick address/socials to client metadata if newly updated
@@ -7077,9 +7387,16 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               }
             }
 
-            const data = await deployNailsAtelierForClient(targetClient, palette, customAddr, customSoc);
+            const selectedTemplate = document.getElementById('atelier-template-type')?.value || 'nails-atelier';
+            let data;
+            
+            if (selectedTemplate === 'nails-atelier') {
+              data = await deployNailsAtelierForClient(targetClient, palette, customAddr, customSoc);
+            } else {
+              data = await deployTradieTemplateForClient(targetClient, selectedTemplate, customAddr, customSoc);
+            }
 
-            showToast(`🎉 Đã dựng Khung Nails Atelier (Bộ màu ${palette}) kèm Favicon & ảnh SEO Share tại: ${data.demoUrl}`);
+            showToast(`🎉 Đã dựng Khung Giao Diện kèm Favicon & ảnh SEO Share tại: ${data.demoUrl}`);
             closeUploadModal();
             if (data.client) {
               upsertClientInCache(data.client);
@@ -7087,9 +7404,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               await loadClients();
             }
           } catch (err) {
-            showToast(`Lỗi dựng khung Nails: ${err.message}`, true);
+            showToast(`Lỗi dựng khung giao diện: ${err.message}`, true);
             btnGenerateNailsAtelier.disabled = false;
-            btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Bộ Màu &amp; Lên Sóng Khung Nails Atelier Ngay</span>';
+            btnGenerateNailsAtelier.innerHTML = '<span>✨ Áp Dụng Dữ Liệu &amp; Khởi Tạo Giao Diện Ngay</span>';
           } finally {
             endGlobalBusy();
           }
@@ -7294,13 +7611,15 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           if (!currentAiRevClient) return;
           const target = currentAiRevClient;
           const bizName = target.businessName || target.name || target.demoSlug || 'Tiệm';
+          const adminInstructionsEl = document.getElementById('ai-rev-admin-instructions');
+          const adminInstructions = adminInstructionsEl ? adminInstructionsEl.value.trim() : '';
 
           btnRunAiRevision.disabled = true;
           btnRunAiRevision.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Đang chạy Gemini Vision OCR & cập nhật website...';
 
           if (aiRevStatusBox) {
             aiRevStatusBox.classList.remove('hidden');
-            if (aiRevStatusText) aiRevStatusText.textContent = `Đang gửi yêu cầu và hình ảnh tới Gemini AI để cập nhật website của "${bizName}"...`;
+            if (aiRevStatusText) aiRevStatusText.textContent = `Đang lưu bản Backup & gửi yêu cầu + hình ảnh tới Gemini AI để cập nhật website của "${bizName}"...`;
           }
           if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
 
@@ -7315,7 +7634,8 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               },
               body: JSON.stringify({
                 cid: target.id,
-                geminiApiKey: gKey
+                geminiApiKey: gKey,
+                adminInstructions
               })
             });
 
@@ -7337,7 +7657,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             }
 
             btnRunAiRevision.disabled = false;
-            btnRunAiRevision.innerHTML = '<span>✓ Đã Áp Dụng Thành Công</span>';
+            btnRunAiRevision.innerHTML = '<span>✓ Đã Áp Dụng Thành Công (Bấm để chạy lại)</span>';
 
             target.revisionStatus = 'applied';
             showToast(`🎉 Gemini AI đã cập nhật xong web demo của "${bizName}"!`);
@@ -7348,6 +7668,194 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             btnRunAiRevision.disabled = false;
             btnRunAiRevision.innerHTML = '<span>❌ Thử Lại: Gemini AI Auto-Edit</span>';
           }
+        });
+      }
+
+      const btnUndoAiRevision = document.getElementById('btn-undo-ai-revision');
+      if (btnUndoAiRevision) {
+        btnUndoAiRevision.addEventListener('click', async () => {
+          if (!currentAiRevClient) return;
+          const target = currentAiRevClient;
+          const bizName = target.businessName || target.name || target.demoSlug || 'Tiệm';
+          if (!confirm(`Khôi phục lại bản HTML trước khi chạy AI cho "${bizName}"?`)) return;
+
+          const origHtml = btnUndoAiRevision.innerHTML;
+          btnUndoAiRevision.disabled = true;
+          btnUndoAiRevision.innerHTML = '<span>⏳ Đang hoàn tác...</span>';
+          try {
+            const res = await fetch('/api/admin/undo-ai-revision', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': adminKey
+              },
+              body: JSON.stringify({ cid: target.id })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || 'Chưa có bản sao lưu trước đó cho tiệm này.');
+            }
+            showToast(`⏪ Đã hoàn tác website của "${bizName}" về bản trước khi AI sửa!`);
+            if (aiRevResultBox) {
+              aiRevResultBox.classList.remove('hidden');
+              if (aiRevResultText) aiRevResultText.textContent = '⏪ Đã hoàn tác về bản HTML gốc trước khi chạy AI!';
+            }
+          } catch (err) {
+            showToast(err.message, true);
+          } finally {
+            btnUndoAiRevision.disabled = false;
+            btnUndoAiRevision.innerHTML = origHtml;
+          }
+        });
+      }
+
+      // ========================================================
+      // CLOUD AI OIL PAINTING & SALON PHOTO STUDIO MODAL
+      // ========================================================
+      const aiArtModal = document.getElementById('ai-art-modal');
+      const aiArtBizName = document.getElementById('ai-art-biz-name');
+      const aiArtPaletteLabel = document.getElementById('ai-art-palette-label');
+      const aiArtPhotosCount = document.getElementById('ai-art-photos-count');
+      const aiArtPhotosGrid = document.getElementById('ai-art-photos-grid');
+      const aiArtPromptInput = document.getElementById('ai-art-prompt-input');
+      const aiArtStatusBox = document.getElementById('ai-art-status-box');
+      const aiArtStatusText = document.getElementById('ai-art-status-text');
+      const aiArtResultBox = document.getElementById('ai-art-result-box');
+      const aiArtResultText = document.getElementById('ai-art-result-text');
+      const aiArtPreviewBtn = document.getElementById('ai-art-preview-btn');
+      const btnCloseAiArt = document.getElementById('btn-close-ai-art');
+      const btnCopyAiArtPromptModal = document.getElementById('btn-copy-ai-art-prompt-modal');
+      const btnCloudGenerateOil = document.getElementById('btn-cloud-generate-oil');
+      const btnCloudApplyRealPhotos = document.getElementById('btn-cloud-apply-real-photos');
+      const btnCloudRestoreVault = document.getElementById('btn-cloud-restore-vault');
+      let currentAiArtClient = null;
+      let currentAiArtPhotos = [];
+
+      if (btnCloseAiArt && aiArtModal) {
+        btnCloseAiArt.addEventListener('click', () => aiArtModal.classList.add('hidden'));
+      }
+
+      function buildDefaultArtPromptText(client) {
+        const name = (client && (client.businessName || client.name)) || 'Boutique';
+        const palette = (client && client.demoPalette) || '01';
+        const palName = palette === '02' ? 'Rose Silk' : (palette === '03' ? 'Botanical Sage' : (palette === '04' ? 'Espresso Cashmere' : (palette === '05' ? 'Coastal Pearl' : 'Terracotta Gold')));
+        return `Translate the real photography and manicure craftsmanship of "${name}" into WynnPages signature French Haute Couture fine-art oil painting with 24k gold leaf foil accents.\n\n1. Style: French Impressionist oil on fine woven linen canvas with visible impasto brushstrokes.\n2. Subject: Sunlit serene luxury nail & beauty sanctuary interior inspired by "${name}", unhurried quiet luxury atmosphere.\n3. Palette Target: Haute Couture Palette ${palette} (${palName}) with delicate 24k Kintsugi gold-leaf accents.\n4. Finish: Museum gallery finish, zero text or modern clutter.`;
+      }
+
+      function openAiArtStudioModal(client) {
+        if (!client || !aiArtModal) return;
+        currentAiArtClient = client;
+        const bizName = client.businessName || client.name || client.demoSlug || 'Tiệm';
+        const pal = client.demoPalette || '01';
+        let ph = (client.placesPhotos && Array.isArray(client.placesPhotos) && client.placesPhotos.length)
+          ? client.placesPhotos
+          : (Array.isArray(client.photos) ? client.photos : []);
+        if (!ph.length && typeof allStoredLeads !== 'undefined' && Array.isArray(allStoredLeads)) {
+          const matchL = allStoredLeads.find(l => (client.googlePlaceId && (l.placeId || l.id) === client.googlePlaceId) || (l.name && l.name.toLowerCase() === bizName.toLowerCase()));
+          if (matchL && Array.isArray(matchL.photos) && matchL.photos.length) {
+            ph = matchL.photos;
+          }
+        }
+        currentAiArtPhotos = ph;
+
+        if (aiArtBizName) aiArtBizName.textContent = bizName;
+        if (aiArtPaletteLabel) aiArtPaletteLabel.textContent = `Bảng màu #${pal}`;
+        if (aiArtPhotosCount) aiArtPhotosCount.textContent = `${ph.length} ảnh Google Maps`;
+        if (aiArtStatusBox) aiArtStatusBox.classList.add('hidden');
+        if (aiArtResultBox) aiArtResultBox.classList.add('hidden');
+
+        if (aiArtPhotosGrid) {
+          if (ph.length > 0) {
+            aiArtPhotosGrid.innerHTML = ph.slice(0, 6).map((ref, idx) => {
+              const thumbUrl = String(ref).startsWith('http') ? ref : `/api/places-photo?ref=${encodeURIComponent(ref)}&maxWidth=240&maxHeight=240`;
+              const fullUrl = String(ref).startsWith('http') ? ref : `/api/places-photo?ref=${encodeURIComponent(ref)}&maxWidth=1200&maxHeight=1200`;
+              return `
+                <a href="${escapeHtml(fullUrl)}" target="_blank" class="block aspect-square rounded-xl overflow-hidden border border-[#d8ccb8] hover:border-[#96432b] bg-stone-100 shadow-2xs group" title="Ảnh Google Maps #${idx + 1}">
+                  <img src="${escapeHtml(thumbUrl)}" alt="Ảnh #${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy">
+                </a>
+              `;
+            }).join('');
+          } else {
+            aiArtPhotosGrid.innerHTML = '<div class="col-span-full text-[11px] text-stone-400 italic">Chưa có ảnh Google Maps được lưu. Gemini AI vẫn có thể tự vẽ tranh sơn dầu mới theo tên tiệm &amp; bảng màu!</div>';
+          }
+        }
+
+        if (aiArtPromptInput) {
+          aiArtPromptInput.value = buildDefaultArtPromptText(client);
+        }
+        aiArtModal.classList.remove('hidden');
+      }
+      if (btnCopyAiArtPromptModal) {
+        btnCopyAiArtPromptModal.addEventListener('click', () => {
+          if (!currentAiArtClient) return;
+          copyAiFineArtPromptHelper({
+            name: currentAiArtClient.businessName || currentAiArtClient.name,
+            suburb: currentAiArtClient.businessAddress,
+            address: currentAiArtClient.businessAddress,
+            industry: currentAiArtClient.industry,
+            palette: currentAiArtClient.demoPalette,
+            photos: currentAiArtPhotos
+          });
+        });
+      }
+
+      async function executeCloudArtAction(mode, busyMsg) {
+        if (!currentAiArtClient) return;
+        const target = currentAiArtClient;
+        const bizName = target.businessName || target.name || target.demoSlug || 'Tiệm';
+        if (aiArtStatusBox) {
+          aiArtStatusBox.classList.remove('hidden');
+          if (aiArtStatusText) aiArtStatusText.textContent = busyMsg;
+        }
+        if (aiArtResultBox) aiArtResultBox.classList.add('hidden');
+
+        try {
+          const gKey = localCreds.geminiApiKey || '';
+          const res = await fetch('/api/admin/generate-ai-art', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': adminKey
+            },
+            body: JSON.stringify({
+              cid: target.id,
+              slug: target.demoSlug || '',
+              mode,
+              customPrompt: aiArtPromptInput ? aiArtPromptInput.value.trim() : '',
+              photos: currentAiArtPhotos,
+              geminiApiKey: gKey
+            })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'Không thực hiện được thao tác.');
+          }
+          if (aiArtStatusBox) aiArtStatusBox.classList.add('hidden');
+          if (aiArtResultBox) {
+            aiArtResultBox.classList.remove('hidden');
+            if (aiArtResultText) aiArtResultText.textContent = `✓ ${data.summary || 'Đã cập nhật hình ảnh lên trang Demo thành công!'}`;
+            if (aiArtPreviewBtn) aiArtPreviewBtn.href = data.previewUrl || `https://${target.demoSlug}.wynnpages.com.au`;
+          }
+          showToast(`🎨 ${data.summary || `Đã cập nhật hình ảnh cho "${bizName}"!`}`);
+        } catch (err) {
+          if (aiArtStatusBox) aiArtStatusBox.classList.add('hidden');
+          showToast(err.message, true);
+        }
+      }
+
+      if (btnCloudGenerateOil) {
+        btnCloudGenerateOil.addEventListener('click', () => {
+          executeCloudArtAction('ai_oil_painting', 'Đang tải ảnh tiệm & gọi Gemini Image Generation vẽ tranh sơn dầu (~10–20 giây)...');
+        });
+      }
+      if (btnCloudApplyRealPhotos) {
+        btnCloudApplyRealPhotos.addEventListener('click', () => {
+          executeCloudArtAction('apply_google_photos', 'Đang gắn bộ ảnh thực tế từ Google Maps của tiệm lên trang Demo...');
+        });
+      }
+      if (btnCloudRestoreVault) {
+        btnCloudRestoreVault.addEventListener('click', () => {
+          executeCloudArtAction('restore_vault', 'Đang khôi phục bộ tranh sơn dầu mặc định theo Bảng Màu...');
         });
       }
 

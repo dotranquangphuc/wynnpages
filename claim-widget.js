@@ -143,8 +143,12 @@
               <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:rgba(251,222,185,0.85);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Bespoke Demo &bull; No Monthly Fees</span>
             </div>
             <div style="display:flex;align-items:baseline;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              <span style="font-size:11px;font-weight:600;color:#b8b0a5;letter-spacing:0.03em;text-transform:uppercase;flex-shrink:0;">Crafted exclusively for</span>
+              <span style="font-size:11px;font-weight:600;color:#b8b0a5;letter-spacing:0.03em;text-transform:uppercase;flex-shrink:0;">Exclusively for</span>
               <strong style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;">${bizName.replace(/</g, '&lt;')}</strong>
+            </div>
+            <div style="font-size:10.5px;color:#d6cfc2;font-weight:500;margin-top:2px;display:flex;align-items:center;gap:5px;line-height:1.3;">
+              <span style="color:#34d399;font-weight:800;flex-shrink:0;">✓</span>
+              <span>Sample photos/info shown &mdash; customize 100% with your real photos &amp; details after checkout</span>
             </div>
           </div>
         </div>

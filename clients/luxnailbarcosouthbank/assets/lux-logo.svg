@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="100" height="32" fill="none" role="img" aria-label="Lux">
+  <defs>
+    <linearGradient id="quietLuxuryEspresso" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="32">
+      <stop offset="0%" stop-color="#4A2518"/>
+      <stop offset="55%" stop-color="#6E2C1A"/>
+      <stop offset="100%" stop-color="#4A2518"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#quietLuxuryEspresso)">
+    <!-- Capital "L" (High-Contrast Editorial Serif) -->
+    <path d="M 0 2.0
+             H 14.2
+             V 3.4
+             H 12.2
+             C 10.0 3.4, 9.2 4.2, 9.2 6.5
+             V 27.0
+             C 9.2 28.7, 10.0 29.3, 12.2 29.3
+             H 19.8
+             C 24.8 29.3, 27.6 27.2, 29.5 22.0
+             H 31.0
+             L 29.3 31.0
+             H 0
+             V 29.6
+             H 1.8
+             C 3.8 29.6, 4.5 28.8, 4.5 26.6
+             V 6.5
+             C 4.5 4.2, 3.8 3.4, 1.8 3.4
+             H 0
+             V 2.0 Z"/>
+
+    <!-- Lowercase High-Contrast Editorial Serif "u" -->
+    <path d="M 37.5 11.2
+             H 45.2
+             V 23.8
+             C 45.2 27.3, 47.1 29.0, 50.4 29.0
+             C 53.4 29.0, 55.9 27.0, 57.3 24.2
+             V 14.1
+             C 57.3 12.7, 56.6 12.3, 54.5 12.3
+             V 11.2
+             H 61.8
+             V 27.4
+             C 61.8 29.0, 62.5 29.6, 64.3 29.6
+             H 65.3
+             V 31.0
+             H 57.8
+             L 57.3 26.6
+             C 55.2 29.7, 52.2 31.4, 48.5 31.4
+             C 43.7 31.4, 40.7 28.6, 40.7 23.6
+             V 14.1
+             C 40.7 12.7, 40.0 12.3, 37.5 12.3
+             V 11.2 Z"/>
+
+    <!-- Lowercase High-Contrast Editorial Serif "x" -->
+    <!-- Primary thick down-right diagonal with bracketed serifs -->
+    <path d="M 71.0 11.2
+             H 82.2
+             V 12.3
+             H 80.5
+             C 79.8 12.3, 80.0 12.8, 80.9 13.8
+             L 94.2 28.7
+             C 95.1 29.7, 96.0 29.9, 97.8 29.9
+             V 31.0
+             H 86.8
+             V 29.9
+             H 88.5
+             C 89.2 29.9, 89.0 29.4, 88.1 28.4
+             L 74.8 13.5
+             C 73.9 12.5, 73.1 12.3, 71.0 12.3
+             V 11.2 Z"/>
+    <!-- Secondary hairline up-right diagonal with bracketed serifs -->
+    <path d="M 88.4 11.2
+             H 97.4
+             V 12.3
+             H 95.7
+             C 94.5 12.3, 93.8 12.8, 92.9 13.8
+             L 78.2 28.7
+             C 77.3 29.6, 77.8 29.9, 79.6 29.9
+             H 80.2
+             V 31.0
+             H 71.0
+             V 29.9
+             H 72.7
+             C 73.9 29.9, 74.6 29.3, 75.5 28.4
+             L 90.2 13.5
+             C 91.1 12.6, 90.6 12.3, 88.8 12.3
+             H 88.4
+             V 11.2 Z"/>
+  </g>
+</svg>
