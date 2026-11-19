@@ -293,6 +293,12 @@
 
               <div class="space-y-3 text-xs">
                 <div>
+                  <span class="text-stone-400 block font-semibold text-[10.5px]">BRAND LOGO</span>
+                  <div id="cur-logo-preview" class="mt-1 bg-white/80 p-2.5 rounded-xl border border-[#e5dec9] flex items-center gap-3">
+                    <span class="text-stone-500 text-[11px]">Loading logo...</span>
+                  </div>
+                </div>
+                <div>
                   <span class="text-stone-400 block font-semibold text-[10.5px]">BUSINESS NAME</span>
                   <p id="cur-biz-name" class="font-extrabold text-stone-900 text-sm mt-0.5">Maison Élan</p>
                 </div>
@@ -345,6 +351,23 @@
                 <div>
                   <label class="block font-bold text-stone-700 mb-1" for="rev-booking">Updated Booking Link (Fresha, Timely, Square)</label>
                   <input type="url" id="rev-booking" name="bookingUrl" placeholder="https://fresha.com/a/your-salon-link" class="atelier-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+                </div>
+                <div class="pt-1">
+                  <label class="block font-bold text-stone-700 mb-1">Upload Your Original Salon Logo (Optional — PNG / SVG / JPG)</label>
+                  <div id="rev-logo-upload-zone" class="upload-box rounded-2xl p-3.5 text-center cursor-pointer transition-all hover:border-[#96432b]">
+                    <input type="file" id="rev-logo-input" name="logoFile" accept="image/*,.svg" class="hidden">
+                    <div id="rev-logo-placeholder" class="flex items-center justify-center gap-2 text-stone-700 font-semibold text-xs">
+                      <span>✨</span>
+                      <span>Choose Transparent Logo File (SVG / PNG / JPG)</span>
+                    </div>
+                  </div>
+                  <div id="rev-logo-preview-wrap" class="hidden mt-2 p-2.5 rounded-xl border border-[#d8ccb8] bg-[#faf6ee] flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <img id="rev-logo-thumb" src="" alt="Uploaded Salon Logo" class="h-8 w-auto max-w-[140px] object-contain shrink-0">
+                      <span id="rev-logo-filename" class="text-[11px] font-medium text-stone-700 truncate"></span>
+                    </div>
+                    <button type="button" id="btn-remove-rev-logo" class="px-2 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold shrink-0 cursor-pointer">✕ Remove</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -666,6 +689,7 @@
       // State arrays for multi-file upload: each item is { name, dataUrl, url, type }
       let menuFiles = [];
       let salonPhotos = [];
+      let uploadedLogoFile = null;
 
       const SAVE_DRAFT_DEFAULT_HTML = `
         <span class="text-[14px] font-semibold leading-tight text-stone-800">💾 Save Draft</span>
@@ -765,6 +789,21 @@
         if (btnOpenDemoTop) btnOpenDemoTop.href = demoUrl;
 
         // Block 1 Core
+        const curLogoEl = document.getElementById('cur-logo-preview');
+        if (curLogoEl) {
+          const activeLogo = (c.logoUrl || '').trim();
+          if (activeLogo) {
+            curLogoEl.innerHTML = `
+              <img src="${escapeHtml(activeLogo)}" alt="${escapeHtml(bizName)} Logo" class="h-8 w-auto max-w-[150px] object-contain shrink-0" onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg';">
+              <span class="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Custom Logo Active</span>
+            `;
+          } else {
+            curLogoEl.innerHTML = `
+              <img src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg" alt="Default Studio Wordmark (Lux)" class="h-6 w-auto max-w-[120px] object-contain shrink-0">
+              <span class="text-[11px] text-stone-500">Default Studio Wordmark (Lux)</span>
+            `;
+          }
+        }
         document.getElementById('cur-biz-name').textContent = bizName;
         document.getElementById('cur-phone').textContent = c.displayPhone || c.phone || '(Not specified)';
         document.getElementById('cur-address').textContent = c.businessAddress || c.address || 'Australia';
@@ -941,6 +980,25 @@
 
         renderMenuThumbnails();
         renderSalonPhotoThumbnails();
+
+        if (revData.logoFile && (revData.logoFile.dataUrl || revData.logoFile.url)) {
+          uploadedLogoFile = {
+            name: revData.logoFile.name || 'client-logo.png',
+            dataUrl: revData.logoFile.dataUrl || '',
+            url: revData.logoFile.url || revData.logoFile.dataUrl || '',
+            type: revData.logoFile.type || 'image/png'
+          };
+        } else if (revData.logoUrl) {
+          uploadedLogoFile = {
+            name: revData.logoFileName || 'client-logo.png',
+            dataUrl: '',
+            url: revData.logoUrl,
+            type: 'image/png'
+          };
+        } else {
+          uploadedLogoFile = null;
+        }
+        renderRevLogoPreview();
       }
 
       function lockPortal(revData, submittedAt) {
@@ -961,8 +1019,12 @@
         allInputs.forEach(el => el.disabled = true);
         const mZone = document.getElementById('menu-upload-zone');
         const pZone = document.getElementById('photos-upload-zone');
+        const lZone = document.getElementById('rev-logo-upload-zone');
+        const lRemove = document.getElementById('btn-remove-rev-logo');
         if (mZone) mZone.classList.add('disabled', 'opacity-60', 'pointer-events-none');
         if (pZone) pZone.classList.add('disabled', 'opacity-60', 'pointer-events-none');
+        if (lZone) lZone.classList.add('disabled', 'opacity-60', 'pointer-events-none');
+        if (lRemove) lRemove.classList.add('hidden');
 
         // Populate fields with submitted values if available
         if (revData) {
@@ -1204,6 +1266,96 @@
         });
       }
 
+      // Read logo file preserving SVG vectors and PNG transparency
+      function readLogoFileDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('Could not read logo file'));
+          reader.onload = (ev) => {
+            const rawDataUrl = ev.target.result;
+            const lowerName = (file.name || '').toLowerCase();
+            if (file.type === 'image/svg+xml' || lowerName.endsWith('.svg')) {
+              resolve({ name: file.name, dataUrl: rawDataUrl, url: rawDataUrl, type: 'image/svg+xml' });
+              return;
+            }
+            const img = new Image();
+            img.onerror = () => resolve({ name: file.name, dataUrl: rawDataUrl, url: rawDataUrl, type: file.type || 'image/png' });
+            img.onload = () => {
+              const maxDim = 640;
+              let w = img.width;
+              let h = img.height;
+              if (w > maxDim || h > maxDim) {
+                if (w >= h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                else { w = Math.round((w * maxDim) / h); h = maxDim; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.clearRect(0, 0, w, h);
+              ctx.drawImage(img, 0, 0, w, h);
+              const outMime = (file.type === 'image/jpeg' || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) ? 'image/jpeg' : 'image/png';
+              const compressed = canvas.toDataURL(outMime, 0.9);
+              resolve({ name: file.name, dataUrl: compressed, url: compressed, type: outMime });
+            };
+            img.src = rawDataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function renderRevLogoPreview() {
+        const wrap = document.getElementById('rev-logo-preview-wrap');
+        const thumb = document.getElementById('rev-logo-thumb');
+        const fname = document.getElementById('rev-logo-filename');
+        if (!wrap || !thumb || !fname) return;
+        if (uploadedLogoFile && (uploadedLogoFile.dataUrl || uploadedLogoFile.url)) {
+          thumb.src = uploadedLogoFile.dataUrl || uploadedLogoFile.url;
+          fname.textContent = uploadedLogoFile.name || 'client-logo.png';
+          wrap.classList.remove('hidden');
+        } else {
+          thumb.src = '';
+          fname.textContent = '';
+          wrap.classList.add('hidden');
+        }
+      }
+
+      (function setupRevLogoUpload() {
+        const zone = document.getElementById('rev-logo-upload-zone');
+        const input = document.getElementById('rev-logo-input');
+        const removeBtn = document.getElementById('btn-remove-rev-logo');
+        if (!zone || !input) return;
+
+        zone.addEventListener('click', () => {
+          if (isFormLocked) return;
+          input.click();
+        });
+        input.addEventListener('change', async () => {
+          if (!input.files || !input.files[0]) return;
+          try {
+            uploadedLogoFile = await readLogoFileDataUrl(input.files[0]);
+            renderRevLogoPreview();
+            const editBtn = document.querySelector('[data-section-toggle="1"][data-mode="edit"]');
+            const keepBtn = document.querySelector('[data-section-toggle="1"][data-mode="keep"]');
+            if (editBtn && keepBtn) {
+              keepBtn.classList.remove('active-keep');
+              keepBtn.classList.add('border-stone-200', 'bg-white', 'text-stone-600');
+              editBtn.classList.remove('border-stone-200', 'bg-white', 'text-stone-600');
+              editBtn.classList.add('active-edit');
+            }
+          } catch (_) {}
+          input.value = '';
+        });
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isFormLocked) return;
+            uploadedLogoFile = null;
+            renderRevLogoPreview();
+          });
+        }
+      })();
+
       // Setup Multi-File Menu Upload (Appends up to 4 files)
       (function setupMenuMultiUpload() {
         const zone = document.getElementById('menu-upload-zone');
@@ -1310,6 +1462,12 @@
           menuFileName: menuFiles.map(f => f.name).join(', '),
           photosFileBase64: firstPhoto ? (firstPhoto.dataUrl || '') : null,
           photosFileName: salonPhotos.map(f => f.name).join(', '),
+          logoFile: uploadedLogoFile ? {
+            name: uploadedLogoFile.name,
+            dataUrl: uploadedLogoFile.dataUrl || '',
+            url: uploadedLogoFile.url || '',
+            type: uploadedLogoFile.type || 'image/png'
+          } : null,
           notes: document.getElementById('rev-notes').value.trim(),
           desiredDomain: (document.getElementById('rev-desired-domain')?.value || '').trim(),
           domainConciergeRequested: Boolean(document.getElementById('rev-domain-concierge')?.checked),

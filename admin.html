@@ -6866,6 +6866,9 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         patchStringField('palette', validPal);
         patchStringField('salonName', bizName);
         patchStringField('monogram', monogram);
+        if (client && (client.logoUrl || client.logoDriveUrl)) {
+          patchStringField('logoUrl', client.logoUrl || client.logoDriveUrl);
+        }
 
         // Bake palette-matched oil-painting vault URLs directly into ATELIER_CONFIG.images
         const vaultBase = 'https://wynnpages.com.au/assets/atelier/nails';
@@ -6902,7 +6905,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         patchStringField('pedicureFeature', pv.pedi);
         html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
         html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.pedi}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${vaultBase}/before-natural-nails.jpg$2`);
 
         const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
         const resolvedState = address ? parsedAddr.state : '';

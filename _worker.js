@@ -2416,6 +2416,11 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
     if (newConfig.heroStory) {
       updated = updated.replace(/(<p id="hero-story-text"[^>]*>)[^<]*(<\/p>)/g, `$1${newConfig.heroStory}$2`);
     }
+    if (newConfig.logoUrl !== undefined) {
+      const nextLogoSrc = newConfig.logoUrl || newConfig.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg';
+      updated = updated.replace(/(<img[^>]*id="nav-logo-img"[^>]*src=")[^"]*(")/i, `$1${nextLogoSrc}$2`);
+      updated = updated.replace(/(<img[^>]*id="footer-monogram"[^>]*src=")[^"]*(")/i, `$1${nextLogoSrc}$2`);
+    }
     if (newConfig.images) {
       if (newConfig.images.hero) {
         updated = updated.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.hero}$2`);
@@ -2446,6 +2451,10 @@ async function executeGeminiAutoRevision({ currentHtml, revData = {}, menuImageB
   const changesSummaryList = [];
 
   // 1. Apply Core Info updates
+  if (revData.logoUrl && revData.logoUrl.trim()) {
+    changesSummaryList.push('Updated Brand Logo');
+    config.logoUrl = revData.logoUrl.trim();
+  }
   if (revData.bizName && revData.bizName.trim() && revData.bizName !== config.salonName) {
     changesSummaryList.push(`Business Name: "${config.salonName}" → "${revData.bizName}"`);
     config.salonName = revData.bizName.trim();
@@ -2676,6 +2685,7 @@ ${cleanAdminInst || '(None)'}`
                   }
                   if (cp.instagramUrl) config.instagramUrl = String(cp.instagramUrl).trim();
                   if (cp.facebookUrl) config.facebookUrl = String(cp.facebookUrl).trim();
+                  if (cp.logoUrl) config.logoUrl = String(cp.logoUrl).trim();
                   if (Array.isArray(cp.hours) && cp.hours.length) {
                     config.hours = cp.hours;
                   }
@@ -6961,19 +6971,38 @@ export default {
 
         const nowIso = new Date().toISOString();
 
-        // 1. Check previous manifest to clean up obsolete deleted files
+        // 1. Check previous manifest to clean up obsolete deleted files (preserving uploaded client logos & media unless purged)
         const isPartial = body.partialUpdate === true;
         const metaKey = `site_meta:${targetSlug}`;
         const prevMeta = await env.WYNN_KV.get(metaKey, 'json').catch(() => null);
+        const isPreservedAsset = (p) => body.purgeCustomAssets !== true && /^\/assets\/(lux-logo\.svg|logo\.svg|client-logo\.|client-photo-|menu-revision)/i.test(p);
+
+        const idxFile = files.find(f => f && (f.path === '/index.html' || f.path === 'index.html') && f.text);
+        if (idxFile && idxFile.text && body.purgeCustomAssets !== true) {
+          const prevHtml = await env.WYNN_KV.get(`site_asset:${targetSlug}:/index.html`, 'text').catch(() => null);
+          const prevParsed = prevHtml ? parseConfigAndMenuFromHtml(prevHtml) : null;
+          const prevCfg = prevParsed && prevParsed.config;
+          const incomingParsed = parseConfigAndMenuFromHtml(idxFile.text);
+          const incomingCfg = incomingParsed && incomingParsed.config;
+          const preservedLogo = (prevCfg && (prevCfg.wordmarkUrl || prevCfg.logoUrl || '')).trim();
+          if (preservedLogo && incomingCfg && !(incomingCfg.logoUrl || '').trim()) {
+            const nextCfg = { ...incomingCfg, logoUrl: preservedLogo };
+            idxFile.text = updateHtmlWithConfigAndMenu(idxFile.text, nextCfg, null);
+          }
+        }
+
         const newPathsSet = new Set(files.map(f => {
           let p = (f.path || '').trim();
           if (!p.startsWith('/')) p = '/' + p;
           return p;
         }));
+        const preservedPaths = (prevMeta && Array.isArray(prevMeta.filesList))
+          ? prevMeta.filesList.filter(p => isPreservedAsset(p) && !newPathsSet.has(p))
+          : [];
 
         if (!isPartial && prevMeta && Array.isArray(prevMeta.filesList)) {
           const obsoleteDeletes = prevMeta.filesList
-            .filter(oldPath => !newPathsSet.has(oldPath))
+            .filter(oldPath => !newPathsSet.has(oldPath) && !isPreservedAsset(oldPath))
             .map(oldPath => env.WYNN_KV.delete(`site_asset:${targetSlug}:${oldPath}`).catch(() => { }));
           if (obsoleteDeletes.length) {
             if (ctx && typeof ctx.waitUntil === 'function') {
@@ -7006,7 +7035,6 @@ export default {
         // 3. Save site metadata (extract palette & salonName from index.html if present)
         let detectedPalette = body.palette || '';
         let detectedBizName = body.businessName || '';
-        const idxFile = files.find(f => f && (f.path === '/index.html' || f.path === 'index.html') && f.text);
         if (idxFile && idxFile.text) {
           if (!detectedPalette) {
             const palMatch = idxFile.text.match(/data-palette=["'](0[1-5])["']/);
@@ -7019,7 +7047,7 @@ export default {
         }
         const mergedFilesList = isPartial && prevMeta && Array.isArray(prevMeta.filesList)
           ? Array.from(new Set([...prevMeta.filesList, ...newPathsSet]))
-          : Array.from(newPathsSet);
+          : Array.from(new Set([...preservedPaths, ...newPathsSet]));
 
         await env.WYNN_KV.put(metaKey, JSON.stringify({
           slug: targetSlug,
@@ -7456,6 +7484,7 @@ export default {
         }
 
         const hasCustomDemoPhotos = demoPhotosList.some(p => p.isCustom);
+        const resolvedLogoUrl = resolveDemoAssetUrl((demoConfig && (demoConfig.wordmarkUrl || demoConfig.logoUrl)) || clientRecord.logoDriveUrl || '');
 
         const clientResp = {
           id: resolvedClientId,
@@ -7465,6 +7494,7 @@ export default {
           existingDomain: clientRecord.existingDomain || '',
           desiredDomains: clientRecord.desiredDomains || '',
           domainDelegated: Boolean(clientRecord.domainDelegated),
+          logoUrl: resolvedLogoUrl,
           businessName: (demoConfig && demoConfig.salonName) || clientRecord.businessName || clientRecord.name,
           displayPhone: (demoConfig && demoConfig.displayPhone) || clientRecord.displayPhone || clientRecord.phone,
           phone: clientRecord.phone || (demoConfig && demoConfig.smsPhone),
@@ -7657,6 +7687,63 @@ export default {
           ? savedSalonPhotos.map(f => f.name).join(', ')
           : (body.photosFileName || (prevRevData && prevRevData.photosFileName) || '');
 
+        // Save optional uploaded Brand Logo into KV (`site_asset:${cleanSlug}:/assets/client-logo.${ext}`)
+        let savedLogoUrl = (prevRevData && prevRevData.logoUrl) || '';
+        let savedLogoFileName = (prevRevData && prevRevData.logoFileName) || '';
+        let savedLogoAssetPath = '';
+        if (body.logoFile && body.logoFile.dataUrl && String(body.logoFile.dataUrl).startsWith('data:') && env && env.WYNN_KV && cleanSlug) {
+          const rawLogoName = String(body.logoFile.name || 'client-logo.png').trim();
+          const dataStr = String(body.logoFile.dataUrl);
+          const mimeMatch = dataStr.match(/^data:([^;,]+)(?:;[^,]*)?,(.*)$/s);
+          const lMime = (mimeMatch && mimeMatch[1]) || body.logoFile.type || 'image/png';
+          const isSvg = lMime.includes('svg') || rawLogoName.toLowerCase().endsWith('.svg');
+          const lExt = isSvg ? 'svg' : (lMime.includes('jpeg') || lMime.includes('jpg') ? 'jpg' : (lMime.includes('webp') ? 'webp' : 'png'));
+          savedLogoAssetPath = `/assets/client-logo.${lExt}`;
+          const lKey = `site_asset:${cleanSlug}:${savedLogoAssetPath}`;
+          if (dataStr.includes(';base64,')) {
+            const b64Part = dataStr.replace(/^data:[^;]+;base64,/, '');
+            const binBuf = Uint8Array.from(atob(b64Part), ch => ch.charCodeAt(0));
+            await env.WYNN_KV.put(lKey, binBuf.buffer, {
+              metadata: { mimeType: lMime, contentType: lMime, updatedAt: nowIso }
+            }).catch(() => {});
+          } else if (mimeMatch && mimeMatch[2]) {
+            const textPayload = decodeURIComponent(mimeMatch[2]);
+            await env.WYNN_KV.put(lKey, textPayload, {
+              metadata: { mimeType: lMime, contentType: lMime, updatedAt: nowIso }
+            }).catch(() => {});
+          }
+          savedLogoUrl = `https://${cleanSlug}.wynnpages.com.au${savedLogoAssetPath}?t=${Date.now()}`;
+          savedLogoFileName = rawLogoName;
+
+          const curMetaKey = `site_meta:${cleanSlug}`;
+          const curMeta = await env.WYNN_KV.get(curMetaKey, 'json').catch(() => null);
+          if (curMeta && Array.isArray(curMeta.filesList)) {
+            curMeta.filesList = Array.from(new Set([...curMeta.filesList, savedLogoAssetPath]));
+            curMeta.filesCount = curMeta.filesList.length;
+            await env.WYNN_KV.put(curMetaKey, JSON.stringify(curMeta)).catch(() => {});
+          }
+
+          if (!isDraft) {
+            const liveHtml = await env.WYNN_KV.get(`site_asset:${cleanSlug}:/index.html`, 'text').catch(() => null);
+            if (liveHtml) {
+              const parsedLive = parseConfigAndMenuFromHtml(liveHtml);
+              if (parsedLive && parsedLive.config) {
+                parsedLive.config.logoUrl = savedLogoAssetPath;
+                const patchedHtml = updateHtmlWithConfigAndMenu(liveHtml, parsedLive.config, null);
+                await env.WYNN_KV.put(`site_asset:${cleanSlug}:/index.html`, patchedHtml, {
+                  metadata: { mimeType: 'text/html; charset=utf-8', updatedAt: nowIso }
+                }).catch(() => {});
+              }
+            }
+          }
+        } else if (body.logoFile && body.logoFile.url) {
+          savedLogoUrl = String(body.logoFile.url);
+          savedLogoFileName = String(body.logoFile.name || 'client-logo.png');
+        } else if (body.logoFile === null) {
+          savedLogoUrl = '';
+          savedLogoFileName = '';
+        }
+
         const revPayload = {
           cid: resolvedClientId,
           email: (cust && cust.email) || clientRecord.email || email,
@@ -7673,6 +7760,8 @@ export default {
           menuFiles: savedMenuFiles,
           photosFileName: resolvedPhotosFileName,
           salonPhotos: savedSalonPhotos,
+          logoUrl: savedLogoUrl,
+          logoFileName: savedLogoFileName,
           domainConciergeRequested: Boolean(body.domainConciergeRequested),
           desiredDomain: body.desiredDomain || '',
           notes: body.notes || '',
@@ -7717,6 +7806,7 @@ export default {
 
         // Build summary text for Stripe metadata
         const summaryParts = [];
+        if (savedLogoFileName) summaryParts.push(`Logo: ${savedLogoFileName}`);
         if (revPayload.bizName) summaryParts.push(`Name: ${revPayload.bizName}`);
         if (revPayload.phone) summaryParts.push(`Phone: ${revPayload.phone}`);
         if (revPayload.address) summaryParts.push(`Addr: ${revPayload.address}`);
@@ -7730,6 +7820,7 @@ export default {
         const notifyBizName = revPayload.bizName || clientRecord.businessName || 'Khách hàng';
         const tgDetails = [
           `🏢 Tiệm: ${notifyBizName}`,
+          savedLogoFileName ? `✨ Logo mới tải lên: ${savedLogoFileName}` : '',
           revPayload.phone ? `📞 SĐT hiển thị: ${revPayload.phone}` : '',
           revPayload.address ? `📍 Địa chỉ: ${revPayload.address}` : '',
           revPayload.hours ? `🕒 Giờ mở cửa: ${revPayload.hours}` : '',

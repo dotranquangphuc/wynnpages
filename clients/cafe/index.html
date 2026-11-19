@@ -1057,7 +1057,8 @@
       salonName: "cafe",
       salonSubtitle: "Nail & Hand Sanctuary",
       monogram: "C",
-      logoUrl: "", // Leave empty to render the embossed gold-leaf monogram seal, or provide transparent PNG/SVG URL
+      logoUrl: "", // Client custom logo URL; leave empty to fall back to default editorial serif Lux wordmark
+      fallbackLogoUrl: "https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg",
       suburb: "Australia",
       state: "",
       address: "Australia",
@@ -1186,15 +1187,12 @@
   <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2 w-full">
     <div class="max-w-6xl mx-auto relative">
       <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 min-w-0" aria-label="Primary Navigation">
-        <!-- Brand Identity + Wax Monogram Seal -->
-        <a href="#top" data-smooth-anchor="#top" class="flex items-center gap-2 sm:gap-3 group min-w-0 flex-1 lg:flex-initial overflow-hidden">
-          <div id="brand-logo-slot" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-105">
-            <span id="nav-monogram" class="font-editorial italic font-bold text-base sm:text-lg" style="color: var(--accent-primary);">M</span>
+        <!-- Brand Identity: Client Custom Logo with Fallback to Quiet Luxury Editorial Serif Wordmark -->
+        <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
+          <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]" style="flex: 0 0 auto !important;">
+            <img id="nav-logo-img" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg" alt="Lux" class="h-6 sm:h-7 w-auto max-w-[150px] sm:max-w-[185px] object-contain block">
           </div>
-          <div class="min-w-0 flex-1 overflow-hidden">
-            <span id="nav-salon-name" class="font-editorial font-semibold text-base min-[390px]:text-lg sm:text-2xl tracking-tight block leading-tight truncate">Maison Élan</span>
-            <span id="nav-salon-sub" class="text-[9.5px] sm:text-[10px] uppercase tracking-[0.15em] block mt-0.5 truncate max-w-full" style="color: var(--ink-muted);">Armadale, VIC</span>
-          </div>
+          <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9px] uppercase tracking-[0.22em] font-semibold block leading-none truncate max-w-full" style="color: #4A2518;">South Brisbane, QLD</span>
         </a>
 
         <!-- Center Editorial Links (Desktop lg+) -->
@@ -2055,8 +2053,8 @@
       <!-- Right: Dedicated Reserve Card (5 Cols) -->
       <div data-apple-reveal="right" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
-          <div class="w-12 h-12 rounded-full wax-monogram-seal flex items-center justify-center">
-            <span id="footer-monogram" class="font-editorial italic font-bold text-xl" style="color: var(--accent-primary);">M</span>
+          <div class="inline-flex items-center justify-start">
+            <img id="footer-monogram" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg" alt="Salon Logo" class="h-8 sm:h-9 w-auto max-w-[180px] object-contain block">
           </div>
           <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight text-balance">
             Reserve your <span class="accent-italic">table today.</span>
@@ -2319,28 +2317,49 @@
       // 2. Hydrate Brand, Hero, Socials, SEO & Contact
       const fullTitle = `${cfg.salonName || 'Nail Atelier'} — Bespoke BIAB & Nail Sanctuary | ${locSpaceLabel}`.trim();
       document.title = fullTitle;
-      setText('nav-salon-name', cfg.salonName);
-      setText('nav-salon-sub', locLabel.replace(/,\s*$/, ''));
-      setText('nav-monogram', cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase());
-      setText('footer-monogram', cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase());
+      const defaultFallbackLogo = (cfg.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg').trim();
+      const customLogo = (cfg.wordmarkUrl || cfg.logoUrl || '').trim();
+      const activeLogoSrc = customLogo || defaultFallbackLogo;
+      const isFallbackLogo = !customLogo;
 
-      if (cfg.wordmarkUrl) {
-        const slot = document.getElementById('brand-logo-slot');
-        const brandLink = slot ? slot.closest('a') : null;
-        if (brandLink) {
-          brandLink.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-10 sm:h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]" style="filter: drop-shadow(0 2px 6px rgba(138, 77, 26, 0.25));">`;
-        }
-        const fMono = document.getElementById('footer-monogram');
-        const fSeal = fMono ? fMono.parentElement : null;
-        if (fSeal) {
-          fSeal.className = 'flex items-center';
-          fSeal.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-12 sm:h-14 w-auto object-contain" style="filter: drop-shadow(0 3px 8px rgba(138, 77, 26, 0.32));">`;
-        }
-      } else if (cfg.logoUrl) {
-        const slot = document.getElementById('brand-logo-slot');
-        if (slot) {
-          slot.innerHTML = `<img src="${cfg.logoUrl}" alt="${cfg.salonName || 'Salon Logo'}" class="w-7 h-7 object-contain">`;
-        }
+      const resolvedNavSub = (!customLogo && (!cfg.address || cfg.address === '1048 High Street, Armadale VIC 3143'))
+        ? 'South Brisbane, QLD'
+        : (locLabel.replace(/,\s*$/, '') || 'South Brisbane, QLD');
+
+      setText('nav-salon-name', cfg.salonName);
+      setText('nav-salon-sub', resolvedNavSub);
+      const navMonoEl = document.getElementById('nav-monogram');
+      if (navMonoEl && navMonoEl.tagName !== 'IMG') {
+        navMonoEl.textContent = cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase();
+      }
+      const footMonoEl = document.getElementById('footer-monogram');
+      if (footMonoEl && footMonoEl.tagName !== 'IMG') {
+        footMonoEl.textContent = cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase();
+      }
+
+      const slot = document.getElementById('brand-logo-slot');
+      if (slot) {
+        slot.className = 'flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]';
+        slot.style.flex = '0 0 auto';
+        const navImgCls = isFallbackLogo
+          ? 'h-6 sm:h-7 w-auto max-w-[150px] sm:max-w-[185px] object-contain block'
+          : 'h-7 sm:h-8 w-auto max-w-[150px] sm:max-w-[185px] object-contain block';
+        const fallbackAttr = !isFallbackLogo && defaultFallbackLogo
+          ? ` onerror="this.onerror=null;this.src='${defaultFallbackLogo}';"`
+          : '';
+        slot.innerHTML = `<img id="nav-logo-img" src="${activeLogoSrc}" alt="${cfg.salonName || 'Lux'}" class="${navImgCls}"${fallbackAttr}>`;
+      }
+      const fMono = document.getElementById('footer-monogram');
+      const fSeal = fMono ? fMono.parentElement : null;
+      if (fSeal) {
+        fSeal.className = 'inline-flex items-center justify-start';
+        const footImgCls = isFallbackLogo
+          ? 'h-8 sm:h-9 w-auto max-w-[180px] object-contain block'
+          : 'h-9 sm:h-10 w-auto max-w-[180px] object-contain block';
+        const fallbackAttr = !isFallbackLogo && defaultFallbackLogo
+          ? ` onerror="this.onerror=null;this.src='${defaultFallbackLogo}';"`
+          : '';
+        fSeal.innerHTML = `<img id="footer-monogram" src="${activeLogoSrc}" alt="${cfg.salonName || 'Salon Logo'}" class="${footImgCls}"${fallbackAttr}>`;
       }
 
       const resolvedBadge = (cfg.heroBadge && !/^\d+\s/.test(cfg.heroBadge))

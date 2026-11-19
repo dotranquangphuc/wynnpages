@@ -1057,7 +1057,8 @@
       salonName: "Lux Nails Bar",
       salonSubtitle: "Nail & Hand Sanctuary",
       monogram: "L",
-      logoUrl: "/assets/lux-logo.svg", // Leave empty to render the embossed gold-leaf monogram seal, or provide transparent PNG/SVG URL
+      logoUrl: "/assets/lux-logo.svg", // Client's original bespoke logo (leave empty to fall back to default editorial serif Lux wordmark)
+      fallbackLogoUrl: "/assets/logo.svg",
       suburb: "South Brisbane",
       state: "QLD",
       address: "Shop 7a/271 Grey St, South Brisbane QLD 4101, Australia",
@@ -1210,12 +1211,12 @@
   <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2 w-full">
     <div class="max-w-6xl mx-auto relative">
       <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 min-w-0" aria-label="Primary Navigation">
-        <!-- Brand Identity: Quiet Luxury Editorial Serif Wordmark + Wide-Tracked Espresso Sub-label -->
-        <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1.5 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
-          <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.02]" style="flex: 0 0 auto !important;">
-            <img src="/assets/lux-logo.svg" alt="Lux" class="h-6 sm:h-7 w-auto object-contain block">
+        <!-- Brand Identity: Client Original Logo with Fallback to Quiet Luxury Editorial Serif Wordmark -->
+        <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
+          <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]" style="flex: 0 0 auto !important;">
+            <img id="nav-logo-img" src="/assets/lux-logo.svg" alt="Lux Nails Bar Logo" class="h-7 sm:h-8 w-auto max-w-[150px] sm:max-w-[185px] object-contain block" onerror="this.onerror=null;this.src='/assets/logo.svg';">
           </div>
-          <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9px] uppercase tracking-[0.25em] font-semibold block leading-none truncate max-w-full" style="color: #4A2518;">South Brisbane, QLD</span>
+          <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9px] uppercase tracking-[0.22em] font-semibold block leading-none truncate max-w-full" style="color: #4A2518;">South Brisbane, QLD</span>
         </a>
 
         <!-- Center Editorial Links (Desktop lg+) -->
@@ -2078,7 +2079,7 @@
       <div data-apple-reveal="right" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
           <div class="inline-flex items-center justify-start">
-            <img id="footer-monogram" src="/assets/lux-logo.svg" alt="Lux Nails Bar Logo" class="h-9 sm:h-10 w-auto object-contain block">
+            <img id="footer-monogram" src="/assets/lux-logo.svg" alt="Lux Nails Bar Logo" class="h-9 sm:h-10 w-auto max-w-[180px] object-contain block" onerror="this.onerror=null;this.src='/assets/logo.svg';">
           </div>
           <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight text-balance">
             Reserve your <span class="accent-italic">table today.</span>
@@ -2390,31 +2391,35 @@
         footMonoEl.textContent = cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase();
       }
 
-      if (cfg.wordmarkUrl) {
-        const slot = document.getElementById('brand-logo-slot');
-        const brandLink = slot ? slot.closest('a') : null;
-        if (brandLink) {
-          brandLink.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-10 sm:h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]" style="filter: drop-shadow(0 2px 6px rgba(138, 77, 26, 0.25));">`;
-        }
-        const fMono = document.getElementById('footer-monogram');
-        const fSeal = fMono ? fMono.parentElement : null;
-        if (fSeal) {
-          fSeal.className = 'flex items-center';
-          fSeal.innerHTML = `<img src="${cfg.wordmarkUrl}" alt="${cfg.salonName || 'Salon'}" class="h-12 sm:h-14 w-auto object-contain" style="filter: drop-shadow(0 3px 8px rgba(138, 77, 26, 0.32));">`;
-        }
-      } else if (cfg.logoUrl) {
-        const slot = document.getElementById('brand-logo-slot');
-        if (slot) {
-          slot.className = 'flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.02]';
-          slot.style.flex = '0 0 auto';
-          slot.innerHTML = `<img src="${cfg.logoUrl}" alt="Lux" class="h-6 sm:h-7 w-auto object-contain block">`;
-        }
-        const fMono = document.getElementById('footer-monogram');
-        const fSeal = fMono ? fMono.parentElement : null;
-        if (fSeal) {
-          fSeal.className = 'inline-flex items-center justify-start';
-          fSeal.innerHTML = `<img id="footer-monogram" src="${cfg.logoUrl}" alt="${cfg.salonName || 'Salon Logo'}" class="h-9 sm:h-10 w-auto object-contain block">`;
-        }
+      const customLogo = (cfg.wordmarkUrl || cfg.logoUrl || '').trim();
+      const defaultFallbackLogo = (cfg.fallbackLogoUrl || '/assets/logo.svg').trim();
+      const activeLogoSrc = customLogo || defaultFallbackLogo;
+      const isFallbackLogo = !customLogo;
+
+      const slot = document.getElementById('brand-logo-slot');
+      if (slot) {
+        slot.className = 'flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]';
+        slot.style.flex = '0 0 auto';
+        const navImgCls = isFallbackLogo
+          ? 'h-6 sm:h-7 w-auto max-w-[150px] sm:max-w-[185px] object-contain block'
+          : 'h-7 sm:h-8 w-auto max-w-[150px] sm:max-w-[185px] object-contain block';
+        const fallbackAttr = !isFallbackLogo && defaultFallbackLogo
+          ? ` onerror="this.onerror=null;this.src='${defaultFallbackLogo}';"`
+          : '';
+        slot.innerHTML = `<img id="nav-logo-img" src="${activeLogoSrc}" alt="${cfg.salonName || 'Lux'}" class="${navImgCls}"${fallbackAttr}>`;
+      }
+
+      const fMono = document.getElementById('footer-monogram');
+      const fSeal = fMono ? fMono.parentElement : null;
+      if (fSeal) {
+        fSeal.className = 'inline-flex items-center justify-start';
+        const footImgCls = isFallbackLogo
+          ? 'h-8 sm:h-9 w-auto max-w-[180px] object-contain block'
+          : 'h-9 sm:h-10 w-auto max-w-[180px] object-contain block';
+        const fallbackAttr = !isFallbackLogo && defaultFallbackLogo
+          ? ` onerror="this.onerror=null;this.src='${defaultFallbackLogo}';"`
+          : '';
+        fSeal.innerHTML = `<img id="footer-monogram" src="${activeLogoSrc}" alt="${cfg.salonName || 'Salon Logo'}" class="${footImgCls}"${fallbackAttr}>`;
       }
 
       const resolvedBadge = (cfg.heroBadge && !/^\d+\s/.test(cfg.heroBadge))
