@@ -2426,7 +2426,10 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
         updated = updated.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.hero}$2`);
       }
       if (newConfig.images.biabFeature) {
-        updated = updated.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.biabFeature}$2`);
+        updated = updated.replace(/(<img[\s\S]*?id="feature-biab-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.biabFeature}$2`);
+      }
+      if (newConfig.images.afterNail || newConfig.images.biabFeature) {
+        updated = updated.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.afterNail || newConfig.images.biabFeature}$2`);
       }
       if (newConfig.images.beforeNail) {
         updated = updated.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.beforeNail}$2`);
@@ -8178,11 +8181,11 @@ export default {
           : '01';
         const vaultBase = 'https://wynnpages.com.au/assets/atelier/nails';
         const vaultMap = {
-          '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, biab: `${vaultBase}/biab-artistry.jpg`, pedi: `${vaultBase}/botanical-pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-gilded-french.jpg`, `${vaultBase}/lookbook-pearl-glaze.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/biab-artistry.jpg`] },
-          '02': { hero: `${vaultBase}/p02/hero.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg`, lookbook: [`${vaultBase}/p02/lookbook-1.jpg`, `${vaultBase}/p02/lookbook-2.jpg`, `${vaultBase}/p02/biab.jpg`, `${vaultBase}/p02/pedicure.jpg`] },
-          '03': { hero: `${vaultBase}/p03/hero.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg`, lookbook: [`${vaultBase}/p03/biab.jpg`, `${vaultBase}/p03/lookbook-1.jpg`, `${vaultBase}/p03/lookbook-2.jpg`, `${vaultBase}/p03/pedicure.jpg`] },
-          '04': { hero: `${vaultBase}/p04/hero.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg`, lookbook: [`${vaultBase}/p04/lookbook-1.jpg`, `${vaultBase}/p04/biab.jpg`, `${vaultBase}/p04/lookbook-2.jpg`, `${vaultBase}/p04/pedicure.jpg`] },
-          '05': { hero: `${vaultBase}/p05/hero.jpg`, biab: `${vaultBase}/p05/biab.jpg`, pedi: `${vaultBase}/p05/pedicure.jpg`, lookbook: [`${vaultBase}/p05/lookbook-1.jpg`, `${vaultBase}/p05/biab.jpg`, `${vaultBase}/p05/lookbook-2.jpg`, `${vaultBase}/p05/pedicure.jpg`] }
+          '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/sheer-biab-architecture.jpg`, pedi: `${vaultBase}/botanical-pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-gilded-french.jpg`, `${vaultBase}/lookbook-pearl-glaze.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '02': { hero: `${vaultBase}/p02/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg`, lookbook: [`${vaultBase}/p02/lookbook-1.jpg`, `${vaultBase}/p02/lookbook-2.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '03': { hero: `${vaultBase}/p03/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/p03/lookbook-1.jpg`, `${vaultBase}/p03/lookbook-2.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '04': { hero: `${vaultBase}/p04/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg`, lookbook: [`${vaultBase}/p04/lookbook-1.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/p04/lookbook-2.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '05': { hero: `${vaultBase}/p05/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p05/biab.jpg`, pedi: `${vaultBase}/p05/pedicure.jpg`, lookbook: [`${vaultBase}/p05/lookbook-1.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/p05/lookbook-2.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] }
         };
         const pv = vaultMap[activePal] || vaultMap['01'];
         const photosList = Array.isArray(clientRecord.placesPhotos) && clientRecord.placesPhotos.length
@@ -8193,6 +8196,8 @@ export default {
         if (mode === 'restore_vault') {
           config.images = config.images || {};
           config.images.hero = pv.hero;
+          config.images.beforeNail = pv.beforeNail;
+          config.images.afterNail = pv.afterNail;
           config.images.biabFeature = pv.biab;
           config.images.pedicureFeature = pv.pedi;
           if (Array.isArray(config.images.lookbook)) {

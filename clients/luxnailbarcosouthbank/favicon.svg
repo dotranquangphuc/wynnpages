@@ -43,16 +43,16 @@
   <g filter="url(#lSoftShadow)" transform="translate(11.1, 17.1) scale(0.198)" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <!-- Crisp Antique Bronze Halo + 3D Extrusion for High-Contrast Readability -->
     <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119"
-          stroke="url(#goldBronzeL)" stroke-opacity="0.78" stroke-width="22"/>
-    <path transform="translate(-3.8, 6.2)"
+          stroke="url(#goldBronzeL)" stroke-opacity="0.78" stroke-width="17.5"/>
+    <path transform="translate(-3.0, 4.8)"
           d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119"
-          stroke="url(#goldBronzeL)" stroke-opacity="0.88" stroke-width="20"/>
+          stroke="url(#goldBronzeL)" stroke-opacity="0.88" stroke-width="16"/>
     <!-- 24K Gold-Leaf Main Body -->
     <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119"
-          stroke="url(#goldFoilL)" stroke-width="16.5"/>
+          stroke="url(#goldFoilL)" stroke-width="13"/>
     <!-- Specular Foil Sheen -->
-    <path transform="translate(1.0, -1.8)"
+    <path transform="translate(0.8, -1.4)"
           d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119"
-          stroke="#FFFDF5" stroke-opacity="0.72" stroke-width="3.6"/>
+          stroke="#FFFDF5" stroke-opacity="0.72" stroke-width="2.8"/>
   </g>
 </svg>
