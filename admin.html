@@ -219,7 +219,7 @@
     <!-- Login Gate -->
     <div id="auth-gate" class="max-w-md mx-auto my-6 sm:my-12 bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xl border border-[#e5dec9] text-center space-y-5">
       <div class="w-12 h-12 rounded-2xl bg-[#fcf9f3] border border-[#dfd5c3] flex items-center justify-center mx-auto font-editorial text-2xl font-bold text-[#96432b]">
-        W
+        <img src="/assets/favicon.png" alt="WynnPages Studio" class="w-7 h-7 object-contain">
       </div>
       <div>
         <h1 class="font-editorial text-3xl font-bold text-stone-900">Atelier Command Center</h1>
@@ -6875,37 +6875,51 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const vaultMap = {
           '01': {
             hero: `${vaultBase}/hero-sanctuary.jpg`,
-            biab: `${vaultBase}/biab-artistry.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
+            biab: `${vaultBase}/sheer-biab-architecture.jpg`,
             pedi: `${vaultBase}/botanical-pedicure.jpg`
           },
           '02': {
             hero: `${vaultBase}/p02/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p02/biab.jpg`,
             pedi: `${vaultBase}/p02/pedicure.jpg`
           },
           '03': {
             hero: `${vaultBase}/p03/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p03/biab.jpg`,
             pedi: `${vaultBase}/p03/pedicure.jpg`
           },
           '04': {
             hero: `${vaultBase}/p04/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p04/biab.jpg`,
             pedi: `${vaultBase}/p04/pedicure.jpg`
           },
           '05': {
             hero: `${vaultBase}/p05/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p05/biab.jpg`,
             pedi: `${vaultBase}/p05/pedicure.jpg`
           }
         };
         const pv = vaultMap[validPal] || vaultMap['01'];
         patchStringField('hero', pv.hero);
+        patchStringField('beforeNail', pv.beforeNail);
+        patchStringField('afterNail', pv.afterNail);
         patchStringField('biabFeature', pv.biab);
         patchStringField('pedicureFeature', pv.pedi);
         html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${vaultBase}/before-natural-nails.jpg$2`);
+        html = html.replace(/(<img[\s\S]*?id="feature-biab-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
+        html = html.replace(/(<img[\s\S]*?id="feature-pedi-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.pedi}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.afterNail || pv.biab}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.beforeNail}$2`);
 
         const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
         const resolvedState = address ? parsedAddr.state : '';

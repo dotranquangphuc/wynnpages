@@ -11,7 +11,8 @@
 
   const cid = (currentScript && currentScript.getAttribute('data-cid')) || urlParams.get('cid') || urlParams.get('client_id') || '';
   const email = (currentScript && currentScript.getAttribute('data-email')) || urlParams.get('email') || '';
-  const bizName = (currentScript && currentScript.getAttribute('data-name')) || urlParams.get('name') || 'Your Business';
+  const rawBiz = String((currentScript && currentScript.getAttribute('data-name')) || urlParams.get('name') || 'Your Business').trim();
+  const bizName = (rawBiz === rawBiz.toLowerCase()) ? rawBiz.replace(/\b\w/g, (c) => c.toUpperCase()) : rawBiz;
   const checkoutUrlOverride = (currentScript && currentScript.getAttribute('data-checkout-url')) || '';
   const hostLower = (window.location.hostname || '').toLowerCase();
   const pathMatch = (window.location.pathname || '').match(/^\/d\/([^/]+)/i);
@@ -42,15 +43,15 @@
     'transform:translateX(-50%) translateY(0)',
     'z-index:2147483647',
     'width:calc(100% - 28px)',
-    'max-width:760px',
-    'background:rgba(28,22,19,0.58) !important',
+    'max-width:780px',
+    'background:linear-gradient(135deg,rgba(58,35,25,0.92) 0%,rgba(43,26,19,0.94) 100%) !important',
     'backdrop-filter:blur(22px) saturate(180%) !important',
     '-webkit-backdrop-filter:blur(22px) saturate(180%) !important',
     'color:#fcf9f3',
-    'border:1px solid rgba(255,255,255,0.22) !important',
-    'border-radius:20px',
-    'padding:28px 18px 14px 18px',
-    'box-shadow:0 20px 50px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.25) !important',
+    'border:1px solid rgba(212,155,40,0.38) !important',
+    'border-radius:22px',
+    'padding:22px 20px 14px 20px',
+    'box-shadow:0 20px 48px -12px rgba(54,26,16,0.42),0 4px 16px rgba(43,25,18,0.24),inset 0 1px 0 rgba(255,244,228,0.18) !important',
     'display:flex',
     'flex-wrap:wrap',
     'align-items:center',
@@ -75,11 +76,11 @@
     'align-items:center',
     'justify-content:center',
     'gap:7px',
-    'background:rgba(28,22,19,0.58) !important',
+    'background:linear-gradient(135deg,rgba(58,35,25,0.92) 0%,rgba(43,26,19,0.94) 100%) !important',
     'backdrop-filter:blur(22px) saturate(180%) !important',
     '-webkit-backdrop-filter:blur(22px) saturate(180%) !important',
     'color:rgba(255,255,255,0.96)',
-    'border:1px solid rgba(255,255,255,0.22) !important',
+    'border:1px solid rgba(212,155,40,0.38) !important',
     'border-radius:9999px',
     'padding:8px 16px',
     'font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","Segoe UI",Roboto,sans-serif',
@@ -87,7 +88,7 @@
     'font-weight:700',
     'letter-spacing:0.01em',
     'white-space:nowrap',
-    'box-shadow:0 20px 50px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.25) !important',
+    'box-shadow:0 20px 48px -12px rgba(54,26,16,0.42),0 4px 16px rgba(43,25,18,0.24),inset 0 1px 0 rgba(255,244,228,0.18) !important',
     'cursor:pointer',
     'opacity:0',
     'transform:translateX(-50%) translateY(16px)',
@@ -102,7 +103,7 @@
       </button>
     `;
     const isNarrow = window.innerWidth <= 640;
-    bar.style.padding = isNarrow ? '28px 14px 12px 14px' : '28px 18px 14px 18px';
+    bar.style.padding = isNarrow ? '22px 14px 12px 14px' : '22px 20px 14px 20px';
     if (isPaid) {
       bar.style.setProperty('background', 'rgba(16,31,24,0.62)', 'important');
       bar.style.setProperty('border', '1.5px solid rgba(52,211,153,0.48)', 'important');
@@ -146,22 +147,16 @@
               <span style="font-size:11px;font-weight:600;color:#b8b0a5;letter-spacing:0.03em;text-transform:uppercase;flex-shrink:0;">Exclusively for</span>
               <strong style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;">${bizName.replace(/</g, '&lt;')}</strong>
             </div>
-            <div style="font-size:10.5px;color:#d6cfc2;font-weight:500;margin-top:2px;display:flex;align-items:center;gap:5px;line-height:1.3;">
+            <div style="font-size:10.5px;color:#e6dccb;font-weight:500;margin-top:3px;display:flex;align-items:center;gap:5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               <span style="color:#34d399;font-weight:800;flex-shrink:0;">✓</span>
-              <span>Sample photos/info shown &mdash; customize 100% with your real photos &amp; details after checkout</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;">Sample preview shown &mdash; 100% customised with your real photos &amp; details after checkout</span>
             </div>
           </div>
         </div>
         <div style="display:flex;${isNarrow ? 'flex-direction:column;width:100%;align-items:center;' : 'flex-direction:row;align-items:center;'}gap:8px;flex-shrink:0;">
-          <a id="wynnpages-claim-btn" href="${claimHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#B85332 0%,#96432b 100%) !important;opacity:1 !important;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 20px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(255,255,255,0.26);box-shadow:0 10px 26px rgba(150,67,43,0.55),0 4px 12px rgba(0,0,0,0.28);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
+          <a id="wynnpages-claim-btn" href="${claimHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#8B3A22 0%,#6E2C1A 100%) !important;opacity:1 !important;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 22px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(251,222,185,0.36);box-shadow:0 10px 26px rgba(110,44,26,0.5),0 4px 12px rgba(0,0,0,0.28);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
             <span>Claim This Website &mdash; $599 AUD</span>
             <span>&rarr;</span>
-          </a>
-          <a href="https://wynnpages.com.au" target="_blank" rel="noopener" style="${isNarrow ? 'padding:4px 10px;font-size:11px;border:none;background:transparent;color:rgba(255,255,255,0.68);text-decoration:underline;' : 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);color:#f6f1e8;padding:11px 14px;border-radius:13px;font-size:12px;'}text-decoration:${isNarrow ? 'underline' : 'none'};font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;transition:all 0.2s ease;" title="Visit WynnPages Studio">
-            <span>About Studio</span>
-            <svg style="width:10px;height:10px;" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
-            </svg>
           </a>
         </div>
       `;

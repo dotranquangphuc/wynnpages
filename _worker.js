@@ -2426,7 +2426,10 @@ function updateHtmlWithConfigAndMenu(html, newConfig, newMenu) {
         updated = updated.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.hero}$2`);
       }
       if (newConfig.images.biabFeature) {
-        updated = updated.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.biabFeature}$2`);
+        updated = updated.replace(/(<img[\s\S]*?id="feature-biab-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.biabFeature}$2`);
+      }
+      if (newConfig.images.afterNail || newConfig.images.biabFeature) {
+        updated = updated.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.afterNail || newConfig.images.biabFeature}$2`);
       }
       if (newConfig.images.beforeNail) {
         updated = updated.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${newConfig.images.beforeNail}$2`);
@@ -3628,7 +3631,8 @@ function buildDealTopRibbonHtml(client) {
 }
 
 function buildClaimBarSnippet(client) {
-  const bizName = (client && (client.businessName || client.name)) || 'Your Business';
+  const rawBiz = String((client && (client.businessName || client.name)) || 'Your Business').trim();
+  const bizName = (rawBiz === rawBiz.toLowerCase()) ? rawBiz.replace(/\b\w/g, (c) => c.toUpperCase()) : rawBiz;
   const cid = (client && client.id) || '';
   const email = (client && client.email) || '';
   const isPaid = Boolean(client && (
@@ -3667,14 +3671,14 @@ function buildClaimBarSnippet(client) {
       transform: translateX(-50%) translateY(0);
       z-index: 999999;
       width: calc(100% - 28px);
-      max-width: 880px;
-      background: rgba(28, 22, 19, 0.58) !important;
+      max-width: 780px;
+      background: linear-gradient(135deg, rgba(58, 35, 25, 0.92) 0%, rgba(43, 26, 19, 0.94) 100%) !important;
       backdrop-filter: blur(22px) saturate(180%) !important;
       -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
-      border: 1px solid rgba(255, 255, 255, 0.22) !important;
+      border: 1px solid rgba(212, 155, 40, 0.38) !important;
       border-radius: 22px;
-      padding: 28px 18px 14px 18px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      padding: 22px 20px 14px 20px;
+      box-shadow: 0 20px 48px -12px rgba(54, 26, 16, 0.42), 0 4px 16px rgba(43, 25, 18, 0.24), inset 0 1px 0 rgba(255, 244, 228, 0.18) !important;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -3728,11 +3732,11 @@ function buildClaimBarSnippet(client) {
       align-items: center;
       justify-content: center;
       gap: 7px;
-      background: rgba(28, 22, 19, 0.58) !important;
+      background: linear-gradient(135deg, rgba(58, 35, 25, 0.92) 0%, rgba(43, 26, 19, 0.94) 100%) !important;
       backdrop-filter: blur(22px) saturate(180%) !important;
       -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
       color: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(255, 255, 255, 0.22) !important;
+      border: 1px solid rgba(212, 155, 40, 0.38) !important;
       border-radius: 9999px;
       padding: 8px 16px;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -3740,15 +3744,15 @@ function buildClaimBarSnippet(client) {
       font-weight: 700;
       letter-spacing: 0.01em;
       white-space: nowrap;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      box-shadow: 0 20px 48px -12px rgba(54, 26, 16, 0.42), 0 4px 16px rgba(43, 25, 18, 0.24), inset 0 1px 0 rgba(255, 244, 228, 0.18) !important;
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .claim-restore-tab:hover {
-      background: rgba(28, 22, 19, 0.72) !important;
-      border-color: rgba(255, 255, 255, 0.36) !important;
+      background: linear-gradient(135deg, rgba(72, 43, 30, 0.96) 0%, rgba(52, 31, 22, 0.96) 100%) !important;
+      border-color: rgba(212, 155, 40, 0.56) !important;
       color: #ffffff;
     }
     .claim-restore-tab.visible {
@@ -3972,13 +3976,16 @@ function buildClaimBarSnippet(client) {
     }
     .claim-reassure {
       font-size: 10.5px;
-      color: #d6cfc2;
+      color: #e6dccb;
       font-weight: 500;
-      margin-top: 2px;
+      margin-top: 3px;
       display: flex;
       align-items: center;
       gap: 5px;
       line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .claim-reassure-check {
       color: #34d399;
@@ -4037,7 +4044,7 @@ function buildClaimBarSnippet(client) {
       position: relative;
       overflow: hidden;
       flex-shrink: 0;
-      background: linear-gradient(135deg, #B85332 0%, #96432b 100%) !important;
+      background: linear-gradient(135deg, #8B3A22 0%, #6E2C1A 100%) !important;
       opacity: 1 !important;
       color: #ffffff;
       text-decoration: none;
@@ -4048,8 +4055,8 @@ function buildClaimBarSnippet(client) {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.26);
-      box-shadow: 0 10px 26px rgba(150, 67, 43, 0.55), 0 4px 12px rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(251, 222, 185, 0.36);
+      box-shadow: 0 10px 26px rgba(110, 44, 26, 0.5), 0 4px 12px rgba(0, 0, 0, 0.28);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
       animation: claim-glow 3.8s ease-in-out infinite;
@@ -4105,7 +4112,7 @@ function buildClaimBarSnippet(client) {
       .claim-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 28px 14px 12px 14px;
+        padding: 22px 14px 12px 14px;
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px;
         border-radius: 20px;
@@ -4234,7 +4241,7 @@ function buildClaimBarSnippet(client) {
           </div>
           <div class="claim-reassure">
             <span class="claim-reassure-check">✓</span>
-            <span>Sample photos/info shown &mdash; customize 100% with your real photos &amp; details after checkout</span>
+            <span style="overflow: hidden; text-overflow: ellipsis;">Sample preview shown &mdash; 100% customised with your real photos &amp; details after checkout</span>
           </div>
           ${isFlashDeal ? `
             <div class="claim-countdown-wrap">
@@ -4255,12 +4262,6 @@ function buildClaimBarSnippet(client) {
         <a href="${claimHref}" class="claim-btn ${isFlashDeal ? 'claim-deal-btn' : ''}">
           <span>${btnLabel}</span>
           <span class="claim-arrow">&rarr;</span>
-        </a>
-        <a href="https://wynnpages.com.au" target="_blank" rel="noopener" class="claim-studio-btn" title="Explore WynnPages Web Atelier">
-          <span>About Studio</span>
-          <svg class="claim-ext-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"/>
-          </svg>
         </a>
       `}
     </div>
@@ -4463,8 +4464,8 @@ function buildBrandedPreviewHtml(client, options = {}) {
     return buildExpiredDemoHtml(client);
   }
 
-  const bizName = (client && (client.businessName || client.name)) || 'Your Business';
-  const monogram = bizName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'W';
+  const rawBiz = String((client && (client.businessName || client.name)) || 'Your Business').trim();
+  const bizName = (rawBiz === rawBiz.toLowerCase()) ? rawBiz.replace(/\b\w/g, (c) => c.toUpperCase()) : rawBiz;
   let rawDemo = (client && client.demoUrl) || 'https://wynnpages.com.au';
   if (rawDemo && !rawDemo.startsWith('http')) rawDemo = 'https://' + rawDemo;
   const slug = (client && client.demoSlug) || '';
@@ -4472,7 +4473,7 @@ function buildBrandedPreviewHtml(client, options = {}) {
   const bodyContent = isSelfLoop
     ? `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f1e8;color:#2b251e;font-family:'Plus Jakarta Sans',sans-serif;padding:24px 24px 130px;text-align:center;">
         <div style="max-width:500px;background:#fcf9f3;padding:40px 36px;border-radius:28px;border:1px solid rgba(197,160,89,0.42);box-shadow:0 20px 44px -16px rgba(43,37,30,0.12);">
-          <div style="width:54px;height:54px;border-radius:999px;background:radial-gradient(circle at 32% 28%,#fbf3dc 0%,#dfc286 58%,#b38e46 100%);border:1px solid rgba(255,248,225,0.85);box-shadow:inset 0 2px 4px rgba(255,255,255,0.7),0 8px 18px rgba(150,67,43,0.16);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:700;font-size:24px;color:#96432b;">${monogram}</div>
+          <div style="width:56px;height:56px;border-radius:999px;background:radial-gradient(circle at 32% 28%,#fffdf9 0%,#f5e5c0 62%,#dfc082 100%);border:1px solid rgba(212,155,40,0.45);box-shadow:inset 0 2px 4px rgba(255,255,255,0.85),0 8px 20px rgba(150,67,43,0.16);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;"><img src="https://wynnpages.com.au/assets/favicon.png" alt="WynnPages Studio" style="width:32px;height:32px;object-fit:contain;display:block;"></div>
           <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;font-weight:700;color:#96432b;margin-bottom:8px;">WynnPages Australian Web Atelier</p>
           <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;color:#2b251e;line-height:1.15;margin-bottom:10px;">Bespoke Concept in <em style="color:#96432b;">Final Preparation.</em></h2>
           <p style="font-size:13px;color:#6b5e51;line-height:1.65;margin-bottom:22px;">
@@ -8178,11 +8179,11 @@ export default {
           : '01';
         const vaultBase = 'https://wynnpages.com.au/assets/atelier/nails';
         const vaultMap = {
-          '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, biab: `${vaultBase}/biab-artistry.jpg`, pedi: `${vaultBase}/botanical-pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-gilded-french.jpg`, `${vaultBase}/lookbook-pearl-glaze.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/biab-artistry.jpg`] },
-          '02': { hero: `${vaultBase}/p02/hero.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg`, lookbook: [`${vaultBase}/p02/lookbook-1.jpg`, `${vaultBase}/p02/lookbook-2.jpg`, `${vaultBase}/p02/biab.jpg`, `${vaultBase}/p02/pedicure.jpg`] },
-          '03': { hero: `${vaultBase}/p03/hero.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg`, lookbook: [`${vaultBase}/p03/biab.jpg`, `${vaultBase}/p03/lookbook-1.jpg`, `${vaultBase}/p03/lookbook-2.jpg`, `${vaultBase}/p03/pedicure.jpg`] },
-          '04': { hero: `${vaultBase}/p04/hero.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg`, lookbook: [`${vaultBase}/p04/lookbook-1.jpg`, `${vaultBase}/p04/biab.jpg`, `${vaultBase}/p04/lookbook-2.jpg`, `${vaultBase}/p04/pedicure.jpg`] },
-          '05': { hero: `${vaultBase}/p05/hero.jpg`, biab: `${vaultBase}/p05/biab.jpg`, pedi: `${vaultBase}/p05/pedicure.jpg`, lookbook: [`${vaultBase}/p05/lookbook-1.jpg`, `${vaultBase}/p05/biab.jpg`, `${vaultBase}/p05/lookbook-2.jpg`, `${vaultBase}/p05/pedicure.jpg`] }
+          '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/sheer-biab-architecture.jpg`, pedi: `${vaultBase}/botanical-pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-gilded-french.jpg`, `${vaultBase}/lookbook-pearl-glaze.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '02': { hero: `${vaultBase}/p02/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg`, lookbook: [`${vaultBase}/p02/lookbook-1.jpg`, `${vaultBase}/p02/lookbook-2.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '03': { hero: `${vaultBase}/p03/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg`, lookbook: [`${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/p03/lookbook-1.jpg`, `${vaultBase}/p03/lookbook-2.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '04': { hero: `${vaultBase}/p04/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg`, lookbook: [`${vaultBase}/p04/lookbook-1.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/p04/lookbook-2.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] },
+          '05': { hero: `${vaultBase}/p05/hero.jpg`, beforeNail: `${vaultBase}/before-natural-nails.jpg`, afterNail: `${vaultBase}/biab-artistry.jpg`, biab: `${vaultBase}/p05/biab.jpg`, pedi: `${vaultBase}/p05/pedicure.jpg`, lookbook: [`${vaultBase}/p05/lookbook-1.jpg`, `${vaultBase}/lookbook-velvet-rose.jpg`, `${vaultBase}/p05/lookbook-2.jpg`, `${vaultBase}/lookbook-bare-cashmere.jpg`] }
         };
         const pv = vaultMap[activePal] || vaultMap['01'];
         const photosList = Array.isArray(clientRecord.placesPhotos) && clientRecord.placesPhotos.length
@@ -8193,6 +8194,8 @@ export default {
         if (mode === 'restore_vault') {
           config.images = config.images || {};
           config.images.hero = pv.hero;
+          config.images.beforeNail = pv.beforeNail;
+          config.images.afterNail = pv.afterNail;
           config.images.biabFeature = pv.biab;
           config.images.pedicureFeature = pv.pedi;
           if (Array.isArray(config.images.lookbook)) {
@@ -10723,5 +10726,683 @@ export default {
             if (!isFbMode && c.phone && effectiveCfg.clicksendApiKey) {
               const biz = c.businessName || c.name || 'Boutique';
               const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
-              const pitchSms = `Hi ${biz}, it's Wynn here from WynnPages. I came across your place recently and really loved your vibe, so I spent a bit of time putting together a custom website concept just for you to see how it could look: ${demoUrl} — No pressure at all, just thought I'd share it with you.
-... [truncated for diff preview]
+              const pitchSms = `Hi ${biz}, it's Wynn here from WynnPages. I came across your place recently and really loved your vibe, so I spent a bit of time putting together a custom website concept just for you to see how it could look: ${demoUrl} — No pressure at all, just thought I'd share it with you. Have a look whenever you get a quiet moment and let me know what you think! Warmly, Wynn`;
+              const sRes = await sendClickSendSms(c.phone, pitchSms, effectiveCfg);
+              await recordSmsHistory({ customerId: c.id, env, stripeSecretKey: effectiveCfg.stripeSecretKey, type: 'aussie_pitch', to: c.phone, text: pitchSms, status: sRes.sent, reason: sRes.reason });
+            }
+            if (!isFbMode && c.email && effectiveCfg.resendApiKey) {
+              const mailPayload = buildNurtureStepEmail({ stepKey: 'step1', client: c });
+              if (mailPayload) await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
+            }
+          }
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: uP.toString()
+          });
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
+          }
+          return new Response(JSON.stringify({ ok: true, targetStep, shiftedIso, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Reset 10-Day / 60-Min Closing Sequence to Clean Start ($599 AUD)
+        if (action === 'reset_closing_sequence' && customerId) {
+          const uP = new URLSearchParams();
+          for (const k of ['deal_activated_at', 'deal_expires_at', 'demo_sent_at', 'fb_pitched_at', 'sequence_started_at', 'step1_sent_at', 'step2_sent_at', 'step3_sent_at', 'step4_sent_at', 'step5_locked_at', 'nurture_step', 'fb_due_step', 'fb_alerted_steps']) {
+            uP.append(`metadata[${k}]`, '');
+          }
+          uP.append('metadata[deal_status]', 'standard');
+          uP.append('metadata[stage]', 'outbound_pending');
+
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: uP.toString()
+          });
+          let updatedCust = null;
+          if (patchRes.ok) {
+            updatedCust = formatCustomerRecord(await patchRes.json());
+            await upsertD1Client(env, updatedCust);
+            runInBg(ctx, syncClientsKvSnapshot(env));
+          }
+          return new Response(JSON.stringify({ ok: true, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Update Subdomain (Cloudflare + KV + Stripe sync)
+        if (action === 'update_subdomain' && customerId) {
+          const oldSlug = slugifyName(body.oldSlug || '');
+          const newSlug = slugifyName(body.newSlug || '');
+          if (!newSlug) {
+            return new Response(JSON.stringify({ error: 'Subdomain mới không hợp lệ.' }), { status: 400, headers: corsHeaders });
+          }
+
+          // 1. If old slug differs, remove from Cloudflare & migrate KV
+          if (oldSlug && oldSlug !== newSlug) {
+            await removeCloudflareWorkerDomain(oldSlug, env, effectiveCfg.cfApiToken);
+            if (env && env.WYNN_KV) {
+              await env.WYNN_KV.delete(`sub_${oldSlug}`);
+              await env.WYNN_KV.put(`sub_${newSlug}`, '1');
+
+              const oldCode = await env.WYNN_KV.get(`demo_code:${oldSlug}`);
+              if (oldCode) {
+                await env.WYNN_KV.put(`demo_code:${newSlug}`, oldCode);
+                await env.WYNN_KV.delete(`demo_code:${oldSlug}`);
+              }
+              const oldZip = await env.WYNN_KV.get(`demo_zip:${oldSlug}`);
+              if (oldZip) {
+                await env.WYNN_KV.put(`demo_zip:${newSlug}`, oldZip);
+                await env.WYNN_KV.delete(`demo_zip:${oldSlug}`);
+              }
+
+              const oldMetaKey = `site_meta:${oldSlug}`;
+              const meta = await env.WYNN_KV.get(oldMetaKey, 'json').catch(() => null);
+              if (meta && Array.isArray(meta.filesList)) {
+                for (const p of meta.filesList) {
+                  const assetKeyOld = `site_asset:${oldSlug}:${p}`;
+                  const assetKeyNew = `site_asset:${newSlug}:${p}`;
+                  const resOld = await env.WYNN_KV.getWithMetadata(assetKeyOld, 'arrayBuffer').catch(() => ({}));
+                  if (resOld && resOld.value) {
+                    await env.WYNN_KV.put(assetKeyNew, resOld.value, { metadata: resOld.metadata });
+                    await env.WYNN_KV.delete(assetKeyOld).catch(() => { });
+                  }
+                }
+                meta.slug = newSlug;
+                await env.WYNN_KV.put(`site_meta:${newSlug}`, JSON.stringify(meta));
+                await env.WYNN_KV.delete(oldMetaKey).catch(() => { });
+              }
+            }
+          }
+
+          // 2. Attach new subdomain in background
+          if (ctx && typeof ctx.waitUntil === 'function') {
+            ctx.waitUntil(ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken).catch(() => { }));
+          } else {
+            await ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken);
+          }
+
+          // 3. Update Stripe Customer
+          const newDemoUrl = `https://${newSlug}.wynnpages.com.au`;
+          const uParams = new URLSearchParams();
+          uParams.append('metadata[demo_slug]', newSlug);
+          uParams.append('metadata[demo_url]', newDemoUrl);
+          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+          let updatedCust = null;
+          if (patchRes.ok) {
+            const patchData = await patchRes.json();
+            updatedCust = formatCustomerRecord(patchData);
+          }
+
+          return new Response(JSON.stringify({ ok: true, success: true, newSlug, newDemoUrl, client: updatedCust }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action 0b: Sync Existing Uploaded File to Google Drive
+        if (action === 'sync_file_to_drive' && customerId) {
+          if (!effectiveCfg.googleDriveWebhookUrl) {
+            return new Response(
+              JSON.stringify({ error: 'Chưa cấu hình Google Drive Webhook URL! Hãy bấm nút "⚙️ Cấu hình API / Google Drive" ở góc trên để kết nối.' }),
+              { status: 400, headers: corsHeaders }
+            );
+          }
+          const fileId = (body.fileId || '').trim();
+          const fileName = (body.fileName || 'client-file.bin').trim();
+          const fieldType = (body.fieldType || 'menu').trim(); // 'logo' | 'menu' | 'photos'
+          const folderName = (body.folderName || 'WynnPages Client').trim();
+
+          const fileRes = await fetch(`https://files.stripe.com/v1/files/${encodeURIComponent(fileId)}/contents`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (!fileRes.ok) {
+            return new Response(JSON.stringify({ error: 'Không tải được file gốc từ hệ thống lưu trữ.' }), { status: 404, headers: corsHeaders });
+          }
+          const mimeType = fileRes.headers.get('content-type') || 'application/octet-stream';
+          const arrayBuf = await fileRes.arrayBuffer();
+          const base64Data = arrayBufferToBase64(arrayBuf);
+
+          const driveRes = await uploadGoogleDriveFile(
+            { name: fileName, dataUrl: `data:${mimeType};base64,${base64Data}` },
+            folderName,
+            effectiveCfg.googleDriveWebhookUrl
+          );
+          if (!driveRes || !driveRes.fileUrl) {
+            return new Response(JSON.stringify({ error: 'Không thể lưu lên Google Drive. Hãy kiểm tra lại Google Drive Webhook URL.' }), { status: 500, headers: corsHeaders });
+          }
+
+          const uParams = new URLSearchParams();
+          const metaKey = fieldType === 'logo' ? 'logo_drive_url' : (fieldType === 'photos' ? 'photos_drive_url' : 'menu_drive_url');
+          uParams.append(`metadata[${metaKey}]`, driveRes.fileUrl.slice(0, 490));
+          if (driveRes.folderUrl) {
+            uParams.append('metadata[drive_folder_url]', driveRes.folderUrl.slice(0, 490));
+          }
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+
+          return new Response(JSON.stringify({ ok: true, driveUrl: driveRes.fileUrl, folderUrl: driveRes.folderUrl }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Check Live DNS & Zone Activation Status (1-Click Smart Check in Admin)
+        if (action === 'check_domain_status' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          const rawDomain = (body.liveUrl || (formatted && (formatted.liveUrl || formatted.existingDomain || formatted.desiredDomains)) || '').trim();
+          const rootDomain = extractCleanHost(rawDomain);
+          if (!rootDomain || !rootDomain.includes('.')) {
+            return new Response(JSON.stringify({ error: 'Vui lòng nhập Tên Miền Chính Thức trước khi kiểm tra DNS!' }), { status: 400, headers: corsHeaders });
+          }
+
+          const bindRes = await ensureCustomLiveDomainOnCloudflare(rootDomain, env, effectiveCfg.cfApiToken);
+          let zoneStatus = (bindRes && bindRes.zoneStatus) || (bindRes && bindRes.reason) || 'pending';
+          let assignedNs = (bindRes && bindRes.attached && bindRes.nameservers) ? bindRes.nameservers : ((formatted && formatted.cfNameservers) || '');
+
+          // Trigger immediate activation re-check if zone exists & is still pending
+          if (bindRes && bindRes.zoneId && zoneStatus !== 'active') {
+            const accessToken = await getValidCloudflareToken(env, false, effectiveCfg.cfApiToken);
+            if (accessToken) {
+              await fetch(`https://api.cloudflare.com/client/v4/zones/${bindRes.zoneId}/activation_check`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+              }).catch(() => { });
+              const reRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${bindRes.zoneId}`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+              }).catch(() => null);
+              if (reRes && reRes.ok) {
+                const reData = await reRes.json().catch(() => ({}));
+                if (reData && reData.result && reData.result.status) {
+                  zoneStatus = reData.result.status;
+                }
+              }
+            }
+          }
+
+          // Live DNS-over-HTTPS NS lookup to see what nameservers the domain currently points to globally
+          let liveNs = [];
+          try {
+            const dohRes = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(rootDomain)}&type=NS`, {
+              headers: { 'Accept': 'application/dns-json' }
+            });
+            if (dohRes.ok) {
+              const dohData = await dohRes.json().catch(() => ({}));
+              if (Array.isArray(dohData.Answer)) {
+                liveNs = dohData.Answer
+                  .filter((a) => a && a.type === 2 && a.data)
+                  .map((a) => String(a.data).toLowerCase().replace(/\.$/, ''));
+              }
+            }
+          } catch (_) { }
+
+          const expectedList = assignedNs.split(',').map((s) => s.trim().toLowerCase().replace(/\.$/, '')).filter(Boolean);
+          const nsMatched = expectedList.length > 0 && expectedList.every((nsItem) => liveNs.includes(nsItem));
+          const isActive = zoneStatus === 'active' || nsMatched;
+          const savedStatus = isActive ? 'active' : (bindRes && bindRes.reason === 'zone_pending_registration' ? 'unregistered' : 'pending');
+
+          let updatedCustRecord = formatted;
+          if (effectiveCfg.stripeSecretKey) {
+            const uP = new URLSearchParams();
+            uP.append('metadata[live_url]', rootDomain);
+            uP.append('metadata[cf_zone_status]', savedStatus);
+            if (assignedNs) uP.append('metadata[cf_nameservers]', assignedNs.slice(0, 490));
+            const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uP.toString()
+            });
+            if (patchRes.ok) {
+              updatedCustRecord = formatCustomerRecord(await patchRes.json());
+            }
+          }
+
+          return new Response(JSON.stringify({
+            ok: true,
+            rootDomain,
+            isActive,
+            zoneStatus: savedStatus,
+            nameservers: assignedNs,
+            liveNs,
+            client: updatedCustRecord
+          }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Send DNS Configuration Email Manually (Optional for In-House IT Teams)
+        if (action === 'send_dns_email' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          if (!formatted || !formatted.email) {
+            return new Response(JSON.stringify({ error: 'Khách hàng này chưa có email để gửi hướng dẫn DNS!' }), { status: 400, headers: corsHeaders });
+          }
+          if (!formatted.liveUrl) {
+            return new Response(JSON.stringify({ error: 'Chưa có Tên Miền Chính Thức nào được lưu cho khách này!' }), { status: 400, headers: corsHeaders });
+          }
+          let nsToSend = formatted.cfNameservers || '';
+          if (!nsToSend) {
+            const bindRes = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
+            if (bindRes && bindRes.attached && bindRes.nameservers) {
+              nsToSend = bindRes.nameservers;
+            }
+          }
+          if (!nsToSend) {
+            return new Response(JSON.stringify({ error: 'Tên miền này chưa được đăng ký trên hệ thống tên miền quốc tế (WHOIS) nên chưa sinh được cặp Nameservers. Hãy đợi khách mua tên miền trên VentraIP trước!' }), { status: 400, headers: corsHeaders });
+          }
+          const guideUrl = buildDomainGuideUrl({
+            origin: url.origin,
+            client: formatted,
+            tab: 'existing',
+            ns: nsToSend
+          });
+          const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
+          const parts = nsToSend.split(',').map(s => s.trim());
+
+          const mailRes = await sendResendEmail({
+            to: formatted.email,
+            subject: `Network Nameservers for ${formatted.liveUrl} — WynnPages Studio`,
+            html: buildAtelierEmailHtml({
+              preheader: `Network Nameservers for ${formatted.liveUrl}`,
+              heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
+              bodyHtml: `
+                <p>We have provisioned the <strong>WynnPages Studio Australian High-Speed Network</strong> configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
+                <p>If your IT team prefers to point DNS manually, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
+                <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
+                  <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
+                  ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
+                </div>
+                <p><strong>Prefer zero technical hassle?</strong> Simply invite <strong>hello@wynnpages.com.au</strong> or submit registrar access via our guide page, and our Australian engineers will connect it for you for free.</p>
+              `,
+              primaryCta: {
+                label: 'Open Domain Connection Guide →',
+                url: guideUrl
+              },
+              secondaryCta: {
+                label: 'Visit WynnPages Studio',
+                url: url.origin
+              }
+            }),
+            cfg: effectiveCfg
+          });
+
+          return new Response(JSON.stringify({ ok: Boolean(mailRes && mailRes.sent), result: mailRes, guideUrl }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action A: Create or Update Client + Optionally Trigger Stage Notification
+        if (action === 'trigger_stage' || action === 'save_client') {
+          let cust = null;
+          if (customerId) {
+            const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              method: 'GET',
+              headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+            });
+            if (getRes.ok) cust = await getRes.json();
+          }
+
+          if (action === 'trigger_stage' && body.stage === 'site_launched') {
+            const checkFormatted = cust ? formatCustomerRecord(cust) : null;
+            const isClientPaid = body.paymentStatus === 'paid' || (checkFormatted && checkFormatted.paymentStatus === 'paid');
+            const candidateLiveUrl = (body.liveUrl !== undefined ? body.liveUrl : (checkFormatted && checkFormatted.liveUrl) || '').trim();
+            if (!isClientPaid) {
+              return new Response(
+                JSON.stringify({ error: 'Khách hàng chưa thanh toán $599 nên chưa thể báo lên sóng chính thức!' }),
+                { status: 400, headers: corsHeaders }
+              );
+            }
+            if (!candidateLiveUrl || !candidateLiveUrl.includes('.')) {
+              return new Response(
+                JSON.stringify({ error: 'Vui lòng nhập Tên Miền Chính Thức (Mục 2) trước khi báo lên sóng!' }),
+                { status: 400, headers: corsHeaders }
+              );
+            }
+          }
+
+          const uParams = new URLSearchParams();
+          const email = (body.email !== undefined ? body.email : (cust && cust.email) || '').trim();
+          const name = (body.name !== undefined ? body.name : (cust && cust.name) || '').trim();
+          const phone = (body.phone !== undefined ? body.phone : (cust && cust.phone) || '').trim();
+          const candidateBizName = (body.businessName !== undefined ? body.businessName : (cust && cust.metadata && cust.metadata.business_name) || name || 'demo').trim();
+          const autoSlug = (cust && cust.metadata && cust.metadata.demo_slug) || slugifyName(candidateBizName) || 'demo';
+          const demoUrl = ((body.demoUrl && body.demoUrl.trim()) || (cust && cust.metadata && cust.metadata.demo_url) || `https://${autoSlug}.wynnpages.com.au`).trim();
+          const stage = body.stage || (cust && cust.metadata && cust.metadata.stage) || 'paid';
+
+          if (email) uParams.append('email', email);
+          if (name) uParams.append('name', name);
+          if (phone) uParams.append('phone', phone);
+          uParams.append('metadata[studio]', 'WynnPages Australia');
+          if (name) uParams.append('metadata[customer_name]', name);
+          if (phone) uParams.append('metadata[customer_phone]', phone);
+          if (email) uParams.append('metadata[customer_email]', email);
+          if (body.businessName !== undefined) uParams.append('metadata[business_name]', body.businessName);
+          if (body.displayPhone !== undefined) uParams.append('metadata[display_phone]', body.displayPhone);
+          if (body.businessAddress !== undefined) uParams.append('metadata[business_address]', body.businessAddress);
+          if (body.socialLinks !== undefined) uParams.append('metadata[social_links]', body.socialLinks);
+          if (demoUrl) uParams.append('metadata[demo_url]', demoUrl);
+          if (!cust || !cust.metadata || !cust.metadata.demo_slug) {
+            uParams.append('metadata[demo_slug]', autoSlug);
+          }
+          if (body.industry !== undefined) {
+            uParams.append('metadata[industry]', body.industry);
+            if (body.industry) uParams.append('metadata[brief_status]', 'completed');
+          }
+          if (body.brandColors !== undefined) uParams.append('metadata[brand_colors]', body.brandColors);
+          if (body.vibeLinks !== undefined) uParams.append('metadata[vibe_links]', body.vibeLinks);
+          if (body.existingDomain !== undefined) uParams.append('metadata[existing_domain]', body.existingDomain);
+          if (body.desiredDomains !== undefined) uParams.append('metadata[desired_domains]', body.desiredDomains);
+          if (body.liveUrl !== undefined) uParams.append('metadata[live_url]', body.liveUrl.trim());
+          if (body.flowType !== undefined) uParams.append('metadata[flow_type]', body.flowType);
+          if (body.paymentStatus !== undefined) uParams.append('metadata[payment_status]', body.paymentStatus);
+          if (body.googlePlaceId !== undefined) uParams.append('metadata[google_place_id]', String(body.googlePlaceId).slice(0, 100));
+          if (body.googleRating !== undefined) uParams.append('metadata[google_rating]', String(body.googleRating).slice(0, 20));
+          if (body.googleReviewCount !== undefined) uParams.append('metadata[google_review_count]', String(body.googleReviewCount).slice(0, 20));
+          if (body.googleLeadType !== undefined) uParams.append('metadata[google_lead_type]', String(body.googleLeadType).slice(0, 50));
+          if (body.googleWebsiteUri !== undefined) uParams.append('metadata[google_website_uri]', String(body.googleWebsiteUri).slice(0, 300));
+          if (body.openingHours !== undefined) uParams.append('metadata[opening_hours]', String(body.openingHours).slice(0, 480));
+          if (body.customerReviews !== undefined) uParams.append('metadata[customer_reviews]', String(body.customerReviews).slice(0, 480));
+          if (body.dealStatus !== undefined) uParams.append('metadata[deal_status]', String(body.dealStatus).slice(0, 50));
+          if (body.dealActivatedAt !== undefined) uParams.append('metadata[deal_activated_at]', String(body.dealActivatedAt).slice(0, 50));
+          if (body.dealExpiresAt !== undefined) uParams.append('metadata[deal_expires_at]', String(body.dealExpiresAt).slice(0, 50));
+          if (body.nurtureStep !== undefined) uParams.append('metadata[nurture_step]', String(body.nurtureStep).slice(0, 50));
+          if (body.instagramUrl !== undefined) uParams.append('metadata[instagram_url]', String(body.instagramUrl).slice(0, 300));
+          if (body.facebookUrl !== undefined) uParams.append('metadata[facebook_url]', String(body.facebookUrl).slice(0, 300));
+          if (body.parkingInfo !== undefined) uParams.append('metadata[parking_info]', String(body.parkingInfo).slice(0, 300));
+          if (body.editorialSummary !== undefined) uParams.append('metadata[editorial_summary]', String(body.editorialSummary).slice(0, 480));
+          if (body.placesPhotos !== undefined) {
+            const phStr = typeof body.placesPhotos === 'string' ? body.placesPhotos : JSON.stringify(body.placesPhotos);
+            uParams.append('metadata[places_photos]', phStr.slice(0, 490));
+          }
+
+          if (!customerId) {
+            uParams.append('metadata[demo_view_count]', '0');
+            uParams.append('metadata[claim_click_count]', '0');
+          }
+          const stageMap = {
+            payment_confirmed: 'paid',
+            brief_completed: 'brief_completed',
+            demo_ready: 'demo_sent',
+            demo_reminder: 'reminder_sent',
+            outbound_pitch: 'outbound_pitched',
+            outbound_followup: 'outbound_followup',
+            site_launched: 'launched'
+          };
+          const mappedStage = stageMap[stage] || stage;
+          uParams.append('metadata[stage]', mappedStage);
+
+          const nowIso = new Date().toISOString();
+          if (action === 'trigger_stage') {
+            if (stage === 'demo_ready' || stage === 'outbound_pitch') {
+              uParams.append('metadata[demo_sent_at]', nowIso);
+            } else if (stage === 'demo_reminder' || stage === 'outbound_followup') {
+              const prevCount = Number((cust && cust.metadata && cust.metadata.reminder_count) || 0);
+              uParams.append('metadata[reminder_count]', String(prevCount + 1));
+            } else if (stage === 'site_launched') {
+              uParams.append('metadata[launched_at]', nowIso);
+            }
+          }
+
+          const saveEndpoint = customerId
+            ? `https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`
+            : 'https://api.stripe.com/v1/customers';
+
+          const saveRes = await fetch(saveEndpoint, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+          let updatedCust = await saveRes.json();
+          let formatted = formatCustomerRecord(updatedCust);
+
+          // Attach demo subdomain in background so creating/editing clients finishes in ~450ms!
+          if (ctx && typeof ctx.waitUntil === 'function') {
+            ctx.waitUntil(ensureCloudflareSubdomain(formatted.demoSlug, env, effectiveCfg.cfApiToken));
+          } else {
+            await ensureCloudflareSubdomain(formatted.demoSlug, env, effectiveCfg.cfApiToken);
+          }
+
+          const prevLiveUrl = (cust && cust.metadata && cust.metadata.live_url) || '';
+          const shouldProvisionLiveDomain =
+            Boolean(formatted.liveUrl) &&
+            (extractCleanHost(formatted.liveUrl) !== extractCleanHost(prevLiveUrl) || !formatted.cfNameservers);
+
+          let liveDomainBindResult = null;
+          if (shouldProvisionLiveDomain) {
+            liveDomainBindResult = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
+            if (liveDomainBindResult) {
+              const newStatus = liveDomainBindResult.attached
+                ? (liveDomainBindResult.zoneStatus || 'pending')
+                : (liveDomainBindResult.reason === 'zone_pending_registration' ? 'unregistered' : 'pending');
+              const newNs = liveDomainBindResult.attached ? (liveDomainBindResult.nameservers || '') : '';
+              const nsChanged = newNs !== formatted.cfNameservers || newStatus !== formatted.cfZoneStatus;
+              if (nsChanged) {
+                const nsParams = new URLSearchParams();
+                nsParams.append('metadata[cf_nameservers]', newNs.slice(0, 490));
+                nsParams.append('metadata[cf_zone_status]', newStatus);
+                const nsRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  body: nsParams.toString()
+                });
+                if (nsRes.ok) {
+                  updatedCust = await nsRes.json();
+                  formatted = formatCustomerRecord(updatedCust);
+                }
+              }
+            }
+          }
+
+          let notifyRes = null;
+          const shouldAutoLaunchOnSave =
+            action === 'save_client' &&
+            body.launchSite === true &&
+            Boolean(body.liveUrl && String(body.liveUrl).trim().includes('.')) &&
+            (formatted.paymentStatus === 'paid' || body.paymentStatus === 'paid');
+          const effectiveNotifyStage = action === 'trigger_stage' ? stage : (shouldAutoLaunchOnSave ? 'site_launched' : '');
+
+          if (effectiveNotifyStage) {
+            notifyRes = await triggerLifecycleNotification({
+              stage: effectiveNotifyStage,
+              client: formatted,
+              origin: url.origin,
+              cfg: effectiveCfg
+            });
+
+            if (effectiveNotifyStage === 'site_launched') {
+              const bizLaunch = formatted.businessName || formatted.name || 'Boutique';
+              const cleanHost = extractCleanHost(formatted.liveUrl || '') || formatted.liveUrl || '';
+              await recordStudioActivity(env, {
+                type: 'site_launched',
+                icon: '🚀',
+                title: `Website Chính Thức Đã Lên Sóng Live: ${bizLaunch}`,
+                message: `Tên miền chính thức https://${cleanHost} của "${bizLaunch}" đã được báo lên sóng Live thành công!`,
+                clientName: bizLaunch,
+                slug: formatted.demoSlug || ''
+              }, ctx);
+            }
+
+            // Save delivery logs to Stripe metadata
+            const logParams = new URLSearchParams();
+            if (shouldAutoLaunchOnSave) {
+              logParams.append('metadata[stage]', 'launched');
+              logParams.append('metadata[launched_at]', nowIso);
+            }
+            const smsSummary = notifyRes.smsResult && notifyRes.smsResult.sent
+              ? `OK (${notifyRes.smsResult.to}) [${effectiveNotifyStage}] @ ${nowIso}`
+              : `ERR: ${(notifyRes.smsResult && notifyRes.smsResult.reason) || 'Skipped'} [${effectiveNotifyStage}]`;
+            const emailSummary = notifyRes.emailResult && notifyRes.emailResult.sent
+              ? `OK (${notifyRes.emailResult.to}) [${effectiveNotifyStage}] @ ${nowIso}`
+              : `ERR: ${(notifyRes.emailResult && notifyRes.emailResult.reason) || 'Skipped'} [${effectiveNotifyStage}]`;
+            logParams.append('metadata[last_sms_log]', smsSummary.slice(0, 480));
+            logParams.append('metadata[last_email_log]', emailSummary.slice(0, 480));
+
+            const logRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(formatted.id)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: logParams.toString()
+            });
+            if (logRes.ok) {
+              updatedCust = await logRes.json();
+              formatted = formatCustomerRecord(updatedCust);
+            }
+
+            if (notifyRes && notifyRes.smsResult) {
+              await recordSmsHistory({
+                customerId: formatted.id,
+                env,
+                stripeSecretKey: effectiveCfg.stripeSecretKey,
+                type: `stage_${effectiveNotifyStage}`,
+                to: notifyRes.smsResult.to,
+                text: notifyRes.smsText || (notifyRes.smsResult && notifyRes.smsResult.text) || '',
+                status: notifyRes.smsResult.sent,
+                reason: notifyRes.smsResult.reason
+              });
+            }
+          }
+
+          if (formatted && formatted.id) {
+            await upsertD1Client(env, formatted);
+            runInBg(ctx, syncClientsKvSnapshot(env));
+          }
+
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              client: formatted,
+              liveDomainBindResult,
+              notifyRes
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 6b. Admin Autopilot Engine Endpoint (GET / POST /api/admin/autopilot)
+    if (url.pathname === '/api/admin/autopilot' && (request.method === 'POST' || request.method === 'GET')) {
+      try {
+        const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
+        const auth = verifyAdminAuth(request, env, cfg, body);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
+        }
+
+        const subAction = body.action || 'get_settings';
+        const dbApEndpoint = getD1(env);
+        if (subAction === 'get_settings') {
+          let settings = { enabled: true, autoSms: true, autoDeal: true, autoExpire: true };
+          let lastRun = null;
+          if (dbApEndpoint) {
+            await ensureD1Schema(env);
+            const [sRow, rRow] = await Promise.all([
+              dbApEndpoint.prepare('SELECT value FROM settings WHERE key = ?').bind('studio_autopilot_settings').first().catch(() => null),
+              dbApEndpoint.prepare('SELECT value FROM settings WHERE key = ?').bind('studio_autopilot_last_run').first().catch(() => null)
+            ]);
+            if (sRow && sRow.value) { try { settings = { ...settings, ...JSON.parse(sRow.value) }; } catch (_) {} }
+            else if (env && env.WYNN_KV) { settings = (await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null)) || settings; }
+            if (rRow && rRow.value) { try { lastRun = JSON.parse(rRow.value); } catch (_) {} }
+            else if (env && env.WYNN_KV) { lastRun = await env.WYNN_KV.get('studio_autopilot_last_run', 'json').catch(() => null); }
+          } else if (env && env.WYNN_KV) {
+            settings = (await env.WYNN_KV.get('studio_autopilot_settings', 'json').catch(() => null)) || settings;
+            lastRun = await env.WYNN_KV.get('studio_autopilot_last_run', 'json').catch(() => null);
+          }
+          return new Response(JSON.stringify({ ok: true, settings, lastRun }), { status: 200, headers: corsHeaders });
+        }
+
+        if (subAction === 'update_settings') {
+          const newSettings = {
+            enabled: Boolean(body.enabled),
+            autoSms: Boolean(body.autoSms),
+            autoDeal: Boolean(body.autoDeal),
+            autoExpire: Boolean(body.autoExpire)
+          };
+          if (dbApEndpoint) {
+            await ensureD1Schema(env);
+            await dbApEndpoint.prepare(
+              'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
+            ).bind('studio_autopilot_settings', JSON.stringify(newSettings), new Date().toISOString()).run().catch(() => {});
+          } else if (env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_autopilot_settings', JSON.stringify(newSettings)).catch(() => {});
+          }
+          return new Response(JSON.stringify({ ok: true, settings: newSettings }), { status: 200, headers: corsHeaders });
+        }
+
+        if (subAction === 'run_now') {
+          const result = await runScheduledAutopilot(env, { force: true });
+          return new Response(JSON.stringify(result), { status: 200, headers: corsHeaders });
+        }
+
+        return new Response(JSON.stringify({ error: 'Unknown autopilot action' }), { status: 400, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 7. Default static assets fetch with Cloudflare Edge Caching Headers
+    if (env.ASSETS) {
+      const assetRes = await env.ASSETS.fetch(request);
+      if (assetRes.status >= 300 && assetRes.status < 400) {
+        return assetRes;
+      }
+      const newHeaders = new Headers(assetRes.headers);
+      if (url.pathname.startsWith('/admin') || url.pathname === '/sw.js' || url.pathname === '/manifest.json') {
+        newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      } else if (
+        url.pathname.startsWith('/assets/') ||
+        /\.(css|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(url.pathname)
+      ) {
+        newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      return new Response(assetRes.body, {
+        status: assetRes.status,
+        statusText: assetRes.statusText,
+        headers: newHeaders
+      });
+    }
+    return fetch(request);
+  },
+  async scheduled(event, env, ctx) {
+    const combinedJob = Promise.allSettled([
+      processDueScheduledSms(env, ctx),
+      runScheduledAutopilot(env, { force: false, fromPing: true, ctx })
+    ]);
+    if (ctx && typeof ctx.waitUntil === 'function') {
+      ctx.waitUntil(combinedJob);
+    } else {
+      await combinedJob;
+    }
+  }
+};
