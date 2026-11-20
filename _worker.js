@@ -3671,7 +3671,7 @@ function buildClaimBarSnippet(client) {
       transform: translateX(-50%) translateY(0);
       z-index: 999999;
       width: calc(100% - 28px);
-      max-width: 780px;
+      max-width: 820px;
       background: linear-gradient(135deg, rgba(58, 35, 25, 0.92) 0%, rgba(43, 26, 19, 0.94) 100%) !important;
       backdrop-filter: blur(22px) saturate(180%) !important;
       -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
@@ -4241,7 +4241,7 @@ function buildClaimBarSnippet(client) {
           </div>
           <div class="claim-reassure">
             <span class="claim-reassure-check">✓</span>
-            <span style="overflow: hidden; text-overflow: ellipsis;">Sample preview shown &mdash; 100% customised with your real photos &amp; details after checkout</span>
+            <span style="overflow: hidden; text-overflow: ellipsis;">Sample preview &mdash; 100% tailored with your real photos &amp; menu after checkout</span>
           </div>
           ${isFlashDeal ? `
             <div class="claim-countdown-wrap">

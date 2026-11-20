@@ -43,7 +43,7 @@
     'transform:translateX(-50%) translateY(0)',
     'z-index:2147483647',
     'width:calc(100% - 28px)',
-    'max-width:780px',
+    'max-width:820px',
     'background:linear-gradient(135deg,rgba(58,35,25,0.92) 0%,rgba(43,26,19,0.94) 100%) !important',
     'backdrop-filter:blur(22px) saturate(180%) !important',
     '-webkit-backdrop-filter:blur(22px) saturate(180%) !important',
@@ -149,7 +149,7 @@
             </div>
             <div style="font-size:10.5px;color:#e6dccb;font-weight:500;margin-top:3px;display:flex;align-items:center;gap:5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               <span style="color:#34d399;font-weight:800;flex-shrink:0;">✓</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;">Sample preview shown &mdash; 100% customised with your real photos &amp; details after checkout</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;">Sample preview &mdash; 100% tailored with your real photos &amp; menu after checkout</span>
             </div>
           </div>
         </div>
