@@ -4803,10 +4803,10 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
 
         // Inline CSS & JS into index.html so it works 100% standalone on both subdomain and /d/slug
         if (css) {
-          html = html.replace(/<link[^>]+href=["']style\.css["'][^>]*>/i, `<style>\n${css}\n</style>`);
+          html = html.replace(new RegExp('<' + 'link[^>]+href=["\']style\\.css["\'][^>]*>', 'i'), '<' + 'style>\n' + css + '\n<' + '/style>');
         }
         if (scriptJS) {
-          html = html.replace(/<script[^>]+src=["']script\.js["'][^>]*><\/script>/i, `<script>\n${scriptJS}\n</script>`);
+          html = html.replace(new RegExp('<' + 'script[^>]+src=["\']script\\.js["\'][^>]*><' + '/script>', 'i'), '<' + 'script>\n' + scriptJS + '\n<' + '/script>');
         }
 
         const seoAssets = await generateClientSeoAssetsBrowser(clientObj, '01', customAddr);
@@ -7100,7 +7100,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const sameAs = [parsedLinks.instagramUrl, parsedLinks.facebookUrl].filter(Boolean);
         if (sameAs.length) jsonLdObj.sameAs = sameAs;
         html = html.replace(
-          /<script type="application\/ld\+json" id="salon-jsonld">[\s\S]*?<\/script>/,
+          new RegExp('<' + 'script type="application\\/ld\\+json" id="salon-jsonld">[\\s\\S]*?<' + '/script>'),
           '<' + 'script type="application/ld+json" id="salon-jsonld">\n' + JSON.stringify(jsonLdObj, null, 2) + '\n  <' + '/script>'
         );
 

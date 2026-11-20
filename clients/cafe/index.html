@@ -1057,8 +1057,8 @@
       salonName: "cafe",
       salonSubtitle: "Nail & Hand Sanctuary",
       monogram: "C",
-      logoUrl: "", // Client custom logo URL; leave empty to fall back to default editorial serif Lux wordmark
-      fallbackLogoUrl: "https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg",
+      logoUrl: "", // Client custom logo URL; leave empty to fall back to default 24K gold-leaf Lux script logo
+      fallbackLogoUrl: "https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120gold",
       suburb: "Australia",
       state: "",
       address: "Australia",
@@ -1187,12 +1187,12 @@
   <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2 w-full">
     <div class="max-w-6xl mx-auto relative">
       <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 min-w-0" aria-label="Primary Navigation">
-        <!-- Brand Identity: Client Custom Logo with Fallback to Quiet Luxury Editorial Serif Wordmark -->
+        <!-- Brand Identity: Client Custom Logo with Fallback to 24K Gold-Leaf Calligraphic Lux Logo -->
         <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
           <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]" style="flex: 0 0 auto !important;">
-            <img id="nav-logo-img" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg" alt="Lux" class="h-6 sm:h-7 w-auto max-w-[150px] sm:max-w-[185px] object-contain block">
+            <img id="nav-logo-img" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120gold" alt="Lux" class="h-6 sm:h-7 w-auto max-w-[150px] sm:max-w-[185px] object-contain block">
           </div>
-          <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9px] uppercase tracking-[0.22em] font-semibold block leading-none truncate max-w-full" style="color: #4A2518;">South Brisbane, QLD</span>
+          <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9.5px] uppercase tracking-[0.15em] font-medium block leading-none truncate max-w-full" style="color: var(--ink-muted);">South Brisbane, QLD</span>
         </a>
 
         <!-- Center Editorial Links (Desktop lg+) -->
@@ -2054,7 +2054,7 @@
       <div data-apple-reveal="right" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
           <div class="inline-flex items-center justify-start">
-            <img id="footer-monogram" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg" alt="Salon Logo" class="h-8 sm:h-9 w-auto max-w-[180px] object-contain block">
+            <img id="footer-monogram" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120gold" alt="Salon Logo" class="h-8 sm:h-9 w-auto max-w-[180px] object-contain block">
           </div>
           <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight text-balance">
             Reserve your <span class="accent-italic">table today.</span>
@@ -2317,7 +2317,7 @@
       // 2. Hydrate Brand, Hero, Socials, SEO & Contact
       const fullTitle = `${cfg.salonName || 'Nail Atelier'} — Bespoke BIAB & Nail Sanctuary | ${locSpaceLabel}`.trim();
       document.title = fullTitle;
-      const defaultFallbackLogo = (cfg.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg').trim();
+      const defaultFallbackLogo = (cfg.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120gold').trim();
       const customLogo = (cfg.wordmarkUrl || cfg.logoUrl || '').trim();
       const activeLogoSrc = customLogo || defaultFallbackLogo;
       const isFallbackLogo = !customLogo;

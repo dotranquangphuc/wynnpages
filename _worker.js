@@ -4975,7 +4975,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
         const mime = (directObj.metadata && directObj.metadata.mimeType) || getMimeType(reqPath);
         return new Response(directObj.value, {
           status: 200,
-          headers: { 'Content-Type': mime, 'Cache-Control': 'public, max-age=86400' }
+          headers: { 'Content-Type': mime, 'Cache-Control': 'public, max-age=0, must-revalidate' }
         });
       }
       if (reqPath !== '/favicon.svg') {
@@ -4983,7 +4983,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
         if (pngFallback && pngFallback.value) {
           return new Response(pngFallback.value, {
             status: 200,
-            headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' }
+            headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=0, must-revalidate' }
           });
         }
       }
@@ -4991,7 +4991,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
       if (svgStored) {
         return new Response(svgStored, {
           status: 200,
-          headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' }
+          headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=0, must-revalidate' }
         });
       }
     }
@@ -5043,7 +5043,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
       const mimeType = (assetObj.metadata && assetObj.metadata.mimeType) || getMimeType(reqPath);
       return new Response(assetObj.value, {
         status: 200,
-        headers: { 'Content-Type': mimeType, 'Cache-Control': 'public, max-age=86400' }
+        headers: { 'Content-Type': mimeType, 'Cache-Control': 'public, max-age=0, must-revalidate' }
       });
     }
   }

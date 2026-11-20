@@ -1,89 +1,70 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="100" height="32" fill="none" role="img" aria-label="Lux">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 156" width="380" height="156" fill="none">
   <defs>
-    <linearGradient id="quietLuxuryEspresso" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="32">
-      <stop offset="0%" stop-color="#4A2518"/>
-      <stop offset="55%" stop-color="#6E2C1A"/>
-      <stop offset="100%" stop-color="#4A2518"/>
+    <!-- 24K Gold-Leaf Foil Multi-Stop Metallic Gradient -->
+    <linearGradient id="goldLeafBody" x1="6%" y1="4%" x2="94%" y2="96%">
+      <stop offset="0%" stop-color="#9E6812"/>
+      <stop offset="15%" stop-color="#E7BA4C"/>
+      <stop offset="30%" stop-color="#FFF2C4"/>
+      <stop offset="46%" stop-color="#D49B28"/>
+      <stop offset="62%" stop-color="#9B6510"/>
+      <stop offset="78%" stop-color="#F7DC88"/>
+      <stop offset="91%" stop-color="#C88A1E"/>
+      <stop offset="100%" stop-color="#8C580A"/>
     </linearGradient>
+
+    <!-- Brushed Gold Specular Bevel Highlight -->
+    <linearGradient id="goldLeafSheen" x1="0%" y1="0%" x2="100%" y2="90%">
+      <stop offset="0%" stop-color="#FFFDF5" stop-opacity="0.82"/>
+      <stop offset="38%" stop-color="#FBE8A4" stop-opacity="0.52"/>
+      <stop offset="70%" stop-color="#D49B28" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#FFF9E2" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- Deep Antique Bronze 3D Extrusion -->
+    <linearGradient id="goldBronzeDepth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5C3A08"/>
+      <stop offset="55%" stop-color="#744A0C"/>
+      <stop offset="100%" stop-color="#4A2E05"/>
+    </linearGradient>
+
+    <!-- Soft Shadow -->
+    <filter id="goldDrop" x="-8%" y="-10%" width="120%" height="128%">
+      <feDropShadow dx="-1.4" dy="2.6" stdDeviation="1.9" flood-color="#2B1E0D" flood-opacity="0.3"/>
+    </filter>
   </defs>
-  <g fill="url(#quietLuxuryEspresso)">
-    <!-- Capital "L" (High-Contrast Editorial Serif) -->
-    <path d="M 0 2.0
-             H 14.2
-             V 3.4
-             H 12.2
-             C 10.0 3.4, 9.2 4.2, 9.2 6.5
-             V 27.0
-             C 9.2 28.7, 10.0 29.3, 12.2 29.3
-             H 19.8
-             C 24.8 29.3, 27.6 27.2, 29.5 22.0
-             H 31.0
-             L 29.3 31.0
-             H 0
-             V 29.6
-             H 1.8
-             C 3.8 29.6, 4.5 28.8, 4.5 26.6
-             V 6.5
-             C 4.5 4.2, 3.8 3.4, 1.8 3.4
-             H 0
-             V 2.0 Z"/>
 
-    <!-- Lowercase High-Contrast Editorial Serif "u" -->
-    <path d="M 37.5 11.2
-             H 45.2
-             V 23.8
-             C 45.2 27.3, 47.1 29.0, 50.4 29.0
-             C 53.4 29.0, 55.9 27.0, 57.3 24.2
-             V 14.1
-             C 57.3 12.7, 56.6 12.3, 54.5 12.3
-             V 11.2
-             H 61.8
-             V 27.4
-             C 61.8 29.0, 62.5 29.6, 64.3 29.6
-             H 65.3
-             V 31.0
-             H 57.8
-             L 57.3 26.6
-             C 55.2 29.7, 52.2 31.4, 48.5 31.4
-             C 43.7 31.4, 40.7 28.6, 40.7 23.6
-             V 14.1
-             C 40.7 12.7, 40.0 12.3, 37.5 12.3
-             V 11.2 Z"/>
+  <g filter="url(#goldDrop)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- LAYER 1: 3D Extruded Antique Bronze Backing -->
+    <g transform="translate(-1.5, 2.6)" stroke="url(#goldBronzeDepth)">
+      <!-- L -->
+      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="14.2"/>
+      <!-- u flowing cleanly to x shoulder -->
+      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103" stroke-width="13.2"/>
+      <!-- x main wave -->
+      <path d="M 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="13.2"/>
+      <!-- x cross stroke -->
+      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="12.2"/>
+    </g>
 
-    <!-- Lowercase High-Contrast Editorial Serif "x" -->
-    <!-- Primary thick down-right diagonal with bracketed serifs -->
-    <path d="M 71.0 11.2
-             H 82.2
-             V 12.3
-             H 80.5
-             C 79.8 12.3, 80.0 12.8, 80.9 13.8
-             L 94.2 28.7
-             C 95.1 29.7, 96.0 29.9, 97.8 29.9
-             V 31.0
-             H 86.8
-             V 29.9
-             H 88.5
-             C 89.2 29.9, 89.0 29.4, 88.1 28.4
-             L 74.8 13.5
-             C 73.9 12.5, 73.1 12.3, 71.0 12.3
-             V 11.2 Z"/>
-    <!-- Secondary hairline up-right diagonal with bracketed serifs -->
-    <path d="M 88.4 11.2
-             H 97.4
-             V 12.3
-             H 95.7
-             C 94.5 12.3, 93.8 12.8, 92.9 13.8
-             L 78.2 28.7
-             C 77.3 29.6, 77.8 29.9, 79.6 29.9
-             H 80.2
-             V 31.0
-             H 71.0
-             V 29.9
-             H 72.7
-             C 73.9 29.9, 74.6 29.3, 75.5 28.4
-             L 90.2 13.5
-             C 91.1 12.6, 90.6 12.3, 88.8 12.3
-             H 88.4
-             V 11.2 Z"/>
+    <!-- LAYER 2: 24K Gold-Leaf Foil Body -->
+    <g stroke="url(#goldLeafBody)">
+      <!-- L -->
+      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="13"/>
+      <!-- u flowing cleanly to x shoulder -->
+      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103" stroke-width="12"/>
+      <!-- x main wave -->
+      <path d="M 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="12"/>
+      <!-- x cross stroke -->
+      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="11"/>
+    </g>
+
+    <!-- LAYER 3: Specular Gold-Leaf Foil Highlight Ridge -->
+    <g transform="translate(0.4, -0.9)" stroke="url(#goldLeafSheen)">
+      <!-- L -->
+      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="2.6"/>
+      <!-- u + x unified bevel highlight -->
+      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="2.3"/>
+      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="2.0"/>
+    </g>
   </g>
 </svg>
