@@ -21,7 +21,9 @@ Whenever asked to create, pull, edit, or publish a client demo (`<slug>`):
    - Initialize new client from master skeleton: `node scripts/atelier-sync.mjs init <slug> --template nails-atelier --palette 01`
    - Push local folder live to `<slug>.wynnpages.com.au`: `node scripts/atelier-sync.mjs push <slug>`
 
-## 3. Core Studio Deployment
-- Pushing to `origin/main` on GitHub automatically triggers Workers Builds and deploys `https://wynnpages.com.au` in ~15–20 seconds.
+## 3. Core Studio & Demo Auto-Deployment (MANDATORY AFTER EVERY EDIT)
+- **Strict Auto-Push Rule:** Whenever you finish editing ANY file (whether `clients/<slug>/index.html`, `clients/_templates/nails-atelier/index.html`, `templates/*`, `admin.html`, `index.html`, or `_worker.js`), you MUST immediately deploy the changes live without waiting for the user to ask:
+  - Run `node scripts/atelier-sync.mjs push-all` to automatically sync `templates/nails-atelier.html`, push all client demos in `clients/*` to Cloudflare KV (`https://<slug>.wynnpages.com.au`), and `git commit` + `git push origin main` to deploy `https://wynnpages.com.au`.
 - Always run `node -c _worker.js` before committing changes to `_worker.js`.
+
 

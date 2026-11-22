@@ -4770,23 +4770,21 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
       // Helper to auto-deploy Tradie Master Engine template (01 Emergency, 02 Luxury Builder, 03 B2B Contractor)
       async function deployTradieTemplateForClient(clientObj, tradieKey = 'tradie-emergency', customAddr = undefined, customSoc = undefined) {
         const templatePaths = {
-          'tradie-emergency': '1-emergency-plumber.html',
-          'tradie-luxury': '2-luxury-builder.html',
-          'tradie-b2b': '3-b2b-contractor.html'
+          'tradie-emergency': '1-emergency-plumber',
+          'tradie-luxury': '2-luxury-builder',
+          'tradie-b2b': '3-b2b-contractor'
         };
-        const tplName = templatePaths[tradieKey] || '1-emergency-plumber.html';
-        const [tplRes, cssRes, jsRes] = await Promise.all([
-          fetch(`/templates/tradie-master/${tplName}`, { cache: 'no-cache' }),
-          fetch('/templates/tradie-master/style.css', { cache: 'no-cache' }),
-          fetch('/templates/tradie-master/script.js', { cache: 'no-cache' })
-        ]);
-        if (!tplRes.ok) throw new Error(`Không tải được khung mẫu /templates/tradie-master/${tplName}`);
+        const tplSlug = templatePaths[tradieKey] || '1-emergency-plumber';
+        let tplRes = await fetch(`/templates/tradie-master/${tplSlug}`, { cache: 'no-cache', redirect: 'follow' }).catch(() => null);
+        if (!tplRes || !tplRes.ok) {
+          tplRes = await fetch(`/templates/tradie-master/${tplSlug}.html`, { cache: 'no-cache', redirect: 'follow' });
+        }
+        if (!tplRes || !tplRes.ok) throw new Error(`Không tải được khung mẫu /templates/tradie-master/${tplSlug}`);
         let html = await tplRes.text();
-        const css = cssRes.ok ? await cssRes.text() : '';
-        const scriptJS = jsRes.ok ? await jsRes.text() : '';
 
         const bizName = (clientObj && (clientObj.businessName || clientObj.name)) || 'WynnPages Tradie';
         const safeBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const initial = (bizName.replace(/[^A-Za-z]/g, '').charAt(0) || 'A').toUpperCase();
         const dPhone = (clientObj && (clientObj.displayPhone || clientObj.phone)) || '1300 999 999';
         const sPhone = ((clientObj && (clientObj.phone || clientObj.displayPhone)) || '1300999999').replace(/[^0-9+]/g, '');
         const address = (customAddr !== undefined ? customAddr : (clientObj && clientObj.businessAddress)) || '';
@@ -4794,26 +4792,17 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const shortLoc = [parsedAddr.suburb, parsedAddr.state].filter(Boolean).join(', ') || '';
 
         html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${safeBiz} | Official Website</title>`);
+        html = html.replace(/<span class="brand-monogram">A<\/span>/g, `<span class="brand-monogram">${initial}</span>`);
         html = html.replace(/RAPID PLUMBING|AURA ARCHITECTURE|APEX COMM-TILING|ELITE BUILDERS/g, safeBiz);
         html = html.replace(/1300 999 999|1800 123 456/g, dPhone);
         html = html.replace(/tel:1300999999|tel:1800123456/g, `tel:${sPhone}`);
         if (shortLoc) {
-          html = html.replace(/across Queensland|serving the Greater Region/gi, `across ${shortLoc}`);
-        }
-
-        // Inline CSS & JS into index.html so it works 100% standalone on both subdomain and /d/slug
-        if (css) {
-          html = html.replace(new RegExp('<' + 'link[^>]+href=["\']style\\.css["\'][^>]*>', 'i'), '<' + 'style>\n' + css + '\n<' + '/style>');
-        }
-        if (scriptJS) {
-          html = html.replace(new RegExp('<' + 'script[^>]+src=["\']script\\.js["\'][^>]*><' + '/script>', 'i'), '<' + 'script>\n' + scriptJS + '\n<' + '/script>');
+          html = html.replace(/across Queensland|across Australia|serving the Greater Region/gi, `across ${shortLoc}`);
         }
 
         const seoAssets = await generateClientSeoAssetsBrowser(clientObj, '01', customAddr);
         const bundleFiles = [
           { path: '/index.html', type: 'text/html; charset=utf-8', text: html },
-          { path: '/style.css', type: 'text/css; charset=utf-8', text: css },
-          { path: '/script.js', type: 'application/javascript; charset=utf-8', text: scriptJS },
           ...seoAssets
         ];
 
@@ -6875,51 +6864,37 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const vaultMap = {
           '01': {
             hero: `${vaultBase}/hero-sanctuary.jpg`,
-            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
-            afterNail: `${vaultBase}/biab-artistry.jpg`,
-            biab: `${vaultBase}/sheer-biab-architecture.jpg`,
+            biab: `${vaultBase}/biab-artistry.jpg`,
             pedi: `${vaultBase}/botanical-pedicure.jpg`
           },
           '02': {
             hero: `${vaultBase}/p02/hero.jpg`,
-            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
-            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p02/biab.jpg`,
             pedi: `${vaultBase}/p02/pedicure.jpg`
           },
           '03': {
             hero: `${vaultBase}/p03/hero.jpg`,
-            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
-            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p03/biab.jpg`,
             pedi: `${vaultBase}/p03/pedicure.jpg`
           },
           '04': {
             hero: `${vaultBase}/p04/hero.jpg`,
-            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
-            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p04/biab.jpg`,
             pedi: `${vaultBase}/p04/pedicure.jpg`
           },
           '05': {
             hero: `${vaultBase}/p05/hero.jpg`,
-            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
-            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p05/biab.jpg`,
             pedi: `${vaultBase}/p05/pedicure.jpg`
           }
         };
         const pv = vaultMap[validPal] || vaultMap['01'];
         patchStringField('hero', pv.hero);
-        patchStringField('beforeNail', pv.beforeNail);
-        patchStringField('afterNail', pv.afterNail);
         patchStringField('biabFeature', pv.biab);
         patchStringField('pedicureFeature', pv.pedi);
         html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
-        html = html.replace(/(<img[\s\S]*?id="feature-biab-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
-        html = html.replace(/(<img[\s\S]*?id="feature-pedi-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.pedi}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.afterNail || pv.biab}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.beforeNail}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${vaultBase}/before-natural-nails.jpg$2`);
 
         const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
         const resolvedState = address ? parsedAddr.state : '';

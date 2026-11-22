@@ -3,14 +3,16 @@
  * WynnPages Digital Atelier — Local <-> Live KV Sync & Initializer CLI
  *
  * Commands:
- *   node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03|04|05] [--name "Salon Name"]
+ *   node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03|04|05] [--template nails-atelier|tradie-emergency|tradie-luxury|tradie-b2b] [--name "Business Name"]
  *   node scripts/atelier-sync.mjs pull <slug>
+ *   node scripts/atelier-sync.mjs pull-all
  *   node scripts/atelier-sync.mjs push <slug>
  *   node scripts/atelier-sync.mjs sync-template
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,6 +20,11 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const CLIENTS_DIR = path.join(ROOT_DIR, 'clients');
 const TEMPLATE_HTML_PATH = path.join(CLIENTS_DIR, '_templates', 'nails-atelier', 'index.html');
 const PUBLIC_TEMPLATE_COPY = path.join(ROOT_DIR, 'templates', 'nails-atelier.html');
+const TRADIE_TEMPLATES = {
+  'tradie-emergency': path.join(ROOT_DIR, 'templates', 'tradie-master', '1-emergency-plumber.html'),
+  'tradie-luxury': path.join(ROOT_DIR, 'templates', 'tradie-master', '2-luxury-builder.html'),
+  'tradie-b2b': path.join(ROOT_DIR, 'templates', 'tradie-master', '3-b2b-contractor.html')
+};
 
 const STUDIO_ORIGIN = process.env.WYNN_ORIGIN || 'https://wynnpages.com.au';
 const ADMIN_KEY = process.env.WYNN_ADMIN_KEY || 'wynn2026';
@@ -355,6 +362,43 @@ async function downloadClientBriefUploads(client, clientDir) {
   return downloaded;
 }
 
+function resolveClientTemplateKey(slug, client, flagTemplate) {
+  if (flagTemplate && (flagTemplate === 'nails-atelier' || TRADIE_TEMPLATES[flagTemplate])) {
+    return flagTemplate;
+  }
+  const tplKey = String((client && client.demoPalette) || '').trim();
+  if (TRADIE_TEMPLATES[tplKey]) return tplKey;
+  const searchCtx = `${slug || ''} ${(client && client.businessName) || ''} ${(client && client.name) || ''} ${(client && client.industry) || ''}`;
+  const isTradie = /(water|plumb|drain|gas|elec|build|construct|tile|tiling|roof|carpenter|concret|tradie|hvac|paint|solar|fenc|landscap|tool|hardware|civil|commercial)/i.test(searchCtx);
+  if (!isTradie) return 'nails-atelier';
+  if (/(build|architect|renov|luxury|home|interior|landscap|carpenter)/i.test(searchCtx)) return 'tradie-luxury';
+  if (/(tile|tiling|commercial|civil|concret|steel|screed|waterproof|b2b|tool|hardware)/i.test(searchCtx)) return 'tradie-b2b';
+  return 'tradie-emergency';
+}
+
+function hydrateTradieMasterHtml(templateHtml, client, slug) {
+  const bizName = (client && (client.businessName || client.name)) || slug || 'Your Business';
+  const safeBiz = bizName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const initial = (bizName.replace(/[^A-Za-z]/g, '').charAt(0) || 'A').toUpperCase();
+  const dPhone = (client && (client.displayPhone || client.phone)) || '1300 999 999';
+  const sPhone = ((client && (client.phone || client.displayPhone)) || '1300999999').replace(/[^0-9+]/g, '');
+  let html = templateHtml;
+  html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${safeBiz} | Official Website</title>`);
+  html = html.replace(/<span class="brand-monogram">A<\/span>/g, `<span class="brand-monogram">${initial}</span>`);
+  html = html.replace(/RAPID PLUMBING|AURA ARCHITECTURE|APEX COMM-TILING|ELITE BUILDERS/g, safeBiz);
+  html = html.replace(/1300 999 999|1800 123 456/g, dPhone);
+  html = html.replace(/tel:1300999999|tel:1800123456/g, `tel:${sPhone}`);
+  return html;
+}
+
+async function fetchAllRemoteClients() {
+  const url = `${STUDIO_ORIGIN}/api/clients?key=${encodeURIComponent(ADMIN_KEY)}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.clients) ? data.clients : [];
+}
+
 async function fetchRemoteBundle(slugOrCid) {
   const url = `${STUDIO_ORIGIN}/api/demo-bundle?slug=${encodeURIComponent(slugOrCid)}&key=${encodeURIComponent(ADMIN_KEY)}`;
   const res = await fetch(url);
@@ -396,27 +440,82 @@ async function main() {
     return;
   }
 
+  if (cmd === 'pull-all') {
+    const clients = await fetchAllRemoteClients().catch(() => []);
+    if (!clients.length) {
+      console.log('No remote clients found.');
+      return;
+    }
+    for (const c of clients) {
+      const s = slugify(c.demoSlug || c.businessName || c.name);
+      if (!s) continue;
+      console.log(`Pulling client "${s}"...`);
+      await syncSingleClient('pull', s, flags);
+    }
+    return;
+  }
+
+  if (cmd === 'push-all') {
+    fs.mkdirSync(path.dirname(PUBLIC_TEMPLATE_COPY), { recursive: true });
+    fs.copyFileSync(TEMPLATE_HTML_PATH, PUBLIC_TEMPLATE_COPY);
+    console.log(`1. Synced master skeleton -> ${PUBLIC_TEMPLATE_COPY}`);
+
+    const entries = fs.readdirSync(CLIENTS_DIR, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('_') || entry.name.startsWith('.')) continue;
+      const slug = slugify(entry.name);
+      if (!slug) continue;
+      console.log(`2. Pushing client demo "${slug}" to Cloudflare KV...`);
+      await syncSingleClient('push', slug, flags);
+    }
+
+    try {
+      console.log('3. Committing & pushing main studio repository to GitHub (origin/main)...');
+      execSync('git add -A && (git diff --cached --quiet || git commit -m "Sync Atelier templates, Before/After slider, Safari arch clip & Hero wall signage") && git push origin main', {
+        cwd: ROOT_DIR,
+        stdio: 'inherit'
+      });
+      console.log('✅ All client demos (KV) and main studio site (GitHub -> Cloudflare Workers) pushed!');
+    } catch (err) {
+      console.error('Git push note:', err.message);
+    }
+    return;
+  }
+
   if (!cmd || !rawTarget || !['init', 'pull', 'push'].includes(cmd)) {
-    console.error('Usage:\n  node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03|04|05] [--name "Salon Name"]\n  node scripts/atelier-sync.mjs pull <slug>\n  node scripts/atelier-sync.mjs push <slug>\n  node scripts/atelier-sync.mjs sync-template');
+    console.error('Usage:\n  node scripts/atelier-sync.mjs init <slug> [--palette 01|02|03|04|05] [--template nails-atelier|tradie-emergency|tradie-luxury|tradie-b2b] [--name "Business Name"]\n  node scripts/atelier-sync.mjs pull <slug>\n  node scripts/atelier-sync.mjs pull-all\n  node scripts/atelier-sync.mjs push <slug>\n  node scripts/atelier-sync.mjs push-all\n  node scripts/atelier-sync.mjs sync-template');
     process.exit(1);
   }
 
+  await syncSingleClient(cmd, rawTarget, flags);
+}
+
+async function syncSingleClient(cmd, rawTarget, flags = {}) {
   const remote = await fetchRemoteBundle(rawTarget).catch(() => null);
   const client = remote && remote.client ? remote.client : (flags.name ? { businessName: flags.name } : null);
   const slug = slugify((remote && remote.slug) || rawTarget);
   const clientDir = path.join(CLIENTS_DIR, slug);
   fs.mkdirSync(clientDir, { recursive: true });
 
-  if (cmd === 'init') {
-    const palette = flags.palette || '01';
+  const renderClientSkeleton = () => {
+    const tplKey = resolveClientTemplateKey(slug, client, flags.template);
+    if (TRADIE_TEMPLATES[tplKey] && fs.existsSync(TRADIE_TEMPLATES[tplKey])) {
+      const rawTradie = fs.readFileSync(TRADIE_TEMPLATES[tplKey], 'utf8');
+      return { html: hydrateTradieMasterHtml(rawTradie, client, slug), tplKey };
+    }
+    const palette = flags.palette || (client && client.demoPalette) || '01';
     const masterHtml = fs.readFileSync(TEMPLATE_HTML_PATH, 'utf8');
-    const hydrated = injectClientIntoMasterHtml(masterHtml, client, palette);
-    fs.writeFileSync(path.join(clientDir, 'index.html'), hydrated, 'utf8');
+    return { html: injectClientIntoMasterHtml(masterHtml, client, palette), tplKey: palette };
+  };
+
+  if (cmd === 'init') {
+    const { html, tplKey } = renderClientSkeleton();
+    fs.writeFileSync(path.join(clientDir, 'index.html'), html, 'utf8');
     const bizLabel = (client && (client.businessName || client.name)) || slug;
-    fs.writeFileSync(path.join(clientDir, 'favicon.svg'), buildClientFaviconSvg(bizLabel, palette), 'utf8');
+    fs.writeFileSync(path.join(clientDir, 'favicon.svg'), buildClientFaviconSvg(bizLabel, flags.palette || '01'), 'utf8');
     const uploads = await downloadClientBriefUploads(client, clientDir);
-    fs.writeFileSync(path.join(clientDir, 'ATELIER_MANIFEST.md'), buildManifestMarkdown(slug, client, palette, uploads), 'utf8');
-    console.log(`Initialized clients/${slug}/ with Nails Atelier Skeleton, bespoke favicon.svg & SEO (Palette ${palette}).`);
+    fs.writeFileSync(path.join(clientDir, 'ATELIER_MANIFEST.md'), buildManifestMarkdown(slug, client, tplKey, uploads), 'utf8');
+    console.log(`Initialized clients/${slug}/ with template "${tplKey}".`);
     return;
   }
 
@@ -435,17 +534,16 @@ async function main() {
       }
       console.log(`Pulled ${files.length} live file(s) from KV into clients/${slug}/`);
     } else {
-      const palette = flags.palette || '01';
-      const masterHtml = fs.readFileSync(TEMPLATE_HTML_PATH, 'utf8');
-      const hydrated = injectClientIntoMasterHtml(masterHtml, client, palette);
-      fs.writeFileSync(path.join(clientDir, 'index.html'), hydrated, 'utf8');
+      const { html, tplKey } = renderClientSkeleton();
+      fs.writeFileSync(path.join(clientDir, 'index.html'), html, 'utf8');
       const bizLabel = (client && (client.businessName || client.name)) || slug;
-      fs.writeFileSync(path.join(clientDir, 'favicon.svg'), buildClientFaviconSvg(bizLabel, palette), 'utf8');
-      console.log(`No live KV bundle found yet for "${slug}" — initialized fresh Nails Atelier skeleton + favicon.svg in clients/${slug}/.`);
+      fs.writeFileSync(path.join(clientDir, 'favicon.svg'), buildClientFaviconSvg(bizLabel, flags.palette || '01'), 'utf8');
+      console.log(`No live KV bundle found yet for "${slug}" — initialized fresh "${tplKey}" skeleton + favicon.svg in clients/${slug}/.`);
     }
     const uploads = await downloadClientBriefUploads(client, clientDir);
     if (!fs.existsSync(path.join(clientDir, 'ATELIER_MANIFEST.md')) || uploads.length > 0 || client) {
-      fs.writeFileSync(path.join(clientDir, 'ATELIER_MANIFEST.md'), buildManifestMarkdown(slug, client, flags.palette || '01', uploads), 'utf8');
+      const tplKey = resolveClientTemplateKey(slug, client, flags.template);
+      fs.writeFileSync(path.join(clientDir, 'ATELIER_MANIFEST.md'), buildManifestMarkdown(slug, client, flags.palette || tplKey, uploads), 'utf8');
     }
     if (uploads.length) {
       console.log(`Downloaded ${uploads.length} client brief upload(s) into clients/${slug}/_client_uploads/`);

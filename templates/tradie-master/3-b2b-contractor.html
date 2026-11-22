@@ -1,74 +1,592 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Commercial Contractor | Tradie Master Engine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>APEX COMM-TILING | Tier-1 Commercial Tiling &amp; Trade Contractor</title>
+  <meta name="description" content="Trusted Tier-1 commercial & industrial contractor. QBCC licensed, AS 3958.1 & AS 3740 compliant, Form 15/16 QA sign-off, zero lippage guarantee across Australia.">
+  <meta name="theme-color" content="#0a0c10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root {
+      --brand-green: #1EA33A;
+      --brand-green-bright: #4ADE80;
+      --brand-red: #E51E25;
+      --bg-dark: #0a0c10;
+      --bg-card: rgba(16, 20, 28, 0.82);
+      --bg-card-hover: rgba(24, 30, 42, 0.94);
+      --text-main: #f0f0f0;
+      --text-muted: #9aa5b1;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --container-width: 1220px;
+      --radius-md: 8px;
+      --radius-lg: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg-dark); color: var(--text-main); }
+    body { font-family: 'Inter', sans-serif; color: var(--text-main); background-color: var(--bg-dark); line-height: 1.6; overflow-x: hidden; position: relative; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 80px 80px; z-index: -2; pointer-events: none;
+    }
+    .ambient-glow-1, .ambient-glow-2 { position: fixed; width: 600px; height: 600px; border-radius: 50%; filter: blur(150px); z-index: -1; pointer-events: none; }
+    .ambient-glow-1 { top: -200px; left: -200px; background: radial-gradient(circle, rgba(30, 163, 58, 0.1) 0%, transparent 70%); }
+    .ambient-glow-2 { bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(229, 30, 37, 0.07) 0%, transparent 70%); }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; line-height: 1.15; }
+    .text-green { color: var(--brand-green-bright); }
+    .text-red { color: var(--brand-red); }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; }
+    .container { max-width: var(--container-width); margin: 0 auto; padding: 0 22px; }
+    .glass-card {
+      background: var(--bg-card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color); border-radius: var(--radius-lg); transition: all 0.35s ease; position: relative;
+    }
+    .glass-card:hover { background: var(--bg-card-hover); border-color: rgba(74, 222, 128, 0.35); box-shadow: 0 14px 36px rgba(0,0,0,0.55); }
+    .header {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      background: rgba(10, 12, 16, 0.86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.07); transition: all 0.3s ease;
+    }
+    .scroll-progress-bar {
+      position: absolute; bottom: 0; left: 0; height: 2.5px; width: 0%;
+      background: linear-gradient(90deg, var(--brand-red) 0%, var(--brand-green-bright) 100%);
+      box-shadow: 0 0 10px var(--brand-green); z-index: 1001; transition: width 0.08s linear;
+    }
+    .header-container { display: flex; justify-content: space-between; align-items: center; height: 82px; gap: 16px; }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+    .logo-mark {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--brand-green) 0%, #0f5c20 100%);
+      border: 1px solid var(--brand-green-bright);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.2rem; color: #fff;
+      box-shadow: 0 0 18px rgba(30, 163, 58, 0.35);
+    }
+    .logo-text-col { display: flex; flex-direction: column; }
+    .logo-text { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.1rem; letter-spacing: 1px; color: #fff; }
+    .logo-sub { font-size: 0.65rem; color: var(--brand-green-bright); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: 26px; align-items: center; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.25s; }
+    .nav-links a:hover { color: #fff; }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .header-tender-pill {
+      display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px;
+      background: rgba(30, 163, 58, 0.12); border: 1px solid rgba(74, 222, 128, 0.38);
+      border-radius: 50px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; color: #fff;
+    }
+    .beacon-green { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: beaconPulse 1.6s infinite; }
+    @keyframes beaconPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.4; } }
+    .tile-call-btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px;
+      background: linear-gradient(135deg, #c8191f 0%, #990f13 100%);
+      border: 1px solid rgba(255,255,255,0.25); border-radius: var(--radius-md);
+      color: #fff; font-weight: 700; font-size: 0.86rem; text-decoration: none;
+      box-shadow: 0 6px 20px rgba(229, 30, 37, 0.38); transition: all 0.25s ease;
+    }
+    .tile-call-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(229, 30, 37, 0.55); }
+
+    /* Hero + Interactive Laser Grid Reveal */
+    .hero { position: relative; min-height: 92vh; display: flex; align-items: center; padding: 130px 0 80px; overflow: hidden; }
+    .hero-bg { position: absolute; inset: 0; z-index: -1; }
+    .hero-bg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.28; filter: contrast(1.1); }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(10,12,16,0.96) 0%, rgba(10,12,16,0.8) 50%, rgba(10,12,16,0.45) 100%);
+    }
+    .tile-grid-reveal { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .tile-grid-reveal::before {
+      content: ''; position: absolute; inset: 0;
+      background-size: 64px 64px;
+      background-image: linear-gradient(to right, rgba(74, 222, 128, 0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(74, 222, 128, 0.22) 1px, transparent 1px);
+      mask-image: radial-gradient(circle 340px at var(--grid-spot-x, 50%) var(--grid-spot-y, 50%), black 0%, transparent 75%);
+      -webkit-mask-image: radial-gradient(circle 340px at var(--grid-spot-x, 50%) var(--grid-spot-y, 50%), black 0%, transparent 75%);
+    }
+    .hero-container { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 44px; align-items: center; position: relative; z-index: 3; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px;
+      background: rgba(30, 163, 58, 0.15); border: 1px solid rgba(74, 222, 128, 0.35);
+      color: var(--brand-green-bright); border-radius: 50px; font-size: 0.85rem; font-weight: 600; margin-bottom: 22px;
+    }
+    .hero h1 { font-size: clamp(2.6rem, 4.6vw, 4rem); font-weight: 900; margin-bottom: 20px; letter-spacing: -0.8px; }
+    .hero p { font-size: 1.12rem; color: var(--text-muted); margin-bottom: 32px; max-width: 600px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+    .btn-hero-cta {
+      display: inline-flex; align-items: center; gap: 8px; padding: 13px 26px;
+      font-size: 0.94rem; font-weight: 700; border-radius: var(--radius-md);
+      background: var(--brand-green); border: 1px solid var(--brand-green-bright); color: #fff;
+      text-decoration: none; box-shadow: 0 8px 24px rgba(30, 163, 58, 0.35); transition: all 0.25s ease;
+    }
+    .btn-hero-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(30, 163, 58, 0.55); }
+    .hero-spec-strip {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+      margin-top: 32px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
+    }
+
+    /* Spirit Level HUD Card */
+    .hero-hud-card {
+      padding: 24px; background: rgba(10, 14, 20, 0.94);
+      border: 1px solid rgba(74, 222, 128, 0.42);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.75), 0 0 30px rgba(30, 163, 58, 0.14);
+      border-radius: var(--radius-lg); backdrop-filter: blur(24px);
+    }
+    .hero-hud-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 16px; font-size: 0.74rem; font-weight: 700; color: var(--brand-green-bright); }
+    .hud-tag { padding: 3px 8px; background: rgba(255,255,255,0.06); border-radius: 4px; border: 1px solid rgba(255,255,255,0.14); color: #fff; }
+    .hero-level-display { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+    .level-vial {
+      position: relative; width: 100%; height: 28px;
+      background: linear-gradient(180deg, rgba(14, 46, 22, 0.95) 0%, rgba(7, 24, 11, 0.95) 100%);
+      border: 1px solid rgba(74, 222, 128, 0.55); border-radius: 14px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 0 15px rgba(34, 197, 94, 0.22);
+      display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 8px;
+    }
+    .vial-target-line { position: absolute; width: 1.5px; height: 100%; background: rgba(255,255,255,0.45); z-index: 3; }
+    .vial-target-line.left-line { left: calc(50% - 16px); }
+    .vial-target-line.right-line { right: calc(50% - 16px); }
+    .vial-bubble {
+      width: 28px; height: 18px; background: radial-gradient(circle, #86efac 20%, #22c55e 80%);
+      border-radius: 50%; box-shadow: 0 0 12px #4ade80;
+      animation: bubbleOscillate 4.2s ease-in-out infinite alternate;
+    }
+    @keyframes bubbleOscillate { 0% { transform: translateX(-6px); } 50% { transform: translateX(5px); } 100% { transform: translateX(0px); } }
+    .level-scale { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); }
+    .hero-hud-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hud-spec-pill { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(20, 26, 36, 0.95); border: 1px solid rgba(74, 222, 128, 0.35); border-radius: 8px; font-size: 0.76rem; font-weight: 600; color: #fff; }
+    /* Trusted Marquee */
+    .trusted-by { background: rgba(10,12,16,0.92); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 32px 0; overflow: hidden; text-align: center; }
+    .trusted-subtitle { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; color: var(--brand-green-bright); text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .trusted-title { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 18px; }
+    .marquee-track { display: flex; width: max-content; gap: 24px; animation: marqueeScroll 36s linear infinite; }
+    .builder-badge { padding: 12px 24px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1rem; letter-spacing: 1.5px; color: #fff; white-space: nowrap; }
+    @keyframes marqueeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* Stats Section */
+    .stats-section { padding: 65px 0; position: relative; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+    .stat-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 28px 20px; text-align: center; position: relative; }
+    .stat-number { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 900; line-height: 1; margin-bottom: 6px; color: #fff; }
+    .stat-number.accent-green { color: var(--brand-green-bright); }
+    .stat-number.accent-red { color: var(--brand-red); }
+    .stat-label { font-size: 0.88rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+    .stat-subtag { font-family: monospace; font-size: 0.7rem; color: var(--brand-green-bright); }
+    .tile-corner { position: absolute; font-family: monospace; font-size: 12px; font-weight: 700; color: rgba(74,222,128,0.5); }
+    .tc-tl { top: 8px; left: 10px; } .tc-tr { top: 8px; right: 10px; } .tc-bl { bottom: 8px; left: 10px; } .tc-br { bottom: 8px; right: 10px; }
+
+    /* Sections */
+    .section { padding: 95px 0; position: relative; }
+    .section-title { font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; margin-bottom: 14px; }
+    .section-desc { color: var(--text-muted); font-size: 1.05rem; max-width: 620px; margin-bottom: 32px; }
+
+    /* Capacity & Legal Scanner */
+    .capacity-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 50px; align-items: center; }
+    .legal-card { padding: 30px; border-left: 4px solid var(--brand-green); overflow: hidden; }
+    .legal-scanner-beam {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--brand-green-bright) 50%, transparent 100%);
+      box-shadow: 0 0 14px var(--brand-green-bright); animation: legalScanSweep 4.5s ease-in-out infinite;
+    }
+    @keyframes legalScanSweep { 0% { top: 0%; opacity: 0; } 20%, 80% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    .legal-list { list-style: none; margin-top: 16px; }
+    .legal-list li { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; gap: 12px; }
+    .legal-list li:last-child { border-bottom: none; }
+    .legal-list .label { color: var(--text-muted); }
+    .legal-list .value { font-weight: 700; text-align: right; }
+
+    /* Capabilities & Projects */
+    .cards-3-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+    .cap-card { overflow: hidden; display: flex; flex-direction: column; }
+    .cap-img { height: 220px; position: relative; overflow: hidden; }
+    .cap-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .cap-card:hover .cap-img img { transform: scale(1.06); }
+    .cap-spec-tag { position: absolute; top: 14px; right: 14px; background: rgba(10,12,16,0.9); border: 1px solid rgba(74,222,128,0.4); color: var(--brand-green-bright); font-size: 0.68rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
+    .cap-body { padding: 26px; flex: 1; display: flex; flex-direction: column; }
+    .cap-body h3 { font-size: 1.3rem; margin-bottom: 10px; color: #fff; }
+    .cap-body p { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 18px; flex: 1; }
+    .spec-pills { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .spec-pill { font-size: 0.75rem; padding: 5px 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-main); display: inline-flex; align-items: center; gap: 6px; }
+    .spec-pill i { color: var(--brand-green-bright); }
+
+    .assurance-banner { margin-top: 40px; padding: 26px 32px; background: linear-gradient(135deg, rgba(14, 24, 18, 0.92), rgba(16, 20, 28, 0.92)); border: 1px solid rgba(74,222,128,0.4); border-radius: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .footer { border-top: 1px solid var(--border-color); padding: 50px 0 110px; background: #07080a; font-size: 0.88rem; color: var(--text-muted); }
+    .reveal { opacity: 0; transform: translateY(28px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 992px) {
+      .hero-container, .capacity-grid, .cards-3-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-links, .header-tender-pill { display: none; }
+    }
+  </style>
 </head>
-<body class="theme-b2b">
-    <div class="global-noise"></div>
-    <header class="header glass-panel">
-        <div class="nav-container">
-            <div class="logo">
-                <span class="logo-icon"><i class="ph-bold ph-buildings"></i></span>
-                <span class="logo-text">APEX COMM-TILING</span>
-            </div>
-            <nav class="nav-links">
-                <a href="#capabilities">Capabilities</a>
-                <a href="#compliance">Compliance</a>
-            </nav>
-            <div class="nav-cta">
-                <a href="mailto:tenders@apex.com" class="btn btn-primary magnetic" data-strength="20">
-                    <span class="btn-text">Submit BOQ</span>
-                </a>
-            </div>
+<body>
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <header class="header">
+    <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+    <div class="container header-container">
+      <a href="#home" class="logo">
+        <div class="logo-mark"><i class="ph-bold ph-buildings"></i></div>
+        <div class="logo-text-col">
+          <span class="logo-text">APEX COMM-TILING</span>
+          <span class="logo-sub">Tier-1 Commercial Contractor</span>
         </div>
-    </header>
-    <main>
-        <section class="hero">
-            <div class="hero-glow"></div>
-            <div class="container hero-layout">
-                <div class="hero-content">
-                    <div class="hero-badge reveal">
-                        <span class="badge-dot green"></span> Tier-1 Subcontractor
-                    </div>
-                    <h1 class="hero-title reveal delay-1">
-                        Precision at <span class="text-accent">Scale.</span>
-                    </h1>
-                    <div class="hero-specs-grid reveal delay-2">
-                        <div class="spec-item"><i class="ph-fill ph-check-circle"></i> AS 3958.1 Compliant</div>
-                        <div class="spec-item"><i class="ph-fill ph-check-circle"></i> QBCC 15242278</div>
-                    </div>
-                    <p class="hero-desc reveal delay-3 mt-4">
-                        Trusted by top-tier builders across Queensland.
-                    </p>
-                    <div class="hero-actions reveal delay-4">
-                        <a href="#tender" class="btn btn-primary btn-lg magnetic" data-strength="30">
-                            <span class="btn-text">Discuss Project</span>
-                        </a>
-                    </div>
-                </div>
-                <div class="hero-visual reveal delay-2">
-                    <div class="visual-card interactive-card glass-panel tech-hud">
-                        <div class="hud-header">
-                            <span class="hud-title">LASER CALIBRATION</span>
-                            <span class="hud-status text-accent">ACTIVE</span>
-                        </div>
-                        <div class="hud-leveler">
-                            <div class="level-line left"></div>
-                            <div class="level-bubble"></div>
-                            <div class="level-line right"></div>
-                        </div>
-                    </div>
-                </div>
+      </a>
+      <nav class="nav-links">
+        <a href="#capacity">Compliance &amp; Capacity</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#projects">Major Projects</a>
+        <a href="#why-us">Why Us</a>
+      </nav>
+      <div class="header-actions">
+        <div class="header-tender-pill">
+          <span class="beacon-green"></span>
+          <span>2026 TENDERS OPEN</span>
+        </div>
+        <a href="tel:1300999999" class="tile-call-btn">
+          <i class="ph-fill ph-phone-call"></i>
+          <span>1300 999 999</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section with Interactive Laser Grid & Precision Level Gauge -->
+    <section id="home" class="hero">
+      <div class="hero-bg">
+        <img src="https://images.unsplash.com/photo-1541888946425-d09bb18086f6?auto=format&fit=crop&w=1920&q=85" alt="Commercial Construction & Tiling">
+        <div class="hero-overlay"></div>
+        <div class="tile-grid-reveal" id="heroTileGrid"></div>
+      </div>
+      <div class="container hero-container">
+        <div class="hero-content">
+          <div class="badge reveal">
+            <span class="beacon-green"></span>
+            <span>Commercial &amp; Industrial Specialists</span>
+          </div>
+          <h1 class="reveal">Your Trusted Partner for <span class="text-green">Commercial Projects</span> at Scale.</h1>
+          <p class="reveal">Delivering large-scale high-rise, retail, hospital, and commercial packages across Queensland on schedule, within budget, and strictly compliant with AS 3958.1, AS 3740 &amp; WHS standards.</p>
+          <div class="hero-actions reveal">
+            <a href="tel:1300999999" class="tile-call-btn" style="padding:14px 28px;font-size:0.96rem;">
+              <i class="ph-fill ph-phone-call"></i>
+              <span>Director Tender Hotline: 1300 999 999</span>
+            </a>
+            <a href="#capabilities" class="btn-hero-cta">
+              <span>View Capabilities</span>
+              <i class="ph-bold ph-arrow-down"></i>
+            </a>
+          </div>
+          <div class="hero-spec-strip reveal">
+            <span><i class="ph-fill ph-crosshair text-green"></i> Laser-Calibrated Leveling</span>
+            <span>/</span>
+            <span><i class="ph-fill ph-certificate text-green"></i> AS 3958.1 &amp; AS 3740 Certified</span>
+            <span>/</span>
+            <span><i class="ph-fill ph-shield-check text-green"></i> $20M Public Liability</span>
+          </div>
+        </div>
+
+        <!-- Precision Spirit-Level Calibration HUD -->
+        <div class="hero-hud-card reveal">
+          <div class="hero-hud-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="beacon-green"></span>
+              <span>AS 3958.1 BENCHMARK</span>
             </div>
-        </section>
-    </main>
-    <script src="script.js"></script>
+            <span class="hud-tag font-mono">&plusmn;0.00mm LEVEL</span>
+          </div>
+          <div class="hero-level-display">
+            <div class="level-vial">
+              <div class="vial-target-line left-line"></div>
+              <div class="vial-bubble"></div>
+              <div class="vial-target-line right-line"></div>
+            </div>
+            <div class="level-scale font-mono">
+              <span>-1.0mm</span>
+              <span class="text-green" style="font-weight:700;">0.00mm [CALIBRATED]</span>
+              <span>+1.0mm</span>
+            </div>
+          </div>
+          <div class="hero-hud-specs">
+            <div class="hud-spec-pill">
+              <i class="ph-bold ph-check text-green"></i>
+              <span>Zero Lippage Guarantee</span>
+            </div>
+            <div class="hud-spec-pill">
+              <i class="ph-bold ph-shield-check text-green"></i>
+              <span>Form 15/16 QA Sign-Off</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tier-1 Head Contractor Marquee -->
+    <div class="trusted-by">
+      <span class="trusted-subtitle">COMMERCIAL TIER-1 EXCELLENCE</span>
+      <h4 class="trusted-title">Trusted for Head Contractor &amp; Commercial Builder Partnerships</h4>
+      <div class="marquee-track">
+        <div class="builder-badge">HUTCHIES &bull; EST. 1912</div>
+        <div class="builder-badge">LENDLEASE</div>
+        <div class="builder-badge">MULTIPLEX</div>
+        <div class="builder-badge">CPB CONTRACTORS</div>
+        <div class="builder-badge">MIRVAC</div>
+        <div class="builder-badge">ADCO CONSTRUCTIONS</div>
+        <div class="builder-badge">BUILT<span class="text-green">.</span></div>
+        <div class="builder-badge">BESIX WATPAC</div>
+        <div class="builder-badge" aria-hidden="true">HUTCHIES &bull; EST. 1912</div>
+        <div class="builder-badge" aria-hidden="true">LENDLEASE</div>
+        <div class="builder-badge" aria-hidden="true">MULTIPLEX</div>
+        <div class="builder-badge" aria-hidden="true">CPB CONTRACTORS</div>
+        <div class="builder-badge" aria-hidden="true">MIRVAC</div>
+        <div class="builder-badge" aria-hidden="true">ADCO CONSTRUCTIONS</div>
+      </div>
+    </div>
+    <!-- Animated Counter Stats Section -->
+    <section class="stats-section">
+      <div class="container stats-grid">
+        <div class="stat-item reveal">
+          <div class="tile-corner tc-tl">+</div><div class="tile-corner tc-tr">+</div><div class="tile-corner tc-bl">+</div><div class="tile-corner tc-br">+</div>
+          <div class="stat-number accent-green">15+</div>
+          <div class="stat-label">Years Commercial Experience</div>
+          <div class="stat-subtag"><i class="ph-fill ph-seal-check"></i> TIER-1 SUBCONTRACTOR</div>
+        </div>
+        <div class="stat-item reveal">
+          <div class="tile-corner tc-tl">+</div><div class="tile-corner tc-tr">+</div><div class="tile-corner tc-bl">+</div><div class="tile-corner tc-br">+</div>
+          <div class="stat-number accent-red">500k+</div>
+          <div class="stat-label">Square Metres Delivered</div>
+          <div class="stat-subtag"><i class="ph-fill ph-squares-four"></i> COMMERCIAL &amp; INDUSTRIAL</div>
+        </div>
+        <div class="stat-item reveal">
+          <div class="tile-corner tc-tl">+</div><div class="tile-corner tc-tr">+</div><div class="tile-corner tc-bl">+</div><div class="tile-corner tc-br">+</div>
+          <div class="stat-number accent-green">100%</div>
+          <div class="stat-label">OHS / WHS Compliance</div>
+          <div class="stat-subtag"><i class="ph-fill ph-shield-check"></i> AS/NZS 4801 &bull; ZERO LTI</div>
+        </div>
+        <div class="stat-item reveal">
+          <div class="tile-corner tc-tl">+</div><div class="tile-corner tc-tr">+</div><div class="tile-corner tc-bl">+</div><div class="tile-corner tc-br">+</div>
+          <div class="stat-number">50+</div>
+          <div class="stat-label">Major Commercial Projects</div>
+          <div class="stat-subtag"><i class="ph-fill ph-buildings"></i> ON-TIME HANDOVER</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Capacity & Legal Compliance Scanner Section -->
+    <section id="capacity" class="section">
+      <div class="container capacity-grid">
+        <div class="reveal">
+          <span class="badge"><i class="ph-fill ph-shield-check"></i> Workforce &amp; Compliance</span>
+          <h2 class="section-title">Built for Scale <br>&amp; <span class="text-green">Strict Compliance</span></h2>
+          <p class="section-desc">Structured specifically for head contractors and commercial developers. With a scalable, EBA/site-inducted workforce, we maintain critical-path schedules without compromising QA standards.</p>
+
+          <div class="legal-card glass-card">
+            <div class="legal-scanner-beam"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <h3 style="font-size:1.15rem;display:flex;align-items:center;gap:8px;"><i class="ph-fill ph-check-circle text-green"></i> Pre-Qualification &amp; Legal Details</h3>
+              <span class="header-tender-pill"><span class="beacon-green"></span> ACTIVE &amp; VERIFIED</span>
+            </div>
+            <ul class="legal-list">
+              <li><span class="label">Contractor Licence</span><span class="value text-red font-mono">QBCC / Commercial Licensed</span></li>
+              <li><span class="label">Australian Standards</span><span class="value">AS 3958.1 &bull; AS 3740 &bull; AS 4654.2</span></li>
+              <li><span class="label">Public Liability Insurance</span><span class="value text-green">$20,000,000 AUD (QBE Commercial)</span></li>
+              <li><span class="label">WorkCover &amp; SWMS</span><span class="value">Full Site-Specific SWMS &amp; White Card</span></li>
+              <li><span class="label">QA Certification</span><span class="value text-green">ISO 9001:2015 &amp; Form 15/16 Sign-Off</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="reveal" style="position:relative;">
+          <div class="glass-card" style="overflow:hidden;border-radius:var(--radius-lg);aspect-ratio:4/4.3;">
+            <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1000&q=85" alt="Site-Ready Commercial Team" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div class="glass-card" style="position:absolute;bottom:-18px;right:20px;padding:16px 24px;border:1px solid var(--brand-green-bright);display:flex;align-items:center;gap:14px;background:#0a0c10;">
+            <i class="ph-fill ph-shield-check text-green" style="font-size:2.4rem;"></i>
+            <div>
+              <strong style="font-size:1.7rem;font-family:'Outfit';display:block;line-height:1;">100%</strong>
+              <span style="font-size:0.75rem;color:var(--text-muted);letter-spacing:1px;">INSURED &amp; SITE-READY</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Core Capabilities Matrix -->
+    <section id="capabilities" class="section" style="background:rgba(14,18,24,0.65);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);">
+      <div class="container">
+        <div style="text-align:center;max-width:680px;margin:0 auto 56px;" class="reveal">
+          <span class="badge"><i class="ph-fill ph-crosshair"></i> Commercial Matrix &amp; Scope</span>
+          <h2 class="section-title">Core Commercial <span class="text-green">Capabilities</span></h2>
+          <p class="section-desc" style="margin:0 auto;">High-volume commercial packages engineered for precision, durability, and Australian Standard compliance.</p>
+        </div>
+
+        <div class="cards-3-grid">
+          <div class="cap-card glass-card reveal">
+            <div class="cap-img">
+              <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80" alt="High-Rise Residential & Hotel Towers">
+              <span class="cap-spec-tag font-mono">01 &bull; HIGH-RISE TOWERS</span>
+            </div>
+            <div class="cap-body">
+              <h3>High-Rise &amp; Multi-Level Developments</h3>
+              <p>Complete multi-floor residential towers, hotels, and mixed-use developments with mechanized logistics and laser-calibrated staging.</p>
+              <div class="spec-pills">
+                <span class="spec-pill"><i class="ph-fill ph-buildings"></i> Multi-Level Staging</span>
+                <span class="spec-pill"><i class="ph-fill ph-check-circle"></i> Zero-Defect Handover</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cap-card glass-card reveal">
+            <div class="cap-img">
+              <img src="https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=900&q=80" alt="Commercial Retail & Public Infrastructure">
+              <span class="cap-spec-tag font-mono">02 &bull; RETAIL &amp; PRECINCTS</span>
+            </div>
+            <div class="cap-body">
+              <h3>Shopping Centres, Lobbies &amp; Hospitals</h3>
+              <p>Heavy-duty commercial porcelain, natural stone lobbies, anti-slip P5 public concourses, and sterile healthcare/hospital fitouts.</p>
+              <div class="spec-pills">
+                <span class="spec-pill"><i class="ph-fill ph-shield-check"></i> Slip-Resistance Certified</span>
+                <span class="spec-pill"><i class="ph-fill ph-clock"></i> Night-Shift Capable</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cap-card glass-card reveal">
+            <div class="cap-img">
+              <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=900&q=80" alt="Acoustic Screeding & Waterproofing">
+              <span class="cap-spec-tag font-mono">03 &bull; AS 3740 WATERPROOFING</span>
+            </div>
+            <div class="cap-body">
+              <h3>Acoustic Screeding &amp; Membrane Systems</h3>
+              <p>Certified wet-area and podium waterproofing (AS 3740 &amp; AS 4654.2), acoustic underlay systems, and laser-leveled structural sand-cement screeds.</p>
+              <div class="spec-pills">
+                <span class="spec-pill"><i class="ph-fill ph-drop"></i> Form 15/16 Certified</span>
+                <span class="spec-pill"><i class="ph-fill ph-seal-check"></i> 10-Yr Warranty</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Landmark Commercial Projects -->
+    <section id="projects" class="section">
+      <div class="container">
+        <div style="text-align:center;max-width:680px;margin:0 auto 56px;" class="reveal">
+          <span class="badge"><i class="ph-fill ph-buildings"></i> Proven Track Record</span>
+          <h2 class="section-title">Recent Commercial <span class="text-green">Deliveries</span></h2>
+          <p class="section-desc" style="margin:0 auto;">Delivered on time and signed off with zero defects for Tier-1 and mid-tier head contractors.</p>
+        </div>
+
+        <div class="cards-3-grid">
+          <div class="cap-card glass-card reveal">
+            <div class="cap-img">
+              <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=900&q=80" alt="Metro Residential Tower">
+              <span class="cap-spec-tag font-mono">PRACTICAL COMPLETION</span>
+            </div>
+            <div class="cap-body">
+              <h3>CBD Mixed-Use Residential Tower</h3>
+              <p>14,200 sqm of internal apartment wet areas, acoustic screeding, podium decks, and grand marble entrance lobby.</p>
+              <div class="spec-pills">
+                <span class="spec-pill"><i class="ph-fill ph-ruler"></i> 14,200 sqm Scope</span>
+                <span class="spec-pill"><i class="ph-fill ph-check-circle"></i> 28 Levels</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cap-card glass-card reveal">
+            <div class="cap-img">
+              <img src="https://images.unsplash.com/photo-1555636222-cae831e670b3?auto=format&fit=crop&w=900&q=80" alt="Coastal Retail Mall Precinct">
+              <span class="cap-spec-tag font-mono">PRACTICAL COMPLETION</span>
+            </div>
+            <div class="cap-body">
+              <h3>Major Retail &amp; Dining Precinct</h3>
+              <p>9,800 sqm of high-traffic large-format commercial porcelain, commercial kitchens, and public amenities completed ahead of schedule.</p>
+              <div class="spec-pills">
+                <span class="spec-pill"><i class="ph-fill ph-ruler"></i> 9,800 sqm Scope</span>
+                <span class="spec-pill"><i class="ph-fill ph-seal-check"></i> Zero Lippage QA</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cap-card glass-card reveal">
+            <div class="cap-img">
+              <img src="https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&w=900&q=80" alt="Health & Hospital Hub">
+              <span class="cap-spec-tag font-mono">PRACTICAL COMPLETION</span>
+            </div>
+            <div class="cap-body">
+              <h3>Regional Health &amp; Medical Hub</h3>
+              <p>6,500 sqm of clinical anti-slip flooring, epoxy hygienic grouting, and certified AS 3740 wet-area waterproofing systems.</p>
+              <div class="spec-pills">
+                <span class="spec-pill"><i class="ph-fill ph-ruler"></i> 6,500 sqm Scope</span>
+                <span class="spec-pill"><i class="ph-fill ph-drop"></i> Epoxy &amp; Sterile</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="why-us" class="assurance-banner reveal">
+          <div style="display:flex;align-items:center;gap:18px;">
+            <i class="ph-fill ph-shield-star text-green" style="font-size:2.6rem;"></i>
+            <div>
+              <strong style="font-size:1.1rem;color:#fff;display:block;">100% PRACTICAL COMPLETION RECORD &bull; FORM 15 / 16 SIGNED</strong>
+              <span style="font-size:0.9rem;color:var(--text-muted);">Ready to price your upcoming commercial BOQ? Speak directly with our Estimating &amp; Operations Director.</span>
+            </div>
+          </div>
+          <a href="tel:1300999999" class="tile-call-btn" style="padding:14px 28px;font-size:0.96rem;">
+            <i class="ph-fill ph-phone-call"></i>
+            <span>Call Director: 1300 999 999</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;">
+      <div>
+        <strong style="color:#fff;font-family:'Outfit';letter-spacing:1px;">APEX COMM-TILING</strong>
+        <p style="font-size:0.8rem;margin-top:4px;">Tier-1 Commercial Contractor &bull; AS 3958.1 &amp; AS 3740 Certified &bull; $20M Public Liability</p>
+      </div>
+      <div>&copy; 2026 APEX COMM-TILING. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var bar = document.getElementById('scrollProgressBar');
+      window.addEventListener('scroll', function() {
+        var total = document.documentElement.scrollHeight - window.innerHeight;
+        if (bar && total > 0) bar.style.width = ((window.scrollY / total) * 100) + '%';
+      });
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('active'); });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+
+      var hero = document.getElementById('home');
+      var grid = document.getElementById('heroTileGrid');
+      if (hero && grid) {
+        var angle = 0, moving = false, lastMove = 0;
+        function step() {
+          var now = performance.now();
+          if (!moving || now - lastMove > 1800) {
+            angle += 0.012;
+            grid.style.setProperty('--grid-spot-x', (50 + 30 * Math.sin(angle)).toFixed(1) + '%');
+            grid.style.setProperty('--grid-spot-y', (50 + 20 * Math.cos(angle * 0.75)).toFixed(1) + '%');
+          }
+          requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+        hero.addEventListener('mousemove', function(e) {
+          moving = true; lastMove = performance.now();
+          var r = hero.getBoundingClientRect();
+          grid.style.setProperty('--grid-spot-x', (((e.clientX - r.left) / r.width) * 100).toFixed(1) + '%');
+          grid.style.setProperty('--grid-spot-y', (((e.clientY - r.top) / r.height) * 100).toFixed(1) + '%');
+        });
+      }
+    });
+  </script>
 </body>
 </html>

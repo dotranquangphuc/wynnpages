@@ -147,9 +147,9 @@
               <span style="font-size:11px;font-weight:600;color:#b8b0a5;letter-spacing:0.03em;text-transform:uppercase;flex-shrink:0;">Exclusively for</span>
               <strong style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;">${bizName.replace(/</g, '&lt;')}</strong>
             </div>
-            <div style="font-size:10.5px;color:#e6dccb;font-weight:500;margin-top:3px;display:flex;align-items:center;gap:5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            <div style="font-size:10.5px;color:#e6dccb;font-weight:500;margin-top:3px;display:flex;align-items:flex-start;gap:5px;line-height:1.35;white-space:normal;">
               <span style="color:#34d399;font-weight:800;flex-shrink:0;">✓</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;">Sample preview &mdash; 100% tailored with your real photos &amp; menu after checkout</span>
+              <span>100% tailored with your real photos &amp; menu</span>
             </div>
           </div>
         </div>

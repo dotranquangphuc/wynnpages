@@ -427,10 +427,15 @@
     }
 
     /* ==========================================================================
-       OIL CANVAS ARCH & GOLD FOIL INSET FRAME
+       OIL CANVAS ARCH & GOLD FOIL INSET FRAME (SAFARI WEBKIT HARDWARE CLIP FIX)
        ========================================================================== */
     .arch-oil-frame {
       border-radius: 220px 220px 32px 32px;
+      -webkit-clip-path: inset(0 round 220px 220px 32px 32px);
+      clip-path: inset(0 round 220px 220px 32px 32px);
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+      isolation: isolate;
+      transform: translateZ(0);
       box-shadow:
         0 32px 64px -18px rgba(43, 37, 30, 0.22),
         0 0 0 1px var(--foil-gold);
@@ -438,6 +443,8 @@
     @media (max-width: 640px) {
       .arch-oil-frame {
         border-radius: 170px 170px 28px 28px;
+        -webkit-clip-path: inset(0 round 170px 170px 28px 28px);
+        clip-path: inset(0 round 170px 170px 28px 28px);
       }
     }
 
@@ -1081,7 +1088,7 @@
         hero: "https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg",
         beforeNail: "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg",
         afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg",
-        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg",
+        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg",
         pedicureFeature: "https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg",
         lookbook: [
           {
@@ -1189,12 +1196,15 @@
   <header id="atelier-header" class="sticky top-0 z-40 px-3.5 sm:px-6 pt-2.5 sm:pt-3 pb-2 w-full">
     <div class="max-w-6xl mx-auto relative">
       <nav id="atelier-nav-shell" class="atelier-card rounded-full px-3.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 min-w-0" aria-label="Primary Navigation">
-        <!-- Brand Identity: Client Custom Logo with Fallback to 24K Gold-Leaf Calligraphic Lux Logo -->
-        <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
-          <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]" style="flex: 0 0 auto !important;">
-            <img id="nav-logo-img" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim" alt="Lux" class="h-8 sm:h-9 w-auto max-w-[165px] sm:max-w-[200px] object-contain block">
+        <!-- Brand Identity: Tier A Embossed Gold Wax Monogram Seal or Tier B Custom SVG Logo -->
+        <a href="#top" data-smooth-anchor="#top" class="flex items-center gap-2.5 sm:gap-3 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-0.5 py-0.5">
+          <div id="brand-logo-slot" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full wax-monogram-seal flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-105">
+            <span id="nav-monogram" class="font-editorial italic font-bold text-lg sm:text-xl leading-none" style="color: var(--accent-primary);">M</span>
           </div>
-          <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9.5px] uppercase tracking-[0.15em] font-medium block leading-none truncate max-w-full" style="color: var(--ink-muted);">South Brisbane, QLD</span>
+          <div id="nav-brand-text" class="min-w-0 flex flex-col justify-center">
+            <span id="nav-salon-name" class="font-editorial font-semibold text-lg sm:text-xl tracking-tight leading-none block truncate" style="color: var(--ink-primary);">Maison Élan</span>
+            <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9.5px] uppercase tracking-[0.15em] font-medium block leading-none truncate mt-1" style="color: var(--ink-muted);">Armadale, VIC</span>
+          </div>
         </a>
 
         <!-- Center Editorial Links (Desktop lg+) -->
@@ -1373,33 +1383,57 @@
             fetchpriority="high"
             width="900"
             height="1125"
+            style="border-radius: inherit;"
             class="w-full h-full object-cover animate-canvas-breathe"
           >
-          <!-- Subtle Architectural / Painted Limewash Wall Brand Signage -->
+          <!-- Embedded SVG Filter: Auto-Converts Any Uploaded Client Logo into 3D Brushed Brass & Limewash Wall Relief -->
+          <svg width="0" height="0" class="absolute pointer-events-none" aria-hidden="true">
+            <defs>
+              <filter id="atelier-wall-brass" color-interpolation-filters="sRGB">
+                <!-- Strip white backgrounds to transparent and convert dark strokes into warm antique bronze & 24K brass -->
+                <feColorMatrix type="matrix" values="
+                  0 0 0 0 0.36
+                  0 0 0 0 0.22
+                  0 0 0 0 0.13
+                  -1.1 -1.1 -1.1 3.4 0" result="wallInk"/>
+                <feDropShadow dx="-0.6" dy="-0.6" stdDeviation="0.35" flood-color="#FFFDF7" flood-opacity="0.72"/>
+                <feDropShadow dx="1.1" dy="1.8" stdDeviation="1.0" flood-color="#2B190E" flood-opacity="0.24"/>
+              </filter>
+            </defs>
+          </svg>
+          <!-- Architectural Pin-Mounted Brushed Brass & Plaster Wall Signage (Centered in Arch Alcove Behind Seated Girl) -->
           <div
             id="hero-wall-signage"
             aria-hidden="true"
             class="pointer-events-none select-none absolute z-[2] flex flex-col items-center text-center"
-            style="top: 12%; left: 67.5%; width: 27%; max-width: 126px; transform: translate(-50%, 0) perspective(480px) rotateY(-7deg) rotateZ(-1.4deg); opacity: 0.62; mix-blend-mode: multiply;"
+            style="top: 15%; left: 55.5%; width: 34%; max-width: 154px; transform: translate(-50%, 0) perspective(520px) rotateY(-6deg) rotateZ(-0.6deg); opacity: 0.78; mix-blend-mode: multiply;"
           >
+            <!-- Delicate 24K Brushed Brass Botanical & Diamond Crest -->
+            <svg class="w-11 sm:w-12 h-3.5 mb-0.5 overflow-visible" viewBox="0 0 80 20" fill="none">
+              <path d="M12 13 C20 13, 27 10, 34 8" stroke="#8C5820" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
+              <path d="M68 13 C60 13, 53 10, 46 8" stroke="#8C5820" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
+              <path d="M40 2 L42 7.5 L47.5 9.5 L42 11.5 L40 17 L38 11.5 L32.5 9.5 L38 7.5 Z" fill="#8C5820" opacity="0.88"/>
+              <circle cx="29" cy="9.5" r="1.1" fill="#8C5820" opacity="0.7"/>
+              <circle cx="51" cy="9.5" r="1.1" fill="#8C5820" opacity="0.7"/>
+            </svg>
             <img
               id="hero-wall-logo-img"
-              src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim"
+              src=""
               alt=""
-              class="w-full max-w-[88px] sm:max-w-[102px] h-auto object-contain block"
-              style="filter: brightness(0.38) sepia(0.92) hue-rotate(-18deg) saturate(1.75) drop-shadow(0 1px 0 rgba(255, 250, 240, 0.45));"
+              class="hidden w-full max-w-[96px] sm:max-w-[114px] max-h-[38px] object-contain block"
+              style="filter: url(#atelier-wall-brass);"
             >
             <span
               id="hero-wall-wordmark"
-              class="hidden font-editorial italic font-semibold text-base sm:text-lg leading-tight tracking-wide truncate max-w-full"
-              style="color: #4A2518; text-shadow: 0 1px 0 rgba(255, 250, 240, 0.45);"
-            >Lux</span>
-            <span class="w-10 sm:w-12 h-[0.75px] my-1 block" style="background: rgba(110, 44, 26, 0.42);"></span>
+              class="font-editorial italic font-semibold text-[15px] sm:text-[18px] leading-none tracking-[0.06em] block max-w-full"
+              style="color: #432717; text-shadow: -0.5px -0.5px 0 rgba(255, 252, 245, 0.78), 1px 1.5px 1.5px rgba(43, 25, 14, 0.22);"
+            >Maison Élan</span>
+            <span class="w-12 sm:w-14 h-[0.75px] my-1.5 block" style="background: linear-gradient(90deg, transparent, rgba(110, 58, 28, 0.55), transparent);"></span>
             <span
               id="hero-wall-sub"
-              class="text-[5.5px] sm:text-[6.5px] uppercase tracking-[0.15em] font-semibold block leading-none whitespace-nowrap"
-              style="color: #4A2518; text-shadow: 0 1px 0 rgba(255, 250, 240, 0.4);"
-            >South Brisbane, QLD</span>
+              class="text-[5.5px] sm:text-[6.5px] uppercase tracking-[0.22em] font-semibold block leading-none whitespace-nowrap"
+              style="color: #5A3520; text-shadow: 0 1px 0 rgba(255, 251, 244, 0.6);"
+            >Armadale, VIC</span>
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
           <!-- Interactive Floating Craft Capsule (Glides to Treatment Matchmaker) -->
@@ -1665,31 +1699,31 @@
       </div>
 
       <!-- Before & After Editorial Split Slider -->
-      <div data-apple-reveal="center" class="atelier-card rounded-[32px] p-6 sm:p-8 max-w-4xl mx-auto space-y-5 shadow-lg relative overflow-hidden" style="border-color: var(--border-hairline);">
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-          <div>
+      <div data-apple-reveal="center" class="atelier-card rounded-[28px] sm:rounded-[32px] p-4 sm:p-8 max-w-4xl mx-auto space-y-4 sm:space-y-5 shadow-lg relative overflow-hidden" style="border-color: var(--border-hairline);">
+        <div class="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-2 sm:gap-3 text-center sm:text-left px-1 sm:px-0">
+          <div class="space-y-1">
             <span class="text-[10px] uppercase tracking-[0.2em] font-semibold block" style="color: var(--accent-primary);">Real Craftsmanship Results</span>
             <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">The Anatomy of <span class="accent-italic">Transformation.</span></h3>
           </div>
-          <p class="text-xs text-stone-500 max-w-xs leading-relaxed">
+          <p class="text-xs text-stone-500 max-w-sm sm:max-w-xs leading-relaxed">
             Drag the divider to compare raw natural plates with our precision Russian E-file &amp; structured BIAB finish.
           </p>
         </div>
 
         <!-- Interactive Split Slider Container -->
-        <div id="before-after-container" class="relative rounded-[24px] overflow-hidden aspect-[3/4] sm:aspect-[5/4] max-w-2xl mx-auto select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
+        <div id="before-after-container" class="relative rounded-[20px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[4/4.1] sm:aspect-[5/4] max-w-2xl mx-auto select-none cursor-ew-resize border shadow-inner" style="border-color: var(--border-hairline); background-color: var(--bg-canvas-alt); touch-action: pan-y;">
           <!-- AFTER Layer (Underneath - Full Width) -->
           <img
             id="ba-after-img"
             src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
             alt="After BIAB structured overlay and Russian cuticle refinement"
             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style="object-position: 50% 56%; filter: saturate(1.12) contrast(1.04);"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.08); transform-origin: 50% 55%; filter: saturate(1.02) contrast(1.02);"
             onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg';"
             loading="lazy"
             decoding="async"
           >
-          <div class="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.2em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.52); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.28);">
+          <div class="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.18em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.56); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.3);">
             AFTER
           </div>
 
@@ -1700,12 +1734,12 @@
               src="https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg"
               alt="Before natural unpolished fingernails prior to BIAB restoration"
               class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 56%; filter: saturate(0.76) brightness(0.97) sepia(0.08);"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.08); transform-origin: 50% 55%; filter: saturate(1.08) contrast(1.03) sepia(0.03);"
               onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg';"
               loading="lazy"
               decoding="async"
             >
-            <div class="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.2em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.52); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.28);">
+            <div class="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.18em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.56); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.3);">
               BEFORE
             </div>
           </div>
@@ -1839,8 +1873,9 @@
         <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
-            src="https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg"
+            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
             alt="Fine-art oil study of luminous sheer BIAB manicure"
+            style="filter: saturate(0.92) sepia(0.06);"
             onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg';"
             loading="lazy"
             width="800"
@@ -2146,7 +2181,6 @@
         <a id="footer-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Instagram</a>
         <a id="footer-fb-link" href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Facebook</a>
         <a href="#menu" data-smooth-anchor="#menu" class="hover:underline">Price Menu</a>
-        <a href="https://wynnpages.com.au" target="_blank" rel="noopener noreferrer" class="hover:underline">About Studio</a>
         <button type="button" data-open-booking="" class="font-semibold underline cursor-pointer" style="color: var(--accent-primary);">Book Visit</button>
       </div>
     </div>
@@ -2252,7 +2286,7 @@
           hero: `${VAULT_BASE}/hero-sanctuary.jpg`,
           beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
           afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
-          biabFeature: `${VAULT_BASE}/sheer-biab-architecture.jpg`,
+          biabFeature: `${VAULT_BASE}/biab-artistry.jpg`,
           pedicureFeature: `${VAULT_BASE}/botanical-pedicure.jpg`,
           lookbook: [
             { src: `${VAULT_BASE}/lookbook-gilded-french.jpg`, title: 'Champagne Micro-French', tag: 'BIAB Structured Overlay' },
@@ -2407,71 +2441,47 @@
       // 2. Hydrate Brand, Hero, Socials, SEO & Contact
       const fullTitle = `${cfg.salonName || 'Nail Atelier'} — Bespoke BIAB & Nail Sanctuary | ${locSpaceLabel}`.trim();
       document.title = fullTitle;
-      const defaultFallbackLogo = (cfg.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim').trim();
       const customLogo = (cfg.wordmarkUrl || cfg.logoUrl || '').trim();
-      const activeLogoSrc = customLogo || defaultFallbackLogo;
-      const isFallbackLogo = !customLogo;
-
-      const resolvedNavSub = (!customLogo && (!cfg.address || cfg.address === '1048 High Street, Armadale VIC 3143'))
-        ? 'South Brisbane, QLD'
-        : (locLabel.replace(/,\s*$/, '') || 'South Brisbane, QLD');
+      const resolvedNavSub = locLabel.replace(/,\s*$/, '') || 'Australia';
 
       setText('nav-salon-name', cfg.salonName);
       setText('nav-salon-sub', resolvedNavSub);
+      const monoChar = cfg.monogram || (cfg.salonName || 'A').replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'A';
       const navMonoEl = document.getElementById('nav-monogram');
       if (navMonoEl && navMonoEl.tagName !== 'IMG') {
-        navMonoEl.textContent = cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase();
+        navMonoEl.textContent = monoChar;
       }
       const footMonoEl = document.getElementById('footer-monogram');
       if (footMonoEl && footMonoEl.tagName !== 'IMG') {
-        footMonoEl.textContent = cfg.monogram || (cfg.salonName || 'A').charAt(0).toUpperCase();
+        footMonoEl.textContent = monoChar;
       }
 
       const slot = document.getElementById('brand-logo-slot');
-      if (slot) {
+      const navBrandText = document.getElementById('nav-brand-text');
+      if (slot && customLogo) {
         slot.className = 'flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]';
         slot.style.flex = '0 0 auto';
         const navImgCls = 'h-8 sm:h-9 w-auto max-w-[165px] sm:max-w-[200px] object-contain block';
-        const fallbackAttr = !isFallbackLogo && defaultFallbackLogo
-          ? ` onerror="this.onerror=null;this.src='${defaultFallbackLogo}';"`
-          : '';
-        slot.innerHTML = `<img id="nav-logo-img" src="${activeLogoSrc}" alt="${cfg.salonName || 'Lux'}" class="${navImgCls}"${fallbackAttr}>`;
-      }
-      const fMono = document.getElementById('footer-monogram');
-      const fSeal = fMono ? fMono.parentElement : null;
-      if (fSeal) {
-        fSeal.className = 'inline-flex items-center justify-start';
-        const footImgCls = 'h-10 sm:h-11 w-auto max-w-[190px] object-contain block';
-        const fallbackAttr = !isFallbackLogo && defaultFallbackLogo
-          ? ` onerror="this.onerror=null;this.src='${defaultFallbackLogo}';"`
-          : '';
-        fSeal.innerHTML = `<img id="footer-monogram" src="${activeLogoSrc}" alt="${cfg.salonName || 'Salon Logo'}" class="${footImgCls}"${fallbackAttr}>`;
+        slot.innerHTML = `<img id="nav-logo-img" src="${customLogo}" alt="${cfg.salonName || 'Salon Logo'}" class="${navImgCls}">`;
       }
 
       const wallSignEl = document.getElementById('hero-wall-signage');
       const wallLogoImg = document.getElementById('hero-wall-logo-img');
       const wallWordmark = document.getElementById('hero-wall-wordmark');
       const wallSubEl = document.getElementById('hero-wall-sub');
-      const heroWallSubText = typeof resolvedNavSub !== 'undefined'
-        ? resolvedNavSub
-        : (locLabel.replace(/,\s*$/, '') || 'Australia');
+      const heroWallSubText = resolvedNavSub || 'Australia';
       if (wallSignEl) {
         if (wallSubEl) wallSubEl.textContent = heroWallSubText;
-        const cleanSalon = (cfg.salonName || '').trim();
-        const defaultNames = ['Maison Élan', 'cafe', 'Your Business', 'Lux Nails Bar'];
-        if (customLogo && wallLogoImg) {
-          wallLogoImg.onerror = function () { this.onerror = null; this.src = defaultFallbackLogo; };
+        const cleanSalon = (cfg.salonName || 'Maison Élan').trim();
+        const isGenericDefaultSvg = !customLogo || customLogo.includes('default-lux-logo.svg');
+        if (!isGenericDefaultSvg && wallLogoImg) {
           wallLogoImg.src = customLogo;
           wallLogoImg.classList.remove('hidden');
           if (wallWordmark) wallWordmark.classList.add('hidden');
-        } else if (cleanSalon && !defaultNames.includes(cleanSalon) && wallWordmark) {
+        } else if (wallWordmark) {
           wallWordmark.textContent = cleanSalon;
           wallWordmark.classList.remove('hidden');
           if (wallLogoImg) wallLogoImg.classList.add('hidden');
-        } else if (wallLogoImg) {
-          wallLogoImg.src = defaultFallbackLogo;
-          wallLogoImg.classList.remove('hidden');
-          if (wallWordmark) wallWordmark.classList.add('hidden');
         }
       }
 

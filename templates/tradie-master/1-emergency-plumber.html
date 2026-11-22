@@ -1,66 +1,415 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emergency Plumber | Tradie Master Engine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>RAPID PLUMBING | 24/7 Emergency Plumber, Blocked Drains &amp; Hot Water</title>
+  <meta name="description" content="24/7 rapid-response licensed plumbers & gasfitters. $0 call-out fee during business hours, upfront fixed pricing before we start, lifetime workmanship warranty.">
+  <meta name="theme-color" content="#080D1A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root {
+      --bg-navy: #080D1A;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --bg-card-hover: rgba(23, 35, 64, 0.96);
+      --cyan-primary: #0EA5E9;
+      --cyan-bright: #38BDF8;
+      --red-urgent: #EF4444;
+      --emerald-live: #10B981;
+      --text-white: #F8FAFC;
+      --text-slate: #94A3B8;
+      --border-line: rgba(148, 163, 184, 0.14);
+      --border-cyan: rgba(56, 189, 248, 0.42);
+      --radius-md: 12px;
+      --radius-lg: 18px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg-navy); color: var(--text-white); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-navy); color: var(--text-white);
+      line-height: 1.6; overflow-x: hidden; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(56, 189, 248, 0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.025) 1px, transparent 1px);
+      background-size: 64px 64px; z-index: -2; pointer-events: none;
+    }
+    h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; line-height: 1.12; }
+    .text-cyan { color: var(--cyan-bright); }
+    .text-red { color: var(--red-urgent); }
+    .container { max-width: 1240px; margin: 0 auto; padding: 0 22px; }
+
+    /* Top Live Dispatch Ticker */
+    .top-dispatch-bar {
+      background: linear-gradient(90deg, #0c192c 0%, #112240 50%, #0c192c 100%);
+      border-bottom: 1px solid var(--border-cyan);
+      padding: 8px 16px; text-align: center; font-size: 0.78rem; font-weight: 700; color: #E0F2FE;
+      display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+    }
+    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald-live); box-shadow: 0 0 10px var(--emerald-live); animation: pulseAnim 1.5s infinite; display: inline-block; }
+    .pulse-dot.red { background: var(--red-urgent); box-shadow: 0 0 10px var(--red-urgent); }
+    @keyframes pulseAnim { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.45); opacity: 0.4; } }
+
+    /* Header */
+    .header {
+      position: sticky; top: 0; z-index: 1000;
+      background: rgba(8, 13, 26, 0.88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border-line);
+    }
+    .nav-bar { display: flex; align-items: center; justify-content: space-between; height: 78px; gap: 16px; }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+    .logo-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--cyan-primary), #0284C7);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff;
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+    }
+    .logo-text { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.15rem; letter-spacing: 0.8px; display: block; }
+    .logo-sub { font-size: 0.65rem; font-weight: 700; color: var(--cyan-bright); letter-spacing: 1.5px; text-transform: uppercase; display: block; }
+    .nav-links { display: flex; gap: 26px; }
+    .nav-links a { color: var(--text-slate); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+
+    .btn-emergency {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      padding: 13px 26px; border-radius: 100px;
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: #fff; font-weight: 800; font-size: 0.94rem; text-decoration: none;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.45);
+      border: 1px solid rgba(255,255,255,0.28); transition: all 0.25s ease;
+      animation: emergencyPulse 2.2s infinite;
+    }
+    .btn-emergency:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(239, 68, 68, 0.65); }
+    @keyframes emergencyPulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 70% { box-shadow: 0 0 0 14px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    .btn-cyan {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 26px; border-radius: 100px;
+      background: rgba(14, 165, 233, 0.14); border: 1px solid var(--border-cyan);
+      color: var(--cyan-bright); font-weight: 700; font-size: 0.94rem; text-decoration: none; transition: all 0.25s;
+    }
+    .btn-cyan:hover { background: var(--cyan-primary); color: #fff; }
+    /* Hero Section */
+    .hero { position: relative; padding: 75px 0 85px; overflow: hidden; }
+    .hero-grid { display: grid; grid-template-columns: 1.12fr 0.88fr; gap: 46px; align-items: center; }
+    .urgent-pill {
+      display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px; border-radius: 100px;
+      background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #FCA5A5; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;
+    }
+    .hero-title { font-size: clamp(2.6rem, 4.8vw, 4.2rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 18px; }
+    .hero-desc { font-size: 1.1rem; color: var(--text-slate); margin-bottom: 28px; max-width: 580px; }
+    .hero-cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 30px; }
+    .trust-badges-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-top: 22px; border-top: 1px solid var(--border-line); }
+    .trust-mini { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: #E2E8F0; }
+    .trust-mini i { color: var(--cyan-bright); font-size: 1.2rem; }
+
+    /* Live GPS Dispatch & Diagnostic HUD Card */
+    .radar-hud-card {
+      background: var(--bg-card); border: 1.5px solid var(--border-cyan); border-radius: var(--radius-lg); padding: 24px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.65), 0 0 35px rgba(14, 165, 233, 0.15); position: relative; overflow: hidden;
+    }
+    .radar-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-line); margin-bottom: 16px; font-family: monospace; font-size: 0.75rem; color: var(--cyan-bright); font-weight: 700; }
+    .radar-photo-box { position: relative; height: 255px; border-radius: 12px; overflow: hidden; margin-bottom: 14px; border: 1px solid var(--border-line); }
+    .radar-photo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .eta-overlay-badge {
+      position: absolute; bottom: 12px; left: 12px; right: 12px;
+      background: rgba(8, 13, 26, 0.92); backdrop-filter: blur(12px);
+      border: 1px solid var(--border-cyan); border-radius: 10px;
+      padding: 11px 15px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .hud-Diagnostics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .diag-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--border-line); border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .diag-pill i { color: var(--emerald-live); font-size: 1.1rem; }
+
+    /* Marquee & Sections */
+    .marquee-wrap { background: rgba(15, 23, 42, 0.9); border-top: 1px solid var(--border-line); border-bottom: 1px solid var(--border-line); padding: 20px 0; overflow: hidden; }
+    .marquee-track { display: flex; width: max-content; gap: 40px; animation: scrollMarquee 32s linear infinite; }
+    .marquee-pill { display: inline-flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 0.88rem; letter-spacing: 1px; color: #CBD5E1; text-transform: uppercase; white-space: nowrap; }
+    .marquee-pill i { color: var(--cyan-bright); }
+    @keyframes scrollMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .section { padding: 90px 0; }
+    .section-header { text-align: center; max-width: 680px; margin: 0 auto 52px; }
+    .section-title { font-size: clamp(2rem, 3.6vw, 3rem); font-weight: 900; margin-bottom: 12px; }
+    .section-desc { color: var(--text-slate); font-size: 1.04rem; }
+    .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .service-card {
+      background: var(--bg-card); border: 1px solid var(--border-line); border-radius: var(--radius-lg);
+      padding: 26px; transition: all 0.35s ease; display: flex; flex-direction: column;
+    }
+    .service-card:hover { transform: translateY(-6px); border-color: var(--border-cyan); background: var(--bg-card-hover); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .svc-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(14, 165, 233, 0.14); border: 1px solid var(--border-cyan); color: var(--cyan-bright); display: flex; align-items: center; justify-content: center; font-size: 1.55rem; margin-bottom: 16px; }
+    .svc-title { font-size: 1.24rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
+    .svc-desc { color: var(--text-slate); font-size: 0.9rem; margin-bottom: 16px; flex: 1; }
+    .svc-tag { font-size: 0.75rem; font-weight: 700; color: var(--emerald-live); display: flex; align-items: center; gap: 6px; padding-top: 12px; border-top: 1px solid var(--border-line); }
+    .split-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; }
+    .guarantee-box { background: var(--bg-card); border: 1.5px solid var(--border-cyan); border-radius: var(--radius-lg); padding: 30px; }
+    .g-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-line); font-size: 0.9rem; gap: 12px; }
+    .g-row:last-child { border-bottom: none; }
+    .footer { border-top: 1px solid var(--border-line); padding: 50px 0 110px; background: #050811; color: var(--text-slate); font-size: 0.88rem; }
+    .reveal { opacity: 0; transform: translateY(24px); transition: all 0.7s ease; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+    @media (max-width: 992px) {
+      .hero-grid, .services-grid, .split-2 { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .trust-badges-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
-<body class="theme-plumber">
-    <div class="global-noise"></div>
-    <header class="header glass-panel">
-        <div class="nav-container">
-            <div class="logo">
-                <span class="logo-icon"><i class="ph-bold ph-drop"></i></span>
-                <span class="logo-text">RAPID PLUMBING</span>
-            </div>
-            <div class="nav-cta">
-                <a href="tel:1300999999" class="btn btn-emergency magnetic" data-strength="20">
-                    <span class="btn-text">
-                        <i class="ph-fill ph-phone-call"></i> 1300 999 999
-                    </span>
-                </a>
-            </div>
+<body>
+  <!-- Live Emergency Dispatch Status Ticker -->
+  <div class="top-dispatch-bar">
+    <span class="pulse-dot"></span>
+    <span>LIVE DISPATCH: <strong>4 Licensed Technicians On-Road Now</strong> &bull; $0 Call-Out Fee (Business Hours) &bull; Upfront Fixed Pricing Before We Start</span>
+  </div>
+
+  <header class="header">
+    <div class="container nav-bar">
+      <a href="#home" class="logo">
+        <span class="logo-icon"><i class="ph-fill ph-drop"></i></span>
+        <div>
+          <span class="logo-text">RAPID PLUMBING</span>
+          <span class="logo-sub">24/7 Emergency &amp; Maintenance</span>
         </div>
-    </header>
-    <a href="tel:1300999999" class="mobile-sticky-call">
-        <i class="ph-fill ph-phone-call"></i> CALL NOW - 24/7
-    </a>
-    <main>
-        <section class="hero hero-emergency">
-            <div class="container hero-layout">
-                <div class="hero-content">
-                    <div class="hero-badge badge-emergency reveal">
-                        <span class="pulse-beacon red"></span> 24/7 Emergency Dispatch
-                    </div>
-                    <h1 class="hero-title reveal delay-1">
-                        Burst Pipe? Blocked Drain?<br>
-                        <span class="text-accent">We Arrive in 30 Mins.</span>
-                    </h1>
-                    <p class="hero-desc reveal delay-2">
-                        Don't let water damage your property. Our fully licensed local plumbers are on standby right now. Fixed pricing, no hidden fees.
-                    </p>
-                    <div class="hero-actions reveal delay-3">
-                        <a href="tel:1300999999" class="btn btn-emergency btn-lg magnetic" data-strength="30">
-                            <span class="btn-text">Dispatch Plumber Now</span>
-                        </a>
-                    </div>
-                </div>
-                <div class="hero-visual reveal delay-2">
-                    <div class="visual-card interactive-card">
-                        <img src="https://images.unsplash.com/photo-1607472586893-edb57cbceb42?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Plumber at work" class="visual-img">
-                        <div class="floating-badge bottom-left emergency-badge">
-                            <i class="ph-fill ph-clock-countdown"></i> Arriving fast!
-                        </div>
-                    </div>
-                </div>
+      </a>
+      <nav class="nav-links">
+        <a href="#services">Emergency Services</a>
+        <a href="#guarantee">Our 4-Point Guarantee</a>
+        <a href="#reviews">Google Reviews</a>
+      </nav>
+      <div>
+        <a href="tel:1300999999" class="btn-emergency">
+          <i class="ph-fill ph-phone-call"></i>
+          <span>1300 999 999</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- High-Urgency Split Hero -->
+    <section id="home" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-left">
+          <div class="urgent-pill reveal">
+            <span class="pulse-dot red"></span>
+            <span>24/7 Rapid Emergency Dispatch &bull; On-Site in Under 45 Mins</span>
+          </div>
+          <h1 class="hero-title reveal">
+            Burst Pipe, Blocked Drain or <span class="text-cyan">No Hot Water?</span>
+          </h1>
+          <p class="hero-desc reveal">
+            Don't let water or gas emergencies damage your home. Our fully licensed, police-checked local technicians are on standby right now with fully stocked vans and upfront fixed pricing before any work begins.
+          </p>
+          <div class="hero-cta-row reveal">
+            <a href="tel:1300999999" class="btn-emergency" style="padding:16px 32px;font-size:1.02rem;">
+              <i class="ph-fill ph-phone-call"></i>
+              <span>Call 24/7 Dispatch: 1300 999 999</span>
+            </a>
+            <a href="#services" class="btn-cyan" style="padding:16px 26px;">
+              <span>View Fixed-Price Services</span>
+              <i class="ph-bold ph-arrow-down"></i>
+            </a>
+          </div>
+          <div class="trust-badges-row reveal">
+            <div class="trust-mini">
+              <i class="ph-fill ph-currency-dollar-simple"></i>
+              <span>Upfront Fixed Quote First</span>
             </div>
-        </section>
-    </main>
-    <script src="script.js"></script>
+            <div class="trust-mini">
+              <i class="ph-fill ph-shield-check"></i>
+              <span>Licensed &amp; $20M Insured</span>
+            </div>
+            <div class="trust-mini">
+              <i class="ph-fill ph-star"></i>
+              <span>4.9★ (250+ Google Reviews)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Dispatch & Diagnostic HUD Card -->
+        <div class="radar-hud-card reveal">
+          <div class="radar-header">
+            <span style="display:flex;align-items:center;gap:8px;"><span class="pulse-dot"></span> GPS FLEET DISPATCH &bull; ACTIVE</span>
+            <span>ETA: &lt; 45 MINS</span>
+          </div>
+          <div class="radar-photo-box">
+            <img src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1000&q=85" alt="Licensed Emergency Plumber & Gasfitter">
+            <div class="eta-overlay-badge">
+              <div>
+                <strong style="color:#fff;font-size:0.9rem;display:block;">Fully Stocked Service Vans</strong>
+                <span style="font-size:0.76rem;color:var(--cyan-bright);">95% of emergencies fixed on the first visit</span>
+              </div>
+              <span style="background:rgba(16,185,129,0.18);border:1px solid #10B981;color:#34D399;padding:4px 10px;border-radius:100px;font-size:0.72rem;font-weight:800;">STANDBY NOW</span>
+            </div>
+          </div>
+          <div class="hud-Diagnostics">
+            <div class="diag-pill"><i class="ph-fill ph-video-camera"></i><span>CCTV Drain Camera</span></div>
+            <div class="diag-pill"><i class="ph-fill ph-wave-sine"></i><span>Acoustic Leak Locator</span></div>
+            <div class="diag-pill"><i class="ph-fill ph-flame"></i><span>Licensed Gasfitters</span></div>
+            <div class="diag-pill"><i class="ph-fill ph-seal-check"></i><span>Lifetime Workmanship</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust & Authorized Brands Marquee -->
+    <div class="marquee-wrap">
+      <div class="marquee-track">
+        <span class="marquee-pill"><i class="ph-fill ph-seal-check"></i> MASTER PLUMBERS MEMBER</span>
+        <span class="marquee-pill"><i class="ph-fill ph-flame"></i> RHEEM HOT WATER SPECIALIST</span>
+        <span class="marquee-pill"><i class="ph-fill ph-drop"></i> RINNAI AUTHORIZED INSTALLER</span>
+        <span class="marquee-pill"><i class="ph-fill ph-wrench"></i> BOSCH &amp; DUX SYSTEMS</span>
+        <span class="marquee-pill"><i class="ph-fill ph-credit-card"></i> EFTPOS &amp; INTEREST-FREE AVAILABLE</span>
+        <span class="marquee-pill"><i class="ph-fill ph-shield-check"></i> $20M PUBLIC LIABILITY INSURED</span>
+        <span class="marquee-pill" aria-hidden="true"><i class="ph-fill ph-seal-check"></i> MASTER PLUMBERS MEMBER</span>
+        <span class="marquee-pill" aria-hidden="true"><i class="ph-fill ph-flame"></i> RHEEM HOT WATER SPECIALIST</span>
+        <span class="marquee-pill" aria-hidden="true"><i class="ph-fill ph-drop"></i> RINNAI AUTHORIZED INSTALLER</span>
+        <span class="marquee-pill" aria-hidden="true"><i class="ph-fill ph-wrench"></i> BOSCH &amp; DUX SYSTEMS</span>
+      </div>
+    </div>
+    <!-- 6-Card Emergency & Maintenance Services Matrix -->
+    <section id="services" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="urgent-pill" style="background:rgba(14,165,233,0.14);border-color:var(--border-cyan);color:var(--cyan-bright);">
+            <i class="ph-fill ph-wrench"></i> Same-Day Service &amp; Repairs
+          </div>
+          <h2 class="section-title">Rapid-Response <span class="text-cyan">Capabilities.</span></h2>
+          <p class="section-desc">Equipped with high-pressure water jetters, CCTV pipe inspection cameras, and non-invasive acoustic leak detectors.</p>
+        </div>
+
+        <div class="services-grid">
+          <div class="service-card reveal">
+            <div class="svc-icon"><i class="ph-fill ph-pipe"></i></div>
+            <h3 class="svc-title">Blocked Drains &amp; Hydro-Jetting</h3>
+            <p class="svc-desc">Tree roots, grease, or collapsed pipes cleared fast using 5,000 PSI hydro-jetters and HD CCTV camera inspection to locate the exact cause.</p>
+            <div class="svc-tag"><i class="ph-fill ph-check-circle"></i> Free CCTV Camera Check With Every Clear</div>
+          </div>
+
+          <div class="service-card reveal">
+            <div class="svc-icon"><i class="ph-fill ph-drop-half-bottom"></i></div>
+            <h3 class="svc-title">24/7 Burst Pipes &amp; Leak Detection</h3>
+            <p class="svc-desc">Non-invasive thermal imaging and acoustic listening equipment to pinpoint hidden wall or under-slab water leaks without unnecessary damage.</p>
+            <div class="svc-tag"><i class="ph-fill ph-check-circle"></i> Priority 45-Minute Emergency Dispatch</div>
+          </div>
+
+          <div class="service-card reveal">
+            <div class="svc-icon"><i class="ph-fill ph-thermometer-hot"></i></div>
+            <h3 class="svc-title">Hot Water Repair &amp; Replacement</h3>
+            <p class="svc-desc">Same-day hot water restoration across gas, electric, solar, and heat-pump units. We supply and install Rheem, Rinnai, Dux, and Bosch.</p>
+            <div class="svc-tag"><i class="ph-fill ph-check-circle"></i> Same-Day Hot Water Guarantee</div>
+          </div>
+
+          <div class="service-card reveal">
+            <div class="svc-icon"><i class="ph-fill ph-flame"></i></div>
+            <h3 class="svc-title">Licensed Gas Fitting &amp; Gas Leaks</h3>
+            <p class="svc-desc">Emergency gas leak detection, pressure testing, gas cooktop installations, bayonet points, and official gas compliance certificates.</p>
+            <div class="svc-tag"><i class="ph-fill ph-check-circle"></i> Full Compliance Certificate Issued</div>
+          </div>
+
+          <div class="service-card reveal">
+            <div class="svc-icon"><i class="ph-fill ph-toilet"></i></div>
+            <h3 class="svc-title">Leaking Taps, Toilets &amp; Fixtures</h3>
+            <p class="svc-desc">Dripping mixer taps, running cisterns, smart toilet suites, water hammer arrestors, and water pressure limiting valves installed cleanly.</p>
+            <div class="svc-tag"><i class="ph-fill ph-check-circle"></i> Boot Covers &amp; Drop Sheets Always Used</div>
+          </div>
+
+          <div class="service-card reveal">
+            <div class="svc-icon"><i class="ph-fill ph-house-line"></i></div>
+            <h3 class="svc-title">Roof Leaks, Gutters &amp; Stormwater</h3>
+            <p class="svc-desc">Stormwater drainage pits, downpipe replacements, roof flashing repairs, and backflow prevention testing for homes and strata properties.</p>
+            <div class="svc-tag"><i class="ph-fill ph-check-circle"></i> AS/NZS 3500 Compliant Workmanship</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- 4-Point Homeowner Guarantee & Licence Verification -->
+    <section id="guarantee" class="section" style="background:rgba(15,23,42,0.55);border-top:1px solid var(--border-line);border-bottom:1px solid var(--border-line);">
+      <div class="container split-2">
+        <div class="reveal">
+          <div class="urgent-pill" style="background:rgba(16,185,129,0.14);border-color:#10B981;color:#34D399;">
+            <i class="ph-fill ph-shield-check"></i> Zero-Risk Homeowner Promise
+          </div>
+          <h2 class="section-title">No Hidden Fees. <br><span class="text-cyan">Upfront Fixed Pricing.</span></h2>
+          <p class="section-desc" style="margin-bottom:26px;">We price by the job — never by the hour — so you know the exact cost down to the cent before we pick up a tool.</p>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="diag-pill" style="padding:14px 18px;font-size:0.92rem;"><i class="ph-fill ph-check-circle"></i><span><strong>1. Upfront Written Quote:</strong> Fixed price approved by you before any work starts.</span></div>
+            <div class="diag-pill" style="padding:14px 18px;font-size:0.92rem;"><i class="ph-fill ph-check-circle"></i><span><strong>2. On-Time Arrival Guarantee:</strong> Live GPS SMS tracking when your technician is on the way.</span></div>
+            <div class="diag-pill" style="padding:14px 18px;font-size:0.92rem;"><i class="ph-fill ph-check-circle"></i><span><strong>3. Respect for Your Home:</strong> Boot covers worn indoors &amp; spotless cleanup guaranteed.</span></div>
+            <div class="diag-pill" style="padding:14px 18px;font-size:0.92rem;"><i class="ph-fill ph-check-circle"></i><span><strong>4. Lifetime Workmanship Warranty:</strong> Backed by $20M Public Liability Insurance.</span></div>
+          </div>
+        </div>
+
+        <div class="guarantee-box reveal">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:8px;">
+            <h3 style="font-size:1.25rem;display:flex;align-items:center;gap:8px;"><i class="ph-fill ph-seal-check text-cyan"></i> Trade Licences &amp; Compliance</h3>
+            <span style="background:rgba(16,185,129,0.16);border:1px solid #10B981;color:#34D399;padding:4px 12px;border-radius:100px;font-size:0.72rem;font-weight:800;">VERIFIED ACTIVE</span>
+          </div>
+          <div class="g-row"><span style="color:var(--text-slate);">Trade Licence</span><strong class="text-cyan">Licensed Plumber, Drainer &amp; Gasfitter</strong></div>
+          <div class="g-row"><span style="color:var(--text-slate);">Australian Standards</span><strong>AS/NZS 3500 Compliant</strong></div>
+          <div class="g-row"><span style="color:var(--text-slate);">Public Liability Insurance</span><strong style="color:#34D399;">$20,000,000 AUD Cover</strong></div>
+          <div class="g-row"><span style="color:var(--text-slate);">Technician Screening</span><strong>100% Police-Checked &amp; Uniformed</strong></div>
+          <div class="g-row"><span style="color:var(--text-slate);">Emergency Availability</span><strong class="text-red">24 Hours / 7 Days (Including Public Holidays)</strong></div>
+          <div style="margin-top:24px;text-align:center;">
+            <a href="tel:1300999999" class="btn-emergency" style="width:100%;padding:16px;font-size:1.02rem;">
+              <i class="ph-fill ph-phone-call"></i>
+              <span>Speak With Our On-Call Plumber: 1300 999 999</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Verified Local Google Reviews -->
+    <section id="reviews" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="urgent-pill" style="background:rgba(251,188,5,0.14);border-color:rgba(251,188,5,0.45);color:#FDE047;">
+            <i class="ph-fill ph-star"></i> 4.9★ From 250+ Local Google Reviews
+          </div>
+          <h2 class="section-title">Trusted by Local <span class="text-cyan">Homeowners.</span></h2>
+        </div>
+        <div class="services-grid">
+          <div class="service-card reveal">
+            <div style="color:#FBBC05;letter-spacing:2px;margin-bottom:10px;">★★★★★</div>
+            <p class="svc-desc" style="font-style:italic;color:#F8FAFC;">"Had a burst hot water pipe at 6:30am on a Sunday. They answered on the second ring, arrived in 35 minutes, gave a fair fixed price upfront, and had everything fixed and cleaned up before 8am!"</p>
+            <div class="svc-tag" style="color:var(--cyan-bright);"><i class="ph-fill ph-seal-check"></i> Mark T. &bull; Verified Local Google Review</div>
+          </div>
+          <div class="service-card reveal">
+            <div style="color:#FBBC05;letter-spacing:2px;margin-bottom:10px;">★★★★★</div>
+            <p class="svc-desc" style="font-style:italic;color:#F8FAFC;">"Cleared a severe tree-root blocked drain that two other plumbers couldn't fix. Showed us the live CCTV camera footage inside the pipe so we could see it was 100% spotless."</p>
+            <div class="svc-tag" style="color:var(--cyan-bright);"><i class="ph-fill ph-seal-check"></i> Belinda R. &bull; Verified Local Google Review</div>
+          </div>
+          <div class="service-card reveal">
+            <div style="color:#FBBC05;letter-spacing:2px;margin-bottom:10px;">★★★★★</div>
+            <p class="svc-desc" style="font-style:italic;color:#F8FAFC;">"Super polite, wore boot covers inside the house, and replaced our Rheem hot water system the same afternoon. Honest pricing with zero surprises."</p>
+            <div class="svc-tag" style="color:var(--cyan-bright);"><i class="ph-fill ph-seal-check"></i> Jason &amp; Emma W. &bull; Verified Google Review</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;">
+      <div>
+        <strong style="color:#fff;font-family:'Outfit';letter-spacing:1px;">RAPID PLUMBING</strong>
+        <p style="font-size:0.8rem;margin-top:4px;">24/7 Licensed Emergency Plumbers, Drainers &amp; Gasfitters &bull; $20M Insured</p>
+      </div>
+      <div>&copy; 2026 RAPID PLUMBING. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('active'); });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+    });
+  </script>
 </body>
 </html>

@@ -3,15 +3,15 @@
 - **Slug:** `cafe`
 - **Live Demo URL:** https://cafe.wynnpages.com.au
 - **Official Domain:** Pending
-- **Stripe Customer ID:** `cus_VcXRb4aStmdaaN`
+- **Stripe Customer ID:** `cus_Ve3QqioVi2oS1J`
 - **Selected Haute Couture Palette:** `01` (`01` Terracotta & Gold | `02` Rose Silk & Rose-Gold | `03` Botanical Sage | `04` Espresso Cashmere & Brushed Gold | `05` Coastal Pearl & Mineral Slate)
 - **Business Name:** cafe
 - **Display Phone:** 0424717777
 - **SMS Phone:** 0424717777
 - **Email:** dotranquangphuc@gmail.com
-- **Address / Suburb:** TBD
+- **Address / Suburb:** Australia
 - **Social & Booking Links:** None provided yet
-- **Client Preferred Colors / Vibe Notes:** Curated Atelier | N/A
+- **Client Preferred Colors / Vibe Notes:** Curated Atelier | Revision Applied (`IMG_3097.jpeg, IMG_3096.png, IMG_3095.png, IMG_3094.png`)
 
 ## Client Uploaded Brief Assets (`_client_uploads/`)
 - No uploaded menu/logo files downloaded yet. Using curated Australian AUD sample menu in `window.SALON_MENU_DATA`.

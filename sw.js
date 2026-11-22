@@ -1,5 +1,5 @@
 // WynnPages Studio — Service Worker for iOS PWA & Push Notifications
-const CACHE_NAME = 'wynn-studio-pwa-v6';
+const CACHE_NAME = 'wynn-studio-pwa-v8';
 const PRECACHE_ASSETS = [
   '/manifest.json',
   '/assets/favicon.png',
@@ -83,8 +83,8 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Skip API endpoints, non-GET, or external cross-origin requests
-  if (req.method !== 'GET' || url.pathname.startsWith('/api/') || url.origin !== self.location.origin) {
+  // Skip API endpoints, templates, client demos, non-GET, or external cross-origin requests
+  if (req.method !== 'GET' || url.pathname.startsWith('/api/') || url.pathname.startsWith('/templates/') || url.pathname.startsWith('/clients/') || url.origin !== self.location.origin) {
     return;
   }
 

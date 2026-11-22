@@ -34,9 +34,12 @@ Do NOT allow arbitrary neon or harsh colors, and NEVER use pure black (`#000000`
   - Add `fetchpriority="high"` (and NEVER `loading="lazy"`) on the Hero LCP image; use `loading="lazy"` on below-the-fold lookbook images.
   - Use native `<dialog closedby="any">` with `showModal()` plus the Safari backdrop light-dismiss fallback for Booking / Lightbox modals.
 
-## 3. Logo Treatment (2-Tier Rule)
-- **Tier A — Embossed Gold Wax Monogram Seal (Default / Low-Res Client Logo):** Render the salon's initials inside a circular metallic gold-foil embossed seal with double hairline rings and `Cormorant Garamond` italic monogram.
-- **Tier B — Curated Client Logo:** If the client supplies a clean logo, strip harsh white boxes and harmonize it inside a pearl glassmorphic medallion or apply a warm duotone/metallic CSS filter so it never clashes with the palette.
+## 3. Logo Treatment & Bespoke SVG Redraw (2-Tier Rule + Hero Wall Mounting)
+- **Tier A — Embossed Gold Wax Monogram Seal + Architectural Wall Plaque (Default):** Render the salon's initials inside a circular metallic gold-foil embossed seal in the Header, and display the salon's name inside the 3D Brushed Brass & Plaster Wall Plaque (`#hero-wall-signage`) centered at `top: 15%; left: 55.5%` inside the sunlit arched alcove behind the seated technician.
+- **Tier B — Antigravity Bespoke Vector SVG Redraw (When Client Logo Is Uploaded):**
+  1. Inspect the client's uploaded logo image (`_client_uploads/` or user attachment) using `read_files`.
+  2. Redraw and elevate the client's logo into a pure, clean vector SVG file at `clients/<slug>/assets/brand-logo.svg` in the **WynnPages Haute Couture style** (ultra-clean 1.5px botanical/architectural line-art, *Cormorant Garamond / Didot* editorial serif proportions, 24K champagne gold & antique bronze gradients, zero white background box).
+  3. Set `window.ATELIER_CONFIG.logoUrl = "/assets/brand-logo.svg"` so the bespoke SVG automatically populates the Header (`#brand-logo-slot`), Footer (`#footer-monogram`), and mounts onto the Hero arched alcove wall (`#hero-wall-signage`) via the `#atelier-wall-brass` 3D relief filter.
 
 ## 4. Structured Editable Price Menu & Social Architecture
 - **Editable Menu Data:** Store all service categories, AUD prices, durations, and descriptions inside `window.SALON_MENU_DATA` in `<script id="atelier-menu-data">` so updating a real uploaded client menu only requires updating that JSON object—never rewriting layout HTML.

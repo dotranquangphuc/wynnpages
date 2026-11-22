@@ -323,6 +323,11 @@ h1, h2, h3, h4, h5, h6 {
 .section-desc { color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
 
 .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
 /* ===================================================
    EXTENDED STYLES FOR THE 3 TRADE GROUPS
 =================================================== */
@@ -376,10 +381,6 @@ h1, h2, h3, h4, h5, h6 {
 .level-line { width: 2px; height: 100%; background: rgba(255,255,255,0.2); position: absolute; }
 .level-line.left { left: 40%; } .level-line.right { right: 40%; }
 .level-bubble { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-accent); box-shadow: 0 0 15px var(--brand-accent); }
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-}
 .interactive-card {
     position: relative;
     border-radius: var(--radius-lg);

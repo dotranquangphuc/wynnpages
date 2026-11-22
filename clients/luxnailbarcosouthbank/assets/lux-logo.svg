@@ -1,70 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 1 360 150" width="360" height="150" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 110" width="360" height="110" fill="none">
   <defs>
-    <!-- 24K Gold-Leaf Foil Multi-Stop Metallic Gradient -->
-    <linearGradient id="goldLeafBody" x1="6%" y1="4%" x2="94%" y2="96%">
-      <stop offset="0%" stop-color="#9E6812"/>
-      <stop offset="15%" stop-color="#E7BA4C"/>
-      <stop offset="30%" stop-color="#FFF2C4"/>
-      <stop offset="46%" stop-color="#D49B28"/>
-      <stop offset="62%" stop-color="#9B6510"/>
-      <stop offset="78%" stop-color="#F7DC88"/>
-      <stop offset="91%" stop-color="#C88A1E"/>
-      <stop offset="100%" stop-color="#8C580A"/>
+    <!-- 24K Champagne Gold & Antique Brass Metallic Gradient -->
+    <linearGradient id="atelierGoldFoil" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8C5A1C"/>
+      <stop offset="22%" stop-color="#D49B28"/>
+      <stop offset="45%" stop-color="#F7E3A8"/>
+      <stop offset="68%" stop-color="#B87D1E"/>
+      <stop offset="88%" stop-color="#E5B952"/>
+      <stop offset="100%" stop-color="#7A4B12"/>
     </linearGradient>
-
-    <!-- Brushed Gold Specular Bevel Highlight -->
-    <linearGradient id="goldLeafSheen" x1="0%" y1="0%" x2="100%" y2="90%">
-      <stop offset="0%" stop-color="#FFFDF5" stop-opacity="0.82"/>
-      <stop offset="38%" stop-color="#FBE8A4" stop-opacity="0.52"/>
-      <stop offset="70%" stop-color="#D49B28" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#FFF9E2" stop-opacity="0.6"/>
+    <linearGradient id="atelierDarkInk" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B2316"/>
+      <stop offset="50%" stop-color="#5A3622"/>
+      <stop offset="100%" stop-color="#2B1910"/>
     </linearGradient>
-
-    <!-- Deep Antique Bronze 3D Extrusion -->
-    <linearGradient id="goldBronzeDepth" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5C3A08"/>
-      <stop offset="55%" stop-color="#744A0C"/>
-      <stop offset="100%" stop-color="#4A2E05"/>
-    </linearGradient>
-
-    <!-- Soft Shadow -->
-    <filter id="goldDrop" x="-8%" y="-10%" width="120%" height="128%">
-      <feDropShadow dx="-1.1" dy="2.1" stdDeviation="1.6" flood-color="#2B1E0D" flood-opacity="0.28"/>
+    <filter id="plasterRelief" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="-0.6" dy="-0.6" stdDeviation="0.4" flood-color="#FFFDF8" flood-opacity="0.65"/>
+      <feDropShadow dx="1.1" dy="1.8" stdDeviation="1.1" flood-color="#2B1B10" flood-opacity="0.24"/>
     </filter>
   </defs>
 
-  <g filter="url(#goldDrop)" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- LAYER 1: 3D Extruded Antique Bronze Backing -->
-    <g transform="translate(-1.2, 2.0)" stroke="url(#goldBronzeDepth)">
-      <!-- L -->
-      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="10.4"/>
-      <!-- u flowing cleanly to x shoulder -->
-      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103" stroke-width="9.6"/>
-      <!-- x main wave -->
-      <path d="M 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="9.6"/>
-      <!-- x cross stroke -->
-      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="8.8"/>
+  <g filter="url(#plasterRelief)">
+    <!-- Top Haute Couture Botanical & Starburst Crest -->
+    <g transform="translate(180, 18)">
+      <path d="M-34 4 C-24 4, -16 1, -8 -1" stroke="url(#atelierGoldFoil)" stroke-width="1.1" stroke-linecap="round"/>
+      <path d="M-24 3 C-21 -1, -16 -2, -14 1 C-17 3, -21 4, -24 3 Z" fill="url(#atelierGoldFoil)" opacity="0.85"/>
+      <path d="M34 4 C24 4, 16 1, 8 -1" stroke="url(#atelierGoldFoil)" stroke-width="1.1" stroke-linecap="round"/>
+      <path d="M24 3 C21 -1, 16 -2, 14 1 C17 3, 21 4, 24 3 Z" fill="url(#atelierGoldFoil)" opacity="0.85"/>
+      <path d="M0 -9 L2.2 -2.2 L9 0 L2.2 2.2 L0 9 L-2.2 2.2 L-9 0 L-2.2 -2.2 Z" fill="url(#atelierGoldFoil)"/>
+      <circle cx="-13" cy="0" r="1.2" fill="url(#atelierGoldFoil)"/>
+      <circle cx="13" cy="0" r="1.2" fill="url(#atelierGoldFoil)"/>
     </g>
 
-    <!-- LAYER 2: 24K Gold-Leaf Foil Body -->
-    <g stroke="url(#goldLeafBody)">
-      <!-- L -->
-      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="9.4"/>
-      <!-- u flowing cleanly to x shoulder -->
-      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103" stroke-width="8.6"/>
-      <!-- x main wave -->
-      <path d="M 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="8.6"/>
-      <!-- x cross stroke -->
-      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="7.8"/>
-    </g>
+    <!-- Main Engraved Editorial Wordmark: LUX NAILS BAR -->
+    <text
+      x="180"
+      y="64"
+      text-anchor="middle"
+      font-family="'Cormorant Garamond', 'Didot', 'Bodoni MT', Georgia, serif"
+      font-size="42"
+      font-weight="600"
+      font-style="italic"
+      letter-spacing="5"
+      fill="url(#atelierDarkInk)"
+    >Lux Nails</text>
 
-    <!-- LAYER 3: Specular Gold-Leaf Foil Highlight Ridge -->
-    <g transform="translate(0.3, -0.7)" stroke="url(#goldLeafSheen)">
-      <!-- L -->
-      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="2.0"/>
-      <!-- u + x unified bevel highlight -->
-      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="1.8"/>
-      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="1.5"/>
-    </g>
+    <!-- Subtle Gold-Leaf Hairline Rule with Center Diamond -->
+    <line x1="88" y1="78" x2="171" y2="78" stroke="url(#atelierGoldFoil)" stroke-width="0.9" opacity="0.8"/>
+    <polygon points="180,75 183,78 180,81 177,78" fill="url(#atelierGoldFoil)"/>
+    <line x1="189" y1="78" x2="272" y2="78" stroke="url(#atelierGoldFoil)" stroke-width="0.9" opacity="0.8"/>
+
+    <!-- Architectural Sub-Caption -->
+    <text
+      x="180"
+      y="96"
+      text-anchor="middle"
+      font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+      font-size="9.5"
+      font-weight="600"
+      letter-spacing="4.5"
+      fill="#6B442A"
+    >SOUTH BRISBANE • QLD</text>
   </g>
 </svg>
+
