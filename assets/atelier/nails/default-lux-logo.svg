@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 1 360 150" width="360" height="150" fill="none" shape-rendering="geometricPrecision">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 1 360 150" width="360" height="150" fill="none">
   <defs>
     <!-- 24K Gold-Leaf Foil Multi-Stop Metallic Gradient -->
     <linearGradient id="goldLeafBody" x1="6%" y1="4%" x2="94%" y2="96%">
@@ -26,21 +26,14 @@
       <stop offset="55%" stop-color="#744A0C"/>
       <stop offset="100%" stop-color="#4A2E05"/>
     </linearGradient>
+
+    <!-- Soft Shadow -->
+    <filter id="goldDrop" x="-8%" y="-10%" width="120%" height="128%">
+      <feDropShadow dx="-1.1" dy="2.1" stdDeviation="1.6" flood-color="#2B1E0D" flood-opacity="0.28"/>
+    </filter>
   </defs>
 
-  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- LAYER 0: Pure-Vector Ambient Drop Shadow (Crisp @3x WebKit Retina safe — no SVG filter bitmap rasterization) -->
-    <g transform="translate(-1.8, 2.8)" stroke="#2B1E0D" stroke-opacity="0.22">
-      <!-- L -->
-      <path d="M 105 16 C 81 33, 76 60, 96 71 C 117 82, 149 70, 173 48 C 192 31, 201 14, 193 9 C 184 4, 159 20, 141 48 C 119 82, 95 113, 66 132 C 47 145, 20 145, 18 133 C 17 121, 40 120, 60 129 C 85 140, 114 142, 140 133 C 150 129, 157 124, 162 119" stroke-width="11.2"/>
-      <!-- u flowing cleanly to x shoulder -->
-      <path d="M 183 108 C 176 123, 174 137, 182 138 C 190 139, 199 124, 205 109 C 201 124, 203 139, 217 139 C 232 139, 245 123, 254 103" stroke-width="10.4"/>
-      <!-- x main wave -->
-      <path d="M 254 103 C 267 121, 286 139, 310 139 C 331 139, 347 125, 359 104" stroke-width="10.4"/>
-      <!-- x cross stroke -->
-      <path d="M 248 136 C 259 125, 270 114, 281 105" stroke-width="9.4"/>
-    </g>
-
+  <g filter="url(#goldDrop)" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <!-- LAYER 1: 3D Extruded Antique Bronze Backing -->
     <g transform="translate(-1.2, 2.0)" stroke="url(#goldBronzeDepth)">
       <!-- L -->
