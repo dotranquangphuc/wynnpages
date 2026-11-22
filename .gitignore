@@ -3,3 +3,9 @@
 tailwindcss-macos-arm64
 .DS_Store
 clients/*/_client_uploads/
+dump.js
+find.js
+runme.js
+script_deploy.js
+search2.js
+search_script.js

@@ -228,6 +228,7 @@
     html {
       -webkit-text-size-adjust: 100%;
       scroll-padding-top: 96px;
+      scroll-padding-bottom: calc(10rem + env(safe-area-inset-bottom, 0px));
       overflow-x: clip;
       max-width: 100%;
     }
@@ -471,7 +472,7 @@
        ========================================================================== */
     .btn-atelier-primary {
       position: relative;
-      overflow: hidden;
+      overflow: clip;
       flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-deep) 100%);
       color: #FFFFFF;
@@ -507,8 +508,12 @@
         transparent 100%
       );
       transform: rotate(20deg);
-      animation: foil-shimmer 6.2s ease-in-out infinite;
       pointer-events: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .btn-atelier-primary::after {
+        animation: foil-shimmer 6.2s ease-in-out infinite;
+      }
     }
 
     @keyframes foil-shimmer {
@@ -811,42 +816,25 @@
       will-change: transform, opacity;
     }
 
-    /* ==========================================================================
-       HAUTE COUTURE STACKING DECK (XẾP CHỒNG THU HỒI TỰ NHIÊN)
-       On mobile & tablet (< 1024px), review cards stack tactilely on top of each other.
-       When scrolling down, Card 2 stacks over Card 1; Card 3 over Card 2.
-       When scrolling back up, the top card retracts/peels off the deck smoothly!
-       ========================================================================== */
+    /* Mobile & Coarse Touch: Compositor-only opacity + transform reveals (zero blur stutter) */
+    @media (max-width: 767px), (pointer: coarse) {
+      [data-apple-reveal] {
+        filter: none !important;
+        will-change: opacity, transform;
+      }
+    }
+
+    /* Reviews Mobile Vertical Deck (Clean opaque separation, zero sticky collision) */
     @media (max-width: 1023px) {
       .atelier-stack-deck {
         display: flex !important;
         flex-direction: column !important;
-        gap: 20px !important;
+        gap: 16px !important;
         position: relative;
       }
       .atelier-stack-card {
-        position: sticky !important;
-        top: calc(82px + var(--stack-offset, 0px)) !important;
-        transform-origin: center top;
-        box-shadow:
-          0 20px 45px -15px rgba(43, 37, 30, 0.14),
-          0 0 0 1px var(--border-hairline) !important;
-        transition:
-          transform 0.45s var(--apple-silk),
-          box-shadow 0.45s var(--apple-silk),
-          filter 0.45s ease;
-      }
-      .atelier-stack-card:nth-child(1) {
-        --stack-offset: 0px;
-        z-index: 1;
-      }
-      .atelier-stack-card:nth-child(2) {
-        --stack-offset: 16px;
-        z-index: 2;
-      }
-      .atelier-stack-card:nth-child(3) {
-        --stack-offset: 32px;
-        z-index: 3;
+        position: relative;
+        background: var(--bg-card-solid) !important;
       }
     }
 
@@ -872,8 +860,10 @@
       0%, 100% { transform: scale(1.02) translate3d(0, 0, 0); }
       50% { transform: scale(1.052) translate3d(0, -3px, 0); }
     }
-    .animate-canvas-breathe {
-      animation: canvas-breathe 16s ease-in-out infinite;
+    @media (prefers-reduced-motion: no-preference) {
+      .animate-canvas-breathe {
+        animation: canvas-breathe 16s ease-in-out infinite;
+      }
     }
 
     /* Palette-Harmonized Architectural Map Embed (GPU-Isolated, Zero-Jank) */
@@ -1088,7 +1078,7 @@
         hero: "https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg",
         beforeNail: "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg",
         afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg",
-        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg",
+        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg",
         pedicureFeature: "https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg",
         lookbook: [
           {
@@ -1320,11 +1310,11 @@
     <section id="hero-section" class="grid grid-cols-1 lg:grid-cols-12 gap-9 sm:gap-10 lg:gap-12 items-center">
       <!-- Left Editorial Copy (7 Cols) -->
       <div id="hero-copy-col" class="lg:col-span-7 space-y-5 sm:space-y-7 text-left will-change-transform">
-        <div style="--hero-delay: 60ms;" class="hero-choreo inline-flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full text-[10.5px] sm:text-[11px] font-semibold tracking-wider uppercase max-w-full" style="background-color: var(--pill-bg); color: var(--accent-primary); border: 1px solid var(--border-hairline);">
+        <div style="--hero-delay: 60ms; background-color: var(--pill-bg); color: var(--accent-primary); border: 1px solid var(--border-hairline);" class="hero-choreo inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-semibold tracking-[0.11em] sm:tracking-wider uppercase max-w-full">
           <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"></path>
           </svg>
-          <span id="hero-badge-text" class="truncate">Armadale • BIAB &amp; Non-Toxic Nail Sanctuary</span>
+          <span id="hero-badge-text" class="leading-snug">Armadale • BIAB &amp; Non-Toxic Nail Sanctuary</span>
         </div>
 
         <h1 style="--hero-delay: 170ms;" class="hero-choreo font-editorial text-[42px] min-[400px]:text-5xl sm:text-6xl lg:text-[68px] font-semibold leading-[1.04] tracking-tight text-balance">
@@ -1337,22 +1327,23 @@
         </p>
 
         <!-- Primary & Secondary Actions -->
-        <div style="--hero-delay: 410ms;" class="hero-choreo flex flex-wrap items-center gap-3 sm:gap-3.5 pt-1">
-          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-6 sm:px-7 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2.5 cursor-pointer flex-1 min-[430px]:flex-initial">
+        <div style="--hero-delay: 410ms;" class="hero-choreo grid grid-cols-1 min-[350px]:grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 sm:gap-3.5 pt-1">
+          <button type="button" data-open-booking="" class="btn-atelier-primary rounded-full px-3.5 sm:px-7 py-3.5 sm:py-4 text-[12px] sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-1.5 sm:gap-2.5 cursor-pointer whitespace-nowrap">
             <span>Book Appointment</span>
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3.5 8h9M8.5 4l4 4-4 4"></path>
             </svg>
           </button>
-          <a href="#menu" data-smooth-anchor="#menu" class="btn-atelier-secondary rounded-full px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 flex-1 min-[430px]:flex-initial">
+          <a href="#menu" data-smooth-anchor="#menu" class="btn-atelier-secondary rounded-full px-3.5 sm:px-6 py-3.5 sm:py-4 text-[12px] sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 whitespace-nowrap">
             <span>Explore Price Menu</span>
           </a>
         </div>
 
         <!-- Evergreen Scarcity Reassurance Badge -->
         <div style="--hero-delay: 470ms;" class="hero-choreo flex items-center">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border shadow-2xs" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">
-            <span>🌿 Friday &amp; Saturday rituals book out early — Reserve ahead</span>
+          <div class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-medium leading-snug border shadow-2xs" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+            <span>Friday &amp; Saturday slots fill fast — Reserve ahead</span>
           </div>
         </div>
 
@@ -1406,10 +1397,10 @@
             id="hero-wall-signage"
             aria-hidden="true"
             class="pointer-events-none select-none absolute z-[2] flex flex-col items-center text-center"
-            style="top: 15%; left: 55.5%; width: 34%; max-width: 154px; transform: translate(-50%, 0) perspective(520px) rotateY(-6deg) rotateZ(-0.6deg); opacity: 0.78; mix-blend-mode: multiply;"
+            style="top: 15%; left: 55.5%; width: 34%; max-width: 150px; transform: translate(-50%, 0) perspective(520px) rotateY(-6deg) rotateZ(-0.6deg); opacity: 0.76; mix-blend-mode: multiply;"
           >
             <!-- Delicate 24K Brushed Brass Botanical & Diamond Crest -->
-            <svg class="w-11 sm:w-12 h-3.5 mb-0.5 overflow-visible" viewBox="0 0 80 20" fill="none">
+            <svg id="hero-wall-crest" class="w-11 sm:w-12 h-3.5 mb-0.5 overflow-visible" viewBox="0 0 80 20" fill="none">
               <path d="M12 13 C20 13, 27 10, 34 8" stroke="#8C5820" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
               <path d="M68 13 C60 13, 53 10, 46 8" stroke="#8C5820" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
               <path d="M40 2 L42 7.5 L47.5 9.5 L42 11.5 L40 17 L38 11.5 L32.5 9.5 L38 7.5 Z" fill="#8C5820" opacity="0.88"/>
@@ -1421,7 +1412,7 @@
               src=""
               alt=""
               class="hidden w-full max-w-[96px] sm:max-w-[114px] max-h-[38px] object-contain block"
-              style="filter: url(#atelier-wall-brass);"
+              style="filter: sepia(0.28) brightness(0.76) contrast(1.12);"
             >
             <span
               id="hero-wall-wordmark"
@@ -1431,8 +1422,8 @@
             <span class="w-12 sm:w-14 h-[0.75px] my-1.5 block" style="background: linear-gradient(90deg, transparent, rgba(110, 58, 28, 0.55), transparent);"></span>
             <span
               id="hero-wall-sub"
-              class="text-[5.5px] sm:text-[6.5px] uppercase tracking-[0.22em] font-semibold block leading-none whitespace-nowrap"
-              style="color: #5A3520; text-shadow: 0 1px 0 rgba(255, 251, 244, 0.6);"
+              class="text-[7.5px] sm:text-[8.5px] uppercase tracking-[0.16em] font-bold block leading-tight whitespace-nowrap"
+              style="color: #4A2816;"
             >Armadale, VIC</span>
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
@@ -1462,11 +1453,11 @@
          SUBTLE SCROLL-SCRUBBED EDITORIAL CRAFTSMANSHIP FRIEZE
          ====================================================================== -->
     <div data-apple-reveal="header" class="py-4 border-y overflow-hidden select-none" style="border-color: var(--border-hairline);">
-      <div id="craft-frieze-track" class="flex flex-wrap sm:flex-nowrap items-center justify-center gap-x-5 sm:gap-x-6 gap-y-2 text-[10.5px] sm:text-[11px] uppercase tracking-[0.2em] font-medium whitespace-nowrap will-change-transform" style="color: var(--ink-muted);">
+      <div id="craft-frieze-track" class="flex flex-wrap sm:flex-nowrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 text-[10px] sm:text-[11px] uppercase tracking-[0.16em] sm:tracking-[0.2em] font-medium whitespace-nowrap will-change-transform" style="color: var(--ink-muted);">
         <span>HEMA-Free Builder Gels</span>
-        <svg class="w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
+        <svg class="hidden sm:inline w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
         <span>Hospital-Grade Autoclave</span>
-        <svg class="w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
+        <svg class="hidden sm:inline w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
         <span>Zero Harsh Monomer Odour</span>
         <svg class="hidden md:inline w-2.5 h-2.5 shrink-0" style="color: var(--foil-gold);" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l2.1 4.9L15 8l-4.9 2.1L8 15l-2.1-4.9L1 8l4.9-2.1L8 1z"/></svg>
         <span class="hidden md:inline">Australian Botanical Oils</span>
@@ -1603,17 +1594,17 @@
           <h3 class="font-editorial text-2xl font-semibold">What is your primary focus for this visit?</h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button type="button" data-quiz-choice="daily" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">🌿</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>
               <strong class="text-sm font-semibold block">Daily Quiet Luxury</strong>
               <span class="text-xs text-stone-500 block leading-snug">Low-maintenance, natural strength for work &amp; life.</span>
             </button>
             <button type="button" data-quiz-choice="event" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">🥂</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M7 3h10l-1 7a4 4 0 0 1-8 0L7 3z"/></svg></span>
               <strong class="text-sm font-semibold block">Wedding / Event</strong>
               <span class="text-xs text-stone-500 block leading-snug">Flawless silhouette, camera-ready length &amp; finish.</span>
             </button>
             <button type="button" data-quiz-choice="rehab" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">🩹</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>
               <strong class="text-sm font-semibold block">Nail Rehabilitation</strong>
               <span class="text-xs text-stone-500 block leading-snug">Recovering from damage, acrylic trauma, or biting.</span>
             </button>
@@ -1625,17 +1616,17 @@
           <h3 class="font-editorial text-2xl font-semibold">How would you describe your natural nail plates?</h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button type="button" data-quiz-choice="healthy" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">✨</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/></svg></span>
               <strong class="text-sm font-semibold block">Healthy &amp; Intact</strong>
               <span class="text-xs text-stone-500 block leading-snug">Nails grow well; desire clean Russian care &amp; glow.</span>
             </button>
             <button type="button" data-quiz-choice="brittle" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">🍂</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
               <strong class="text-sm font-semibold block">Thin, Bending or Brittle</strong>
               <span class="text-xs text-stone-500 block leading-snug">Snaps easily or peels; needs reinforced flexible apex.</span>
             </button>
             <button type="button" data-quiz-choice="short" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">📏</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
               <strong class="text-sm font-semibold block">Short &amp; Seeking Length</strong>
               <span class="text-xs text-stone-500 block leading-snug">Craving elegant almond or oval extensions instantly.</span>
             </button>
@@ -1647,17 +1638,17 @@
           <h3 class="font-editorial text-2xl font-semibold">What is your dream aesthetic &amp; finish?</h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button type="button" data-quiz-choice="nude" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">🤍</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M9.5 9.5a3.5 3.5 0 0 1 5 0"/></svg></span>
               <strong class="text-sm font-semibold block">Porcelain / Sheer Glaze</strong>
               <span class="text-xs text-stone-500 block leading-snug">Understated, clean girl cashmere or translucent milk.</span>
             </button>
             <button type="button" data-quiz-choice="french" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">💅</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V9a5 5 0 0 1 10 0v11"/><path d="M7.5 10.5c1.8 1.5 7.2 1.5 9 0"/></svg></span>
               <strong class="text-sm font-semibold block">Classic Micro-French</strong>
               <span class="text-xs text-stone-500 block leading-snug">Fine hand-painted smile lines in ivory or champagne.</span>
             </button>
             <button type="button" data-quiz-choice="art" class="btn-quiz-option atelier-card p-4 rounded-2xl text-left space-y-1.5 transition-all hover:scale-[1.02] border cursor-pointer hover:border-[var(--accent-primary)]">
-              <span class="text-xl block">🎨</span>
+              <span class="block" style="color: var(--accent-primary);" aria-hidden="true"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 1 0-3-3Z"/><path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/></svg></span>
               <strong class="text-sm font-semibold block">Artisan Bespoke Design</strong>
               <span class="text-xs text-stone-500 block leading-snug">3D chrome accents, kintsugi foils, or velvet cat-eye.</span>
             </button>
@@ -1718,12 +1709,12 @@
             src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
             alt="After BIAB structured overlay and Russian cuticle refinement"
             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.08); transform-origin: 50% 55%; filter: saturate(1.02) contrast(1.02);"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.04); transform-origin: 50% 55%; filter: saturate(1.12) contrast(1.04);"
             onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg';"
             loading="lazy"
             decoding="async"
           >
-          <div class="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.18em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.56); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.3);">
+          <div class="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 z-10 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.18em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.56); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.3);">
             AFTER
           </div>
 
@@ -1734,18 +1725,18 @@
               src="https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg"
               alt="Before natural unpolished fingernails prior to BIAB restoration"
               class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.08); transform-origin: 50% 55%; filter: saturate(1.08) contrast(1.03) sepia(0.03);"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.04); transform-origin: 50% 55%; filter: saturate(0.76) brightness(0.97) sepia(0.08);"
               onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg';"
               loading="lazy"
               decoding="async"
             >
-            <div class="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.18em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.56); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.3);">
+            <div class="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-10 px-2.5 py-1 rounded-full text-[9px] uppercase tracking-[0.18em] font-semibold pointer-events-none shadow-sm" style="background: rgba(43, 30, 22, 0.56); color: #FFFDF9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 251, 245, 0.3);">
               BEFORE
             </div>
           </div>
 
           <!-- Divider Handle (44x44px iPhone 16 Touch Target) -->
-          <div id="ba-handle" class="absolute top-0 bottom-0 pointer-events-none flex items-center justify-center" style="left: 50%; transform: translateX(-50%); width: 44px;">
+          <div id="ba-handle" class="absolute top-0 bottom-0 z-20 pointer-events-none flex items-center justify-center" style="left: 50%; transform: translateX(-50%); width: 44px;">
             <div class="h-full" style="width: 1.5px; background: rgba(110, 44, 26, 0.58); box-shadow: 0 0 10px rgba(110, 44, 26, 0.16), 0 0 1px rgba(255, 251, 245, 0.5);"></div>
             <div class="absolute w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center pointer-events-auto cursor-ew-resize transition-transform duration-200 hover:scale-110 active:scale-95" style="background: rgba(110, 44, 26, 0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1.5px solid rgba(255, 250, 244, 0.88); box-shadow: 0 6px 20px rgba(62, 26, 16, 0.28), 0 0 0 4px rgba(110, 44, 26, 0.10); color: #FFFDF9;">
               <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1873,9 +1864,8 @@
         <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
-            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
+            src="https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg"
             alt="Fine-art oil study of luminous sheer BIAB manicure"
-            style="filter: saturate(0.92) sepia(0.06);"
             onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg';"
             loading="lazy"
             width="800"
@@ -2170,7 +2160,7 @@
   <!-- ========================================================================
        MINIMALIST ATELIER FOOTER
        ======================================================================== -->
-  <footer class="relative z-10 border-t py-10 px-4 sm:px-6 text-xs w-full overflow-x-clip" style="border-color: var(--border-hairline); color: var(--ink-muted);">
+  <footer class="relative z-10 border-t pt-10 pb-44 sm:pb-24 px-4 sm:px-6 text-xs w-full overflow-x-clip" style="border-color: var(--border-hairline); color: var(--ink-muted);">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
       <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
         <span id="copyright-salon" class="font-editorial font-semibold text-base" style="color: var(--ink-primary);">Maison Élan</span>
@@ -2181,6 +2171,7 @@
         <a id="footer-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Instagram</a>
         <a id="footer-fb-link" href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Facebook</a>
         <a href="#menu" data-smooth-anchor="#menu" class="hover:underline">Price Menu</a>
+        <a href="https://wynnpages.com.au" target="_blank" rel="noopener noreferrer" class="hover:underline">About Studio</a>
         <button type="button" data-open-booking="" class="font-semibold underline cursor-pointer" style="color: var(--accent-primary);">Book Visit</button>
       </div>
     </div>
@@ -2246,7 +2237,7 @@
             <div style="display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:4px 14px;border-radius:9999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">● Demo Preview Archived</div>
             <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:700;color:#1c1917;margin-bottom:10px;">This Bespoke Preview Has <em style="color:#96432b;">Expired</em></h2>
             <p style="font-size:13px;line-height:1.65;color:#57534e;margin-bottom:22px;">Prepared exclusively for <strong>${bName}</strong>. Click below to unlock <strong>48-hour live preview access</strong> instantly.</p>
-            <button type="button" id="tpl-self-unlock-48h" style="width:100%;background:linear-gradient(135deg,#15803d 0%,#166534 100%);color:#fff;border:0;padding:15px 22px;border-radius:14px;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 12px 24px rgba(22,101,52,0.25);">🔓 I'm the Business Owner — Unlock 48-Hour Preview</button>
+            <button type="button" id="tpl-self-unlock-48h" style="width:100%;background:linear-gradient(135deg,#15803d 0%,#166534 100%);color:#fff;border:0;padding:15px 22px;border-radius:14px;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 12px 24px rgba(22,101,52,0.25);">I'm the Business Owner — Unlock 48-Hour Preview</button>
             <div id="tpl-unlock-status" style="font-size:12px;font-weight:600;color:#166534;margin-top:8px;min-height:18px;"></div>
           </div>
         `;
@@ -2256,7 +2247,7 @@
         if (uBtn) {
           uBtn.addEventListener('click', () => {
             uBtn.disabled = true;
-            uBtn.textContent = '⏳ Unlocking Your 48-Hour Preview...';
+            uBtn.textContent = 'Unlocking Your 48-Hour Preview...';
             fetch('/api/track?slug=' + encodeURIComponent(slugVal) + '&type=self_unlock_48h', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -2286,7 +2277,7 @@
           hero: `${VAULT_BASE}/hero-sanctuary.jpg`,
           beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
           afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
-          biabFeature: `${VAULT_BASE}/biab-artistry.jpg`,
+          biabFeature: `${VAULT_BASE}/sheer-biab-architecture.jpg`,
           pedicureFeature: `${VAULT_BASE}/botanical-pedicure.jpg`,
           lookbook: [
             { src: `${VAULT_BASE}/lookbook-gilded-french.jpg`, title: 'Champagne Micro-French', tag: 'BIAB Structured Overlay' },
@@ -2466,6 +2457,7 @@
       }
 
       const wallSignEl = document.getElementById('hero-wall-signage');
+      const wallCrestEl = document.getElementById('hero-wall-crest');
       const wallLogoImg = document.getElementById('hero-wall-logo-img');
       const wallWordmark = document.getElementById('hero-wall-wordmark');
       const wallSubEl = document.getElementById('hero-wall-sub');
@@ -2477,10 +2469,12 @@
         if (!isGenericDefaultSvg && wallLogoImg) {
           wallLogoImg.src = customLogo;
           wallLogoImg.classList.remove('hidden');
+          if (wallCrestEl) wallCrestEl.classList.add('hidden');
           if (wallWordmark) wallWordmark.classList.add('hidden');
         } else if (wallWordmark) {
           wallWordmark.textContent = cleanSalon;
           wallWordmark.classList.remove('hidden');
+          if (wallCrestEl) wallCrestEl.classList.remove('hidden');
           if (wallLogoImg) wallLogoImg.classList.add('hidden');
         }
       }
@@ -3014,9 +3008,9 @@
               </div>
               <p class="font-editorial italic text-xl leading-relaxed">"${r.quote}"</p>
             </div>
-            <div class="pt-3 border-t flex items-center justify-between gap-2 text-xs" style="border-color: var(--border-hairline);">
-              <span class="font-semibold uppercase tracking-wider">${r.author}</span>
-              <span class="text-right" style="color: var(--ink-muted);">${r.detail || 'Verified Client'}</span>
+            <div class="pt-3 border-t flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-1 sm:gap-2 text-xs" style="border-color: var(--border-hairline);">
+              <span class="font-semibold uppercase tracking-wider shrink-0">${r.author}</span>
+              <span class="min-[420px]:text-right" style="color: var(--ink-muted);">${r.detail || 'Verified Client'}</span>
             </div>
           </article>
         `).join('');
@@ -3108,6 +3102,12 @@
         const target = hash === '#top' ? document.body : document.querySelector(hash);
         if (!target) return;
         setMobileMenuOpen(false);
+
+        if (typeof lenis !== 'undefined' && lenis && !prefersReducedMotion) {
+          cancelAnchorGlide();
+          lenis.scrollTo(target, { offset: hash === '#top' ? 0 : -88 });
+          return;
+        }
 
         const headerOffset = hash === '#top' ? 0 : 88;
         const startY = window.scrollY;
@@ -3204,16 +3204,17 @@
       }
       refreshStaggers();
 
-      // 9b. Native High-Performance Bidirectional IntersectionObserver
+      // 9b. Native High-Performance IntersectionObserver (Desktop bidirectional retract; Touch/Mobile one-way compositor glide)
       if ('IntersectionObserver' in window && !prefersReducedMotion) {
+        const isTouchOrMobile = window.innerWidth < 1024 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
         const revealObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
             const target = entry.target;
             if (entry.isIntersecting) {
               target.classList.remove('is-retracting');
               target.classList.add('is-inview');
-            } else {
-              // Only retract if the element has fallen below the viewport (when user scrolls back up)
+            } else if (!isTouchOrMobile) {
+              // Only retract on desktop if the element has fallen below the viewport (when user scrolls back up)
               const rect = entry.boundingClientRect;
               if (rect && rect.top > 50) {
                 target.classList.remove('is-inview');
@@ -3226,8 +3227,13 @@
           threshold: [0, 0.08]
         });
 
+        const vhNow = window.innerHeight || 850;
         // Observe all static & dynamically injected reveal nodes
-        document.querySelectorAll('[data-apple-reveal]').forEach((node) => revealObserver.observe(node));
+        document.querySelectorAll('[data-apple-reveal]').forEach((node) => {
+          const r = node.getBoundingClientRect();
+          if (r.top < vhNow * 0.96) node.classList.add('is-inview');
+          revealObserver.observe(node);
+        });
       } else {
         document.querySelectorAll('[data-apple-reveal]').forEach((node) => node.classList.add('is-inview'));
       }
@@ -3277,15 +3283,25 @@
         }
 
         if (!prefersReducedMotion) {
-          // Subtle Hero Recede & Arch Counter-Parallax (0 -> 580px)
-          if (scrollY < vh * 1.25) {
-            const heroT = Math.min(1, scrollY / 560);
+          if (window.innerWidth >= 1024) {
+            // Subtle Hero Recede & Arch Counter-Parallax on Desktop only (prevents mobile overlap/premature fade)
+            if (scrollY < vh * 1.25) {
+              const heroT = Math.min(1, scrollY / 560);
+              if (heroCopyCol) {
+                heroCopyCol.style.transform = `translate3d(0, ${(-heroT * 20).toFixed(1)}px, 0)`;
+                heroCopyCol.style.opacity = (1 - heroT * 0.55).toFixed(3);
+              }
+              if (heroArtCol) {
+                heroArtCol.style.transform = `translate3d(0, ${(heroT * 22).toFixed(1)}px, 0)`;
+              }
+            }
+          } else {
             if (heroCopyCol) {
-              heroCopyCol.style.transform = `translate3d(0, ${(-heroT * 20).toFixed(1)}px, 0)`;
-              heroCopyCol.style.opacity = (1 - heroT * 0.55).toFixed(3);
+              heroCopyCol.style.transform = '';
+              heroCopyCol.style.opacity = '';
             }
             if (heroArtCol) {
-              heroArtCol.style.transform = `translate3d(0, ${(heroT * 22).toFixed(1)}px, 0)`;
+              heroArtCol.style.transform = '';
             }
           }
 
@@ -3335,24 +3351,6 @@
         console.warn('Lenis smooth scroll skipped:', err);
         lenis = null;
       }
-
-      // Smooth in-page anchor navigation (using Lenis when available)
-      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-        anchor.addEventListener('click', (e) => {
-          const targetHref = anchor.getAttribute('href');
-          if (targetHref && targetHref.length > 1) {
-            const targetEl = document.querySelector(targetHref);
-            if (targetEl) {
-              e.preventDefault();
-              if (lenis) {
-                lenis.scrollTo(targetEl, { offset: -64 });
-              } else {
-                targetEl.scrollIntoView({ behavior: 'smooth' });
-              }
-            }
-          }
-        });
-      });
 
       // Initial execution
       updateScrollChrome();

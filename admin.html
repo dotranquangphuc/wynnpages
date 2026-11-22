@@ -6475,22 +6475,22 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const views = Number((client && client.demoViewCount) || 0);
         if (stepKey === 'day3' || stepKey === 'step2') {
           if (views >= 2) {
-            return `Hi ${bizName}! 🌿\n\nIt's Wynn here again. I noticed you had a quick look at the website preview I put together for your business — I really hope you liked the feel of it!\n👉 ${demoUrl}\n\nJust wanted to reassure you that the current photos and details are only stand-in placeholders to show the layout. The moment you claim the site on the preview page, it unlocks your private Customization Portal where I personally swap in your favourite photos, exact pricing/details, and connect your own .com.au domain (it's a simple $599 AUD one-off build with $0 ongoing monthly fees).\n\nNo rush at all, just let me know if you have any questions!\n\nWarmly,\nWynn — WynnPages Studio`;
+            return `Hi ${bizName}! 🌿\n\nIt's Wynn here again. I noticed you had a quick look at the website preview I put together for your business — I really hope you liked the feel of it!\n👉 ${demoUrl}\n\nJust wanted to reassure you that the current photos and details are only stand-in placeholders to show the layout. The moment you claim the site on the preview page, it unlocks your private Customisation Portal where I personally swap in your favourite photos, exact pricing/details, and connect your own .com.au domain (it's a simple $599 AUD one-off build with $0 ongoing monthly fees).\n\nNo rush at all, just let me know if you have any questions!\n\nWarmly,\nWynn — WynnPages Studio`;
           }
-          return `Hi ${bizName}! 🌿\n\nHope your week is going really well! It's Wynn here from WynnPages Studio. I know how busy things get, so I just wanted to gently follow up in case my earlier message got buried.\n\nHere is the custom website preview I hand-crafted for you:\n👉 ${demoUrl}\n\nNote: I've used sample photos & details just to demonstrate the layout — once claimed on the preview page, you'll get instant access to our Customization Portal where I personally update all photos, pricing, and details to your exact liking.\n\nWhenever you get a quiet cuppa, have a little browse!\n\nWarmly,\nWynn — WynnPages Studio`;
+          return `Hi ${bizName}! 🌿\n\nHope your week is going really well! It's Wynn here from WynnPages Studio. I know how busy things get, so I just wanted to gently follow up in case my earlier message got buried.\n\nHere is the custom website preview I hand-crafted for you:\n👉 ${demoUrl}\n\nNote: I've used sample photos & details just to demonstrate the layout — once claimed on the preview page, you'll get instant access to our Customisation Portal where I personally update all photos, pricing, and details to your exact liking.\n\nWhenever you get a quiet cuppa, have a little browse!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
         if (stepKey === 'day6' || stepKey === 'step3') {
-          return `Hi ${bizName}! 🌿\n\nHope you're having a lovely week! It's Wynn here. Since I've already poured the time into hand-crafting the custom website design for your business, I'd honestly much rather see you using and enjoying it than letting it sit in my studio archive.\n\nSo for the next 3 days, I've halved the one-off build fee on your preview page down to $299 AUD all-up (instead of $599 AUD, and still $0 monthly fees forever):\n\n👉 ${demoUrl}\n\nClaiming on the preview page immediately unlocks your private Customization Portal where I personally swap in your real photos, exact pricing/details, and connect your .com.au domain for free. Would love to make it yours if you like it!\n\nWarmly,\nWynn — WynnPages Studio`;
+          return `Hi ${bizName}! 🌿\n\nHope you're having a lovely week! It's Wynn here. Since I've already poured the time into hand-crafting the custom website design for your business, I'd honestly much rather see you using and enjoying it than letting it sit in my studio archive.\n\nSo for the next 3 days, I've halved the one-off build fee on your preview page down to $299 AUD all-up (instead of $599 AUD, and still $0 monthly fees forever):\n\n👉 ${demoUrl}\n\nClaiming on the preview page immediately unlocks your private Customisation Portal where I personally swap in your real photos, exact pricing/details, and connect your .com.au domain for free. Would love to make it yours if you like it!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
         if (stepKey === 'day9' || stepKey === 'step4') {
-          return `Hi ${bizName}, Wynn here — I promise this is my last message so I don't clutter your inbox! 🌿\n\nJust a gentle heads up that I'll be archiving the private website preview I built for you tomorrow as I tidy up my studio server for new projects:\n\n👉 ${demoUrl}\n\nIf you'd still like to keep the design at the $299 AUD one-off rate (with $0 monthly fees and full access to our Customization Portal after checkout to swap in your real photos, pricing/details & .com.au domain), you can grab it right on the preview link anytime before tomorrow.\n\nEither way, wishing you and the team all the very best!\n\nWarmly,\nWynn — WynnPages Studio`;
+          return `Hi ${bizName}, Wynn here — I promise this is my last message so I don't clutter your inbox! 🌿\n\nJust a gentle heads up that I'll be archiving the private website preview I built for you tomorrow as I tidy up my studio server for new projects:\n\n👉 ${demoUrl}\n\nIf you'd still like to keep the design at the $299 AUD one-off rate (with $0 monthly fees and full access to our Customisation Portal after checkout to swap in your real photos, pricing/details & .com.au domain), you can grab it right on the preview link anytime before tomorrow.\n\nEither way, wishing you and the team all the very best!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
         if (stepKey === 'launched' || stepKey === 'site_launched') {
           const rawLive = (client && client.liveUrl) ? String(client.liveUrl).trim() : '';
           const liveHref = rawLive ? (rawLive.startsWith('http') ? rawLive : `https://${rawLive}`) : demoUrl;
           return `Congratulations ${bizName}! 🎉🍾\n\nIt's Wynn here — I'm so excited to let you know that your bespoke website is now officially LIVE on your custom domain:\n\n👉 ${liveHref}\n\n• 100% owned by you with $0 ongoing monthly fees.\n• Hosted on our Australian High-Speed Network with full SSL security.\n\nThank you so much for trusting me with your business's digital home — let me know if you ever need a hand with anything!\n\nWarmly,\nWynn — WynnPages Studio`;
         }
-        return `Hi ${bizName}! 🌿\n\nIt's Wynn here — I'm a web designer based here in Australia. I came across your business recently and really loved your reputation, so instead of sending a generic message, I spent some time hand-crafting a custom website concept just for you to see how it could look:\n\n👉 ${demoUrl}\n\n• Note: I've used sample concept photos and placeholder details just to show the layout — once claimed on the page, you'll get instant access to our Customization Portal where I personally swap in your real photos, exact pricing/details, and connect your .com.au domain.\n• Simple one-off build ($599 AUD flat, 100% owned by you with $0 ongoing monthly fees).\n\nNo pressure at all — just thought I'd share it with you! Have a look whenever you get a quiet moment.\n\nWarmly,\nWynn — WynnPages Studio\nhttps://wynnpages.com.au`;
+        return `Hi ${bizName}! 🌿\n\nIt's Wynn here — I'm a web designer based here in Australia. I came across your business recently and really loved your reputation, so instead of sending a generic message, I spent some time hand-crafting a custom website concept just for you to see how it could look:\n\n👉 ${demoUrl}\n\n• Note: I've used sample concept photos and placeholder details just to show the layout — once claimed on the page, you'll get instant access to our Customisation Portal where I personally swap in your real photos, exact pricing/details, and connect your .com.au domain.\n• Simple one-off build ($599 AUD flat, 100% owned by you with $0 ongoing monthly fees).\n\nNo pressure at all — just thought I'd share it with you! Have a look whenever you get a quiet moment.\n\nWarmly,\nWynn — WynnPages Studio\nhttps://wynnpages.com.au`;
       }
 
       function selectFbStepTab(stepKey) {
@@ -6864,37 +6864,51 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         const vaultMap = {
           '01': {
             hero: `${vaultBase}/hero-sanctuary.jpg`,
-            biab: `${vaultBase}/biab-artistry.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
+            biab: `${vaultBase}/sheer-biab-architecture.jpg`,
             pedi: `${vaultBase}/botanical-pedicure.jpg`
           },
           '02': {
             hero: `${vaultBase}/p02/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p02/biab.jpg`,
             pedi: `${vaultBase}/p02/pedicure.jpg`
           },
           '03': {
             hero: `${vaultBase}/p03/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p03/biab.jpg`,
             pedi: `${vaultBase}/p03/pedicure.jpg`
           },
           '04': {
             hero: `${vaultBase}/p04/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p04/biab.jpg`,
             pedi: `${vaultBase}/p04/pedicure.jpg`
           },
           '05': {
             hero: `${vaultBase}/p05/hero.jpg`,
+            beforeNail: `${vaultBase}/before-natural-nails.jpg`,
+            afterNail: `${vaultBase}/biab-artistry.jpg`,
             biab: `${vaultBase}/p05/biab.jpg`,
             pedi: `${vaultBase}/p05/pedicure.jpg`
           }
         };
         const pv = vaultMap[validPal] || vaultMap['01'];
         patchStringField('hero', pv.hero);
+        patchStringField('beforeNail', pv.beforeNail);
+        patchStringField('afterNail', pv.afterNail);
         patchStringField('biabFeature', pv.biab);
         patchStringField('pedicureFeature', pv.pedi);
         html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
-        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${vaultBase}/before-natural-nails.jpg$2`);
+        html = html.replace(/(<img[\s\S]*?id="feature-biab-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.biab}$2`);
+        html = html.replace(/(<img[\s\S]*?id="feature-pedi-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.pedi}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-after-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.afterNail || pv.biab}$2`);
+        html = html.replace(/(<img[\s\S]*?id="ba-before-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.beforeNail}$2`);
 
         const resolvedSuburb = parsedAddr.suburb || (address ? parsedAddr.street : 'Australia');
         const resolvedState = address ? parsedAddr.state : '';

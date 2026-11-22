@@ -2044,7 +2044,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   } else if (stage === 'outbound_pitch') {
     const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
-    smsText = `Hi ${bizLabel}, it's Wynn here from WynnPages Studio. I came across your business recently and loved your reputation, so I hand-crafted a custom website concept just for you to see how it could look: ${previewLink} — Note: I've used sample photos & details just to show the layout. If you love it and claim it on the page, you'll get instant access to our Customization Portal where I personally swap in your real photos, exact pricing/details & connect your .com.au domain ($599 AUD one-off, $0 monthly fees). No pressure at all! Warmly, Wynn`;
+    smsText = buildNurtureStepSms({ stepKey: 'step1', biz: bizLabel, demoUrl: previewLink });
     emailSubject = `A little website concept I put together for ${bizLabel}`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Personal note from Wynn at WynnPages Studio',
@@ -2058,7 +2058,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
         </p>
         <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;">
           <strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>
-          Please note that the preview currently uses stand-in concept photos and sample service details just to demonstrate the layout. The moment you claim the website via Stripe's secure checkout, you'll be redirected straight to your private <strong>WynnPages Customization Portal</strong> where you can upload your real photos, logo, exact pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.
+          Please note that the preview currently uses stand-in concept photos and sample service details just to demonstrate the layout. The moment you claim the website via our secure checkout, you'll be redirected straight to your private <strong>WynnPages Customisation Portal</strong> where you can upload your real photos, logo, exact pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.
         </div>
         <p>There's zero pressure at all — please just have a browse whenever you get a quiet cuppa ($599 AUD flat one-off build, 100% owned by you with $0 ongoing monthly fees forever).</p>
         <p>Feel free to reply to this email anytime if you have any thoughts or questions!</p>
@@ -2148,9 +2148,12 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     const bizLabel = client.businessName || client.name || 'your business';
     const previewLink = shortDemoUrl;
     const isDeal = client.dealStatus === 'flash_deal';
-    smsText = isDeal
-      ? `Hi ${bizLabel}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${previewLink} Warmly, Wynn`
-      : `Hi ${bizLabel}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${previewLink} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
+    smsText = buildNurtureStepSms({
+      stepKey: isDeal ? 'step3' : 'step2',
+      biz: bizLabel,
+      demoUrl: previewLink,
+      views: Number(client.demoViewCount || 0)
+    });
     emailSubject = isDeal
       ? `I'd love to see ${bizLabel} use this design (a personal note from Wynn)`
       : `Just checking in on the website concept I made for ${bizLabel}`;
@@ -2165,7 +2168,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
           <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
         </p>
         ${isDeal ? `<div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#44403c;"><strong>A personal gesture from me:</strong> Since the design is already built for you, I've halved the one-off build fee on your preview link down to <strong>$299 AUD all-up</strong> (save $300 AUD, with zero monthly fees forever).</div>` : ''}
-        <p><strong>100% Tailored After Checkout:</strong> The preview currently uses sample photos and placeholder details just to show the layout. Once you claim the website on the preview page, you'll get instant access to your private <strong>Customization Portal</strong> where you can upload your real photos, logo, and exact pricing/details for me to personally update before connecting your <code>.com.au</code> domain.</p>
+        <p><strong>100% Tailored After Checkout:</strong> The preview currently uses sample photos and placeholder details just to show the layout. Once you claim the website on the preview page, you'll get instant access to your private <strong>Customisation Portal</strong> where you can upload your real photos, logo, and exact pricing/details for me to personally update before connecting your <code>.com.au</code> domain.</p>
         <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>
       `,
       primaryCta: {
@@ -2203,6 +2206,33 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
   return { smsResult, emailResult, stage, smsText, phone };
 }
 
+function buildNurtureStepSms({ stepKey, biz, demoUrl, views = 0 }) {
+  const b = (biz || 'there').trim();
+  const url = (demoUrl || 'https://wynnpages.com.au').trim();
+  if (stepKey === 'step1' || stepKey === 'aussie_pitch' || stepKey === 'pitch') {
+    return `Hi ${b}, Wynn from WynnPages Studio. I loved your local vibe so I mocked up a custom website concept for you: ${url} (sample photos - we tailor 100% with your real photos, prices & .com.au domain once claimed, $599 flat, $0/mth). No pressure! Warmly, Wynn`;
+  }
+  if (stepKey === 'aussie_followup_views' || stepKey === 'followup_views') {
+    return `Hi ${b}, Wynn from WynnPages. Saw you browsed your preview (${url}) - hope you liked it! Quick note: photos & prices are samples; once claimed, our Customisation Portal lets you upload your real photos, logo & menu for me to tailor 100%. Warmly, Wynn`;
+  }
+  if (stepKey === 'step2' || stepKey === 'day3_reminder') {
+    if (Number(views || 0) >= 2) {
+      return `Hi ${b}, Wynn from WynnPages. Saw you browsed your preview (${url}) - hope you liked it! Quick note: photos & prices are samples; once claimed, our Customisation Portal lets you upload your real photos, logo & menu for me to tailor 100%. Warmly, Wynn`;
+    }
+    return `Hi ${b}, hope your week's going well! Wynn from WynnPages - popping your custom website preview back up in case it got buried: ${url} (sample photos shown; I personally tailor your real photos, prices & .com.au domain once claimed, $599 flat, $0/mth). Warmly, Wynn`;
+  }
+  if (stepKey === 'day7_nudge_0views') {
+    return `Hi ${b}, hope your week's going well! Wynn from WynnPages - popping your custom website preview back up in case it got buried: ${url} (sample photos shown; I personally tailor your real photos, prices & .com.au domain once claimed, $599 flat, $0/mth). Warmly, Wynn`;
+  }
+  if (stepKey === 'step3' || stepKey === 'day7_deal' || stepKey === 'aussie_flash_deal_299' || stepKey === 'flash_deal_299') {
+    return `Hi ${b}, Wynn from WynnPages. Your website concept is built & I'd rather see it live for you than archived - for 72h it's halved to $299 AUD all-up (usually $599, $0/mth forever), incl. full tailoring with your photos, menu & .com.au domain: ${url} Warmly, Wynn`;
+  }
+  if (stepKey === 'step4' || stepKey === 'day9_warning') {
+    return `Hi ${b}, Wynn here - last note so I don't clutter your phone! I'm archiving your preview (${url}) tomorrow as I clear studio space. Still want it at $299 AUD one-off ($0/mth, full tailoring & .com.au setup incl.)? Grab it before tomorrow! All the best, Wynn`;
+  }
+  return '';
+}
+
 function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
   const biz = (client && (client.businessName || client.name)) || 'your boutique';
   const firstName = ((client && client.name) || biz).split(/\s+/)[0] || 'there';
@@ -2215,7 +2245,7 @@ function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
       html: buildAtelierEmailHtml({
         preheader: 'Personal note from Wynn at WynnPages Studio',
         heading: `Something I hand-crafted for ${biz}.`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>I hope your week is going really well! My name is Wynn, and I'm a web designer here in Australia.</p><p>I came across <strong>${biz}</strong> recently and genuinely loved your vibe and reputation. Rather than sending a generic pitch, I decided to sit down and put together a complete, mobile-ready website concept tailored specifically to your business so you could see how it looks and feels in real life:</p>${pBox}<div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;"><strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>Please note that the preview currently uses stand-in concept photos and sample details just to demonstrate the layout. The moment you claim the website via Stripe's secure checkout, you'll be redirected straight to your private <strong>WynnPages Customization Portal</strong> where you can upload your real photos, logo, exact service pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.</div><p>There's no pressure at all — just have a browse whenever you get a quiet moment ($599 AUD flat one-off build, with $0 monthly fees forever). Feel free to reply directly to this email if you have any thoughts!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>I hope your week is going really well! My name is Wynn, and I'm a web designer here in Australia.</p><p>I came across <strong>${biz}</strong> recently and genuinely loved your vibe and reputation. Rather than sending a generic pitch, I decided to sit down and put together a complete, mobile-ready website concept tailored specifically to your business so you could see how it looks and feels in real life:</p>${pBox}<div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;"><strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>Please note that the preview currently uses stand-in concept photos and sample details just to demonstrate the layout. The moment you claim the website via our secure checkout, you'll be redirected straight to your private <strong>WynnPages Customisation Portal</strong> where you can upload your real photos, logo, exact service pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.</div><p>There's no pressure at all — just have a browse whenever you get a quiet moment ($599 AUD flat one-off build, with $0 monthly fees forever). Feel free to reply directly to this email if you have any thoughts!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
         primaryCta: { label: 'Have a Look at Your Website Preview', url: previewLink }
       })
     };
@@ -2228,8 +2258,8 @@ function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
         preheader: sawMultiple ? 'Happy to tailor any photos, colours, or prices for you' : 'A friendly note from Wynn at WynnPages Studio',
         heading: sawMultiple ? `Happy to tailor anything for ${biz}, ${firstName}!` : `Hope your week is going well, ${firstName}!`,
         bodyHtml: sawMultiple
-          ? `<p>Hi ${firstName},</p><p>I noticed you had a chance to check out the custom website preview I put together for <strong>${biz}</strong> — I really hope you liked the feel of it!</p>${pBox}<p>I just wanted to reassure you that the current photos and service details on the preview are simply stand-in placeholders to show the layout. The moment you claim the website on the preview page, you'll unlock your private <strong>WynnPages Customization Portal</strong> where you can upload your favourite photos, update any service prices/details, or adjust colours before I connect it to your own <code>.com.au</code> domain ($599 AUD flat, $0 ongoing monthly fees).</p><p>Simply reply to this email with any questions, or claim it right on the preview page whenever you're ready!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`
-          : `<p>Hi ${firstName},</p><p>I know how busy things get running <strong>${biz}</strong>, so I just wanted to send a warm follow-up in case my earlier note got buried during a busy week!</p><p>Here is the custom website preview I put together for your business:</p>${pBox}<p>Please note I've used sample photos and placeholder details just to show the layout — once claimed on the preview page, you'll get instant access to our <strong>Customization Portal</strong> where I personally swap in your real photos, pricing, and details so it feels 100% like you ($599 AUD one-off, zero monthly fees).</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+          ? `<p>Hi ${firstName},</p><p>I noticed you had a chance to check out the custom website preview I put together for <strong>${biz}</strong> — I really hope you liked the feel of it!</p>${pBox}<p>I just wanted to reassure you that the current photos and service details on the preview are simply stand-in placeholders to show the layout. The moment you claim the website on the preview page, you'll unlock your private <strong>WynnPages Customisation Portal</strong> where you can upload your favourite photos, update any service prices/details, or adjust colours before I connect it to your own <code>.com.au</code> domain ($599 AUD flat, $0 ongoing monthly fees).</p><p>Simply reply to this email with any questions, or claim it right on the preview page whenever you're ready!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`
+          : `<p>Hi ${firstName},</p><p>I know how busy things get running <strong>${biz}</strong>, so I just wanted to send a warm follow-up in case my earlier note got buried during a busy week!</p><p>Here is the custom website preview I put together for your business:</p>${pBox}<p>Please note I've used sample photos and placeholder details just to show the layout — once claimed on the preview page, you'll get instant access to our <strong>Customisation Portal</strong> where I personally swap in your real photos, pricing, and details so it feels 100% like you ($599 AUD one-off, zero monthly fees).</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
         primaryCta: { label: 'Open Your Website Preview', url: previewLink }
       })
     };
@@ -2240,7 +2270,7 @@ function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
       html: buildAtelierEmailHtml({
         preheader: 'Personal studio gesture for your business — $299 AUD all-up, zero monthly fees',
         heading: `I'd love this design to go to ${biz}, ${firstName}.`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>I hope you're having a lovely week! I was looking over the custom website concept I hand-crafted for <strong>${biz}</strong>, and since I've already poured the time and care into building it specifically around your brand, I would genuinely much rather see you using and enjoying it than archiving the work in my studio folder.</p><div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.7;color:#44403c;"><strong>A personal gesture from me:</strong> For the next 3 days, I've halved the one-off build fee on your preview page down to <strong>$299 AUD all-up</strong> (instead of $599 AUD, and still <strong>$0 monthly fees forever</strong>). Claiming on the preview page immediately unlocks your private <strong>Customization Portal</strong> where I personally swap in your real photos, exact pricing/details, and connect your <code>.com.au</code> domain for free.</div>${pBox}<p>If you'd love to make it yours, you can claim it directly on the preview page or reply here and I'll help you get everything sorted.</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>I hope you're having a lovely week! I was looking over the custom website concept I hand-crafted for <strong>${biz}</strong>, and since I've already poured the time and care into building it specifically around your brand, I would genuinely much rather see you using and enjoying it than archiving the work in my studio folder.</p><div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.7;color:#44403c;"><strong>A personal gesture from me:</strong> For the next 3 days, I've halved the one-off build fee on your preview page down to <strong>$299 AUD all-up</strong> (instead of $599 AUD, and still <strong>$0 monthly fees forever</strong>). Claiming on the preview page immediately unlocks your private <strong>Customisation Portal</strong> where I personally swap in your real photos, exact pricing/details, and connect your <code>.com.au</code> domain for free.</div>${pBox}<p>If you'd love to make it yours, you can claim it directly on the preview page or reply here and I'll help you get everything sorted.</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
         primaryCta: { label: 'View Preview & Claim for $299 AUD', url: previewLink }
       })
     };
@@ -2251,7 +2281,7 @@ function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
       html: buildAtelierEmailHtml({
         preheader: 'Archiving your private preview link tomorrow',
         heading: `A quick, friendly note before I tidy up my studio archive`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>I promise this is my last note so I don't clutter your inbox! I just wanted to give you a gentle heads up that I'll be archiving the private website preview I built for <strong>${biz}</strong> tomorrow as I clear server space for upcoming projects:</p>${pBox}<p>If you'd still like to keep this design at the <strong>$299 AUD one-off rate</strong> (with $0 monthly fees and full post-checkout access to our Customization Portal to swap in your real photos, pricing/details, and <code>.com.au</code> domain), you can grab it on the preview link anytime before tomorrow.</p><p>Either way, thank you so much for your time, and I wish you and everyone at <strong>${biz}</strong> all the very best!</p><p style="margin-top:16px;">Warmly,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+        bodyHtml: `<p>Hi ${firstName},</p><p>I promise this is my last note so I don't clutter your inbox! I just wanted to give you a gentle heads up that I'll be archiving the private website preview I built for <strong>${biz}</strong> tomorrow as I clear server space for upcoming projects:</p>${pBox}<p>If you'd still like to keep this design at the <strong>$299 AUD one-off rate</strong> (with $0 monthly fees and full post-checkout access to our Customisation Portal to swap in your real photos, pricing/details, and <code>.com.au</code> domain), you can grab it on the preview link anytime before tomorrow.</p><p>Either way, thank you so much for your time, and I wish you and everyone at <strong>${biz}</strong> all the very best!</p><p style="margin-top:16px;">Warmly,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
         primaryCta: { label: 'Open Your Website Preview Before It Archives', url: previewLink }
       })
     };
@@ -5004,14 +5034,7 @@ async function serveClientSpecialSeoOrAsset({ slug, client, reqPath, url, reques
         });
       }
 
-      let finalHtml = ensureClientHtmlSeoTags(rawHtml, resolvedClient, url, isPathDemo, cleanSlug)
-        .replace(/\/assets\/atelier\/nails\/sheer-biab-architecture\.jpg/g, '/assets/atelier/nails/biab-artistry.jpg')
-        .replace(/<a[^>]*href="https:\/\/wynnpages\.com\.au"[^>]*>\s*About Studio\s*<\/a>/gi, '')
-        .replace(/\.arch-oil-frame\s*\{\s*border-radius:\s*220px 220px 32px 32px;/g, '.arch-oil-frame { border-radius: 220px 220px 32px 32px; -webkit-clip-path: inset(0 round 220px 220px 32px 32px); clip-path: inset(0 round 220px 220px 32px 32px); -webkit-mask-image: -webkit-radial-gradient(white, black); isolation: isolate; transform: translateZ(0);')
-        .replace(/\.arch-oil-frame\s*\{\s*border-radius:\s*170px 170px 28px 28px;/g, '.arch-oil-frame { border-radius: 170px 170px 28px 28px; -webkit-clip-path: inset(0 round 170px 170px 28px 28px); clip-path: inset(0 round 170px 170px 28px 28px);')
-        .replace(/id="before-after-container"\s+class="relative rounded-\[24px\] overflow-hidden aspect-\[3\/4\] sm:aspect-\[5\/4\]/g, 'id="before-after-container" class="relative rounded-[20px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[4/4.1] sm:aspect-[5/4]')
-        .replace(/object-position:\s*50%\s*56%;\s*filter:\s*saturate\(1\.12\)\s*contrast\(1\.04\);/g, 'width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.08); transform-origin: 50% 55%; filter: saturate(1.02) contrast(1.02);')
-        .replace(/object-position:\s*50%\s*56%;\s*filter:\s*saturate\(0\.76\)\s*brightness\(0\.97\)\s*sepia\(0\.08\);/g, 'object-position: 50% 55%; transform: scale(1.08); transform-origin: 50% 55%; filter: saturate(1.08) contrast(1.03) sepia(0.03);');
+      let finalHtml = ensureClientHtmlSeoTags(rawHtml, resolvedClient, url, isPathDemo, cleanSlug);
       if (!isLiveDomain && (!resolvedClient || resolvedClient.stage !== 'launched' || forceBar)) {
         finalHtml = injectClaimBarIntoHtml(finalHtml, resolvedClient || { businessName: slug, demoSlug: cleanSlug });
       }
@@ -5700,9 +5723,7 @@ async function runScheduledAutopilot(env, options = {}) {
         }
         continue;
       } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-        const reminderMsg = d3Views >= 2
-          ? `Hi ${biz}, Wynn here from WynnPages. I noticed you had a quick look at the website preview I put together for you (${demoUrl}) — I really hope you liked the feel of it! Just so you know, the current photos and details are only placeholders to show the layout. Once claimed on the preview page, it unlocks your private Customization Portal where you can upload your real photos, logo & exact prices/details for me to tailor 100% to your business before connecting your .com.au domain. Warmly, Wynn`
-          : `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoUrl} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
+        const reminderMsg = buildNurtureStepSms({ stepKey: 'step2', biz, demoUrl, views: d3Views });
         const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
         let emailSent = false;
         if (c.email && cfg.resendApiKey) {
@@ -5778,7 +5799,7 @@ async function runScheduledAutopilot(env, options = {}) {
         let dealMsg = '';
         let smsRes = null;
         if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-          dealMsg = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoUrl} Warmly, Wynn`;
+          dealMsg = buildNurtureStepSms({ stepKey: 'step3', biz, demoUrl });
           smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
           smsSent = Boolean(smsRes && smsRes.sent);
           if (smsSent) smsSentCount++;
@@ -5843,7 +5864,7 @@ async function runScheduledAutopilot(env, options = {}) {
         }
         continue;
       } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-        const warningMsg = `Hi ${biz}, Wynn here from WynnPages — I promise this is my last message so I don't clutter your phone! Just a gentle heads up that I'll be archiving the private preview link I made for you (${demoUrl}) tomorrow as I tidy up my studio server. If you'd still like to keep the design at the $299 AUD one-off rate (including full customization of your real photos, pricing/details & .com.au domain setup via our Revision Portal after checkout), you can claim it on the preview page anytime before tomorrow. Wishing you all the very best! Warmly, Wynn`;
+        const warningMsg = buildNurtureStepSms({ stepKey: 'step4', biz, demoUrl });
         const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
         let emailSent = false;
         if (c.email && cfg.resendApiKey) {
@@ -7102,8 +7123,8 @@ export default {
           const prevCfg = prevParsed && prevParsed.config;
           const incomingParsed = parseConfigAndMenuFromHtml(idxFile.text);
           const incomingCfg = incomingParsed && incomingParsed.config;
-          const preservedLogo = (prevCfg && (prevCfg.wordmarkUrl || prevCfg.logoUrl || '')).trim();
-          if (preservedLogo && incomingCfg && !(incomingCfg.logoUrl || '').trim()) {
+          const preservedLogo = prevCfg ? String(prevCfg.wordmarkUrl || prevCfg.logoUrl || '').trim() : '';
+          if (preservedLogo && incomingCfg && !String(incomingCfg.logoUrl || '').trim()) {
             const nextCfg = { ...incomingCfg, logoUrl: preservedLogo };
             idxFile.text = updateHtmlWithConfigAndMenu(idxFile.text, nextCfg, null);
           }
@@ -10353,7 +10374,7 @@ export default {
             const uP0 = new URLSearchParams();
             uP0.append('metadata[nurture_step]', 'day7_nudge_0views');
             if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-              nudgeText = `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoLink} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
+              nudgeText = buildNurtureStepSms({ stepKey: 'day7_nudge_0views', biz, demoUrl: demoLink, views: 0 });
               nudgeRes = await sendClickSendSms({ to: custToNotify.phone, message: nudgeText, cfg: effectiveCfg });
               if (nudgeRes) {
                 const nowIso0 = new Date().toISOString();
@@ -10408,7 +10429,7 @@ export default {
           const demoLink = (custToNotify && (custToNotify.demoUrl || custToNotify.brandedDemoUrl)) || ( custToNotify && custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${customerId}.wynnpages.com.au`);
 
           if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-            const text = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoLink} Warmly, Wynn`;
+            const text = buildNurtureStepSms({ stepKey: 'step3', biz, demoUrl: demoLink, views: Number((custToNotify && custToNotify.views) || 0) });
             notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
             if (notifyRes) {
               const nowIso = new Date().toISOString();
@@ -10603,30 +10624,14 @@ export default {
           let smsText = '';
           if (body.customMessage && String(body.customMessage).trim()) {
             smsText = String(body.customMessage).trim();
-          } else if (templateKey === 'aussie_pitch' || templateKey === 'pitch') {
-            smsText = `Hi ${biz}, it's Wynn here from WynnPages Studio. I came across your business recently and loved your reputation, so I hand-crafted a custom website concept just for you to see how it could look: ${demoUrl} — Note: I've used sample photos & details just to show the layout. If you love it and claim it on the page, you'll get instant access to our Customization Portal where I personally swap in your real photos, exact pricing/details & connect your .com.au domain ($599 AUD one-off, $0 monthly fees). No pressure at all! Warmly, Wynn`;
-          } else if (templateKey === 'aussie_followup_views' || templateKey === 'followup_views') {
-            smsText = `Hi ${biz}, Wynn here from WynnPages. I noticed you had a quick look at the website preview I put together for you (${demoUrl}) — I really hope you liked the feel of it! Just so you know, the current photos and details are only placeholders to show the layout. Once claimed on the preview page, it unlocks your private Customization Portal where you can upload your real photos, logo & exact prices/details for me to tailor 100% to your business before connecting your .com.au domain. Warmly, Wynn`;
-          } else if (templateKey === 'aussie_flash_deal_299' || templateKey === 'flash_deal_299') {
-            smsText = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoUrl} Warmly, Wynn`;
           } else if (templateKey === 'day3_reminder') {
-            if (realViews >= 2) {
-              templateKey = 'aussie_followup_views';
-              smsText = `Hi ${biz}, Wynn here from WynnPages. I noticed you had a quick look at the website preview I put together for you (${demoUrl}) — I really hope you liked the feel of it! Just so you know, the current photos and details are only placeholders to show the layout. Once claimed on the preview page, it unlocks your private Customization Portal where you can upload your real photos, logo & exact prices/details for me to tailor 100% to your business before connecting your .com.au domain. Warmly, Wynn`;
-            } else {
-              smsText = `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoUrl} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
-            }
+            if (realViews >= 2) templateKey = 'aussie_followup_views';
+            smsText = buildNurtureStepSms({ stepKey: templateKey, biz, demoUrl, views: realViews });
           } else if (templateKey === 'day7_deal') {
-            if (realViews === 0 && body.onlyIfViewed === true) {
-              templateKey = 'day7_nudge_0views';
-              smsText = `Hi ${biz}, hope your week is going really well! It's Wynn here from WynnPages. I know how busy things get, so I just wanted to gently follow up in case my earlier note got buried. Here is the custom website preview I hand-crafted for you: ${demoUrl} — I've used sample photos & details just to show the layout, and if you decide to claim it on the page, you'll get instant access to our Customization Portal where I personally update all photos, pricing & details to your exact liking. Warmly, Wynn`;
-            } else {
-              smsText = `Hi ${biz}, it's Wynn here from WynnPages. Hope you're having a lovely week! Since I've already built the custom website concept for your business, I'd honestly much rather see it go live for you than sit in my studio archive. For the next 3 days, I've halved the build fee on your preview page down to $299 AUD all-up (instead of $599, with $0 monthly fees forever). Claiming on the page unlocks your Customization Portal where I personally swap in your real photos, exact prices/details & connect your .com.au domain: ${demoUrl} Warmly, Wynn`;
-            }
-          } else if (templateKey === 'day9_warning') {
-            smsText = `Hi ${biz}, Wynn here from WynnPages — I promise this is my last message so I don't clutter your phone! Just a gentle heads up that I'll be archiving the private preview link I made for you (${demoUrl}) tomorrow as I tidy up my studio server. If you'd still like to keep the design at the $299 AUD one-off rate (including full customization of your real photos, pricing/details & .com.au domain setup via our Revision Portal after checkout), you can claim it on the preview page anytime before tomorrow. Wishing you all the very best! Warmly, Wynn`;
+            if (realViews === 0 && body.onlyIfViewed === true) templateKey = 'day7_nudge_0views';
+            smsText = buildNurtureStepSms({ stepKey: templateKey, biz, demoUrl, views: realViews });
           } else {
-            smsText = (body.customMessage || '').trim();
+            smsText = buildNurtureStepSms({ stepKey: templateKey, biz, demoUrl, views: realViews }) || (body.customMessage || '').trim();
           }
 
           if (!smsText) {
@@ -10836,6 +10841,22 @@ export default {
           } else if (targetStep === 'step5' && step4Done) {
             uP.append('metadata[step4_sent_at]', prevStepShiftedIso);
           }
+          if (targetStep === 'step1') {
+            uP.append('metadata[step1_sent_at]', shiftedIso);
+            uP.append('metadata[stage]', 'outbound_pitched');
+            uP.append('metadata[nurture_step]', 'aussie_pitch');
+            if (!isFbMode && c.phone && effectiveCfg.clicksendApiKey) {
+              const biz = c.businessName || c.name || 'Boutique';
+              const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
+              const pitchSms = buildNurtureStepSms({ stepKey: 'step1', biz, demoUrl });
+              const sRes = await sendClickSendSms(c.phone, pitchSms, effectiveCfg);
+              await recordSmsHistory({ customerId: c.id, env, stripeSecretKey: effectiveCfg.stripeSecretKey, type: 'aussie_pitch', to: c.phone, text: pitchSms, status: sRes.sent, reason: sRes.reason });
+            }
+            if (!isFbMode && c.email && effectiveCfg.resendApiKey) {
+              const mailPayload = buildNurtureStepEmail({ stepKey: 'step1', client: c });
+              if (mailPayload) await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
+            }
+          }
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
             headers: {
@@ -10850,26 +10871,16 @@ export default {
             await upsertD1Client(env, updatedCust);
             runInBg(ctx, syncClientsKvSnapshot(env));
           }
-          return new Response(JSON.stringify({ ok: true, targetStep, client: updatedCust }), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: true, targetStep, shiftedIso, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
-        // Action: Reset Turbo Sequence Back to Start ($599 AUD)
-        if (action === 'reset_turbo_sequence' && customerId) {
+        // Action: Reset 10-Day / 60-Min Closing Sequence Back to Clean Start ($599 AUD)
+        if ((action === 'reset_closing_sequence' || action === 'reset_turbo_sequence') && customerId) {
           const uP = new URLSearchParams();
+          for (const k of ['deal_activated_at', 'deal_expires_at', 'demo_sent_at', 'fb_pitched_at', 'sequence_started_at', 'step1_sent_at', 'step2_sent_at', 'step3_sent_at', 'step4_sent_at', 'step5_locked_at', 'nurture_step', 'fb_due_step', 'fb_alerted_steps']) {
+            uP.append(`metadata[${k}]`, '');
+          }
           uP.append('metadata[deal_status]', 'standard');
-          uP.append('metadata[deal_activated_at]', '');
-          uP.append('metadata[deal_expires_at]', '');
-          uP.append('metadata[nurture_step]', '');
-          uP.append('metadata[sequence_started_at]', '');
-          uP.append('metadata[demo_sent_at]', '');
-          uP.append('metadata[fb_pitched_at]', '');
-          uP.append('metadata[step1_sent_at]', '');
-          uP.append('metadata[step2_sent_at]', '');
-          uP.append('metadata[step3_sent_at]', '');
-          uP.append('metadata[step4_sent_at]', '');
-          uP.append('metadata[step5_locked_at]', '');
-          uP.append('metadata[fb_due_step]', '');
-          uP.append('metadata[fb_alerted_steps]', '');
           uP.append('metadata[stage]', 'outbound_pending');
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             method: 'POST',
@@ -10888,29 +10899,58 @@ export default {
           return new Response(JSON.stringify({ ok: true, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
-        // Action: Update Subdomain
+        // Action: Update Subdomain (Cloudflare + KV + Stripe sync)
         if (action === 'update_subdomain' && customerId) {
           const oldSlug = slugifyName(body.oldSlug || '');
           const newSlug = slugifyName(body.newSlug || '');
           if (!newSlug) {
             return new Response(JSON.stringify({ error: 'Subdomain mới không hợp lệ!' }), { status: 400, headers: corsHeaders });
           }
-          if (oldSlug && oldSlug !== newSlug && env && env.WYNN_KV) {
-            const oldMeta = await env.WYNN_KV.get(`site_meta:${oldSlug}`, 'json').catch(() => null);
-            const filesList = (oldMeta && Array.isArray(oldMeta.filesList) && oldMeta.filesList.length) ? oldMeta.filesList : ['/index.html', '/favicon.svg', '/favicon.png', '/og-share.jpg'];
-            for (const p of filesList) {
-              const obj = await env.WYNN_KV.getWithMetadata(`site_asset:${oldSlug}:${p}`, 'arrayBuffer').catch(() => null);
-              if (obj && obj.value) {
-                await env.WYNN_KV.put(`site_asset:${newSlug}:${p}`, obj.value, { metadata: obj.metadata || {} }).catch(() => {});
-                await env.WYNN_KV.delete(`site_asset:${oldSlug}:${p}`).catch(() => {});
+
+          // 1. If old slug differs, remove from Cloudflare & migrate KV
+          if (oldSlug && oldSlug !== newSlug) {
+            await removeCloudflareWorkerDomain(oldSlug, env, effectiveCfg.cfApiToken);
+            if (env && env.WYNN_KV) {
+              await env.WYNN_KV.delete(`sub_${oldSlug}`).catch(() => {});
+              await env.WYNN_KV.put(`sub_${newSlug}`, '1').catch(() => {});
+
+              const oldCode = await env.WYNN_KV.get(`demo_code:${oldSlug}`).catch(() => null);
+              if (oldCode) {
+                await env.WYNN_KV.put(`demo_code:${newSlug}`, oldCode).catch(() => {});
+                await env.WYNN_KV.delete(`demo_code:${oldSlug}`).catch(() => {});
+              }
+              const oldZip = await env.WYNN_KV.get(`demo_zip:${oldSlug}`).catch(() => null);
+              if (oldZip) {
+                await env.WYNN_KV.put(`demo_zip:${newSlug}`, oldZip).catch(() => {});
+                await env.WYNN_KV.delete(`demo_zip:${oldSlug}`).catch(() => {});
+              }
+
+              const oldMetaKey = `site_meta:${oldSlug}`;
+              const oldMeta = await env.WYNN_KV.get(oldMetaKey, 'json').catch(() => null);
+              const filesList = (oldMeta && Array.isArray(oldMeta.filesList) && oldMeta.filesList.length) ? oldMeta.filesList : ['/index.html', '/favicon.svg', '/favicon.png', '/og-share.jpg'];
+              for (const p of filesList) {
+                const obj = await env.WYNN_KV.getWithMetadata(`site_asset:${oldSlug}:${p}`, 'arrayBuffer').catch(() => null);
+                if (obj && obj.value) {
+                  await env.WYNN_KV.put(`site_asset:${newSlug}:${p}`, obj.value, { metadata: obj.metadata || {} }).catch(() => {});
+                  await env.WYNN_KV.delete(`site_asset:${oldSlug}:${p}`).catch(() => {});
+                }
+              }
+              if (oldMeta) {
+                oldMeta.slug = newSlug;
+                await env.WYNN_KV.put(`site_meta:${newSlug}`, JSON.stringify(oldMeta)).catch(() => {});
+                await env.WYNN_KV.delete(oldMetaKey).catch(() => {});
               }
             }
-            if (oldMeta) {
-              oldMeta.slug = newSlug;
-              await env.WYNN_KV.put(`site_meta:${newSlug}`, JSON.stringify(oldMeta)).catch(() => {});
-              await env.WYNN_KV.delete(`site_meta:${oldSlug}`).catch(() => {});
-            }
           }
+
+          // 2. Attach new subdomain in background
+          if (ctx && typeof ctx.waitUntil === 'function') {
+            ctx.waitUntil(ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken).catch(() => {}));
+          } else {
+            await ensureCloudflareSubdomain(newSlug, env, effectiveCfg.cfApiToken);
+          }
+
+          // 3. Update Stripe Customer & D1
           const newDemoUrl = `https://${newSlug}.wynnpages.com.au`;
           const uP = new URLSearchParams();
           uP.append('metadata[demo_slug]', newSlug);
@@ -10928,50 +10968,211 @@ export default {
             updatedCust = formatCustomerRecord(await patchRes.json());
             await upsertD1Client(env, updatedCust);
           }
-          return new Response(JSON.stringify({ ok: true, client: updatedCust }), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: true, success: true, newSlug, newDemoUrl, client: updatedCust }), { status: 200, headers: corsHeaders });
         }
 
-        // Action: Check Custom Domain DNS Status
+        // Action 0b: Sync Existing Uploaded File to Google Drive
+        if (action === 'sync_file_to_drive' && customerId) {
+          if (!effectiveCfg.googleDriveWebhookUrl) {
+            return new Response(
+              JSON.stringify({ error: 'Chưa cấu hình Google Drive Webhook URL! Hãy bấm nút "⚙️ Cấu hình API / Google Drive" ở góc trên để kết nối.' }),
+              { status: 400, headers: corsHeaders }
+            );
+          }
+          const fileId = (body.fileId || '').trim();
+          const fileName = (body.fileName || 'client-file.bin').trim();
+          const fieldType = (body.fieldType || 'menu').trim(); // 'logo' | 'menu' | 'photos'
+          const folderName = (body.folderName || 'WynnPages Client').trim();
+
+          const fileRes = await fetch(`https://files.stripe.com/v1/files/${encodeURIComponent(fileId)}/contents`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (!fileRes.ok) {
+            return new Response(JSON.stringify({ error: 'Không tải được file gốc từ hệ thống lưu trữ.' }), { status: 404, headers: corsHeaders });
+          }
+          const mimeType = fileRes.headers.get('content-type') || 'application/octet-stream';
+          const arrayBuf = await fileRes.arrayBuffer();
+          const base64Data = arrayBufferToBase64(arrayBuf);
+
+          const driveRes = await uploadGoogleDriveFile(
+            { name: fileName, dataUrl: `data:${mimeType};base64,${base64Data}` },
+            folderName,
+            effectiveCfg.googleDriveWebhookUrl
+          );
+          if (!driveRes || !driveRes.fileUrl) {
+            return new Response(JSON.stringify({ error: 'Không thể lưu lên Google Drive. Hãy kiểm tra lại Google Drive Webhook URL.' }), { status: 500, headers: corsHeaders });
+          }
+
+          const uParams = new URLSearchParams();
+          const metaKey = fieldType === 'logo' ? 'logo_drive_url' : (fieldType === 'photos' ? 'photos_drive_url' : 'menu_drive_url');
+          uParams.append(`metadata[${metaKey}]`, driveRes.fileUrl.slice(0, 490));
+          if (driveRes.folderUrl) {
+            uParams.append('metadata[drive_folder_url]', driveRes.folderUrl.slice(0, 490));
+          }
+          await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: uParams.toString()
+          });
+
+          return new Response(JSON.stringify({ ok: true, driveUrl: driveRes.fileUrl, folderUrl: driveRes.folderUrl }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Check Live DNS & Zone Activation Status (1-Click Smart Check in Admin)
         if (action === 'check_domain_status' && customerId) {
           let cust = null;
           const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
             headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
           });
           if (getRes.ok) cust = await getRes.json();
-          const c = cust ? formatCustomerRecord(cust) : null;
-          const targetDomain = extractCleanHost(body.liveUrl || (c && (c.liveUrl || c.existingDomain || c.desiredDomains)) || '');
-          if (!targetDomain) {
-            return new Response(JSON.stringify({ error: 'Chưa có tên miền chính thức để kiểm tra!' }), { status: 400, headers: corsHeaders });
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          const rawDomain = (body.liveUrl || (formatted && (formatted.liveUrl || formatted.existingDomain || formatted.desiredDomains)) || '').trim();
+          const rootDomain = extractCleanHost(rawDomain);
+          if (!rootDomain || !rootDomain.includes('.')) {
+            return new Response(JSON.stringify({ error: 'Vui lòng nhập Tên Miền Chính Thức trước khi kiểm tra DNS!' }), { status: 400, headers: corsHeaders });
           }
-          const dnsRes = await ensureCustomLiveDomainOnCloudflare(targetDomain, env, effectiveCfg.cfApiToken);
-          const zoneStatus = (dnsRes && dnsRes.zoneStatus) || 'pending';
-          const nameservers = (dnsRes && dnsRes.nameservers) || '';
-          const uP = new URLSearchParams();
-          uP.append('metadata[live_url]', targetDomain);
-          if (nameservers) uP.append('metadata[cf_nameservers]', nameservers);
-          uP.append('metadata[cf_zone_status]', zoneStatus);
-          const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: uP.toString()
-          });
-          let updatedCust = c;
-          if (patchRes.ok) {
-            updatedCust = formatCustomerRecord(await patchRes.json());
-            await upsertD1Client(env, updatedCust);
+
+          const bindRes = await ensureCustomLiveDomainOnCloudflare(rootDomain, env, effectiveCfg.cfApiToken);
+          let zoneStatus = (bindRes && bindRes.zoneStatus) || (bindRes && bindRes.reason) || 'pending';
+          let assignedNs = (bindRes && bindRes.attached && bindRes.nameservers) ? bindRes.nameservers : ((formatted && formatted.cfNameservers) || '');
+
+          // Trigger immediate activation re-check if zone exists & is still pending
+          if (bindRes && bindRes.zoneId && zoneStatus !== 'active') {
+            const accessToken = await getValidCloudflareToken(env, false, effectiveCfg.cfApiToken);
+            if (accessToken) {
+              await fetch(`https://api.cloudflare.com/client/v4/zones/${bindRes.zoneId}/activation_check`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+              }).catch(() => {});
+              const reRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${bindRes.zoneId}`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+              }).catch(() => null);
+              if (reRes && reRes.ok) {
+                const reData = await reRes.json().catch(() => ({}));
+                if (reData && reData.result && reData.result.status) {
+                  zoneStatus = reData.result.status;
+                }
+              }
+            }
           }
+
+          // Live DNS-over-HTTPS NS lookup to see what nameservers the domain currently points to globally
+          let liveNs = [];
+          try {
+            const dohRes = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(rootDomain)}&type=NS`, {
+              headers: { 'Accept': 'application/dns-json' }
+            });
+            if (dohRes.ok) {
+              const dohData = await dohRes.json().catch(() => ({}));
+              if (Array.isArray(dohData.Answer)) {
+                liveNs = dohData.Answer
+                  .filter((a) => a && a.type === 2 && a.data)
+                  .map((a) => String(a.data).toLowerCase().replace(/\.$/, ''));
+              }
+            }
+          } catch (_) {}
+
+          const expectedList = assignedNs.split(',').map((s) => s.trim().toLowerCase().replace(/\.$/, '')).filter(Boolean);
+          const nsMatched = expectedList.length > 0 && expectedList.every((nsItem) => liveNs.includes(nsItem));
+          const isActive = zoneStatus === 'active' || nsMatched;
+          const savedStatus = isActive ? 'active' : (bindRes && bindRes.reason === 'zone_pending_registration' ? 'unregistered' : 'pending');
+
+          let updatedCustRecord = formatted;
+          if (effectiveCfg.stripeSecretKey) {
+            const uP = new URLSearchParams();
+            uP.append('metadata[live_url]', rootDomain);
+            uP.append('metadata[cf_zone_status]', savedStatus);
+            if (assignedNs) uP.append('metadata[cf_nameservers]', assignedNs.slice(0, 490));
+            const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: uP.toString()
+            });
+            if (patchRes.ok) {
+              updatedCustRecord = formatCustomerRecord(await patchRes.json());
+              await upsertD1Client(env, updatedCustRecord);
+            }
+          }
+
           return new Response(JSON.stringify({
             ok: true,
-            rootDomain: targetDomain,
-            isActive: zoneStatus === 'active',
-            zoneStatus,
-            nameservers,
-            liveNs: (dnsRes && dnsRes.liveNs) || [],
-            client: updatedCust
+            rootDomain,
+            isActive,
+            zoneStatus: savedStatus,
+            nameservers: assignedNs,
+            liveNs,
+            client: updatedCustRecord
           }), { status: 200, headers: corsHeaders });
+        }
+
+        // Action: Send DNS Configuration Email Manually (Optional for In-House IT Teams)
+        if (action === 'send_dns_email' && customerId) {
+          let cust = null;
+          const getRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
+            headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+          });
+          if (getRes.ok) cust = await getRes.json();
+          const formatted = cust ? formatCustomerRecord(cust) : null;
+          if (!formatted || !formatted.email) {
+            return new Response(JSON.stringify({ error: 'Khách hàng này chưa có email để gửi hướng dẫn DNS!' }), { status: 400, headers: corsHeaders });
+          }
+          if (!formatted.liveUrl) {
+            return new Response(JSON.stringify({ error: 'Chưa có Tên Miền Chính Thức nào được lưu cho khách này!' }), { status: 400, headers: corsHeaders });
+          }
+          let nsToSend = formatted.cfNameservers || '';
+          if (!nsToSend) {
+            const bindRes = await ensureCustomLiveDomainOnCloudflare(formatted.liveUrl, env, effectiveCfg.cfApiToken);
+            if (bindRes && bindRes.attached && bindRes.nameservers) {
+              nsToSend = bindRes.nameservers;
+            }
+          }
+          if (!nsToSend) {
+            return new Response(JSON.stringify({ error: 'Tên miền này chưa được đăng ký trên hệ thống tên miền quốc tế (WHOIS) nên chưa sinh được cặp Nameservers. Hãy đợi khách mua tên miền trên VentraIP trước!' }), { status: 400, headers: corsHeaders });
+          }
+          const guideUrl = buildDomainGuideUrl({
+            origin: url.origin,
+            client: formatted,
+            tab: 'existing',
+            ns: nsToSend
+          });
+          const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
+          const parts = nsToSend.split(',').map(s => s.trim());
+
+          const mailRes = await sendResendEmail({
+            to: formatted.email,
+            subject: `Network Nameservers for ${formatted.liveUrl} — WynnPages Studio`,
+            html: buildAtelierEmailHtml({
+              preheader: `Network Nameservers for ${formatted.liveUrl}`,
+              heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
+              bodyHtml: `
+                <p>We have provisioned the <strong>WynnPages Studio Australian High-Speed Network</strong> configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
+                <p>If your IT team prefers to point DNS manually, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
+                <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:14px 18px;margin:16px 0;font-family:monospace;font-size:13px;line-height:1.8;">
+                  <div><strong>Nameserver 1:</strong> <span style="color:#96432b;font-weight:bold;">${parts[0] || ''}</span></div>
+                  ${parts[1] ? `<div><strong>Nameserver 2:</strong> <span style="color:#96432b;font-weight:bold;">${parts[1]}</span></div>` : ''}
+                </div>
+                <p><strong>Prefer zero technical hassle?</strong> Simply invite <strong>hello@wynnpages.com.au</strong> or submit registrar access via our guide page, and our Australian engineers will connect it for you for free.</p>
+              `,
+              primaryCta: {
+                label: 'Open Domain Connection Guide →',
+                url: guideUrl
+              },
+              secondaryCta: {
+                label: 'Visit WynnPages Studio',
+                url: url.origin
+              }
+            }),
+            cfg: effectiveCfg
+          });
+
+          return new Response(JSON.stringify({ ok: Boolean(mailRes && mailRes.sent), result: mailRes, guideUrl }), { status: 200, headers: corsHeaders });
         }
 
         // Action A: Create or Update Client + Optionally Trigger Stage Notification
@@ -11239,10 +11440,10 @@ export default {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
-    // 6b. Cloud Autopilot 24/7 Settings & Manual Trigger Endpoint (POST /api/admin/autopilot)
-    if (url.pathname === '/api/admin/autopilot' && request.method === 'POST') {
+    // 6b. Cloud Autopilot 24/7 Settings & Manual Trigger Endpoint (GET / POST /api/admin/autopilot)
+    if (url.pathname === '/api/admin/autopilot' && (request.method === 'POST' || request.method === 'GET')) {
       try {
-        const body = await request.json().catch(() => ({}));
+        const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
         const auth = verifyAdminAuth(request, env, cfg, body);
         if (!auth.ok) {
           return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
