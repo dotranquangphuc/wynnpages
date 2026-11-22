@@ -508,12 +508,8 @@
         transparent 100%
       );
       transform: rotate(20deg);
+      animation: foil-shimmer 6.2s ease-in-out infinite;
       pointer-events: none;
-    }
-    @media (prefers-reduced-motion: no-preference) {
-      .btn-atelier-primary::after {
-        animation: foil-shimmer 6.2s ease-in-out infinite;
-      }
     }
 
     @keyframes foil-shimmer {
@@ -651,7 +647,9 @@
     [data-apple-reveal] {
       opacity: 0;
       transform: translate3d(0, 28px, 0) scale(0.985);
-      filter: blur(10px);
+      filter: blur(6px);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
       transition:
         opacity 1.15s cubic-bezier(0.16, 1, 0.3, 1),
         transform 1.22s cubic-bezier(0.16, 1, 0.3, 1),
@@ -662,7 +660,7 @@
 
     [data-apple-reveal="header"] {
       transform: translate3d(0, 18px, 0) scale(0.99);
-      filter: blur(8px);
+      filter: blur(6px);
       transition:
         opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
         transform 1.12s cubic-bezier(0.16, 1, 0.3, 1),
@@ -673,63 +671,76 @@
     /* Direction: Lateral Left (Mobile: Safe 10px within padding; Desktop: Full 46px) */
     [data-apple-reveal="left"] {
       transform: translate3d(-10px, 14px, 0) scale(0.98);
-      filter: blur(10px);
+      filter: blur(6px);
     }
 
     /* Direction: Lateral Right (Mobile: Safe 10px within padding; Desktop: Full 46px) */
     [data-apple-reveal="right"] {
       transform: translate3d(10px, 14px, 0) scale(0.98);
-      filter: blur(10px);
+      filter: blur(6px);
     }
 
     /* Direction: Center Scale Zoom */
     [data-apple-reveal="center"],
     [data-apple-reveal="zoom"] {
       transform: translate3d(0, 18px, 0) scale(0.94);
-      filter: blur(10px);
+      filter: blur(6px);
     }
 
     /* Lookbook 4-Diagonal Corner Entrances (Mobile: 10px / 14px; Desktop: 48px / 36px) */
     [data-apple-reveal="corner-tl"] {
       transform: translate3d(-10px, -14px, 0) scale(0.97);
-      filter: blur(12px);
+      filter: blur(8px);
     }
     [data-apple-reveal="corner-tr"] {
       transform: translate3d(10px, -14px, 0) scale(0.97);
-      filter: blur(12px);
+      filter: blur(8px);
     }
     [data-apple-reveal="corner-bl"] {
       transform: translate3d(-10px, 14px, 0) scale(0.97);
-      filter: blur(12px);
+      filter: blur(8px);
     }
     [data-apple-reveal="corner-br"] {
       transform: translate3d(10px, 14px, 0) scale(0.97);
-      filter: blur(12px);
+      filter: blur(8px);
     }
 
-    /* Desktop & Tablet: Full expressive 4-corner diagonal sweeps */
+    /* Desktop & Tablet: Full expressive 4-corner diagonal sweeps + deeper optical focus */
     @media (min-width: 640px) {
+      [data-apple-reveal] {
+        filter: blur(10px);
+      }
+      [data-apple-reveal="header"] {
+        filter: blur(8px);
+      }
       [data-apple-reveal="left"] {
         transform: translate3d(-46px, 0, 0) scale(0.975);
+        filter: blur(10px);
       }
       [data-apple-reveal="right"] {
         transform: translate3d(46px, 0, 0) scale(0.975);
+        filter: blur(10px);
       }
       [data-apple-reveal="center"],
       [data-apple-reveal="zoom"] {
         transform: translate3d(0, 24px, 0) scale(0.935);
+        filter: blur(10px);
       }
       [data-apple-reveal="corner-tl"] {
         transform: translate3d(-48px, -36px, 0) scale(0.96);
+        filter: blur(12px);
       }
       [data-apple-reveal="corner-tr"] {
         transform: translate3d(48px, -36px, 0) scale(0.96);
+        filter: blur(12px);
       }
       [data-apple-reveal="corner-bl"] {
         transform: translate3d(-48px, 36px, 0) scale(0.96);
+        filter: blur(12px);
       }
       [data-apple-reveal="corner-br"] {
         transform: translate3d(48px, 36px, 0) scale(0.96);
+        filter: blur(12px);
       }
     }
 
@@ -743,7 +754,7 @@
     /* Graceful Apple-Spring Retract on Scroll-Up (Mobile & Desktop) */
     [data-apple-reveal].is-retracting {
       opacity: 0;
-      filter: blur(8px);
+      filter: blur(5px);
       transition:
         opacity 0.65s cubic-bezier(0.32, 0.72, 0, 1),
         transform 0.75s cubic-bezier(0.32, 0.72, 0, 1),
@@ -816,25 +827,47 @@
       will-change: transform, opacity;
     }
 
-    /* Mobile & Coarse Touch: Compositor-only opacity + transform reveals (zero blur stutter) */
-    @media (max-width: 767px), (pointer: coarse) {
-      [data-apple-reveal] {
-        filter: none !important;
-        will-change: opacity, transform;
-      }
-    }
-
-    /* Reviews Mobile Vertical Deck (Clean opaque separation, zero sticky collision) */
+    /* ==========================================================================
+       HAUTE COUTURE STACKING DECK (XẾP CHỒNG THU HỒI TỰ NHIÊN — 120 FPS OPAQUE)
+       On mobile & tablet (< 1024px), review cards stack tactilely on top of each other.
+       Matched min-height & opaque warm background prevent bottom protrusion & text bleed.
+       ========================================================================== */
     @media (max-width: 1023px) {
       .atelier-stack-deck {
         display: flex !important;
         flex-direction: column !important;
-        gap: 16px !important;
+        gap: 20px !important;
         position: relative;
       }
       .atelier-stack-card {
-        position: relative;
+        position: sticky !important;
+        top: calc(84px + var(--stack-offset, 0px)) !important;
+        min-height: 228px;
         background: var(--bg-card-solid) !important;
+        transform-origin: center top;
+        transform: translate3d(0, 0, 0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        box-shadow:
+          0 -10px 24px -10px rgba(43, 37, 30, 0.12),
+          0 20px 45px -15px rgba(43, 37, 30, 0.16),
+          0 0 0 1px var(--border-hairline) !important;
+        transition:
+          transform 0.45s var(--apple-silk),
+          box-shadow 0.45s var(--apple-silk),
+          filter 0.45s ease;
+      }
+      .atelier-stack-card:nth-child(1) {
+        --stack-offset: 0px;
+        z-index: 1;
+      }
+      .atelier-stack-card:nth-child(2) {
+        --stack-offset: 16px;
+        z-index: 2;
+      }
+      .atelier-stack-card:nth-child(3) {
+        --stack-offset: 32px;
+        z-index: 3;
       }
     }
 
@@ -860,10 +893,8 @@
       0%, 100% { transform: scale(1.02) translate3d(0, 0, 0); }
       50% { transform: scale(1.052) translate3d(0, -3px, 0); }
     }
-    @media (prefers-reduced-motion: no-preference) {
-      .animate-canvas-breathe {
-        animation: canvas-breathe 16s ease-in-out infinite;
-      }
+    .animate-canvas-breathe {
+      animation: canvas-breathe 16s ease-in-out infinite;
     }
 
     /* Palette-Harmonized Architectural Map Embed (GPU-Isolated, Zero-Jank) */
@@ -1054,8 +1085,8 @@
       salonName: "Lux Nails Bar",
       salonSubtitle: "Nail & Hand Sanctuary",
       monogram: "L",
-      logoUrl: "/assets/lux-logo.svg?v=20261120slim", // Client's original bespoke 24K gold-leaf logo
-      fallbackLogoUrl: "/assets/logo.svg?v=20261120slim",
+      logoUrl: "/assets/lux-logo.svg?v=20261123atelier", // Client's original bespoke 24K gold-leaf logo
+      fallbackLogoUrl: "/assets/logo.svg?v=20261123atelier",
       suburb: "South Brisbane",
       state: "QLD",
       address: "Shop 7a/271 Grey St, South Brisbane QLD 4101, Australia",
@@ -1213,7 +1244,7 @@
         <!-- Brand Identity: Client Original 24K Gold-Leaf Logo + Suburb Sub-label -->
         <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
           <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]" style="flex: 0 0 auto !important;">
-            <img id="nav-logo-img" src="/assets/lux-logo.svg?v=20261120slim" alt="Lux Nails Bar Logo" class="h-8 sm:h-9 w-auto max-w-[165px] sm:max-w-[200px] object-contain block" onerror="this.onerror=null;this.src='/assets/logo.svg?v=20261120slim';">
+            <img id="nav-logo-img" src="/assets/lux-logo.svg?v=20261123atelier" alt="Lux Nails Bar Logo" class="h-8 sm:h-9 w-auto max-w-[165px] sm:max-w-[200px] object-contain block" onerror="this.onerror=null;this.src='/assets/logo.svg?v=20261123atelier';">
           </div>
           <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9.5px] uppercase tracking-[0.15em] font-medium block leading-none truncate max-w-full" style="color: var(--ink-muted);">South Brisbane, QLD</span>
         </a>
@@ -1388,62 +1419,61 @@
       <!-- Right Arched Oil-Painting Frame (5 Cols) -->
       <div id="hero-art-col" class="lg:col-span-5 relative max-w-md mx-auto lg:max-w-none w-full will-change-transform">
         <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
-          <img
-            id="hero-oil-img"
-            src="https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg"
-            alt="Sunlit artisanal nail sanctuary interior oil illustration"
-            fetchpriority="high"
-            width="900"
-            height="1125"
-            style="border-radius: inherit;"
-            class="w-full h-full object-cover animate-canvas-breathe"
-          >
-          <!-- Embedded SVG Filter: Auto-Converts Any Uploaded Client Logo into 3D Brushed Brass & Limewash Wall Relief -->
-          <svg width="0" height="0" class="absolute pointer-events-none" aria-hidden="true">
-            <defs>
-              <filter id="atelier-wall-brass" color-interpolation-filters="sRGB">
-                <feColorMatrix type="matrix" values="
-                  0 0 0 0 0.36
-                  0 0 0 0 0.22
-                  0 0 0 0 0.13
-                  -1.1 -1.1 -1.1 3.4 0" result="wallInk"/>
-                <feDropShadow dx="-0.6" dy="-0.6" stdDeviation="0.35" flood-color="#FFFDF7" flood-opacity="0.72"/>
-                <feDropShadow dx="1.1" dy="1.8" stdDeviation="1.0" flood-color="#2B190E" flood-opacity="0.24"/>
-              </filter>
-            </defs>
-          </svg>
-          <!-- Architectural Pin-Mounted Brushed Brass & Plaster Wall Signage (Centered in Arch Alcove Behind Seated Girl) -->
-          <div
-            id="hero-wall-signage"
-            aria-hidden="true"
-            class="pointer-events-none select-none absolute z-[2] flex flex-col items-center text-center"
-            style="top: 15%; left: 55.5%; width: 34%; max-width: 150px; transform: translate(-50%, 0) perspective(520px) rotateY(-6deg) rotateZ(-0.6deg); opacity: 0.76; mix-blend-mode: multiply;"
-          >
-            <svg id="hero-wall-crest" class="w-11 sm:w-12 h-3.5 mb-0.5 overflow-visible" viewBox="0 0 80 20" fill="none">
-              <path d="M12 13 C20 13, 27 10, 34 8" stroke="#8C5820" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
-              <path d="M68 13 C60 13, 53 10, 46 8" stroke="#8C5820" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
-              <path d="M40 2 L42 7.5 L47.5 9.5 L42 11.5 L40 17 L38 11.5 L32.5 9.5 L38 7.5 Z" fill="#8C5820" opacity="0.88"/>
-              <circle cx="29" cy="9.5" r="1.1" fill="#8C5820" opacity="0.7"/>
-              <circle cx="51" cy="9.5" r="1.1" fill="#8C5820" opacity="0.7"/>
-            </svg>
+          <div id="hero-canvas-stage" class="w-full h-full relative animate-canvas-breathe will-change-transform" style="border-radius: inherit;">
             <img
-              id="hero-wall-logo-img"
-              src=""
-              alt=""
-              class="hidden w-full max-w-[96px] sm:max-w-[114px] max-h-[38px] object-contain block"
-              style="filter: sepia(0.28) brightness(0.76) contrast(1.12);"
+              id="hero-oil-img"
+              src="https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg"
+              alt="Sunlit artisanal nail sanctuary interior oil illustration"
+              fetchpriority="high"
+              width="900"
+              height="1125"
+              style="border-radius: inherit;"
+              class="w-full h-full object-cover block"
             >
-            <span
-              id="hero-wall-wordmark"
-              class="font-editorial italic font-semibold text-[15px] sm:text-[18px] leading-none tracking-[0.06em] block max-w-full"
-              style="color: #432717; text-shadow: -0.5px -0.5px 0 rgba(255, 252, 245, 0.78), 1px 1.5px 1.5px rgba(43, 25, 14, 0.22);"
-            >Lux Nails Bar</span>
-            <span class="w-12 sm:w-14 h-[0.75px] my-1.5 block" style="background: linear-gradient(90deg, transparent, rgba(110, 58, 28, 0.55), transparent);"></span>
-            <span
-              id="hero-wall-sub"
-              class="text-[7.5px] sm:text-[8.5px] uppercase tracking-[0.16em] font-bold block leading-tight whitespace-nowrap"
-              style="color: #4A2816;"
-            >South Brisbane, QLD</span>
+            <!-- Architectural Carved Plaster & Patinated Kintsugi Brass Mural (Integrated on Wall Stage) -->
+            <div
+              id="hero-wall-signage"
+              aria-hidden="true"
+              class="pointer-events-none select-none absolute z-[2] flex flex-col items-center text-center"
+              style="top: 14.5%; left: 56.5%; width: 36%; max-width: 154px; transform: translate(-50%, 0) perspective(540px) rotateY(-8deg) rotateZ(-0.7deg); opacity: 0.78; mix-blend-mode: multiply; -webkit-mask-image: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.92) 45%, rgba(0,0,0,0.68) 100%); mask-image: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.92) 45%, rgba(0,0,0,0.68) 100%);"
+            >
+              <svg id="hero-wall-crest" class="w-11 sm:w-12 h-3.5 mb-0.5 overflow-visible" viewBox="0 0 80 20" fill="none">
+                <g transform="translate(0.5, 0.8)" opacity="0.28">
+                  <path d="M12 13 C20 13, 27 10, 34 8" stroke="#1E1108" stroke-width="1.15" stroke-linecap="round"/>
+                  <path d="M68 13 C60 13, 53 10, 46 8" stroke="#1E1108" stroke-width="1.15" stroke-linecap="round"/>
+                  <path d="M40 2 L42 7.5 L47.5 9.5 L42 11.5 L40 17 L38 11.5 L32.5 9.5 L38 7.5 Z" fill="#1E1108"/>
+                </g>
+                <g id="hero-wall-crest-ink" style="color: var(--wall-crest, #8C5820);">
+                  <path d="M12 13 C20 13, 27 10, 34 8" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.82"/>
+                  <path d="M68 13 C60 13, 53 10, 46 8" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.82"/>
+                  <path d="M40 2 L42 7.5 L47.5 9.5 L42 11.5 L40 17 L38 11.5 L32.5 9.5 L38 7.5 Z" fill="currentColor" opacity="0.92"/>
+                  <circle cx="29" cy="9.5" r="1.1" fill="currentColor" opacity="0.75"/>
+                  <circle cx="51" cy="9.5" r="1.1" fill="currentColor" opacity="0.75"/>
+                </g>
+              </svg>
+              <img
+                id="hero-wall-logo-img"
+                src=""
+                alt=""
+                class="hidden w-full max-w-[96px] sm:max-w-[114px] max-h-[38px] object-contain block"
+                style="filter: sepia(0.32) brightness(0.76) contrast(1.1);"
+              >
+              <span
+                id="hero-wall-wordmark"
+                class="font-editorial italic font-semibold text-[15px] sm:text-[18px] leading-[1.08] tracking-[0.06em] block max-w-full"
+                style="color: var(--wall-ink, #4A2B17); text-shadow: var(--wall-shadow, -0.6px -0.6px 0 rgba(255, 252, 244, 0.82), 1.1px 1.6px 1.6px rgba(43, 24, 12, 0.26));"
+              >Lux Nails Bar</span>
+              <span
+                id="hero-wall-rule"
+                class="w-12 sm:w-14 h-[0.75px] my-1.5 block"
+                style="background: linear-gradient(90deg, transparent, var(--wall-crest, rgba(140, 88, 32, 0.58)), transparent);"
+              ></span>
+              <span
+                id="hero-wall-sub"
+                class="text-[6.5px] sm:text-[7.5px] uppercase tracking-[0.15em] font-semibold block leading-tight whitespace-nowrap"
+                style="color: var(--wall-sub, #5C371F); text-shadow: var(--wall-shadow, -0.5px -0.5px 0 rgba(255, 252, 244, 0.72), 0.8px 1.2px 1.2px rgba(43, 24, 12, 0.22));"
+              >South Brisbane, QLD</span>
+            </div>
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
           <!-- Interactive Floating Craft Capsule (Glides to Treatment Matchmaker) -->
@@ -2133,7 +2163,7 @@
       <div data-apple-reveal="right" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
           <div class="inline-flex items-center justify-start">
-            <img id="footer-monogram" src="/assets/lux-logo.svg?v=20261120slim" alt="Lux Nails Bar Logo" class="h-10 sm:h-11 w-auto max-w-[190px] object-contain block" onerror="this.onerror=null;this.src='/assets/logo.svg?v=20261120slim';">
+            <img id="footer-monogram" src="/assets/lux-logo.svg?v=20261123atelier" alt="Lux Nails Bar Logo" class="h-10 sm:h-11 w-auto max-w-[190px] object-contain block" onerror="this.onerror=null;this.src='/assets/logo.svg?v=20261123atelier';">
           </div>
           <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight text-balance">
             Reserve your <span class="accent-italic">table today.</span>
@@ -2463,7 +2493,7 @@
       }
 
       const customLogo = (cfg.wordmarkUrl || cfg.logoUrl || '').trim();
-      const defaultFallbackLogo = (cfg.fallbackLogoUrl || '/assets/logo.svg?v=20261120slim').trim();
+      const defaultFallbackLogo = (cfg.fallbackLogoUrl || '/assets/logo.svg?v=20261123atelier').trim();
       const activeLogoSrc = customLogo || defaultFallbackLogo;
       const isFallbackLogo = !customLogo;
 
@@ -2497,11 +2527,90 @@
       const heroWallSubText = typeof resolvedNavSub !== 'undefined'
         ? resolvedNavSub
         : (locLabel.replace(/,\s*$/, '') || 'Australia');
+      const PALETTE_WALL_PLACEMENTS = {
+        '01': {
+          top: '14.5%',
+          left: '56.5%',
+          width: '36%',
+          maxWidth: '154px',
+          transform: 'translate(-50%, 0) perspective(540px) rotateY(-8deg) rotateZ(-0.7deg)',
+          mixBlend: 'multiply',
+          opacity: '0.78',
+          ink: '#4A2B17',
+          subInk: '#5C371F',
+          crest: '#8C5820',
+          shadow: '-0.6px -0.6px 0 rgba(255, 252, 244, 0.82), 1.1px 1.6px 1.6px rgba(43, 24, 12, 0.26)'
+        },
+        '02': {
+          top: '20.5%',
+          left: '32.5%',
+          width: '30%',
+          maxWidth: '132px',
+          transform: 'translate(-50%, 0) perspective(520px) rotateY(11deg) rotateZ(0.9deg)',
+          mixBlend: 'multiply',
+          opacity: '0.76',
+          ink: '#4E2D28',
+          subInk: '#633B35',
+          crest: '#9E6252',
+          shadow: '-0.6px -0.6px 0 rgba(255, 250, 248, 0.82), 1.1px 1.6px 1.6px rgba(48, 24, 20, 0.25)'
+        },
+        '03': {
+          top: '23.5%',
+          left: '24.5%',
+          width: '31%',
+          maxWidth: '136px',
+          transform: 'translate(-50%, 0) perspective(520px) rotateY(12deg) rotateZ(1.0deg)',
+          mixBlend: 'normal',
+          opacity: '0.86',
+          ink: '#F2DFB6',
+          subInk: '#E5CFA0',
+          crest: '#D8B168',
+          shadow: '-0.5px -0.5px 0 rgba(255, 253, 245, 0.45), 1.2px 1.8px 2.2px rgba(22, 34, 27, 0.52)'
+        },
+        '04': {
+          top: '31.5%',
+          left: '49.5%',
+          width: '34%',
+          maxWidth: '150px',
+          transform: 'translate(-50%, 0) perspective(600px) rotateX(2deg) rotateY(-1deg)',
+          mixBlend: 'multiply',
+          opacity: '0.80',
+          ink: '#3A2314',
+          subInk: '#4D311E',
+          crest: '#8C6228',
+          shadow: '-0.6px -0.6px 0 rgba(255, 249, 238, 0.78), 1.1px 1.6px 1.8px rgba(32, 18, 10, 0.30)'
+        },
+        '05': {
+          top: '12.8%',
+          left: '27.5%',
+          width: '29%',
+          maxWidth: '128px',
+          transform: 'translate(-50%, 0) perspective(480px) rotateY(14deg) rotateZ(1.2deg)',
+          mixBlend: 'multiply',
+          opacity: '0.76',
+          ink: '#3D3022',
+          subInk: '#524231',
+          crest: '#8A6B3B',
+          shadow: '-0.6px -0.6px 0 rgba(255, 255, 255, 0.84), 1.1px 1.6px 1.6px rgba(35, 28, 20, 0.25)'
+        }
+      };
       if (wallSignEl) {
+        const wallPose = PALETTE_WALL_PLACEMENTS[activePalette] || PALETTE_WALL_PLACEMENTS['01'];
+        wallSignEl.style.top = wallPose.top;
+        wallSignEl.style.left = wallPose.left;
+        wallSignEl.style.width = wallPose.width;
+        wallSignEl.style.maxWidth = wallPose.maxWidth;
+        wallSignEl.style.transform = wallPose.transform;
+        wallSignEl.style.mixBlendMode = wallPose.mixBlend;
+        wallSignEl.style.opacity = wallPose.opacity;
+        wallSignEl.style.setProperty('--wall-ink', wallPose.ink);
+        wallSignEl.style.setProperty('--wall-sub', wallPose.subInk);
+        wallSignEl.style.setProperty('--wall-crest', wallPose.crest);
+        wallSignEl.style.setProperty('--wall-shadow', wallPose.shadow);
         if (wallSubEl) wallSubEl.textContent = heroWallSubText;
         const cleanSalon = (cfg.salonName || 'Lux Nails Bar').trim();
-        const isGenericDefaultSvg = !customLogo || customLogo.includes('default-lux-logo.svg');
-        if (customLogo && wallLogoImg && !isGenericDefaultSvg) {
+        const isLegacyLuxSvg = !customLogo || customLogo.includes('default-lux-logo.svg') || customLogo.includes('lux-logo.svg') || customLogo.includes('logo.svg');
+        if (customLogo && wallLogoImg && !isLegacyLuxSvg) {
           wallLogoImg.src = customLogo;
           wallLogoImg.classList.remove('hidden');
           if (wallWordmark) wallWordmark.classList.add('hidden');
@@ -3241,17 +3350,16 @@
       }
       refreshStaggers();
 
-      // 9b. Native High-Performance IntersectionObserver (Desktop bidirectional retract; Touch/Mobile one-way compositor glide)
+      // 9b. Native High-Performance Bidirectional IntersectionObserver (120 FPS Mobile & Desktop)
       if ('IntersectionObserver' in window && !prefersReducedMotion) {
-        const isTouchOrMobile = window.innerWidth < 1024 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
         const revealObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
             const target = entry.target;
             if (entry.isIntersecting) {
               target.classList.remove('is-retracting');
               target.classList.add('is-inview');
-            } else if (!isTouchOrMobile) {
-              // Only retract on desktop if the element has fallen below the viewport (when user scrolls back up)
+            } else {
+              // Retract smoothly on scroll-up when element falls below viewport
               const rect = entry.boundingClientRect;
               if (rect && rect.top > 50) {
                 target.classList.remove('is-inview');
@@ -3260,17 +3368,12 @@
             }
           });
         }, {
-          rootMargin: '0px 0px -40px 0px',
+          rootMargin: '0px 0px -36px 0px',
           threshold: [0, 0.08]
         });
 
-        const vhNow = window.innerHeight || 850;
         // Observe all static & dynamically injected reveal nodes
-        document.querySelectorAll('[data-apple-reveal]').forEach((node) => {
-          const r = node.getBoundingClientRect();
-          if (r.top < vhNow * 0.96) node.classList.add('is-inview');
-          revealObserver.observe(node);
-        });
+        document.querySelectorAll('[data-apple-reveal]').forEach((node) => revealObserver.observe(node));
       } else {
         document.querySelectorAll('[data-apple-reveal]').forEach((node) => node.classList.add('is-inview'));
       }
@@ -3320,32 +3423,24 @@
         }
 
         if (!prefersReducedMotion) {
-          if (window.innerWidth >= 1024) {
-            // Subtle Hero Recede & Arch Counter-Parallax on Desktop only (prevents mobile overlap/premature fade)
-            if (scrollY < vh * 1.25) {
-              const heroT = Math.min(1, scrollY / 560);
-              if (heroCopyCol) {
-                heroCopyCol.style.transform = `translate3d(0, ${(-heroT * 20).toFixed(1)}px, 0)`;
-                heroCopyCol.style.opacity = (1 - heroT * 0.55).toFixed(3);
-              }
-              if (heroArtCol) {
-                heroArtCol.style.transform = `translate3d(0, ${(heroT * 22).toFixed(1)}px, 0)`;
-              }
-            }
-          } else {
+          // Subtle Hero Recede & Arch Counter-Parallax (Mobile-calibrated & Desktop)
+          if (scrollY < vh * 1.25) {
+            const heroT = Math.min(1, scrollY / 560);
+            const isCompact = window.innerWidth < 1024;
             if (heroCopyCol) {
-              heroCopyCol.style.transform = '';
-              heroCopyCol.style.opacity = '';
+              heroCopyCol.style.transform = `translate3d(0, ${(-heroT * (isCompact ? 14 : 20)).toFixed(1)}px, 0)`;
+              heroCopyCol.style.opacity = (1 - heroT * (isCompact ? 0.38 : 0.55)).toFixed(3);
             }
             if (heroArtCol) {
-              heroArtCol.style.transform = '';
+              heroArtCol.style.transform = `translate3d(0, ${(heroT * (isCompact ? 12 : 22)).toFixed(1)}px, 0)`;
             }
           }
 
-          // Subtle Craftsmanship Frieze Track Glide
-          if (friezeTrack && window.innerWidth >= 640) {
-            const friezeProgress = Math.min(1, Math.max(0, (scrollY - 200) / (vh * 1.4)));
-            const shiftX = (friezeProgress - 0.5) * 40;
+          // Subtle Craftsmanship Frieze Track Glide (Mobile + Desktop)
+          if (friezeTrack) {
+            const friezeProgress = Math.min(1, Math.max(0, (scrollY - 160) / (vh * 1.35)));
+            const maxShift = window.innerWidth >= 640 ? 40 : 22;
+            const shiftX = (friezeProgress - 0.5) * maxShift;
             friezeTrack.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`;
           }
         }
