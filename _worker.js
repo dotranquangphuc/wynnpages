@@ -347,14 +347,15 @@ async function acquireD1RateLock(env, lockKey, ttlSeconds = 21600) {
   const expiresAt = now + Math.max(10, Number(ttlSeconds) || 21600) * 1000;
   if (db) {
     await ensureD1Schema(env);
-    const row = await db.prepare('SELECT expires_at FROM rate_locks WHERE lock_key = ?').bind(lockKey).first().catch(() => null);
-    if (row && Number(row.expires_at) > now) {
-      return false; // Already locked
+    const res = await db.prepare(
+      `INSERT INTO rate_locks (lock_key, expires_at) VALUES (?, ?)
+       ON CONFLICT(lock_key) DO UPDATE SET expires_at = excluded.expires_at
+       WHERE rate_locks.expires_at <= ?`
+    ).bind(lockKey, expiresAt, now).run().catch(() => null);
+    if (res && res.meta) {
+      return Number(res.meta.changes || 0) > 0;
     }
-    await db.prepare(
-      'INSERT INTO rate_locks (lock_key, expires_at) VALUES (?, ?) ON CONFLICT(lock_key) DO UPDATE SET expires_at = excluded.expires_at'
-    ).bind(lockKey, expiresAt).run().catch(() => {});
-    return true;
+    return false;
   }
   if (env && env.WYNN_KV) {
     const existing = await env.WYNN_KV.get(lockKey).catch(() => null);
@@ -1678,7 +1679,7 @@ function buildPrintableTaxInvoicePageHtml({
         <tr>
           <td>
             <strong style="color:#231f1a;">Private Customisation Portal &amp; Personal Tailoring</strong><br>
-            <span style="font-size:12px;color:#6f665c;">Replacement of all sample photos, logo, brand colours &amp; exact salon service pricing menu by WynnPages Studio.</span>
+            <span style="font-size:12px;color:#6f665c;">Replacement of all sample photos, logo, brand colours &amp; exact bespoke offerings by WynnPages Studio.</span>
           </td>
           <td style="text-align:right;font-weight:600;color:#2f5d2a;white-space:nowrap;">Included</td>
         </tr>
@@ -1926,7 +1927,20 @@ function parseAuShippingFromAddress(rawAddress = '', recipientName = '') {
   };
 }
 
-async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId = '', sessionObj = null, paymentIntentObj = null, origin = 'https://wynnpages.com.au', env, ctx, cfg }) {
+async function finalizeStripePaymentAndNotify({
+  sessionId = '',
+  paymentIntentId = '',
+  sessionObj = null,
+  paymentIntentObj = null,
+  overrideEmail = '',
+  overrideBusinessName = '',
+  overridePhone = '',
+  overrideCustomerId = '',
+  origin = 'https://wynnpages.com.au',
+  env,
+  ctx,
+  cfg
+}) {
   const sid = String(sessionId || (sessionObj && sessionObj.id) || '').trim();
   let piId = String(paymentIntentId || (paymentIntentObj && paymentIntentObj.id) || '').trim();
   if ((!sid || !sid.startsWith('cs_')) && (!piId || !piId.startsWith('pi_'))) {
@@ -1960,9 +1974,9 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
   const meta = sourceObj.metadata || {};
   const cd = (sessionData && sessionData.customer_details) || {};
   const chgBilling = (piData && piData.latest_charge && typeof piData.latest_charge === 'object' && piData.latest_charge.billing_details) || {};
-  const email = (cd.email || (sessionData && sessionData.customer_email) || (piData && piData.receipt_email) || chgBilling.email || meta.customer_email || '').trim();
-  const name = (meta.customer_name || cd.name || chgBilling.name || (piData && piData.shipping && piData.shipping.name) || '').trim();
-  const phone = (cd.phone || chgBilling.phone || meta.customer_phone || '').trim();
+  const email = (cd.email || (sessionData && sessionData.customer_email) || (piData && piData.receipt_email) || meta.customer_email || overrideEmail || chgBilling.email || '').trim();
+  const name = (overrideBusinessName || meta.business_name || meta.customer_name || cd.name || chgBilling.name || (piData && piData.shipping && piData.shipping.name) || '').trim();
+  const phone = (cd.phone || meta.customer_phone || overridePhone || chgBilling.phone || '').trim();
 
   if (!isPaid) {
     return { ok: true, paid: false, sessionId: sid || piId, paymentIntentId: piId, email, name, phone };
@@ -1973,6 +1987,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
   const customerIdHint = (typeof sourceObj.customer === 'string' && sourceObj.customer)
     || (sessionData && sessionData.client_reference_id)
     || meta.customer_id
+    || overrideCustomerId
     || '';
 
   let cust = null;
@@ -1986,19 +2001,27 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
     cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
   }
 
+  const isOutboundHint = flowTypeRaw === 'outbound' || Boolean(cust && cust.metadata && cust.metadata.flow_type === 'outbound');
+
   // Create Stripe customer record if Checkout used customer_email without an existing customer
   if (!cust && cfg.stripeSecretKey && (email || name || phone)) {
     const createP = new URLSearchParams();
-    if (email) createP.append('email', email);
-    if (name) createP.append('name', name);
+    if (email) {
+      createP.append('email', email);
+      createP.append('metadata[customer_email]', email);
+    }
+    if (name) {
+      createP.append('name', name);
+      createP.append('metadata[business_name]', name);
+      createP.append('metadata[customer_name]', name);
+    }
     if (phone) {
       createP.append('phone', phone);
       createP.append('metadata[customer_phone]', phone);
       createP.append('metadata[display_phone]', phone);
     }
-    if (meta.business_name || name) createP.append('metadata[business_name]', meta.business_name || name);
-    if (meta.demo_slug) createP.append('metadata[demo_slug]', meta.demo_slug);
-    if (meta.demo_url) createP.append('metadata[demo_url]', meta.demo_url);
+    if (isOutboundHint && meta.demo_slug) createP.append('metadata[demo_slug]', meta.demo_slug);
+    if (isOutboundHint && meta.demo_url) createP.append('metadata[demo_url]', meta.demo_url);
     createP.append('metadata[studio]', 'WynnPages Australia');
     createP.append('metadata[flow_type]', flowTypeRaw);
     const createdRes = await fetch('https://api.stripe.com/v1/customers', {
@@ -2019,9 +2042,11 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
   const resolvedPhone = phone || (cust && cust.phone) || (cust && cust.metadata && cust.metadata.customer_phone) || '';
   const resolvedEmail = email || (cust && cust.email) || (cust && cust.metadata && cust.metadata.customer_email) || '';
   const resolvedName = name || (cust && cust.name) || '';
-  const resolvedBiz = (cust && cust.metadata && cust.metadata.business_name) || meta.business_name || resolvedName || resolvedEmail || 'New Client';
-  const resolvedSlug = (cust && cust.metadata && cust.metadata.demo_slug) || meta.demo_slug || slugifyName(resolvedBiz);
-  const resolvedDemoUrl = (cust && cust.metadata && cust.metadata.demo_url) || meta.demo_url || (resolvedSlug ? `https://${resolvedSlug}.wynnpages.com.au` : '');
+  const resolvedBiz = (overrideBusinessName || (cust && cust.metadata && cust.metadata.business_name) || meta.business_name || resolvedName || resolvedEmail || 'New Client').trim();
+  const resolvedSlug = (cust && cust.metadata && cust.metadata.demo_slug) || meta.demo_slug || (isOutbound ? slugifyName(resolvedBiz) : '');
+  const resolvedDemoUrl = isOutbound
+    ? ((cust && cust.metadata && cust.metadata.demo_url) || meta.demo_url || (resolvedSlug ? `https://${resolvedSlug}.wynnpages.com.au` : ''))
+    : '';
   const resolvedCid = (cust && cust.id) || customerIdHint || txId;
 
   const { invoiceUrl: stripeInvUrl, invoicePdf, invoiceNumber: rawInvNo } = sessionData
@@ -2035,12 +2060,13 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
   const amountTotal = Number((sessionData ? sessionData.amount_total : (piData && (piData.amount_received || piData.amount))) || 59900);
   const amountAudShort = `$${Math.round(amountTotal / 100)} AUD`;
   const amountAudExact = `$${(amountTotal / 100).toFixed(2)} AUD`;
-  const paidAtAu = formatAuDateTime(new Date(), AU_TIMEZONE);
+  const paidAtIso = (cust && cust.metadata && cust.metadata.paid_at_iso) || new Date().toISOString();
+  const paidAtAu = (cust && cust.metadata && cust.metadata.paid_at_au) || formatAuDateTime(paidAtIso, AU_TIMEZONE);
 
   const portalUrl = isOutbound
     ? `${origin}/revision?client_id=${encodeURIComponent(resolvedCid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`
     : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic&payment_intent=${encodeURIComponent(txId)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
-  const brandedInvoiceUrl = `${origin}/invoice?cid=${encodeURIComponent(resolvedCid)}&inv=${encodeURIComponent(invoiceNumber)}&amt=${encodeURIComponent(String(Math.round(amountTotal / 100)))}${piId ? `&pi=${encodeURIComponent(piId)}` : ''}${sid ? `&sid=${encodeURIComponent(sid)}` : ''}`;
+  const brandedInvoiceUrl = `${origin}/invoice?cid=${encodeURIComponent(resolvedCid)}&inv=${encodeURIComponent(invoiceNumber)}&amt=${encodeURIComponent(String(Math.round(amountTotal / 100)))}${piId ? `&pi=${encodeURIComponent(piId)}` : ''}${sid ? `&sid=${encodeURIComponent(sid)}` : ''}&flow=${encodeURIComponent(resolvedFlow)}`;
   const effectiveInvoiceUrl = brandedInvoiceUrl || stripeInvUrl || invoicePdf || '';
 
   // Check unified idempotency flag so post-payment alerts/email/SMS never fire twice
@@ -2062,11 +2088,18 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
     shouldNotify = await acquireD1RateLock(env, `payment_notified:${txId}`, 31536000);
   }
 
-  // Persist paid status, phone, and invoice metadata to Stripe Customer
+  // Persist paid status, email, business name, phone, and invoice metadata to Stripe Customer
   if (cust && cust.id && cfg.stripeSecretKey) {
     const uParams = new URLSearchParams();
-    if (resolvedEmail && !cust.email) uParams.append('email', resolvedEmail);
-    if (resolvedName && !cust.name) uParams.append('name', resolvedName);
+    if (resolvedEmail) {
+      if (!cust.email) uParams.append('email', resolvedEmail);
+      uParams.append('metadata[customer_email]', resolvedEmail);
+    }
+    if (resolvedName) {
+      if (!cust.name) uParams.append('name', resolvedName);
+      uParams.append('metadata[customer_name]', resolvedName);
+    }
+    if (resolvedBiz) uParams.append('metadata[business_name]', resolvedBiz.slice(0, 490));
     if (resolvedPhone) {
       uParams.append('phone', resolvedPhone);
       uParams.append('metadata[customer_phone]', resolvedPhone);
@@ -2081,6 +2114,10 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
     uParams.append('metadata[fb_due_step]', '');
     uParams.append('metadata[flow_type]', resolvedFlow);
     uParams.append('metadata[checkout_session_id]', txId);
+    uParams.append('metadata[paid_at_iso]', paidAtIso);
+    uParams.append('metadata[paid_at_au]', paidAtAu);
+    if (resolvedSlug) uParams.append('metadata[demo_slug]', resolvedSlug);
+    if (resolvedDemoUrl) uParams.append('metadata[demo_url]', resolvedDemoUrl);
     if (effectiveInvoiceUrl) uParams.append('metadata[invoice_url]', effectiveInvoiceUrl.slice(0, 490));
     if (invoiceNumber) uParams.append('metadata[invoice_number]', invoiceNumber.slice(0, 120));
     if (isOutbound) {
@@ -2102,6 +2139,15 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
     }).catch(() => {});
 
     if (!cust.metadata) cust.metadata = {};
+    if (resolvedEmail) {
+      if (!cust.email) cust.email = resolvedEmail;
+      cust.metadata.customer_email = resolvedEmail;
+    }
+    if (resolvedName) {
+      if (!cust.name) cust.name = resolvedName;
+      cust.metadata.customer_name = resolvedName;
+    }
+    if (resolvedBiz) cust.metadata.business_name = resolvedBiz;
     cust.metadata.payment_status = 'paid';
     cust.metadata.deal_status = 'claimed';
     cust.metadata.deal_expires_at = '';
@@ -2110,6 +2156,12 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
     cust.metadata.fb_due_step = '';
     cust.metadata.flow_type = resolvedFlow;
     cust.metadata.checkout_session_id = txId;
+    cust.metadata.paid_at_iso = paidAtIso;
+    cust.metadata.paid_at_au = paidAtAu;
+    cust.metadata.demo_slug = resolvedSlug;
+    cust.metadata.demo_url = resolvedDemoUrl;
+    cust.metadata.invoice_url = effectiveInvoiceUrl;
+    cust.metadata.invoice_number = invoiceNumber;
     cust.metadata.payment_notified = 'true';
     cust.metadata.welcome_sent = 'true';
     if (isOutbound) cust.metadata.stage = 'outbound_paid';
@@ -2141,11 +2193,16 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
   };
   await upsertD1Client(env, {
     ...baseRecord,
+    email: resolvedEmail || baseRecord.email || '',
+    phone: resolvedPhone || baseRecord.phone || '',
+    businessName: resolvedBiz || baseRecord.businessName || '',
     paymentStatus: 'paid',
     dealStatus: 'claimed',
     paymentNotified: true,
     invoiceUrl: effectiveInvoiceUrl,
     invoiceNumber,
+    paidAtIso,
+    paidAtAu,
     checkoutSessionId: txId
   });
   await syncClientsKvSnapshot(env);
@@ -2172,18 +2229,23 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
 
     const smsPortalUrl = isOutbound
       ? `${origin}/revision?client_id=${encodeURIComponent(resolvedCid)}`
-      : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic`;
+      : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic&payment_intent=${encodeURIComponent(txId)}`;
 
     const smsText = isOutbound
       ? `Hi ${resolvedBiz}, it's Wynn here! Thank you so much for claiming your website (${amountAudShort}) — I'm thrilled to get this live for you. Whenever you're ready, pop in your domain name and any little tweaks you'd like me to make right here: ${smsPortalUrl} — I'll take care of the rest! Warmly, Wynn`
       : `Hi ${resolvedBiz}, it's Wynn here from WynnPages! Thank you so much for your order (${amountAudShort}) — I'm really excited to start crafting your website. Whenever you have 2 minutes, pop in your business details here so I can get started: ${smsPortalUrl} Warmly, Wynn`;
 
-    const tgMessage = [
+    const tgLines = [
       `🏢 Khách hàng: ${resolvedBiz}`,
+      `💳 Số tiền: ${amountAudExact} (Luồng: ${isOutbound ? 'Mẫu có sẵn' : 'Đặt thiết kế mới'})`,
+      `🧾 Mã hóa đơn: #${invoiceNumber}`,
       `📧 Email: ${resolvedEmail || 'Chưa có'}`,
       `📱 Số điện thoại: ${resolvedPhone || 'Chưa có'}`,
+      resolvedDemoUrl ? `🌐 Trang mẫu Web: ${resolvedDemoUrl}` : '',
+      `📄 Xem / In Tax Invoice: ${effectiveInvoiceUrl}`,
       `🔗 Cổng gửi thông tin: ${portalUrl}`
-    ].join('\n');
+    ].filter(Boolean);
+    const tgMessage = tgLines.join('\n');
 
     const notifyPipeline = Promise.all([
       // 1. Instant iPhone Telegram + Activity Feed notification
@@ -2194,6 +2256,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
         clientName: resolvedBiz,
         slug: resolvedSlug,
         dedupeKey: `paid_notified:${txId}`,
+        waitForTelegram: true,
         env,
         ctx
       }).catch((err) => {
@@ -2256,7 +2319,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
       await notifyTelegramAutomatedComms({
         env,
         ctx,
-        client: { id: resolvedCid, businessName: resolvedBiz, demoSlug: resolvedSlug, email: resolvedEmail, phone: resolvedPhone },
+        client: { id: resolvedCid, businessName: resolvedBiz, demoSlug: resolvedSlug, demoUrl: resolvedDemoUrl, email: resolvedEmail, phone: resolvedPhone },
         triggerType: 'post_payment_comms',
         icon: '🧾',
         title: `🧾 [Sau thanh toán ${amountAudShort}] Đã gửi hóa đơn & cổng thiết kế cho ${resolvedBiz}`,
@@ -2280,6 +2343,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId 
     ok: true,
     paid: true,
     sessionId: sid,
+    paymentIntentId: piId,
     cid: resolvedCid,
     email: resolvedEmail,
     name: resolvedName,
@@ -3389,8 +3453,8 @@ function formatCustomerRecord(cust) {
     ? 'paid'
     : (m.payment_status === 'unpaid' ? 'unpaid' : (hasExplicitPaymentEvidence ? 'paid' : 'unpaid'));
   const displayName = m.business_name || cust.name || m.customer_name || '';
-  const demoSlug = m.demo_slug || slugifyName(displayName) || cust.id.toLowerCase();
-  const brandedDemoUrl = `https://${demoSlug}.wynnpages.com.au`;
+  const demoSlug = m.demo_slug || (flowType === 'outbound' ? (slugifyName(displayName) || cust.id.toLowerCase()) : '');
+  const brandedDemoUrl = demoSlug ? `https://${demoSlug}.wynnpages.com.au` : '';
   const record = {
     id: cust.id,
     name: cust.name || m.customer_name || m.business_name || '',
@@ -3428,7 +3492,10 @@ function formatCustomerRecord(cust) {
     photosFileName: m.photos_file_name || '',
     photosDriveUrl: m.photos_drive_url || '',
     driveFolderUrl: m.drive_folder_url || '',
-    demoUrl: m.demo_url || brandedDemoUrl,
+    demoUrl: m.demo_url || (flowType === 'outbound' ? brandedDemoUrl : ''),
+    paidAtAu: m.paid_at_au || '',
+    paidAtIso: m.paid_at_iso || '',
+    paymentNotified: m.payment_notified === 'true',
     demoSourceType: m.demo_source_type || 'url',
     demoPalette: m.demo_palette || '01',
     demoFilesCount: Number(m.demo_files_count || 0),
@@ -4058,8 +4125,9 @@ function buildExpiredDemoHtml(client) {
 function buildDealTopRibbonHtml(client) {
   const bizName = (client && (client.businessName || client.name)) || 'Your Business';
   const cid = (client && client.id) || '';
+  const cleanSlug = (client && client.demoSlug) || '';
   const email = (client && client.email) || '';
-  const claimHref = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+  const claimHref = `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(cleanSlug)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
 
   return `
   <style>
@@ -4191,9 +4259,10 @@ function buildClaimBarSnippet(client) {
     }
   }
 
+  const cleanSlug = (client && client.demoSlug) || '';
   const claimHref = isFlashDeal
-    ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`
-    : `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
+    ? `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(cleanSlug)}&deal=flash50&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`
+    : `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(cleanSlug)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}`;
 
   const revisionHref = `https://wynnpages.com.au/revision?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
 
@@ -5263,7 +5332,7 @@ async function notifyTelegramAutomatedComms({
 }) {
   if (!env) return null;
   const biz = (client && (client.businessName || client.name)) || 'Khách hàng';
-  const slug = (client && (client.demoSlug || slugifyName(biz))) || '';
+  const slug = (client && client.demoSlug) || '';
   const demoUrl = (client && (client.demoUrl || client.brandedDemoUrl)) || (slug ? `https://${slug}.wynnpages.com.au` : '');
   const resolvedTypeLabel = resolveTelegramTypeLabelVi(triggerType, messageTypeLabel);
   const lines = [];
@@ -7054,6 +7123,7 @@ export default {
       const sidParam = (url.searchParams.get('sid') || url.searchParams.get('session_id') || '').trim();
       const invNoParam = (url.searchParams.get('inv') || '').trim();
       const amtParam = (url.searchParams.get('amt') || '').trim();
+      const flowParam = (url.searchParams.get('flow') || '').trim();
 
       let invClient = null;
       if (cid && cfg.stripeSecretKey) {
@@ -7061,19 +7131,57 @@ export default {
       }
       let d1Inv = null;
       const dbInv = getD1(env);
-      if (dbInv && cid) {
+      if (dbInv && (cid || piParam)) {
         await ensureD1Schema(env);
-        d1Inv = await dbInv.prepare('SELECT * FROM clients WHERE id = ? OR LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cid, cid).first().catch(() => null);
+        d1Inv = await dbInv.prepare(
+          'SELECT * FROM clients WHERE id = ? OR LOWER(demo_slug) = LOWER(?) LIMIT 1'
+        ).bind(cid || piParam, cid || piParam).first().catch(() => null);
       }
+      let piFallback = null;
+      if (piParam && piParam.startsWith('pi_') && cfg.stripeSecretKey && (!invClient || !invClient.email)) {
+        piFallback = await fetchExpandedPaymentIntent(piParam, cfg.stripeSecretKey).catch(() => null);
+      }
+      const piMeta = (piFallback && piFallback.metadata) || {};
       const d1Meta = (d1Inv && d1Inv.metadata_json) ? (() => { try { return JSON.parse(d1Inv.metadata_json); } catch (_) { return {}; } })() : {};
-      const resolvedBiz = (invClient && invClient.businessName) || (d1Inv && (d1Inv.business_name || d1Inv.name)) || (url.searchParams.get('biz') || 'Lux Nails Bar');
-      const resolvedEmail = (invClient && invClient.email) || (d1Inv && d1Inv.email) || (url.searchParams.get('email') || '');
-      const resolvedPhone = (invClient && invClient.phone) || (d1Inv && d1Inv.phone) || (url.searchParams.get('phone') || '');
-      const resolvedAddr = (invClient && invClient.businessAddress) || d1Meta.businessAddress || 'Brisbane QLD, Australia';
-      const isFlash = amtParam === '299' || (invClient && invClient.dealStatus === 'flash_deal');
-      const resolvedAmt = amtParam ? `$${Number(amtParam).toFixed(2)} AUD` : (isFlash ? '$299.00 AUD' : '$599.00 AUD');
-      const resolvedInv = invNoParam || (invClient && invClient.invoiceNumber) || d1Meta.invoiceNumber || ('WP-' + String(piParam || sidParam || cid || '20260001').slice(-8).toUpperCase());
-      const portalLink = `${url.origin}/revision?client_id=${encodeURIComponent(cid || 'sample')}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
+      const resolvedCid = (invClient && invClient.id) || (d1Inv && d1Inv.id) || piMeta.customer_id || cid;
+      const isSampleInvoice = invNoParam === 'WP-2026SAMPLE' || url.searchParams.get('sample') === '1';
+      const resolvedBiz = (invClient && invClient.businessName)
+        || (d1Inv && (d1Inv.business_name || d1Inv.name))
+        || piMeta.business_name
+        || piMeta.customer_name
+        || url.searchParams.get('biz')
+        || (isSampleInvoice ? 'Lux Nails Bar' : 'Valued Client');
+      const resolvedEmail = (invClient && invClient.email)
+        || (d1Inv && d1Inv.email)
+        || (piFallback && piFallback.receipt_email)
+        || piMeta.customer_email
+        || (url.searchParams.get('email') || '');
+      const resolvedPhone = (invClient && invClient.phone)
+        || (d1Inv && d1Inv.phone)
+        || piMeta.customer_phone
+        || (url.searchParams.get('phone') || '');
+      const resolvedAddr = (invClient && invClient.businessAddress) || d1Meta.businessAddress || (isSampleInvoice ? 'Brisbane QLD, Australia' : '');
+      const piAmtCents = piFallback ? Number(piFallback.amount_received || piFallback.amount || 0) : 0;
+      const isFlash = amtParam === '299'
+        || piAmtCents === 29900
+        || (invClient && (invClient.dealStatus === 'flash_deal' || invClient.dealType === 'flash_deal_50'))
+        || piMeta.deal_type === 'flash_deal_50';
+      const resolvedAmt = amtParam
+        ? `$${Number(amtParam).toFixed(2)} AUD`
+        : (piAmtCents > 0 ? `$${(piAmtCents / 100).toFixed(2)} AUD` : (isFlash ? '$299.00 AUD' : '$599.00 AUD'));
+      const resolvedInv = invNoParam || (invClient && invClient.invoiceNumber) || d1Meta.invoiceNumber || ('WP-' + String(piParam || sidParam || resolvedCid || '20260001').slice(-8).toUpperCase());
+      const resolvedPaidAtAu = (invClient && invClient.paidAtAu)
+        || d1Meta.paidAtAu
+        || (piFallback && piFallback.created ? formatAuDateTime(new Date(piFallback.created * 1000), AU_TIMEZONE) : '')
+        || formatAuDateTime(new Date(), AU_TIMEZONE);
+      const resolvedFlow = flowParam
+        || (invClient && invClient.flowType)
+        || d1Meta.flowType
+        || piMeta.flow_type
+        || (isSampleInvoice || (invClient && (invClient.demoSlug || invClient.demoUrl)) ? 'outbound' : 'inbound');
+      const portalLink = resolvedFlow === 'inbound'
+        ? `${url.origin}/onboarding?client_id=${encodeURIComponent(resolvedCid || 'sample')}&type=organic${piParam ? `&payment_intent=${encodeURIComponent(piParam)}` : ''}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`
+        : `${url.origin}/revision?client_id=${encodeURIComponent(resolvedCid || 'sample')}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
 
       return new Response(buildPrintableTaxInvoicePageHtml({
         businessName: resolvedBiz,
@@ -7082,7 +7190,7 @@ export default {
         businessAddress: resolvedAddr,
         amountAud: resolvedAmt,
         invoiceNumber: resolvedInv,
-        paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
+        paidAtAu: resolvedPaidAtAu,
         abn: cfg.abn || '',
         portalUrl: portalLink,
         isFlashDeal: isFlash
@@ -7195,52 +7303,73 @@ export default {
             dealExpiresAt = activeDealSource.dealExpiresAt;
           }
         }
+        if (isFlashDeal50 && !dealExpiresAt) {
+          dealExpiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+        }
 
         const unitAmount = isFlashDeal50 ? 29900 : 59900;
         const amountAud = Math.round(unitAmount / 100);
         const resolvedSlug = slugHint || (custRec && custRec.demoSlug) || (d1CheckoutRec && d1CheckoutRec.demoSlug) || '';
         const verifiedDemoUrl = (flowParam === 'outbound' && demoUrl && (custRec || d1CheckoutRec)) ? demoUrl : '';
 
-        const piParams = new URLSearchParams();
-        piParams.append('amount', String(unitAmount));
-        piParams.append('currency', 'aud');
-        piParams.append('automatic_payment_methods[enabled]', 'true');
-        piParams.append('automatic_payment_methods[allow_redirects]', 'always');
-        piParams.append('description', isFlashDeal50
-          ? `WynnPages Bespoke Website (50% Sponsorship) — ${bizName || 'Client'}`
-          : `WynnPages Bespoke Website Design & Build — ${bizName || 'Client'}`);
-        if (cust && cust.id) piParams.append('customer', cust.id);
-        if (email) piParams.append('receipt_email', email);
-        piParams.append('shipping[name]', shippingAu.name);
-        piParams.append('shipping[address][line1]', shippingAu.address.line1);
-        piParams.append('shipping[address][city]', shippingAu.address.city);
-        piParams.append('shipping[address][state]', shippingAu.address.state);
-        piParams.append('shipping[address][postal_code]', shippingAu.address.postal_code);
-        piParams.append('shipping[address][country]', 'AU');
-        if (phone) piParams.append('shipping[phone]', phone);
+        const buildPiParams = (methodList) => {
+          const params = new URLSearchParams();
+          params.append('amount', String(unitAmount));
+          params.append('currency', 'aud');
+          methodList.forEach((mType) => params.append('payment_method_types[]', mType));
+          params.append('description', isFlashDeal50
+            ? `WynnPages Bespoke Website (50% Sponsorship) — ${bizName || 'Client'}`
+            : `WynnPages Bespoke Website Design & Build — ${bizName || 'Client'}`);
+          if (cust && cust.id) params.append('customer', cust.id);
+          if (email) params.append('receipt_email', email);
+          params.append('shipping[name]', shippingAu.name);
+          params.append('shipping[address][line1]', shippingAu.address.line1);
+          params.append('shipping[address][city]', shippingAu.address.city);
+          params.append('shipping[address][state]', shippingAu.address.state);
+          params.append('shipping[address][postal_code]', shippingAu.address.postal_code);
+          params.append('shipping[address][country]', 'AU');
+          if (phone) params.append('shipping[phone]', phone);
 
-        piParams.append('metadata[studio]', 'WynnPages Australia');
-        piParams.append('metadata[flow_type]', flowParam);
-        if (cid) piParams.append('metadata[customer_id]', cid);
-        if (bizName) {
-          piParams.append('metadata[business_name]', bizName);
-          piParams.append('metadata[customer_name]', bizName);
-        }
-        if (email) piParams.append('metadata[customer_email]', email);
-        if (phone) piParams.append('metadata[customer_phone]', phone);
-        if (resolvedSlug) piParams.append('metadata[demo_slug]', resolvedSlug);
-        if (verifiedDemoUrl) piParams.append('metadata[demo_url]', verifiedDemoUrl);
-        if (isFlashDeal50) piParams.append('metadata[deal_type]', 'flash_deal_50');
+          params.append('metadata[studio]', 'WynnPages Australia');
+          params.append('metadata[flow_type]', flowParam);
+          if (cid) params.append('metadata[customer_id]', cid);
+          if (bizName) {
+            params.append('metadata[business_name]', bizName);
+            params.append('metadata[customer_name]', bizName);
+          }
+          if (email) params.append('metadata[customer_email]', email);
+          if (phone) params.append('metadata[customer_phone]', phone);
+          if (resolvedSlug) params.append('metadata[demo_slug]', resolvedSlug);
+          if (verifiedDemoUrl) params.append('metadata[demo_url]', verifiedDemoUrl);
+          if (isFlashDeal50) params.append('metadata[deal_type]', 'flash_deal_50');
+          return params;
+        };
 
-        const piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
+        // Explicitly prefer AU methods only (excludes Klarna & Link); gracefully fallback if Afterpay is disabled on Stripe Dashboard
+        const preferredMethods = ['card', 'afterpay_clearpay', 'zip'];
+        const fallbackMethods = ['card', 'zip'];
+        let activeMethodTypes = preferredMethods;
+        let piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${cfg.stripeSecretKey}`,
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: piParams.toString()
+          body: buildPiParams(preferredMethods).toString()
         });
-        const piData = await piRes.json();
+        let piData = await piRes.json();
+        if ((!piRes.ok || !piData.client_secret) && piData && piData.error && /afterpay|payment_method_type/i.test(String(piData.error.message || '') + ' ' + String(piData.error.param || ''))) {
+          activeMethodTypes = fallbackMethods;
+          piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: buildPiParams(fallbackMethods).toString()
+          });
+          piData = await piRes.json();
+        }
         if (!piRes.ok || !piData.client_secret) {
           const msg = piData.error ? piData.error.message : 'Unable to initialise PaymentIntent';
           return new Response(JSON.stringify({ ok: false, error: msg }), { status: 400, headers: corsHeaders });
@@ -7251,6 +7380,7 @@ export default {
           clientSecret: piData.client_secret,
           paymentIntentId: piData.id,
           publishableKey: cfg.stripePublishableKey,
+          activeMethodTypes,
           amountAud,
           isFlashDeal: isFlashDeal50,
           dealExpiresAt,
@@ -7314,6 +7444,7 @@ export default {
     if (url.pathname === '/api/claim' && (request.method === 'GET' || request.method === 'POST')) {
       try {
         let cid = (url.searchParams.get('cid') || '').trim();
+        let slug = (url.searchParams.get('slug') || '').trim();
         let email = (url.searchParams.get('email') || '').trim();
         let bizName = (url.searchParams.get('name') || '').trim();
         let demoUrl = (url.searchParams.get('demo') || '').trim();
@@ -7322,6 +7453,7 @@ export default {
 
         const coUrl = new URL('/checkout', url.origin);
         if (cid) coUrl.searchParams.set('cid', cid);
+        if (slug) coUrl.searchParams.set('slug', slug);
         if (email) coUrl.searchParams.set('email', email);
         if (bizName) coUrl.searchParams.set('name', bizName);
         if (demoUrl) coUrl.searchParams.set('demo', demoUrl);
@@ -7413,10 +7545,18 @@ export default {
       try {
         let sessionId = (url.searchParams.get('session_id') || url.searchParams.get('sessionId') || '').trim();
         let paymentIntentId = (url.searchParams.get('payment_intent') || url.searchParams.get('paymentIntentId') || url.searchParams.get('pi') || '').trim();
+        let overrideEmail = '';
+        let overrideBusinessName = '';
+        let overridePhone = '';
+        let overrideCustomerId = '';
         if (request.method === 'POST') {
           const body = await request.json().catch(() => ({}));
           if (!sessionId) sessionId = (body.sessionId || body.session_id || '').trim();
           if (!paymentIntentId) paymentIntentId = (body.paymentIntentId || body.payment_intent || '').trim();
+          overrideEmail = String(body.email || '').trim();
+          overrideBusinessName = String(body.businessName || body.name || '').trim();
+          overridePhone = String(body.phone || '').trim();
+          overrideCustomerId = String(body.customerId || body.cid || '').trim();
         }
         if (((!sessionId || !sessionId.startsWith('cs_')) && (!paymentIntentId || !paymentIntentId.startsWith('pi_'))) || !cfg.stripeSecretKey) {
           return new Response(JSON.stringify({ ok: false, error: 'Missing or invalid payment identifier' }), { status: 200, headers: corsHeaders });
@@ -7425,6 +7565,10 @@ export default {
         const result = await finalizeStripePaymentAndNotify({
           sessionId,
           paymentIntentId,
+          overrideEmail,
+          overrideBusinessName,
+          overridePhone,
+          overrideCustomerId,
           origin: url.origin,
           env,
           ctx,
@@ -7510,7 +7654,7 @@ export default {
           }
         }
 
-        // Inspect Checkout Session if session_id is present
+        // Inspect Checkout Session (cs_) OR PaymentIntent (pi_) if sessionId is present
         if (sessionId && sessionId.startsWith('cs_')) {
           const sessionRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
             method: 'GET',
@@ -7536,6 +7680,23 @@ export default {
             }
             if (typeof sessionData.customer === 'string') {
               existingCustomerId = sessionData.customer;
+            }
+          }
+        } else if (sessionId && sessionId.startsWith('pi_')) {
+          paymentIntentId = sessionId;
+          const piRes = await fetch(`https://api.stripe.com/v1/payment_intents/${encodeURIComponent(sessionId)}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
+          }).catch(() => null);
+          if (piRes && piRes.ok) {
+            const piObj = await piRes.json().catch(() => null);
+            if (piObj) {
+              if (!email) email = piObj.receipt_email || (piObj.metadata && piObj.metadata.customer_email) || '';
+              if (!customerName) customerName = (piObj.metadata && (piObj.metadata.business_name || piObj.metadata.customer_name)) || '';
+              if (!customerPhone) customerPhone = (piObj.metadata && piObj.metadata.customer_phone) || '';
+              if (!existingCustomerId && typeof piObj.customer === 'string') {
+                existingCustomerId = piObj.customer;
+              }
             }
           }
         }
@@ -11216,7 +11377,48 @@ export default {
           for (const d of domains) {
             results[d] = await ensureStripePaymentMethodDomain(effectiveCfg, d, true);
           }
-          return new Response(JSON.stringify({ ok: true, results }), { status: 200, headers: corsHeaders });
+          let paymentMethodConfig = null;
+          if (effectiveCfg.stripeSecretKey) {
+            const pmcListRes = await fetch('https://api.stripe.com/v1/payment_method_configurations?limit=5', {
+              headers: { 'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}` }
+            }).catch(() => null);
+            if (pmcListRes && pmcListRes.ok) {
+              const pmcList = await pmcListRes.json().catch(() => ({}));
+              const defCfg = Array.isArray(pmcList.data) ? (pmcList.data.find((x) => x.is_default) || pmcList.data[0]) : null;
+              if (defCfg && defCfg.id) {
+                if (body.configureMethods) {
+                  const cfgParams = new URLSearchParams();
+                  cfgParams.append('afterpay_clearpay[display_preference][preference]', 'on');
+                  cfgParams.append('klarna[display_preference][preference]', 'off');
+                  cfgParams.append('link[display_preference][preference]', 'off');
+                  const upPmc = await fetch(`https://api.stripe.com/v1/payment_method_configurations/${encodeURIComponent(defCfg.id)}`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${effectiveCfg.stripeSecretKey}`,
+                      'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: cfgParams.toString()
+                  }).catch(() => null);
+                  if (upPmc) {
+                    const upJson = await upPmc.json().catch(() => ({}));
+                    paymentMethodConfig = { updated: upPmc.ok, config: upJson };
+                  }
+                } else {
+                  paymentMethodConfig = {
+                    id: defCfg.id,
+                    afterpay_clearpay: defCfg.afterpay_clearpay,
+                    zip: defCfg.zip,
+                    klarna: defCfg.klarna,
+                    link: defCfg.link,
+                    apple_pay: defCfg.apple_pay,
+                    google_pay: defCfg.google_pay,
+                    card: defCfg.card
+                  };
+                }
+              }
+            }
+          }
+          return new Response(JSON.stringify({ ok: true, results, paymentMethodConfig }), { status: 200, headers: corsHeaders });
         }
 
         if (action === 'send_sample_invoice') {

@@ -879,11 +879,18 @@
         })
           .then((r) => r.json())
           .then((v) => {
-            if (v && v.email && !emailInput.value) {
+            if (!v) return;
+            if (v.email && !emailInput.value) {
               emailInput.value = v.email;
               emailDisplay.textContent = 'Account: ' + v.email;
               emailPill.classList.remove('hidden');
               emailFallbackWrap.classList.add('hidden');
+            }
+            if ((v.businessName || v.name) && businessNameInput && !businessNameInput.value) {
+              businessNameInput.value = v.businessName || v.name;
+            }
+            if (v.phone && displayPhoneInput && !displayPhoneInput.value) {
+              displayPhoneInput.value = v.phone;
             }
           })
           .catch(() => {});

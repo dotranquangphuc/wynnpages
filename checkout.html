@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
-  <title>Reserve Your Website • WynnPages Digital Atelier</title>
+  <title>Complete Your Reservation • WynnPages Digital Atelier</title>
   <meta name="description" content="Complete your bespoke WynnPages Studio reservation with Apple Pay, Google Pay, Afterpay, Zip, or Card and unlock your private Customisation Portal.">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
@@ -50,8 +50,8 @@
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: #f6f1e8;
       background-image:
-        radial-gradient(circle at 12% 10%, rgba(212, 155, 40, 0.11), transparent 44%),
-        radial-gradient(circle at 88% 85%, rgba(150, 67, 43, 0.08), transparent 48%);
+        radial-gradient(circle at 12% 8%, rgba(212, 155, 40, 0.11), transparent 44%),
+        radial-gradient(circle at 88% 88%, rgba(150, 67, 43, 0.08), transparent 48%);
       color: #231f1a;
       -webkit-font-smoothing: antialiased;
       padding-top: env(safe-area-inset-top, 0px);
@@ -63,42 +63,77 @@
     .atelier-panel {
       background-color: #fcf9f3;
       border: 1px solid #e5dec9;
-      box-shadow: 0 22px 50px -22px rgba(35, 31, 26, 0.14), 0 4px 14px rgba(35, 31, 26, 0.04);
+      box-shadow: 0 22px 50px -22px rgba(35, 31, 26, 0.13), 0 4px 14px rgba(35, 31, 26, 0.04);
+    }
+    .atelier-field-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .atelier-field-icon {
+      position: absolute;
+      left: 14px;
+      color: #a69986;
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+    .atelier-field-wrap:focus-within .atelier-field-icon {
+      color: #96432b;
     }
     .atelier-input {
+      width: 100%;
       background-color: #ffffff;
-      border: 1.5px solid #e2d9c8;
+      border: 1.5px solid #dfd5c3;
       border-radius: 14px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 12px 14px 12px 42px;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #231f1a;
+      box-shadow: 0 1px 2px rgba(35, 31, 26, 0.03);
+      transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+    }
+    .atelier-input::placeholder {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #a99d8b;
+      font-weight: 400;
+      font-size: 13.5px;
+      letter-spacing: 0.005em;
     }
     .atelier-input:hover {
-      border-color: #cbbba0;
+      border-color: #c8b89d;
     }
     .atelier-input:focus {
       border-color: #96432b;
-      box-shadow: 0 0 0 4px rgba(150, 67, 43, 0.1);
+      background-color: #fffefd;
+      box-shadow: 0 0 0 4px rgba(150, 67, 43, 0.09);
       outline: none;
     }
     @media (max-width: 639px) {
       input, select, textarea {
         font-size: 16px !important;
       }
+      .atelier-input::placeholder {
+        font-size: 14.5px;
+      }
     }
     .btn-pay-atelier {
-      background: linear-gradient(135deg, #a64a2e 0%, #83361f 100%);
+      position: relative;
+      background: linear-gradient(135deg, #a4492d 0%, #863720 55%, #692816 100%);
       color: #fffcf7;
-      box-shadow: 0 12px 26px -8px rgba(150, 67, 43, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      border: 1px solid rgba(232, 185, 72, 0.45);
+      box-shadow: 0 14px 30px -10px rgba(134, 55, 32, 0.52), 0 4px 12px rgba(35, 31, 26, 0.14), inset 0 1px 0 rgba(255, 250, 240, 0.28);
       transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, opacity 0.2s ease;
     }
     .btn-pay-atelier:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 16px 32px -10px rgba(150, 67, 43, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      box-shadow: 0 18px 36px -10px rgba(134, 55, 32, 0.6), 0 6px 16px rgba(35, 31, 26, 0.18), inset 0 1px 0 rgba(255, 250, 240, 0.36);
     }
     .btn-pay-atelier:active:not(:disabled) {
       transform: translateY(0);
     }
     .btn-pay-atelier:disabled {
-      opacity: 0.65;
+      opacity: 0.68;
       cursor: not-allowed;
     }
     @keyframes spin {
@@ -134,17 +169,17 @@
     </div>
   </header>
 
-  <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+  <main class="flex-1 w-full max-w-5xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-9">
 
     <!-- Loading Skeleton -->
-    <div id="co-loading" class="atelier-panel rounded-[28px] p-8 sm:p-14 text-center space-y-4">
+    <div id="co-loading" class="atelier-panel rounded-[26px] p-8 sm:p-14 text-center space-y-4">
       <div class="w-10 h-10 rounded-full border-2 border-[#e5dec9] border-t-[#96432b] spinner mx-auto"></div>
-      <p class="font-editorial italic text-2xl text-[#231f1a]">Preparing your bespoke studio reservation&hellip;</p>
-      <p class="text-xs text-[#6f665c]">Securing Apple Pay, Google Pay, Afterpay, Zip &amp; Card options in AUD</p>
+      <p class="font-editorial italic text-2xl text-[#231f1a]">Preparing your bespoke studio checkout&hellip;</p>
+      <p class="text-xs text-[#6f665c]">Securing Apple Pay, Google Pay, Zip &amp; Card options in AUD</p>
     </div>
 
     <!-- Error Fallback -->
-    <div id="co-init-error" class="hidden atelier-panel rounded-[28px] p-8 sm:p-12 text-center space-y-4 max-w-xl mx-auto">
+    <div id="co-init-error" class="hidden atelier-panel rounded-[26px] p-8 sm:p-12 text-center space-y-4 max-w-xl mx-auto">
       <div class="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-center mx-auto font-bold text-lg">!</div>
       <h1 class="font-editorial text-3xl font-semibold text-[#231f1a]">Unable to initialise checkout</h1>
       <p id="co-init-error-msg" class="text-sm text-[#6f665c]"></p>
@@ -153,152 +188,164 @@
       </button>
     </div>
 
-    <!-- Active 2-Column Bespoke Checkout -->
-    <div id="co-layout" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+    <!-- Active Responsive Checkout Grid:
+         Mobile: 1. Compact Price Summary -> 2. Payment Form (above the fold!) -> 3. Everything Included Today
+         Desktop: Left Col = Compact Price + Guarantees, Right Col = Payment Form spanning both rows -->
+    <div id="co-layout" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-7 items-start">
 
-      <!-- LEFT COLUMN: BESPOKE RESERVATION SUMMARY (5 cols) -->
-      <section class="lg:col-span-5 atelier-panel rounded-[28px] p-6 sm:p-7 space-y-6">
-        <div class="space-y-3">
-          <span id="co-reserved-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fdf3e7] border border-[#ebd2b4] text-[10px] uppercase tracking-[0.16em] font-bold text-[#96432b]">
+      <!-- BLOCK 1: COMPACT RESERVATION & PRICE SUMMARY -->
+      <section class="lg:col-span-5 lg:col-start-1 lg:row-start-1 atelier-panel rounded-[24px] sm:rounded-[28px] p-4 sm:p-6 space-y-3.5 sm:space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span id="co-reserved-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#fdf3e7] border border-[#ebd2b4] text-[10px] uppercase tracking-[0.14em] font-bold text-[#96432b]">
             <span class="w-1.5 h-1.5 rounded-full bg-[#96432b]"></span>
-            <span id="co-reserved-label">Bespoke Studio Reservation</span>
+            <span id="co-reserved-label">New Website Build Slot</span>
           </span>
-          <h1 id="co-biz-heading" class="font-editorial text-3xl sm:text-[34px] font-semibold leading-[1.12] text-[#231f1a]">
-            Claim Your Custom Website
-          </h1>
+          <span id="co-deal-badge" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#fef3d6] border border-[#e3b95c] text-[10px] uppercase tracking-[0.12em] font-extrabold text-[#946200]">
+            50% Off Applied
+          </span>
         </div>
 
-        <!-- Flash Deal Banner -->
-        <div id="co-deal-banner" class="hidden rounded-2xl p-4 bg-gradient-to-br from-[#fef7e6] to-[#fdf0d5] border border-[#e3b95c] space-y-1.5">
+        <h1 id="co-biz-heading" class="font-editorial text-[26px] sm:text-[32px] font-semibold leading-[1.12] text-[#231f1a]">
+          Reserve Your Bespoke Studio Build
+        </h1>
+
+        <!-- Flash Deal Countdown Banner (Shown ONLY on 50% Sponsorship) -->
+        <div id="co-deal-banner" class="hidden rounded-2xl p-3 sm:p-3.5 bg-gradient-to-br from-[#fef7e6] to-[#fdf0d5] border border-[#e3b95c] space-y-1">
           <div class="flex items-center justify-between gap-2">
-            <span class="text-[10px] uppercase tracking-[0.16em] font-extrabold text-[#946200]">50% Studio Sponsorship Applied</span>
-            <span id="co-deal-countdown" class="font-mono text-[11px] font-bold text-[#7d3520] bg-white/80 px-2 py-0.5 rounded-md border border-[#e3b95c]/60">--:--:--</span>
+            <span class="text-[10px] uppercase tracking-[0.14em] font-extrabold text-[#946200]">50% Studio Sponsorship</span>
+            <span id="co-deal-countdown" class="font-mono text-[11px] font-bold text-[#7d3520] bg-white/90 px-2 py-0.5 rounded-md border border-[#e3b95c]/70">48:00:00</span>
           </div>
-          <p class="text-xs text-[#4f4331] leading-relaxed">
-            Your custom build is pre-designed — claim it at half price before archival.
+          <p class="text-[11.5px] text-[#4f4331] leading-snug">
+            Your custom build is pre-designed &mdash; claim it at half price before archival.
           </p>
         </div>
 
-        <!-- Price Box -->
-        <div class="rounded-2xl bg-white border border-[#e7dfd0] p-5 space-y-3">
-          <div class="flex items-baseline justify-between gap-3">
+        <!-- Clean Price Box -->
+        <div class="rounded-2xl bg-white border border-[#e7dfd0] p-4 sm:p-5 space-y-2.5">
+          <div class="flex items-center justify-between gap-3">
             <div>
-              <span class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64] block">One-Off Ownership Fee</span>
+              <span class="text-[10.5px] uppercase tracking-[0.14em] font-bold text-[#786f64] block">One-Off Ownership Fee</span>
               <span class="text-xs text-[#6f665c]">Zero monthly fees forever</span>
             </div>
-            <div class="text-right">
+            <div class="text-right shrink-0">
               <div id="co-price-strike" class="hidden text-xs text-[#9c9285] line-through font-medium">$599.00 AUD</div>
               <div class="flex items-baseline justify-end gap-1">
-                <span id="co-price-main" class="font-editorial text-4xl font-bold text-[#231f1a] leading-none">$599</span>
+                <span id="co-price-main" class="font-editorial text-[34px] sm:text-4xl font-bold text-[#231f1a] leading-none">$599</span>
                 <span class="text-xs font-bold text-[#6f665c]">AUD</span>
               </div>
             </div>
           </div>
 
-          <div class="pt-3 border-t border-[#efe9dc] flex items-center justify-between gap-2 text-xs">
-            <span class="text-[#5c5349]">Pay in 4 interest-free fortnightly instalments</span>
-            <span id="co-bnpl-rate" class="font-bold text-[#231f1a] shrink-0">$149.75 × 4</span>
+          <div class="pt-2.5 border-t border-[#efe9dc] flex items-center justify-between gap-2 text-[11.5px] sm:text-xs">
+            <span class="text-[#5c5349]">Pay in 4 interest-free instalments</span>
+            <span id="co-bnpl-rate" class="font-bold text-[#231f1a] shrink-0">$149.75 &times; 4</span>
           </div>
-        </div>
-
-        <!-- Included Guarantees -->
-        <div class="space-y-3">
-          <div class="text-[11px] uppercase tracking-[0.16em] font-bold text-[#786f64]">Everything Included Today</div>
-          <ul class="space-y-2.5 text-xs sm:text-[13px] text-[#3d3730] leading-relaxed">
-            <li class="flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
-              <span id="co-tailored-bullet"><strong>100% Tailored to Your Business:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.</span>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
-              <span><strong>Complimentary <code>.com.au</code> Domain Setup:</strong> Connected personally on the <em>WynnPages Studio Australian High-Speed Network</em> with free SSL.</span>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
-              <span><strong>100% Client Ownership ($0/month):</strong> No subscriptions, no hosting retainers, and no lock-in contracts.</span>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
-              <span><strong>Official Australian Tax Invoice:</strong> Sent immediately to your email with printable PDF receipt.</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Accepted Payment Methods Badges -->
-        <div class="pt-4 border-t border-[#e7dfd0] flex flex-wrap items-center gap-1.5">
-          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#231f1a]">Apple Pay</span>
-          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#231f1a]">Google Pay</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#e6fbf4] border border-[#b2eedb] text-[10px] font-bold text-[#0c4a3e]">Afterpay</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#f3efff] border border-[#d6c9fb] text-[10px] font-bold text-[#3f1f85]">Zip Pay</span>
-          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#4a433b]">Visa &bull; Mastercard &bull; Amex</span>
         </div>
       </section>
 
-      <!-- RIGHT COLUMN: ON-SITE EXPRESS & FLEXIBLE PAYMENT FORM (7 cols) -->
-      <section class="lg:col-span-7 atelier-panel rounded-[28px] p-6 sm:p-8 space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-[#ece4d4]">
+      <!-- BLOCK 2: CONTACT DETAILS & UNIFIED ACCORDION PAYMENT (Immediately visible after Price on Mobile!) -->
+      <section class="lg:col-span-7 lg:col-start-6 lg:row-start-1 lg:row-span-2 atelier-panel rounded-[24px] sm:rounded-[28px] p-4 sm:p-7 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-[#ece4d4]">
           <div>
-            <h2 class="font-editorial text-2xl sm:text-3xl font-semibold text-[#231f1a]">Complete Your Order</h2>
-            <p class="text-xs text-[#6f665c] mt-0.5">Instant unlock of your Private Customisation Portal &amp; Official Tax Invoice</p>
+            <h2 class="font-editorial text-2xl sm:text-[28px] font-semibold text-[#231f1a] leading-tight">Complete Your Order</h2>
+            <p class="text-xs text-[#6f665c] mt-0.5">Instant access to your Customisation Portal &amp; Tax Invoice</p>
           </div>
-          <span id="co-step-badge" class="px-3 py-1 rounded-full bg-[#f6f1e8] border border-[#e5dec9] text-[11px] font-bold text-[#5c5349]">
-            Secure AUD Payment
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f6f1e8] border border-[#e5dec9] text-[10.5px] font-bold text-[#5c5349]">
+            AUD &bull; Instant Unlock
           </span>
         </div>
 
         <!-- Client Contact Fields -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
           <div class="sm:col-span-2">
-            <label for="co-biz-input" class="block text-xs font-bold uppercase tracking-wider text-[#5c5349] mb-1.5">Business / Salon Name</label>
-            <input id="co-biz-input" type="text" autocomplete="organization" placeholder="e.g. Lux Nails Bar" class="atelier-input w-full px-4 py-3 text-sm font-medium text-[#231f1a]">
+            <label for="co-biz-input" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#5c5349] mb-1.5">Business / Brand Name</label>
+            <div class="atelier-field-wrap">
+              <svg class="atelier-field-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <input id="co-biz-input" type="text" autocomplete="organization" placeholder="e.g. Lumière Studio" class="atelier-input">
+            </div>
           </div>
+
           <div>
-            <label for="co-email-input" class="block text-xs font-bold uppercase tracking-wider text-[#5c5349] mb-1.5">Email (for Tax Invoice &amp; Portal)</label>
-            <input id="co-email-input" type="email" autocomplete="email" placeholder="owner@yoursalon.com.au" class="atelier-input w-full px-4 py-3 text-sm font-medium text-[#231f1a]">
+            <label for="co-email-input" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#5c5349] mb-1.5">Your Email <span class="font-normal normal-case tracking-normal text-[#8a7f70]">(Tax Invoice &amp; Portal)</span></label>
+            <div class="atelier-field-wrap">
+              <svg class="atelier-field-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <input id="co-email-input" type="email" autocomplete="email" inputmode="email" placeholder="e.g. sarah.nguyen@gmail.com" class="atelier-input">
+            </div>
           </div>
+
           <div>
-            <label for="co-phone-input" class="block text-xs font-bold uppercase tracking-wider text-[#5c5349] mb-1.5">Australian Mobile (Launch Updates)</label>
-            <input id="co-phone-input" type="tel" autocomplete="tel" placeholder="04XX XXX XXX" class="atelier-input w-full px-4 py-3 text-sm font-medium text-[#231f1a]">
+            <label for="co-phone-input" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#5c5349] mb-1.5">Australian Mobile <span class="font-normal normal-case tracking-normal text-[#8a7f70]">(Launch SMS)</span></label>
+            <div class="atelier-field-wrap">
+              <svg class="atelier-field-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <input id="co-phone-input" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. 0412 345 678" class="atelier-input">
+            </div>
           </div>
         </div>
 
-        <!-- 1-Tap Express Checkout (Apple Pay / Google Pay) -->
-        <div id="co-express-wrap" class="space-y-2.5">
-          <div id="co-express-title" class="hidden text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64]">Instant 1-Tap Wallet</div>
-          <div id="express-checkout-element"></div>
-          <div id="co-express-divider" class="hidden relative py-2 flex items-center justify-center">
-            <span class="absolute inset-x-0 h-px bg-[#e5dec9]"></span>
-            <span class="relative bg-[#fcf9f3] px-3 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#8c8273]">Or Pay With Card, Afterpay or Zip</span>
+        <!-- Unified Single Payment Method Accordion (Apple Pay, Google Pay, Afterpay/Zip, Card) -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6f665c]">Payment Method</span>
+            <span id="co-methods-caption" class="text-[11px] font-medium text-[#786f64]">Apple Pay &bull; Google Pay &bull; Zip &bull; Card</span>
           </div>
-        </div>
-
-        <!-- Unified Payment Element (Card + Afterpay + Zip) -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64]">Select Payment Method</span>
-            <span class="text-[11px] text-[#6f665c]">Afterpay &amp; Zip supported</span>
-          </div>
-          <div id="payment-element" class="min-h-[160px] rounded-2xl bg-white/70 p-3 sm:p-4 border border-[#e5dec9]"></div>
+          <div id="payment-element" class="min-h-[140px] rounded-2xl bg-white/80 p-2.5 sm:p-3.5 border border-[#dfd5c3]"></div>
         </div>
 
         <!-- Inline Error Message -->
         <div id="co-error-box" class="hidden rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-xs sm:text-sm font-medium text-red-800"></div>
 
         <!-- Primary Submit Button -->
-        <form id="co-payment-form" class="space-y-3">
-          <button type="submit" id="co-submit-btn" class="btn-pay-atelier w-full rounded-full py-4 px-6 text-sm sm:text-base font-bold tracking-wide flex items-center justify-center gap-2.5 cursor-pointer">
-            <span id="co-submit-label">Claim Website &amp; Unlock Portal &mdash; $599 AUD &rarr;</span>
+        <form id="co-payment-form" class="space-y-3 pt-1">
+          <button type="submit" id="co-submit-btn" class="btn-pay-atelier w-full rounded-full py-3.5 px-5 sm:px-6 text-[14.5px] sm:text-[15.5px] font-bold tracking-wide flex items-center justify-between gap-3 cursor-pointer">
+            <span class="inline-flex items-center gap-2 min-w-0">
+              <svg class="w-4 h-4 text-[#f0c765] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span id="co-submit-label" class="whitespace-nowrap truncate">Complete Order &mdash; $599 AUD</span>
+            </span>
+            <span class="w-7 h-7 rounded-full bg-white/15 border border-[#f0c765]/40 flex items-center justify-center shrink-0 text-sm leading-none">&rarr;</span>
           </button>
           <p class="text-[11px] text-center text-[#786f64] leading-relaxed">
-            Instant redirect to your private Customisation Portal upon approval. Official Australian Tax Invoice emailed straight away.
+            Redirects straight to your Customisation Portal on approval. Official Australian Tax Invoice emailed immediately.
           </p>
         </form>
       </section>
+
+      <!-- BLOCK 3: EVERYTHING INCLUDED TODAY (Shown below Payment on Mobile, below Price on Desktop) -->
+      <section class="lg:col-span-5 lg:col-start-1 lg:row-start-2 atelier-panel rounded-[24px] sm:rounded-[28px] p-4 sm:p-6 space-y-4">
+        <div class="text-[11px] uppercase tracking-[0.16em] font-bold text-[#786f64]">Everything Included Today</div>
+        <ul class="space-y-2.5 text-xs sm:text-[13px] text-[#3d3730] leading-relaxed">
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+            <span id="co-tailored-bullet"><strong>100% Tailored to Your Business:</strong> Upload your real photos, logo, colours &amp; exact offerings straight into your Customisation Portal right after payment.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+            <span><strong>Complimentary <code>.com.au</code> Domain Setup:</strong> Connected personally on the <em>WynnPages Studio Australian High-Speed Network</em> with free SSL.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+            <span><strong>100% Client Ownership ($0/month):</strong> No subscriptions, no hosting retainers, and no lock-in contracts.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+            <span><strong>Official Australian Tax Invoice:</strong> Sent immediately to your email with printable PDF receipt.</span>
+          </li>
+        </ul>
+
+        <!-- Supported Payment Method Badges -->
+        <div id="co-badges-row" class="pt-3.5 border-t border-[#e7dfd0] flex flex-wrap items-center gap-1.5">
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#231f1a]">Apple Pay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#231f1a]">Google Pay</span>
+          <span id="co-badge-afterpay" class="hidden px-2.5 py-1 rounded-lg bg-[#e6fbf4] border border-[#b2eedb] text-[10px] font-bold text-[#0c4a3e]">Afterpay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-[#f3efff] border border-[#d6c9fb] text-[10px] font-bold text-[#3f1f85]">Zip Pay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#4a433b]">Visa &bull; Mastercard &bull; Amex</span>
+        </div>
+      </section>
+
     </div>
 
   </main>
 
-  <footer class="border-t border-[#e5dec9] py-6 px-4 text-center text-xs text-[#786f64]">
+  <footer class="border-t border-[#e5dec9] py-5 px-4 text-center text-xs text-[#786f64]">
     <p class="font-editorial text-sm font-semibold text-[#3a3329]">WynnPages Digital Atelier &bull; Australian High-Speed Network</p>
     <p class="text-[11px] text-[#8c8273] mt-1">Need a hand? <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-semibold underline">hello@wynnpages.com.au</a></p>
   </footer>
@@ -313,20 +360,20 @@
 
       const bizHeadingEl = document.getElementById('co-biz-heading');
       const reservedLabelEl = document.getElementById('co-reserved-label');
+      const dealBadgeEl = document.getElementById('co-deal-badge');
       const tailoredBulletEl = document.getElementById('co-tailored-bullet');
       const dealBanner = document.getElementById('co-deal-banner');
       const dealCountdown = document.getElementById('co-deal-countdown');
       const priceStrikeEl = document.getElementById('co-price-strike');
       const priceMainEl = document.getElementById('co-price-main');
       const bnplRateEl = document.getElementById('co-bnpl-rate');
+      const methodsCaptionEl = document.getElementById('co-methods-caption');
+      const afterpayBadgeEl = document.getElementById('co-badge-afterpay');
 
       const bizInput = document.getElementById('co-biz-input');
       const emailInput = document.getElementById('co-email-input');
       const phoneInput = document.getElementById('co-phone-input');
 
-      const expressWrap = document.getElementById('co-express-wrap');
-      const expressTitle = document.getElementById('co-express-title');
-      const expressDivider = document.getElementById('co-express-divider');
       const formEl = document.getElementById('co-payment-form');
       const submitBtn = document.getElementById('co-submit-btn');
       const submitLabel = document.getElementById('co-submit-label');
@@ -341,6 +388,7 @@
       let flowType = rawFlowParam || (hasOutboundHint ? 'outbound' : 'inbound');
       let shippingAu = { name: '', address: { line1: '100 Studio Lane', city: 'Brisbane', state: 'QLD', postal_code: '4000', country: 'AU' } };
       let amountAudNumber = 599;
+      let syncTimer = null;
 
       function showInitError(msg) {
         loadingEl.classList.add('hidden');
@@ -373,6 +421,27 @@
         tick();
         setInterval(tick, 1000);
       }
+
+      function syncContactDetailsSoon() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+          if (!paymentIntentId) return;
+          fetch('/api/checkout-intent-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              paymentIntentId,
+              cid: clientCid,
+              businessName: (bizInput.value || '').trim(),
+              email: (emailInput.value || '').trim(),
+              phone: (phoneInput.value || '').trim()
+            })
+          }).catch(() => {});
+        }, 450);
+      }
+      [bizInput, emailInput, phoneInput].forEach((el) => {
+        if (el) el.addEventListener('input', syncContactDetailsSoon);
+      });
 
       function buildSuccessRedirectUrl(piId) {
         const currentEmail = (emailInput.value || '').trim();
@@ -429,6 +498,13 @@
           amountAudNumber = Number(data.amountAud || 599);
           if (data.shipping) shippingAu = data.shipping;
 
+          const activeMethods = Array.isArray(data.activeMethodTypes) ? data.activeMethodTypes : ['card', 'zip'];
+          const hasAfterpay = activeMethods.includes('afterpay_clearpay');
+          if (hasAfterpay) {
+            if (afterpayBadgeEl) afterpayBadgeEl.classList.remove('hidden');
+            if (methodsCaptionEl) methodsCaptionEl.innerHTML = 'Apple Pay &bull; Google Pay &bull; Afterpay &bull; Zip &bull; Card';
+          }
+
           const c = data.client || {};
           const bizLabel = c.businessName || c.name || 'Your Business';
           bizHeadingEl.textContent = flowType === 'inbound'
@@ -436,19 +512,25 @@
             : `Claim Website for ${bizLabel}`;
           reservedLabelEl.textContent = flowType === 'inbound'
             ? 'New Website Build Slot'
-            : `Exclusively Reserved for ${bizLabel}`;
-          if (tailoredBulletEl && flowType !== 'inbound') {
-            tailoredBulletEl.innerHTML = '<strong>100% Tailored to Your Salon:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.';
-          } else if (flowType === 'inbound') {
-            bizInput.placeholder = 'e.g. Studio Luxe';
-            emailInput.placeholder = 'owner@yourbusiness.com.au';
+            : `Reserved for ${bizLabel}`;
+
+          if (flowType !== 'inbound') {
+            if (tailoredBulletEl) {
+              tailoredBulletEl.innerHTML = '<strong>100% Tailored to Your Salon:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.';
+            }
+            bizInput.placeholder = 'e.g. Lush Nails & Beauty';
+          } else {
+            bizInput.placeholder = 'e.g. Lumière Studio';
           }
+          emailInput.placeholder = 'e.g. sarah.nguyen@gmail.com';
+          phoneInput.placeholder = 'e.g. 0412 345 678';
 
           bizInput.value = bizLabel !== 'Your Business' ? bizLabel : '';
           emailInput.value = c.email || '';
           phoneInput.value = c.phone || '';
 
           if (data.isFlashDeal) {
+            if (dealBadgeEl) dealBadgeEl.classList.remove('hidden');
             priceStrikeEl.classList.remove('hidden');
             priceMainEl.textContent = `$${amountAudNumber}`;
             bnplRateEl.textContent = `$${(amountAudNumber / 4).toFixed(2)} × 4`;
@@ -460,8 +542,8 @@
           }
 
           submitLabel.innerHTML = flowType === 'inbound'
-            ? `Lock Build Slot &amp; Start Brief &mdash; $${amountAudNumber} AUD &rarr;`
-            : `Claim Website &amp; Unlock Portal &mdash; $${amountAudNumber} AUD &rarr;`;
+            ? `Complete Order &mdash; $${amountAudNumber} AUD`
+            : `Claim Website &mdash; $${amountAudNumber} AUD`;
 
           if (typeof window.Stripe !== 'function') {
             throw new Error('Secure payment library could not load.');
@@ -484,31 +566,23 @@
               },
               rules: {
                 '.Input': {
-                  border: '1.5px solid #e2d9c8',
+                  border: '1.5px solid #dfd5c3',
                   boxShadow: 'none'
                 },
                 '.Input:focus': {
                   borderColor: '#96432b',
                   boxShadow: '0 0 0 3px rgba(150, 67, 43, 0.12)'
                 },
-                '.Tab': {
+                '.AccordionItem': {
                   border: '1.5px solid #e5dec9',
+                  borderRadius: '14px',
                   backgroundColor: '#fdfbf7',
-                  color: '#5c5349'
+                  boxShadow: 'none'
                 },
-                '.Tab--selected': {
+                '.AccordionItem--selected': {
                   borderColor: '#96432b',
                   backgroundColor: '#ffffff',
-                  color: '#231f1a',
-                  boxShadow: '0 0 0 1px #96432b'
-                },
-                '.TabLabel--selected': {
-                  color: '#231f1a',
-                  fontWeight: '700'
-                },
-                '.TabIcon--selected': {
-                  fill: '#96432b',
-                  color: '#96432b'
+                  boxShadow: '0 6px 18px -8px rgba(150, 67, 43, 0.25)'
                 }
               }
             }
@@ -517,71 +591,19 @@
           loadingEl.classList.add('hidden');
           layoutEl.classList.remove('hidden');
 
-          const expressCheckoutEl = elements.create('expressCheckout', {
-            paymentMethods: {
-              applePay: 'always',
-              googlePay: 'always',
-              link: 'auto',
-              klarna: 'never',
-              paypal: 'never',
-              amazonPay: 'never'
-            },
-            paymentMethodOrder: ['applePay', 'googlePay', 'link'],
-            buttonType: { applePay: 'buy', googlePay: 'buy' },
-            buttonTheme: { applePay: 'black', googlePay: 'black' },
-            buttonHeight: 48
-          });
-          expressCheckoutEl.on('ready', (ev) => {
-            const avail = ev && ev.availablePaymentMethods;
-            if (avail && (avail.applePay || avail.googlePay || avail.link)) {
-              if (expressTitle) expressTitle.classList.remove('hidden');
-              if (expressDivider) expressDivider.classList.remove('hidden');
-            } else {
-              expressWrap.classList.add('hidden');
-            }
-          });
-          expressCheckoutEl.on('confirm', async (event) => {
-            showFormError('');
-            const bDetails = (event && event.billingDetails) || {};
-            const resolvedEmail = (emailInput.value || bDetails.email || '').trim();
-            const resolvedBiz = (bizInput.value || bDetails.name || '').trim();
-            const resolvedPhone = (phoneInput.value || bDetails.phone || '').trim();
-            if (!emailInput.value && resolvedEmail) emailInput.value = resolvedEmail;
-            if (!bizInput.value && resolvedBiz) bizInput.value = resolvedBiz;
-            if (!phoneInput.value && resolvedPhone) phoneInput.value = resolvedPhone;
-            if (resolvedEmail || resolvedBiz || resolvedPhone) {
-              await fetch('/api/checkout-intent-sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  paymentIntentId,
-                  cid: clientCid,
-                  businessName: resolvedBiz,
-                  email: resolvedEmail,
-                  phone: resolvedPhone
-                })
-              }).catch(() => {});
-            }
-            const { error, paymentIntent } = await stripe.confirmPayment({
-              elements,
-              confirmParams: {
-                return_url: buildSuccessRedirectUrl(paymentIntentId),
-                receipt_email: resolvedEmail || undefined
-              },
-              redirect: 'if_required'
-            });
-            if (error) {
-              showFormError(error.message || 'Express payment was cancelled or declined.');
-            } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
-              await verifyAndProceed(paymentIntent.id);
-            }
-          });
-          expressCheckoutEl.mount('#express-checkout-element');
-
           const paymentElement = elements.create('payment', {
-            layout: { type: 'tabs', defaultCollapsed: false },
-            wallets: { applePay: 'auto', googlePay: 'auto' },
-            paymentMethodOrder: ['apple_pay', 'google_pay', 'card', 'afterpay_clearpay', 'zip', 'klarna'],
+            layout: {
+              type: 'accordion',
+              defaultCollapsed: false,
+              radios: true,
+              spacedAccordionItems: true
+            },
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+              link: 'never'
+            },
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'afterpay_clearpay', 'zip', 'card'],
             defaultValues: {
               billingDetails: {
                 name: bizInput.value.trim() || undefined,
@@ -605,15 +627,15 @@
         const bizVal = (bizInput.value || '').trim();
         const emailVal = (emailInput.value || '').trim();
         const phoneVal = (phoneInput.value || '').trim();
-        if (!emailVal || !emailVal.includes('@')) {
-          showFormError('Please enter a valid email address so we can send your Tax Invoice and Customisation Portal link.');
+        if (!emailVal || !emailVal.includes('@') || !emailVal.includes('.')) {
+          showFormError('Please enter your email address so we can send your Tax Invoice and Customisation Portal link.');
           emailInput.focus();
           return;
         }
 
         const prevHtml = submitLabel.innerHTML;
         submitBtn.disabled = true;
-        submitLabel.innerHTML = `<span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white spinner"></span><span>Processing Secure Payment&hellip;</span>`;
+        submitLabel.innerHTML = `Processing Secure Payment&hellip;`;
 
         try {
           await fetch('/api/checkout-intent-sync', {

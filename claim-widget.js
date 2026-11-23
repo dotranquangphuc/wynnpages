@@ -24,7 +24,7 @@
     .replace(/[^a-z0-9]/g, '');
 
   const claimHref = checkoutUrlOverride ||
-    `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}&demo=${encodeURIComponent(window.location.href)}`;
+    `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(clientSlug)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}&demo=${encodeURIComponent(window.location.href)}`;
   const revisionHref = `https://wynnpages.com.au/revision?client_id=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}`;
 
   if (!document.getElementById('wynnpages-claim-glass-style')) {
@@ -96,7 +96,9 @@
     'transition:all 0.28s cubic-bezier(0.16,1,0.3,1)'
   ].join(';');
 
-  function renderBarHtml(isPaid) {
+  function renderBarHtml(isPaid, isFlashDeal) {
+    const dealHref = checkoutUrlOverride ||
+      `https://wynnpages.com.au/api/claim?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(clientSlug)}${isFlashDeal ? '&deal=flash50' : ''}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(bizName)}&demo=${encodeURIComponent(window.location.href)}`;
     const collapseHandleHtml = `
       <button type="button" id="wynnpages-claim-collapse" title="Minimise bar" aria-label="Minimise bar" style="position:absolute;top:6px;left:50%;transform:translateX(-50%);background:transparent;border:none;padding:2px 16px;margin-bottom:6px;color:#ffffff;opacity:0.65;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:opacity 0.2s ease,transform 0.2s ease;line-height:1;">
         <svg width="15" height="8" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L9 8L16 2"/></svg>
@@ -154,8 +156,8 @@
           </div>
         </div>
         <div style="display:flex;${isNarrow ? 'flex-direction:column;width:100%;align-items:center;' : 'flex-direction:row;align-items:center;'}gap:8px;flex-shrink:0;">
-          <a id="wynnpages-claim-btn" href="${claimHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#8B3A22 0%,#6E2C1A 100%) !important;opacity:1 !important;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 22px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(251,222,185,0.36);box-shadow:0 10px 26px rgba(110,44,26,0.5),0 4px 12px rgba(0,0,0,0.28);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
-            <span>Claim This Website &mdash; $599 AUD</span>
+          <a id="wynnpages-claim-btn" href="${dealHref}" style="${isNarrow ? 'width:100%;justify-content:center;text-align:center;' : ''}background:linear-gradient(135deg,#8B3A22 0%,#6E2C1A 100%) !important;opacity:1 !important;color:#ffffff;text-decoration:none;font-size:13px;font-weight:800;padding:12px 22px;border-radius:13px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(251,222,185,0.36);box-shadow:0 10px 26px rgba(110,44,26,0.5),0 4px 12px rgba(0,0,0,0.28);transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;">
+            <span>${isFlashDeal ? 'Claim Website &mdash; $299 AUD (Save 50%)' : 'Claim This Website &mdash; $599 AUD'}</span>
             <span>&rarr;</span>
           </a>
         </div>
@@ -264,7 +266,11 @@
       fetch(`https://wynnpages.com.au/api/demo-status?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(clientSlug)}`)
         .then(function (r) { return r.json(); })
         .then(function (st) {
-          if (st && st.found && st.isPaid) renderBarHtml(true);
+          if (st && st.found && st.isPaid) renderBarHtml(true, false);
+          else if (st && st.found && st.isFlashDeal) {
+            restoreTab.innerHTML = '<span style="width:6px;height:6px;border-radius:9999px;background:#C85A32;box-shadow:0 0 8px rgba(200,90,50,0.95);flex-shrink:0;"></span><svg width="12" height="7" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>50% Off Deal &bull; <span style="color:#f3a683;font-weight:800;">$299 AUD</span></span>';
+            renderBarHtml(false, true);
+          }
         })
         .catch(function () {});
     }
