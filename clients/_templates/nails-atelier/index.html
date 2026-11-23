@@ -751,6 +751,13 @@
       filter: blur(0px);
     }
 
+    /* Release GPU compositing override once entrance animation finishes so iOS position:sticky locks onto 120Hz hardware scrolling */
+    [data-apple-reveal].is-inview.is-settled {
+      transform: none !important;
+      filter: none !important;
+      will-change: auto !important;
+    }
+
     /* Graceful Apple-Spring Retract on Scroll-Up (Mobile & Desktop) */
     [data-apple-reveal].is-retracting {
       opacity: 0;
@@ -844,18 +851,15 @@
         top: calc(84px + var(--stack-offset, 0px)) !important;
         min-height: 228px;
         background: var(--bg-card-solid) !important;
+        contain: none !important;
+        filter: none !important;
         transform-origin: center top;
-        transform: translate3d(0, 0, 0);
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
         box-shadow:
           0 -10px 24px -10px rgba(43, 37, 30, 0.12),
           0 20px 45px -15px rgba(43, 37, 30, 0.16),
           0 0 0 1px var(--border-hairline) !important;
-        transition:
-          transform 0.45s var(--apple-silk),
-          box-shadow 0.45s var(--apple-silk),
-          filter 0.45s ease;
       }
       .atelier-stack-card:nth-child(1) {
         --stack-offset: 0px;
@@ -1144,8 +1148,8 @@
       images: {
         hero: "https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg",
         beforeNail: "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd",
-        afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123hd",
-        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123orig",
+        afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123p1",
+        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123p1",
         pedicureFeature: "https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg",
         lookbook: [
           {
@@ -1164,7 +1168,7 @@
             tag: "Signature Almond Finish"
           },
           {
-            src: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123orig",
+            src: "https://wynnpages.com.au/assets/atelier/nails/lookbook-bare-cashmere.jpg?v=20261123p1",
             title: "Bare Cashmere Structure",
             tag: "Natural Nail Restoration"
           }
@@ -1928,7 +1932,7 @@
         <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
-            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123orig"
+            src="https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123p1"
             alt="Fine-art oil study of luminous sheer BIAB manicure on champagne silk"
             onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123hd';"
             loading="lazy"
@@ -2339,14 +2343,14 @@
         '01': {
           hero: `${VAULT_BASE}/hero-sanctuary.jpg`,
           beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
-          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`,
-          biabFeature: `${VAULT_BASE}/biab-artistry.jpg?v=20261123orig`,
+          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123p1`,
+          biabFeature: `${VAULT_BASE}/sheer-biab-architecture.jpg?v=20261123p1`,
           pedicureFeature: `${VAULT_BASE}/botanical-pedicure.jpg`,
           lookbook: [
             { src: `${VAULT_BASE}/lookbook-gilded-french.jpg`, title: 'Champagne Micro-French', tag: 'BIAB Structured Overlay' },
             { src: `${VAULT_BASE}/lookbook-pearl-glaze.jpg`, title: 'Akoya Pearl Glaze', tag: 'Sheer Botanical Gel' },
             { src: `${VAULT_BASE}/lookbook-velvet-rose.jpg`, title: 'Rose Silk Velvet', tag: 'Signature Almond Finish' },
-            { src: `${VAULT_BASE}/biab-artistry.jpg?v=20261123orig`, title: 'Bare Cashmere Structure', tag: 'Natural Nail Restoration' }
+            { src: `${VAULT_BASE}/lookbook-bare-cashmere.jpg?v=20261123p1`, title: 'Bare Cashmere Structure', tag: 'Natural Nail Restoration' }
           ]
         },
         '02': {
@@ -3555,30 +3559,44 @@
 
       // 9b. Native High-Performance Bidirectional IntersectionObserver (120 FPS Mobile & Desktop)
       if ('IntersectionObserver' in window && !prefersReducedMotion) {
+        const settleTimers = new WeakMap();
         const revealObserver = new IntersectionObserver((entries) => {
+          const vh = window.innerHeight || document.documentElement.clientHeight || 800;
           entries.forEach((entry) => {
             const target = entry.target;
             if (entry.isIntersecting) {
+              const prevTimer = settleTimers.get(target);
+              if (prevTimer) clearTimeout(prevTimer);
               target.classList.remove('is-retracting');
               target.classList.add('is-inview');
+              const settleDelay = target.classList.contains('atelier-stack-card') ? 1680 : 1750;
+              const nextTimer = setTimeout(() => {
+                if (target.classList.contains('is-inview') && !target.classList.contains('is-retracting')) {
+                  target.classList.add('is-settled');
+                }
+              }, settleDelay);
+              settleTimers.set(target, nextTimer);
             } else {
-              // Retract smoothly on scroll-up when element falls below viewport
+              // Retract only after element fully drops below bottom edge (prevents iOS boundary/sticky jitter)
               const rect = entry.boundingClientRect;
-              if (rect && rect.top > 50) {
-                target.classList.remove('is-inview');
+              const retractY = target.classList.contains('atelier-stack-card') ? (vh + 24) : (vh - 6);
+              if (rect && rect.top >= retractY) {
+                const prevTimer = settleTimers.get(target);
+                if (prevTimer) clearTimeout(prevTimer);
+                target.classList.remove('is-inview', 'is-settled');
                 target.classList.add('is-retracting');
               }
             }
           });
         }, {
-          rootMargin: '0px 0px -56px 0px',
+          rootMargin: '0px 0px -48px 0px',
           threshold: [0, 0.08]
         });
 
         // Observe all static & dynamically injected reveal nodes
         document.querySelectorAll('[data-apple-reveal]').forEach((node) => revealObserver.observe(node));
       } else {
-        document.querySelectorAll('[data-apple-reveal]').forEach((node) => node.classList.add('is-inview'));
+        document.querySelectorAll('[data-apple-reveal]').forEach((node) => node.classList.add('is-inview', 'is-settled'));
       }
 
       // 9c. Asynchronous Native IntersectionObserver for Active Header Nav Spy
@@ -3658,10 +3676,11 @@
         }
       }, { passive: true });
 
-      // 9e. Safe Lenis Inertia Momentum Scroll Initialization
+      // 9e. Safe Lenis Inertia Momentum Scroll Initialization (Desktop pointer only; leave native 120Hz scrolling on touch/iOS)
       let lenis = null;
       try {
-        if (typeof Lenis !== 'undefined' && !prefersReducedMotion) {
+        const isCoarseTouchDevice = Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+        if (typeof Lenis !== 'undefined' && !prefersReducedMotion && !isCoarseTouchDevice) {
           lenis = new Lenis({
             duration: 1.2,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

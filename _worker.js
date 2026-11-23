@@ -1157,17 +1157,18 @@ async function processDueScheduledSms(env, ctx) {
         client: schedClient,
         triggerType: 'scheduled_sms_sent',
         icon: '⏰',
-        title: `⏰ [SMS HẸN GIỜ] Đã tự động gửi SMS tới ${schedClient.businessName}`,
+        title: `⏰ [Tin nhắn hẹn giờ] Đã tự động gửi SMS tới ${schedClient.businessName}`,
+        messageTypeLabel: 'Tin nhắn hẹn giờ tự động theo lịch Úc',
         views: schedClient._views ?? null,
         smsSent: true,
         smsTo: smsRes.to || row.to_phone,
         smsText: row.body_text,
-        extraNote: row.scheduled_for_au ? `Lịch Úc: ${row.scheduled_for_au}` : ''
+        extraNote: row.scheduled_for_au ? `Giờ gửi tại Úc: ${row.scheduled_for_au}` : ''
       });
       items.push({ id: row.id, status: 'sent', to: smsRes.to || row.to_phone, scheduledForAu: row.scheduled_for_au, sentAt: sentAtIso });
     } else {
       failedCount++;
-      const reason = (smsRes && smsRes.reason) || 'Send failed';
+      const reason = (smsRes && smsRes.reason) || 'Gửi tin nhắn thất bại';
       await db.prepare(
         `UPDATE scheduled_sms SET status = 'failed', error_reason = ? WHERE id = ?`
       ).bind(String(reason).slice(0, 480), row.id).run().catch(() => {});
@@ -1177,13 +1178,14 @@ async function processDueScheduledSms(env, ctx) {
         client: schedClient,
         triggerType: 'scheduled_sms_failed',
         icon: '⚠️',
-        title: `⚠️ [SMS HẸN GIỜ LỖI] Không gửi được tới ${schedClient.businessName}`,
+        title: `⚠️ [Tin nhắn hẹn giờ bị lỗi] Không gửi được SMS tới ${schedClient.businessName}`,
+        messageTypeLabel: 'Tin nhắn hẹn giờ tự động theo lịch Úc (Gửi lỗi)',
         views: schedClient._views ?? null,
         smsSent: false,
         smsSkippedReason: reason,
         smsTo: row.to_phone,
         smsText: row.body_text,
-        extraNote: row.scheduled_for_au ? `Lịch Úc: ${row.scheduled_for_au}` : ''
+        extraNote: row.scheduled_for_au ? `Giờ dự kiến tại Úc: ${row.scheduled_for_au}` : ''
       });
       items.push({ id: row.id, status: 'failed', to: row.to_phone, reason });
     }
@@ -1776,16 +1778,16 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
 
     const tgMessage = [
       `🏢 Khách hàng: ${resolvedBiz}`,
-      `📧 Email: ${resolvedEmail || 'N/A'}`,
-      `📱 SĐT: ${resolvedPhone || 'Chưa có'}`,
-      `🔗 Portal: ${portalUrl}`
+      `📧 Email: ${resolvedEmail || 'Chưa có'}`,
+      `📱 Số điện thoại: ${resolvedPhone || 'Chưa có'}`,
+      `🔗 Cổng gửi thông tin: ${portalUrl}`
     ].join('\n');
 
     const notifyPipeline = Promise.all([
       // 1. Instant iPhone Telegram + Activity Feed notification
       recordActivityAndNotify({
         type: 'payment_received',
-        title: `💰 ĐƠN HÀNG MỚI ${amountAudShort}!`,
+        title: `💰 ĐƠN HÀNG MỚI VỪA THANH TOÁN ${amountAudShort}!`,
         message: tgMessage,
         clientName: resolvedBiz,
         slug: resolvedSlug,
@@ -1855,7 +1857,8 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
         client: { id: resolvedCid, businessName: resolvedBiz, demoSlug: resolvedSlug, email: resolvedEmail, phone: resolvedPhone },
         triggerType: 'post_payment_comms',
         icon: '🧾',
-        title: `🧾 [SAU THANH TOÁN ${amountAudShort}] Đã gửi Invoice & Portal cho ${resolvedBiz}`,
+        title: `🧾 [Sau thanh toán ${amountAudShort}] Đã gửi hóa đơn & cổng thiết kế cho ${resolvedBiz}`,
+        messageTypeLabel: 'Tin xác nhận thanh toán, hóa đơn điện tử & cổng gửi thông tin',
         smsSent: Boolean(paySmsRes && paySmsRes.sent),
         smsSkippedReason: paySmsRes && paySmsRes.reason,
         smsTo: (paySmsRes && paySmsRes.to) || resolvedPhone,
@@ -2274,17 +2277,17 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
   let telegramRes = null;
   if (!suppressTelegram && env && (smsResult.sent || emailResult.sent || phone || email)) {
     const stageTitles = {
-      outbound_pitch: '🚀 [BƯỚC 1 - PITCH DEMO] Đã gửi SMS & Email chào hàng',
+      outbound_pitch: '🚀 [Bước 1 — Chào hàng lần đầu] Đã gửi mẫu Web xem trước',
       outbound_followup: client.dealStatus === 'flash_deal'
-        ? '🔥 [DEAL 50% $299] Đã gửi SMS & Email Follow-up'
-        : '💬 [CHĂM SÓC DEMO] Đã gửi SMS & Email Follow-up',
-      payment_confirmed: '💳 [XÁC NHẬN ĐƠN HÀNG] Đã gửi Tax Invoice + Portal',
-      outbound_paid_confirmed: '💳 [CHỐT SALE DEMO] Đã gửi Tax Invoice + Revision Portal',
-      brief_completed: '📝 [ONBOARDING BRIEF] Đã gửi SMS & Email hướng dẫn Domain',
-      outbound_revision_submitted: '✏️ [NHẬN YÊU CẦU CHỈNH SỬA] Đã gửi SMS & Email Domain Guide',
-      demo_ready: '🎨 [DEMO SẴN SÀNG] Đã gửi SMS & Email mời xem Web',
-      demo_reminder: '👋 [NHẮC XEM DEMO] Đã gửi SMS & Email check-in',
-      site_launched: '🌐 [LÊN SÓNG LIVE] Đã gửi SMS & Email chúc mừng khai trương'
+        ? '🔥 [Ưu đãi giảm 50% còn $299] Đã gửi tin chăm sóc & báo giá giảm'
+        : '💬 [Chăm sóc mẫu Web] Đã gửi tin hỏi thăm sau chào hàng',
+      payment_confirmed: '💳 [Xác nhận đơn hàng] Đã gửi hóa đơn & cổng nhận thông tin',
+      outbound_paid_confirmed: '💳 [Khách đã chốt mua mẫu Web] Đã gửi hóa đơn & cổng chỉnh sửa',
+      brief_completed: '📝 [Hoàn tất bảng thông tin] Đã gửi hướng dẫn kết nối tên miền',
+      outbound_revision_submitted: '✏️ [Khách đã gửi yêu cầu chỉnh sửa] Đã gửi hướng dẫn kết nối tên miền',
+      demo_ready: '🎨 [Mẫu Web đã sẵn sàng] Đã gửi lời mời khách xem thử',
+      demo_reminder: '👋 [Nhắc xem mẫu Web] Đã gửi tin nhắn hỏi thăm',
+      site_launched: '🌐 [Chính thức lên sóng] Đã gửi tin chúc mừng khai trương website'
     };
     const bizTitle = client.businessName || client.name || 'Khách hàng';
     telegramRes = await notifyTelegramAutomatedComms({
@@ -2293,7 +2296,7 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       client,
       triggerType: `lifecycle_${stage}`,
       icon: '📩',
-      title: `${stageTitles[stage] || `📩 [GỬI THÔNG BÁO: ${stage}]`} — ${bizTitle}`,
+      title: `${stageTitles[stage] || `📩 [Gửi thông báo chăm sóc]`} — ${bizTitle}`,
       views: client.demoViewCount !== undefined ? client.demoViewCount : null,
       smsSent: Boolean(smsResult && smsResult.sent),
       smsSkippedReason: smsResult && smsResult.reason,
@@ -4798,6 +4801,44 @@ async function recordStudioActivity(env, payload = {}, ctx = null) {
   });
 }
 
+function translateTelegramReasonVi(reason) {
+  const r = String(reason || '').trim();
+  if (!r) return '';
+  if (/no phone number/i.test(r)) return 'Chưa có số điện thoại';
+  if (/no email/i.test(r)) return 'Chưa có địa chỉ Email';
+  if (/send failed/i.test(r)) return 'Gửi tin nhắn thất bại';
+  if (/sms delivery error|sms error/i.test(r)) return 'Lỗi kết nối cổng gửi SMS';
+  if (/email delivery skipped/i.test(r)) return 'Đã bỏ qua gửi thư điện tử';
+  if (/not configured|missing|chưa cấu hình/i.test(r)) return 'Chưa cấu hình đầy đủ';
+  return r;
+}
+
+function resolveTelegramTypeLabelVi(triggerType, customLabel = '') {
+  if (customLabel) return customLabel;
+  const map = {
+    scheduled_sms_sent: 'Tin nhắn hẹn giờ tự động',
+    scheduled_sms_failed: 'Tin nhắn hẹn giờ tự động (bị lỗi)',
+    post_payment_comms: 'Hóa đơn & cổng gửi ảnh/thông tin sau thanh toán',
+    lifecycle_outbound_pitch: 'Bước 1 — Gửi mẫu Web xem trước lần đầu',
+    lifecycle_outbound_followup: 'Bước 2 — Hỏi thăm chăm sóc sau chào hàng',
+    lifecycle_payment_confirmed: 'Xác nhận đơn hàng — Gửi hóa đơn & cổng nhận thông tin',
+    lifecycle_outbound_paid_confirmed: 'Chốt đơn mua mẫu Web — Gửi hóa đơn & cổng chỉnh sửa',
+    lifecycle_brief_completed: 'Sau khi điền thông tin — Hướng dẫn kết nối tên miền',
+    lifecycle_outbound_revision_submitted: 'Sau khi gửi yêu cầu sửa — Hướng dẫn kết nối tên miền',
+    lifecycle_demo_ready: 'Thông báo mẫu Web đã sẵn sàng để xem',
+    lifecycle_demo_reminder: 'Nhắc nhẹ xem mẫu Web',
+    lifecycle_site_launched: 'Chúc mừng website chính thức lên sóng',
+    autopilot_step2: 'Bước 2 — Chăm sóc tự động sau 3 ngày',
+    autopilot_step3_deal299: 'Bước 3 — Ưu đãi giảm 50% còn $299 AUD (72 giờ)',
+    autopilot_step4_warning: 'Bước 4 — Nhắc nhẹ lần cuối trước khi đóng đường dẫn (24h cuối)',
+    nurture_day7_nudge_0views: 'Ngày 7 — Nhắc nhẹ xem mẫu Web (khách chưa mở xem lần nào)',
+    nurture_flash_deal_299: 'Ưu đãi đặc biệt giảm 50% còn $299 AUD (có hiệu lực 72 giờ)',
+    turbo_step1_pitch: 'Bước 1 — Gửi mẫu Web xem trước lần đầu (chạy thử)',
+    dns_email_sent: 'Thư hướng dẫn cài đặt tên miền'
+  };
+  return map[triggerType] || 'Thông báo chăm sóc khách hàng';
+}
+
 async function notifyTelegramAutomatedComms({
   env,
   ctx = null,
@@ -4805,6 +4846,7 @@ async function notifyTelegramAutomatedComms({
   triggerType = 'automated_comms',
   icon = '📲',
   title,
+  messageTypeLabel = '',
   views = null,
   smsSent = false,
   smsSkippedReason = '',
@@ -4821,36 +4863,41 @@ async function notifyTelegramAutomatedComms({
   const biz = (client && (client.businessName || client.name)) || 'Khách hàng';
   const slug = (client && (client.demoSlug || slugifyName(biz))) || '';
   const demoUrl = (client && (client.demoUrl || client.brandedDemoUrl)) || (slug ? `https://${slug}.wynnpages.com.au` : '');
+  const resolvedTypeLabel = resolveTelegramTypeLabelVi(triggerType, messageTypeLabel);
   const lines = [];
-  lines.push(`🏢 Khách: ${biz}`);
-  if (demoUrl) lines.push(`🌐 Web Demo: ${demoUrl}`);
-  if (views !== null && views !== undefined) lines.push(`👀 Lượt xem Demo: ${Number(views || 0)}`);
-  if (extraNote) lines.push(`ℹ️ Ghi chú: ${extraNote}`);
+  lines.push(`🏢 Khách hàng: ${biz}`);
+  lines.push(`🏷 Loại tin gửi: ${resolvedTypeLabel}`);
 
   if (smsText || smsTo || smsSent || smsSkippedReason) {
     lines.push(
       smsSent
-        ? `📱 SMS: ✅ Đã gửi tới ${smsTo || (client && client.phone) || 'N/A'}`
-        : `📱 SMS: ⚠️ Chưa gửi (${smsSkippedReason || 'Chưa có SĐT / Bỏ qua'})`
+        ? `📱 Tin nhắn SMS: ✅ Đã gửi thành công tới số ${smsTo || (client && client.phone) || 'Không rõ'}`
+        : `📱 Tin nhắn SMS: ⚠️ Chưa gửi (${translateTelegramReasonVi(smsSkippedReason) || 'Chưa có số điện thoại / Bỏ qua'})`
     );
-    if (smsText) {
-      const trimmedSms = String(smsText).trim();
-      lines.push(`💬 Nội dung SMS:\n"${trimmedSms.length > 440 ? trimmedSms.slice(0, 437) + '...' : trimmedSms}"`);
-    }
   }
 
   if (emailSubject || emailTo || emailSent || emailSkippedReason) {
     lines.push(
       emailSent
-        ? `📧 Email: ✅ Đã gửi tới ${emailTo || (client && client.email) || 'N/A'}${emailSubject ? `\n📝 Tiêu đề Email: ${emailSubject}` : ''}`
-        : `📧 Email: ⚠️ Chưa gửi (${emailSkippedReason || 'Chưa có Email / Chưa cấu hình'})`
+        ? `📧 Thư điện tử (Email): ✅ Đã gửi thành công tới ${emailTo || (client && client.email) || 'Không rõ'}`
+        : `📧 Thư điện tử (Email): ⚠️ Chưa gửi (${translateTelegramReasonVi(emailSkippedReason) || 'Chưa có Email / Chưa cấu hình'})`
     );
+  }
+
+  if (views !== null && views !== undefined) {
+    lines.push(`👀 Lượt xem mẫu Web: ${Number(views || 0)} lượt`);
+  }
+  if (extraNote) {
+    lines.push(`📝 Ghi chú: ${extraNote}`);
+  }
+  if (demoUrl) {
+    lines.push(`🌐 Đường dẫn mẫu Web: ${demoUrl}`);
   }
 
   return recordActivityAndNotify({
     type: triggerType,
     icon,
-    title: title || `Thông báo gửi SMS/Email: ${biz}`,
+    title: title || `📲 Đã gửi thông báo cho ${biz}`,
     message: lines.join('\n'),
     clientName: biz,
     slug,
@@ -4918,10 +4965,10 @@ async function recordActivityAndNotify({ type, icon: customIcon = '', title, mes
         const cleanSlugLink = slug && slug !== 'test' ? `https://${slugifyName(slug)}.wynnpages.com.au` : '';
         const timeStr = formatAuDateTime(new Date(), AU_TIMEZONE);
         const htmlLinks = [
-          cleanSlugLink ? `<a href="${cleanSlugLink}">🌐 Xem Web Demo</a>` : '',
-          `<a href="https://wynnpages.com.au/admin">🛠 Mở Studio Admin</a>`
+          cleanSlugLink ? `<a href="${cleanSlugLink}">🌐 Xem mẫu Web khách</a>` : '',
+          `<a href="https://wynnpages.com.au/admin">🛠 Trang quản trị Studio</a>`
         ].filter(Boolean).join('  •  ');
-        const htmlText = `${icon} <b>${escapeTelegramHtml(title || 'WynnPages Activity')}</b>\n\n${escapeTelegramHtml(message || '')}\n\n🕒 <i>${escapeTelegramHtml(timeStr)}</i>\n👉 ${htmlLinks}`;
+        const htmlText = `${icon} <b>${escapeTelegramHtml(title || 'Hoạt động mới từ WynnPages')}</b>\n\n${escapeTelegramHtml(message || '')}\n\n🕒 <i>${escapeTelegramHtml(timeStr)}</i>\n👉 ${htmlLinks}`;
 
         const tgUrl = `https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`;
         const res = await fetch(tgUrl, {
@@ -4936,7 +4983,7 @@ async function recordActivityAndNotify({ type, icon: customIcon = '', title, mes
         });
         if (res.ok) return true;
         // Plain-text fallback guarantee
-        const plainText = `${icon} ${title || 'WynnPages Activity'}\n\n${message || ''}\n\n🕒 ${timeStr}\n👉 https://wynnpages.com.au/admin${cleanSlugLink ? `\n🌐 ${cleanSlugLink}` : ''}`;
+        const plainText = `${icon} ${title || 'Hoạt động mới từ WynnPages'}\n\n${message || ''}\n\n🕒 ${timeStr}\n👉 Trang quản trị: https://wynnpages.com.au/admin${cleanSlugLink ? `\n🌐 Mẫu Web khách: ${cleanSlugLink}` : ''}`;
         const fbRes = await fetch(tgUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -5020,10 +5067,11 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
     const lockKey = `demo_notify_lock:${cleanSlug}`;
     const lockAcquired = await acquireD1RateLock(env, lockKey, 1800);
     if (lockAcquired) {
+      const deviceVi = device === 'Mobile' ? 'Điện thoại' : 'Máy tính';
       await recordActivityAndNotify({
         type: 'demo_viewed',
-        title: '👀 Khách Đang Xem Demo!',
-        message: `"${bizName}" vừa mở xem bản Demo của bạn! (${device})`,
+        title: '👀 Khách đang mở xem mẫu Web!',
+        message: `"${bizName}" vừa mở xem trang web mẫu của tiệm (bằng ${deviceVi})!`,
         clientName: bizName,
         slug: cleanSlug,
         env,
@@ -5887,8 +5935,8 @@ async function runScheduledAutopilot(env, options = {}) {
             await recordStudioActivity(env, {
               type: 'fb_due_day3',
               icon: '💬',
-              title: `Đến Hạn Gửi FB Bước 2 (Hỏi Thăm): ${biz}`,
-              message: `Đã đến ${isTurbo ? 'phút 15 (Test)' : 'Ngày 3'} cho khách Facebook "${biz}" (${d3Views} lượt xem Demo). Mở Admin bấm vào Bước 2 đang sáng xanh để Copy lời hỏi thăm & mở Messenger!`,
+              title: `Đến hạn nhắn Facebook Bước 2 (Hỏi thăm): ${biz}`,
+              message: `Đã đến ${isTurbo ? 'phút 15 (chạy thử)' : 'ngày thứ 3'} cho khách Facebook "${biz}" (${d3Views} lượt xem mẫu Web). Hãy mở trang quản trị, bấm vào Bước 2 để chép lời hỏi thăm và gửi qua Messenger.`,
               clientName: biz,
               slug: c.demoSlug || ''
             }, options.ctx);
@@ -5938,7 +5986,10 @@ async function runScheduledAutopilot(env, options = {}) {
           client: c,
           triggerType: 'autopilot_step2',
           icon: isTurbo ? '⚡' : '🤖',
-          title: `${isTurbo ? '⚡ [TURBO T+15p - BƯỚC 2]' : '🤖 [AUTOPILOT NGÀY 3 - BƯỚC 2]'} Đã gửi chăm sóc: ${biz}`,
+          title: `${isTurbo ? '⚡ [Chạy thử phút 15 — Bước 2]' : '🤖 [Tự động ngày 3 — Bước 2]'} Đã gửi tin hỏi thăm tới ${biz}`,
+          messageTypeLabel: Number(d3Views || 0) >= 2
+            ? 'Bước 2 — Hỏi thăm & hướng dẫn chỉnh sửa sau 3 ngày (Khách đã mở xem mẫu Web)'
+            : 'Bước 2 — Tin nhắc nhẹ xem mẫu Web sau 3 ngày (Khách chưa mở xem)',
           views: d3Views,
           smsSent: Boolean(smsRes && smsRes.sent),
           smsSkippedReason: smsRes && smsRes.reason,
@@ -5983,8 +6034,8 @@ async function runScheduledAutopilot(env, options = {}) {
             await recordStudioActivity(env, {
               type: 'fb_due_day6',
               icon: '⚡',
-              title: `Đã Hạ Giá $299 & Đến Hạn Gửi FB Bước 3: ${biz}`,
-              message: `Web Demo của "${biz}" đã tự động giảm xuống $299 AUD (72h). Mở Admin bấm vào Bước 3 đang sáng xanh để Copy lời chào Deal 50% & gửi qua Messenger!`,
+              title: `Đã giảm giá còn $299 AUD & đến hạn nhắn Facebook Bước 3: ${biz}`,
+              message: `Trang mẫu của "${biz}" đã tự động giảm còn $299 AUD (trong 72 giờ). Hãy mở trang quản trị bấm Bước 3 để chép tin nhắn ưu đãi 50% và gửi qua Messenger.`,
               clientName: biz,
               slug: c.demoSlug || '',
               waitForTelegram: true
@@ -6036,7 +6087,8 @@ async function runScheduledAutopilot(env, options = {}) {
           client: c,
           triggerType: 'autopilot_step3_deal299',
           icon: '🔥',
-          title: `${isTurbo ? '⚡ [TURBO T+30p - BƯỚC 3]' : '🔥 [AUTOPILOT NGÀY 6/7 - BƯỚC 3]'} Kích hoạt Deal $299 & gửi SMS/Email: ${biz}`,
+          title: `${isTurbo ? '⚡ [Chạy thử phút 30 — Bước 3]' : '🔥 [Tự động ngày 6/7 — Bước 3]'} Đã giảm giá 50% ($299 AUD) & gửi tin tới ${biz}`,
+          messageTypeLabel: 'Bước 3 — Tin nhắn ưu đãi giảm 50% còn $299 AUD (áp dụng 72 giờ)',
           views: Number(c.demoViewCount || 0),
           smsSent,
           smsSkippedReason: smsRes && smsRes.reason,
@@ -6046,7 +6098,7 @@ async function runScheduledAutopilot(env, options = {}) {
           emailSkippedReason: emailRes && emailRes.reason,
           emailTo: c.email,
           emailSubject: (mailPayload && mailPayload.subject) || '',
-          extraNote: `Hết hạn Flash Deal $299 AUD lúc: ${formatAuDateTime(new Date(dealExpiresAt), AU_TIMEZONE)}`,
+          extraNote: `Ưu đãi $299 AUD hết hạn lúc: ${formatAuDateTime(new Date(dealExpiresAt), AU_TIMEZONE)}`,
           waitForTelegram: true
         });
         dealActivatedCount++;
@@ -6076,8 +6128,8 @@ async function runScheduledAutopilot(env, options = {}) {
             await recordStudioActivity(env, {
               type: 'fb_due_day9',
               icon: '💬',
-              title: `Đến Hạn Gửi FB Bước 4 (24h Cuối): ${biz}`,
-              message: `Đã đến ${isTurbo ? 'phút 45 (Test)' : 'Ngày 9'} cho khách Facebook "${biz}". Mở Admin bấm vào Bước 4 đang sáng xanh để Copy tin nhắc 24h cuối & mở Messenger!`,
+              title: `Đến hạn nhắn Facebook Bước 4 (Nhắc 24 giờ cuối): ${biz}`,
+              message: `Đã đến ${isTurbo ? 'phút 45 (chạy thử)' : 'ngày thứ 9'} cho khách Facebook "${biz}". Hãy mở trang quản trị bấm Bước 4 để chép tin nhắn nhắc 24 giờ cuối và gửi qua Messenger.`,
               clientName: biz,
               slug: c.demoSlug || '',
               waitForTelegram: true
@@ -6128,7 +6180,8 @@ async function runScheduledAutopilot(env, options = {}) {
           client: c,
           triggerType: 'autopilot_step4_warning',
           icon: '⏳',
-          title: `${isTurbo ? '⚡ [TURBO T+45p - BƯỚC 4]' : '⏳ [AUTOPILOT NGÀY 9 - BƯỚC 4]'} Cảnh báo 24h cuối: ${biz}`,
+          title: `${isTurbo ? '⚡ [Chạy thử phút 45 — Bước 4]' : '⏳ [Tự động ngày 9 — Bước 4]'} Đã gửi tin nhắc 24 giờ cuối tới ${biz}`,
+          messageTypeLabel: 'Bước 4 — Tin nhắn nhắc lần cuối trước khi đóng trang xem trước (Ngày 9)',
           views: Number(c.demoViewCount || 0),
           smsSent: Boolean(smsRes && smsRes.sent),
           smsSkippedReason: smsRes && smsRes.reason,
@@ -6168,8 +6221,8 @@ async function runScheduledAutopilot(env, options = {}) {
         await recordStudioActivity(env, {
           type: 'demo_expired',
           icon: '🔒',
-          title: `Đã Khoá Demo Tự Động (${isTurbo ? 'Test 60p' : 'Ngày 10'}): ${biz}`,
-          message: `Bản Demo (${demoUrl}) đã tự động khoá HTTP 403 sau khi kết thúc chu trình chốt sale.`,
+          title: `Đã tự động khoá mẫu Web (${isTurbo ? 'Chạy thử phút 60' : 'Hết hạn ngày 10'}): ${biz}`,
+          message: `Trang mẫu (${demoUrl}) đã tự động đóng tạm thời sau khi kết thúc chu kỳ gửi tin chăm sóc.`,
           clientName: biz,
           slug: c.demoSlug || '',
           waitForTelegram: true
@@ -7089,8 +7142,8 @@ export default {
         const briefLabel = businessName || customerName || email || 'Khách hàng mới';
         await recordActivityAndNotify({
           type: 'brief_completed',
-          title: '📝 Khách Đã Gửi Onboarding Brief!',
-          message: `${briefLabel} vừa hoàn tất 4 bước Onboarding Brief${domainSummary ? ` (Tên miền: ${domainSummary})` : ''}.`,
+          title: '📝 Khách vừa hoàn tất bảng thông tin thiết kế web!',
+          message: `${briefLabel} vừa hoàn tất 4 bước điền thông tin thiết kế web${domainSummary ? ` (Tên miền: ${domainSummary})` : ''}.`,
           clientName: briefLabel,
           slug: clientRecord.demoSlug || '',
           env,
@@ -7192,8 +7245,8 @@ export default {
 
         await recordActivityAndNotify({
           type: 'domain_updated',
-          title: '🌐 Tên Miền Đã Cập Nhật!',
-          message: `${customerLabel} đã cập nhật thông tin tên miền ${domainLabel}. Sẵn sàng trỏ DNS!`,
+          title: '🌐 Khách đã cập nhật tên miền mới!',
+          message: `${customerLabel} vừa cập nhật thông tin tên miền ${domainLabel}. Đã sẵn sàng cài đặt trỏ tên miền!`,
           clientName: customerLabel,
           slug: domainLabel,
           env,
@@ -7311,12 +7364,12 @@ export default {
       if (!auth.ok) {
         return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: buildAdminHeaders(corsHeaders) });
       }
-      const customMsg = (body.message || '').trim() || 'Đây là thông báo thử nghiệm từ WynnPages Studio PWA đến iPhone của bạn!';
+      const customMsg = (body.message || '').trim() || 'Đây là thông báo kiểm tra kết nối từ WynnPages Studio gửi đến Telegram trên điện thoại của bạn!';
       await recordActivityAndNotify({
         type: 'payment_received',
-        title: '🔔 Thử Nghiệm Thông Báo PWA iOS',
+        title: '🔔 Kiểm tra thông báo về điện thoại',
         message: customMsg,
-        clientName: 'WynnPages Studio Test',
+        clientName: 'Kiểm tra hệ thống WynnPages',
         slug: 'test',
         env,
         ctx
@@ -8213,23 +8266,23 @@ export default {
         const tgDetails = [
           `🏢 Tiệm: ${notifyBizName}`,
           savedLogoFileName ? `✨ Logo mới tải lên: ${savedLogoFileName}` : '',
-          revPayload.phone ? `📞 SĐT hiển thị: ${revPayload.phone}` : '',
-          revPayload.address ? `📍 Địa chỉ: ${revPayload.address}` : '',
+          revPayload.phone ? `📞 Số điện thoại hiển thị: ${revPayload.phone}` : '',
+          revPayload.address ? `📍 Địa chỉ tiệm: ${revPayload.address}` : '',
           revPayload.hours ? `🕒 Giờ mở cửa: ${revPayload.hours}` : '',
-          savedMenuFiles.length ? `📋 Ảnh Menu tải lên: ${savedMenuFiles.length} trang (${revPayload.menuFileName})` : '',
+          savedMenuFiles.length ? `📋 Ảnh bảng giá tải lên: ${savedMenuFiles.length} trang (${revPayload.menuFileName})` : '',
           revPayload.menuText ? `✏️ Ghi chú sửa giá: ${revPayload.menuText.slice(0, 160)}` : '',
           savedSalonPhotos.length ? `📸 Ảnh tiệm tải lên: ${savedSalonPhotos.length} ảnh` : '',
           revPayload.desiredDomain ? `🌐 Tên miền mong muốn: ${revPayload.desiredDomain}` : '',
-          revPayload.domainConciergeRequested ? `🆘 KHÁCH NHỜ STUDIO CÀI ĐẶT TÊN MIỀN HỘ A–Z!` : '',
-          revPayload.notes ? `💬 Chỉ đạo cuối: ${revPayload.notes.slice(0, 200)}` : '',
-          `\n👉 Mở Admin bấm nút "🤖 Sửa Đổi & AI" để Gemini tự động cập nhật ngay!`
+          revPayload.domainConciergeRequested ? `🆘 KHÁCH NHỜ STUDIO CÀI ĐẶT TÊN MIỀN TRỌN GÓI TỪ A–Z!` : '',
+          revPayload.notes ? `💬 Yêu cầu thêm: ${revPayload.notes.slice(0, 200)}` : '',
+          `\n👉 Hãy mở trang quản trị bấm nút "Sửa Đổi & AI" để hệ thống tự động cập nhật ngay!`
         ].filter(Boolean).join('\n');
 
         await recordActivityAndNotify({
           type: 'revision_submitted',
           title: revPayload.domainConciergeRequested
-            ? '🆘 Khách Gửi Sửa Web + Nhờ Cài Tên Miền A–Z!'
-            : '📝 Khách Đã Gửi Sửa Web (1 Vòng)!',
+            ? '🆘 Khách gửi yêu cầu sửa Web & nhờ cài tên miền A–Z!'
+            : '📝 Khách đã gửi yêu cầu chỉnh sửa Web!',
           message: tgDetails,
           clientName: notifyBizName,
           slug: cleanSlug,
@@ -8963,8 +9016,8 @@ export default {
         runInBg(ctx, recordActivityAndNotify({
           type: 'ai_revision_applied',
           icon: '🤖',
-          title: `Gemini AI Đã Cập Nhật Website: ${finalBizName}`,
-          message: `Tóm tắt thay đổi: ${applyRes.changesSummary || 'Đã cập nhật cấu hình & bảng giá.'}\n(Đã tự động lưu bản Backup trước khi sửa để hoàn tác bất cứ lúc nào).`,
+          title: `Trợ lý AI đã tự động cập nhật website: ${finalBizName}`,
+          message: `Tóm tắt thay đổi: ${applyRes.changesSummary || 'Đã cập nhật thông tin và bảng giá mới.'}\n(Hệ thống đã lưu sẵn bản sao lưu trước khi sửa để khôi phục bất cứ lúc nào).`,
           clientName: finalBizName,
           slug: cleanSlug,
           env,
@@ -9116,8 +9169,8 @@ export default {
 
                 await recordActivityAndNotify({
                   type: 'payment_received',
-                  title: '💰 Đã Nhận Thanh Toán $599 AUD!',
-                  message: `${c.businessName || c.name} vừa thanh toán $599 AUD qua Stripe!`,
+                  title: '💰 Đã nhận thanh toán $599 AUD!',
+                  message: `${c.businessName || c.name} vừa hoàn tất thanh toán $599 AUD!`,
                   clientName: c.businessName || c.name,
                   slug: c.demoSlug,
                   dedupeKey: `paid_notified:${matchedSession.id}`,
@@ -9670,10 +9723,11 @@ export default {
               businessName: bizName,
               knownClient: mergedClient
             });
+            const deviceVi = device === 'Mobile' ? 'Điện thoại' : 'Máy tính';
             await recordActivityAndNotify({
               type: 'demo_self_unlocked',
-              title: '🔓 Khách Tự Mở Khoá Demo (48 Giờ)!',
-              message: `${bizName} vừa tự bấm nút Mở Khoá Xem Lại Demo 48 Giờ trên màn hình Expired (${device})! Khách đang rất quan tâm — hãy liên hệ chốt sale ngay!`,
+              title: '🔓 Khách vừa tự mở khoá xem lại mẫu Web (48 giờ)!',
+              message: `${bizName} vừa bấm nút mở khoá để xem lại trang web mẫu thêm 48 giờ (bằng ${deviceVi})! Khách đang rất quan tâm — hãy liên hệ chốt đơn ngay!`,
               clientName: bizName,
               slug: resolvedSlug,
               dedupeKey: `self_unlock_lock:${resolvedSlug}:${ipSafe}`,
@@ -9765,11 +9819,12 @@ export default {
             }).catch(() => {});
           }
 
+          const deviceVi = device === 'Mobile' ? 'Điện thoại' : 'Máy tính';
           if (eventType === 'claim_click') {
             await recordActivityAndNotify({
               type: 'claim_clicked',
-              title: '💳 Khách Bấm Nút Claim $599!',
-              message: `${bizName} vừa bấm nút Claim / Mua website trên Demo (${device})!`,
+              title: '💳 Khách vừa bấm nút Đặt mua website ($599)!',
+              message: `${bizName} vừa bấm nút Đặt mua trên trang web mẫu (bằng ${deviceVi})!`,
               clientName: bizName,
               slug: resolvedSlug,
               dedupeKey: `claim_click_lock:${resolvedSlug}:${ipSafe}`,
@@ -9780,8 +9835,8 @@ export default {
           } else {
             await recordActivityAndNotify({
               type: 'demo_viewed',
-              title: '👀 Khách Đang Xem Demo!',
-              message: `${bizName} vừa mở xem bản Demo của bạn! (${device})`,
+              title: '👀 Khách đang mở xem mẫu Web!',
+              message: `${bizName} vừa mở xem trang web mẫu của tiệm (bằng ${deviceVi})!`,
               clientName: bizName,
               slug: resolvedSlug,
               dedupeKey: `demo_notify_lock:${resolvedSlug}:${ipSafe}`,
@@ -10668,7 +10723,8 @@ export default {
                 client: updated0 || custToNotify,
                 triggerType: 'nurture_day7_nudge_0views',
                 icon: '👋',
-                title: `👋 [NGÀY 7 - 0 VIEW] Đã gửi SMS nhắc nhẹ xem Demo: ${biz}`,
+                title: `👋 [Ngày 7 — Khách chưa mở xem] Đã gửi SMS nhắc xem mẫu Web tới ${biz}`,
+                messageTypeLabel: 'Tin nhắn nhắc nhẹ ngày thứ 7 (dành cho khách chưa mở xem mẫu Web)',
                 views: realViews,
                 smsSent: Boolean(nudgeRes && nudgeRes.sent),
                 smsSkippedReason: nudgeRes && nudgeRes.reason,
@@ -10761,7 +10817,8 @@ export default {
               client: updatedCust || custToNotify,
               triggerType: 'nurture_flash_deal_299',
               icon: '🔥',
-              title: `🔥 [DEAL 50% $299] Đã gửi SMS/Email giảm giá 72h cho ${biz}`,
+              title: `🔥 [Ưu đãi giảm 50% còn $299 AUD] Đã gửi tin giảm giá 72 giờ tới ${biz}`,
+              messageTypeLabel: 'Tin nhắn ưu đãi giảm 50% còn $299 AUD (có hiệu lực 72 giờ)',
               views: realViews,
               smsSent: Boolean(notifyRes && notifyRes.sent),
               smsSkippedReason: notifyRes && notifyRes.reason,
@@ -11018,25 +11075,38 @@ export default {
           }
 
           const stepTitleMap = {
-            aussie_pitch: '🚀 [BƯỚC 1 - PITCH DEMO]',
-            pitch: '🚀 [BƯỚC 1 - PITCH DEMO]',
-            day3_reminder: '💬 [BƯỚC 2 - NGÀY 3 HỎI THĂM]',
-            aussie_followup_views: '👀 [BƯỚC 2 - KHÁCH ĐÃ XEM DEMO]',
-            followup_views: '👀 [BƯỚC 2 - KHÁCH ĐÃ XEM DEMO]',
-            day7_nudge_0views: '👋 [NGÀY 7 - NHẮC NHẸ 0 VIEW]',
-            day7_deal: '🔥 [BƯỚC 3 - FLASH DEAL $299]',
-            aussie_flash_deal_299: '🔥 [BƯỚC 3 - FLASH DEAL $299]',
-            flash_deal_299: '🔥 [BƯỚC 3 - FLASH DEAL $299]',
-            day9_warning: '⏳ [BƯỚC 4 - CẢNH BÁO 24H CUỐI]'
+            aussie_pitch: '🚀 [Bước 1 — Chào hàng lần đầu]',
+            pitch: '🚀 [Bước 1 — Chào hàng lần đầu]',
+            day3_reminder: '💬 [Bước 2 — Hỏi thăm sau 3 ngày]',
+            aussie_followup_views: '👀 [Bước 2 — Hỏi thăm khách đã xem mẫu]',
+            followup_views: '👀 [Bước 2 — Hỏi thăm khách đã xem mẫu]',
+            day7_nudge_0views: '👋 [Ngày 7 — Nhắc nhẹ khách chưa xem]',
+            day7_deal: '🔥 [Bước 3 — Ưu đãi giảm 50% còn $299]',
+            aussie_flash_deal_299: '🔥 [Bước 3 — Ưu đãi giảm 50% còn $299]',
+            flash_deal_299: '🔥 [Bước 3 — Ưu đãi giảm 50% còn $299]',
+            day9_warning: '⏳ [Bước 4 — Nhắc 24 giờ cuối]'
           };
-          const tgStepLabel = stepTitleMap[templateKey] || `📲 [NURTURE: ${templateKey}]`;
+          const stepDescMapVi = {
+            aussie_pitch: 'Bước 1 — Gửi mẫu Web xem trước lần đầu',
+            pitch: 'Bước 1 — Gửi mẫu Web xem trước lần đầu',
+            day3_reminder: 'Bước 2 — Hỏi thăm sau 3 ngày',
+            aussie_followup_views: 'Bước 2 — Hỏi thăm & hướng dẫn chỉnh sửa (khách đã xem mẫu)',
+            followup_views: 'Bước 2 — Hỏi thăm & hướng dẫn chỉnh sửa (khách đã xem mẫu)',
+            day7_nudge_0views: 'Ngày 7 — Tin nhắc nhẹ dành cho khách chưa mở xem',
+            day7_deal: 'Bước 3 — Ưu đãi giảm 50% còn $299 AUD (hiệu lực 72 giờ)',
+            aussie_flash_deal_299: 'Bước 3 — Ưu đãi giảm 50% còn $299 AUD (hiệu lực 72 giờ)',
+            flash_deal_299: 'Bước 3 — Ưu đãi giảm 50% còn $299 AUD (hiệu lực 72 giờ)',
+            day9_warning: 'Bước 4 — Tin nhắn nhắc lần cuối trước khi đóng trang mẫu'
+          };
+          const tgStepLabel = stepTitleMap[templateKey] || `📲 [Tin chăm sóc khách hàng]`;
           const tgNotifyRes = await notifyTelegramAutomatedComms({
             env,
             ctx,
             client: updatedCust || formatted,
             triggerType: `nurture_${templateKey}`,
             icon: '📲',
-            title: `${tgStepLabel} Đã gửi SMS/Email cho ${biz}`,
+            title: `${tgStepLabel} Đã gửi thông báo tới ${biz}`,
+            messageTypeLabel: stepDescMapVi[templateKey] || 'Tin nhắn chăm sóc khách hàng',
             views: realViews,
             smsSent: Boolean(smsRes && smsRes.sent),
             smsSkippedReason: smsRes && smsRes.reason,
@@ -11201,7 +11271,8 @@ export default {
                 client: c,
                 triggerType: 'turbo_step1_pitch',
                 icon: '⚡',
-                title: `⚡ [TURBO BƯỚC 1] Đã gửi Pitch Demo SMS/Email: ${biz}`,
+                title: `⚡ [Chạy thử Bước 1] Đã gửi mẫu Web chào hàng tới ${biz}`,
+                messageTypeLabel: 'Bước 1 — Gửi mẫu Web xem trước lần đầu (chạy thử nhanh)',
                 views: Number(c.demoViewCount || 0),
                 smsSent: Boolean(ffSmsRes.sent),
                 smsSkippedReason: ffSmsRes.reason,
@@ -11537,12 +11608,13 @@ export default {
             client: formatted,
             triggerType: 'dns_email_sent',
             icon: '🌐',
-            title: `🌐 [HƯỚNG DẪN DNS] Đã gửi Email Nameservers cho ${formatted.businessName || formatted.name || formatted.liveUrl}`,
+            title: `🌐 [Hướng dẫn tên miền] Đã gửi thư hướng dẫn kết nối tên miền tới ${formatted.businessName || formatted.name || formatted.liveUrl}`,
+            messageTypeLabel: 'Thư điện tử hướng dẫn kết nối tên miền cho website',
             emailSent: Boolean(mailRes && mailRes.sent),
             emailSkippedReason: mailRes && mailRes.reason,
             emailTo: formatted.email,
             emailSubject: dnsSubject,
-            extraNote: `Nameservers: ${nsToSend}`,
+            extraNote: `Cặp máy chủ tên miền: ${nsToSend}`,
             waitForTelegram: true
           });
 
@@ -11753,8 +11825,8 @@ export default {
               await recordStudioActivity(env, {
                 type: 'site_launched',
                 icon: '🚀',
-                title: `Website Chính Thức Đã Lên Sóng Live: ${bizLaunch}`,
-                message: `Tên miền chính thức https://${cleanHost} của "${bizLaunch}" đã được báo lên sóng Live thành công!`,
+                title: `Website chính thức đã lên sóng: ${bizLaunch}`,
+                message: `Tên miền chính thức https://${cleanHost} của "${bizLaunch}" đã chính thức hoạt động!`,
                 clientName: bizLaunch,
                 slug: formatted.demoSlug || ''
               }, ctx);
