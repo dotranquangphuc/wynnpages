@@ -121,14 +121,11 @@
         </span>
         <div class="min-w-0">
           <div class="font-editorial text-lg font-bold tracking-tight text-[#231f1a] leading-none">WynnPages</div>
-          <div class="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8c6b32] mt-1 truncate">Australian Digital Atelier</div>
+          <div class="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#8c6b32] mt-1 whitespace-nowrap">Australian Digital Atelier</div>
         </div>
       </a>
 
-      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-        <a id="co-back-demo-btn" href="https://wynnpages.com.au" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#dfd5c1] bg-white/80 hover:bg-white text-xs font-semibold text-[#4a433b] transition-colors">
-          <span>&larr; Preview Site</span>
-        </a>
+      <div class="flex items-center gap-2 shrink-0">
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#e9f2e6] border border-[#c5dcc0] text-[11px] font-bold text-[#2b4d26]">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>256-Bit Encrypted</span>
@@ -169,10 +166,6 @@
           <h1 id="co-biz-heading" class="font-editorial text-3xl sm:text-[34px] font-semibold leading-[1.12] text-[#231f1a]">
             Claim Your Custom Website
           </h1>
-          <p id="co-demo-url-wrap" class="hidden text-xs text-[#6f665c] flex items-center gap-1.5 flex-wrap">
-            <span>Preview concept:</span>
-            <a id="co-demo-url-link" href="#" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#96432b] underline break-all"></a>
-          </p>
         </div>
 
         <!-- Flash Deal Banner -->
@@ -214,7 +207,7 @@
           <ul class="space-y-2.5 text-xs sm:text-[13px] text-[#3d3730] leading-relaxed">
             <li class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
-              <span><strong>100% Tailored to Your Salon:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.</span>
+              <span id="co-tailored-bullet"><strong>100% Tailored to Your Business:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
@@ -270,10 +263,10 @@
         </div>
 
         <!-- 1-Tap Express Checkout (Apple Pay / Google Pay) -->
-        <div id="co-express-wrap" class="hidden space-y-2.5">
-          <div class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64]">Instant 1-Tap Wallet</div>
-          <div id="express-checkout-element" class="min-h-[48px]"></div>
-          <div class="relative py-2 flex items-center justify-center">
+        <div id="co-express-wrap" class="space-y-2.5">
+          <div id="co-express-title" class="hidden text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64]">Instant 1-Tap Wallet</div>
+          <div id="express-checkout-element"></div>
+          <div id="co-express-divider" class="hidden relative py-2 flex items-center justify-center">
             <span class="absolute inset-x-0 h-px bg-[#e5dec9]"></span>
             <span class="relative bg-[#fcf9f3] px-3 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#8c8273]">Or Pay With Card, Afterpay or Zip</span>
           </div>
@@ -320,9 +313,7 @@
 
       const bizHeadingEl = document.getElementById('co-biz-heading');
       const reservedLabelEl = document.getElementById('co-reserved-label');
-      const backDemoBtn = document.getElementById('co-back-demo-btn');
-      const demoUrlWrap = document.getElementById('co-demo-url-wrap');
-      const demoUrlLink = document.getElementById('co-demo-url-link');
+      const tailoredBulletEl = document.getElementById('co-tailored-bullet');
       const dealBanner = document.getElementById('co-deal-banner');
       const dealCountdown = document.getElementById('co-deal-countdown');
       const priceStrikeEl = document.getElementById('co-price-strike');
@@ -334,6 +325,8 @@
       const phoneInput = document.getElementById('co-phone-input');
 
       const expressWrap = document.getElementById('co-express-wrap');
+      const expressTitle = document.getElementById('co-express-title');
+      const expressDivider = document.getElementById('co-express-divider');
       const formEl = document.getElementById('co-payment-form');
       const submitBtn = document.getElementById('co-submit-btn');
       const submitLabel = document.getElementById('co-submit-label');
@@ -343,7 +336,9 @@
       let elements = null;
       let paymentIntentId = '';
       let clientCid = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
-      let flowType = (urlParams.get('flow') || 'outbound').trim();
+      const rawFlowParam = (urlParams.get('flow') || '').trim();
+      const hasOutboundHint = Boolean(clientCid || urlParams.get('slug') || urlParams.get('demo'));
+      let flowType = rawFlowParam || (hasOutboundHint ? 'outbound' : 'inbound');
       let shippingAu = { name: '', address: { line1: '100 Studio Lane', city: 'Brisbane', state: 'QLD', postal_code: '4000', country: 'AU' } };
       let amountAudNumber = 599;
 
@@ -442,14 +437,8 @@
           reservedLabelEl.textContent = flowType === 'inbound'
             ? 'New Website Build Slot'
             : `Exclusively Reserved for ${bizLabel}`;
-
-          if (c.demoUrl && c.demoUrl.startsWith('http')) {
-            backDemoBtn.href = c.demoUrl;
-            backDemoBtn.classList.remove('hidden');
-            backDemoBtn.classList.add('inline-flex');
-            demoUrlLink.href = c.demoUrl;
-            demoUrlLink.textContent = c.demoUrl;
-            demoUrlWrap.classList.remove('hidden');
+          if (tailoredBulletEl && flowType !== 'inbound') {
+            tailoredBulletEl.innerHTML = '<strong>100% Tailored to Your Salon:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.';
           }
 
           bizInput.value = bizLabel !== 'Your Business' ? bizLabel : '';
@@ -522,23 +511,51 @@
             }
           });
 
+          loadingEl.classList.add('hidden');
+          layoutEl.classList.remove('hidden');
+
           const expressCheckoutEl = elements.create('expressCheckout', {
+            paymentMethods: { applePay: 'auto', googlePay: 'auto', link: 'auto' },
             buttonType: { applePay: 'buy', googlePay: 'buy' },
             buttonTheme: { applePay: 'black', googlePay: 'black' },
             buttonHeight: 48
           });
           expressCheckoutEl.on('ready', (ev) => {
-            if (ev && ev.availablePaymentMethods && (ev.availablePaymentMethods.applePay || ev.availablePaymentMethods.googlePay)) {
-              expressWrap.classList.remove('hidden');
+            const avail = ev && ev.availablePaymentMethods;
+            if (avail && (avail.applePay || avail.googlePay || avail.link)) {
+              if (expressTitle) expressTitle.classList.remove('hidden');
+              if (expressDivider) expressDivider.classList.remove('hidden');
+            } else {
+              expressWrap.classList.add('hidden');
             }
           });
-          expressCheckoutEl.on('confirm', async () => {
+          expressCheckoutEl.on('confirm', async (event) => {
             showFormError('');
+            const bDetails = (event && event.billingDetails) || {};
+            const resolvedEmail = (emailInput.value || bDetails.email || '').trim();
+            const resolvedBiz = (bizInput.value || bDetails.name || '').trim();
+            const resolvedPhone = (phoneInput.value || bDetails.phone || '').trim();
+            if (!emailInput.value && resolvedEmail) emailInput.value = resolvedEmail;
+            if (!bizInput.value && resolvedBiz) bizInput.value = resolvedBiz;
+            if (!phoneInput.value && resolvedPhone) phoneInput.value = resolvedPhone;
+            if (resolvedEmail || resolvedBiz || resolvedPhone) {
+              await fetch('/api/checkout-intent-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  paymentIntentId,
+                  cid: clientCid,
+                  businessName: resolvedBiz,
+                  email: resolvedEmail,
+                  phone: resolvedPhone
+                })
+              }).catch(() => {});
+            }
             const { error, paymentIntent } = await stripe.confirmPayment({
               elements,
               confirmParams: {
                 return_url: buildSuccessRedirectUrl(paymentIntentId),
-                receipt_email: (emailInput.value || '').trim() || undefined
+                receipt_email: resolvedEmail || undefined
               },
               redirect: 'if_required'
             });
@@ -552,8 +569,8 @@
 
           const paymentElement = elements.create('payment', {
             layout: { type: 'tabs', defaultCollapsed: false },
-            wallets: { applePay: 'never', googlePay: 'never' },
-            paymentMethodOrder: ['card', 'afterpay_clearpay', 'zip'],
+            wallets: { applePay: 'auto', googlePay: 'auto' },
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'card', 'afterpay_clearpay', 'zip', 'klarna'],
             defaultValues: {
               billingDetails: {
                 name: bizInput.value.trim() || undefined,
@@ -564,9 +581,6 @@
             }
           });
           paymentElement.mount('#payment-element');
-
-          loadingEl.classList.add('hidden');
-          layoutEl.classList.remove('hidden');
         } catch (err) {
           showInitError(err && err.message ? err.message : 'Unable to start checkout.');
         }

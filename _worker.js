@@ -6661,10 +6661,113 @@ async function runScheduledAutopilot(env, options = {}) {
 }
 
 let _lastBgSchedulerTickMs = 0;
+let _applePayDomainAssocText = '';
+const _pmdEnsuredDomains = new Set();
+
+async function fetchStripeApplePayDomainAssoc() {
+  if (_applePayDomainAssocText) return _applePayDomainAssocText;
+  const res = await fetch('https://stripe.com/files/apple-pay/apple-developer-merchantid-domain-association', {
+    cf: { cacheEverything: true, cacheTtl: 86400 }
+  }).catch(() => null);
+  if (res && res.ok) {
+    const txt = await res.text();
+    if (txt && txt.length > 100) {
+      _applePayDomainAssocText = txt;
+      return txt;
+    }
+  }
+  return '';
+}
+
+async function ensureStripePaymentMethodDomain(cfg, domainName = 'wynnpages.com.au', forceValidate = false) {
+  const cleanDomain = String(domainName || 'wynnpages.com.au').trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+  if (!cfg || !cfg.stripeSecretKey || !cleanDomain || cleanDomain === 'localhost' || cleanDomain.endsWith('.workers.dev')) {
+    return { ok: false, skipped: true, reason: 'Invalid domain or missing Stripe key' };
+  }
+  const authHeader = { 'Authorization': `Bearer ${cfg.stripeSecretKey}` };
+  let pmd = null;
+
+  const listRes = await fetch(`https://api.stripe.com/v1/payment_method_domains?domain_name=${encodeURIComponent(cleanDomain)}&limit=5`, {
+    headers: authHeader
+  }).catch(() => null);
+  if (listRes && listRes.ok) {
+    const listJson = await listRes.json().catch(() => ({}));
+    if (Array.isArray(listJson.data) && listJson.data.length > 0) {
+      pmd = listJson.data[0];
+    }
+  }
+
+  if (!pmd) {
+    const createRes = await fetch('https://api.stripe.com/v1/payment_method_domains', {
+      method: 'POST',
+      headers: {
+        ...authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({ domain_name: cleanDomain, enabled: 'true' }).toString()
+    }).catch(() => null);
+    if (createRes) {
+      const createdJson = await createRes.json().catch(() => ({}));
+      if (!createRes.ok) {
+        return { ok: false, error: (createdJson.error && createdJson.error.message) || 'Failed to register payment method domain', raw: createdJson };
+      }
+      pmd = createdJson;
+    }
+  } else if (!pmd.enabled) {
+    const enableRes = await fetch(`https://api.stripe.com/v1/payment_method_domains/${encodeURIComponent(pmd.id)}`, {
+      method: 'POST',
+      headers: {
+        ...authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({ enabled: 'true' }).toString()
+    }).catch(() => null);
+    if (enableRes && enableRes.ok) {
+      pmd = await enableRes.json().catch(() => pmd);
+    }
+  }
+
+  if (pmd && pmd.id) {
+    const apActive = pmd.apple_pay && pmd.apple_pay.status === 'active';
+    const gpActive = pmd.google_pay && pmd.google_pay.status === 'active';
+    if (forceValidate || !apActive || !gpActive) {
+      const valRes = await fetch(`https://api.stripe.com/v1/payment_method_domains/${encodeURIComponent(pmd.id)}/validate`, {
+        method: 'POST',
+        headers: authHeader
+      }).catch(() => null);
+      if (valRes) {
+        const valJson = await valRes.json().catch(() => ({}));
+        if (valRes.ok && valJson.id) {
+          pmd = valJson;
+        } else {
+          return { ok: false, domain: pmd, validationError: (valJson.error && valJson.error.message) || 'Domain validation failed', rawValidation: valJson };
+        }
+      }
+    }
+  }
+
+  return { ok: Boolean(pmd && pmd.id), domain: pmd };
+}
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // 0. Apple Pay Domain Verification File (Required for Stripe Apple Pay & Google Pay Domain Validation)
+    if (url.pathname === '/.well-known/apple-developer-merchantid-domain-association') {
+      const assocText = await fetchStripeApplePayDomainAssoc();
+      if (!assocText) {
+        return new Response('Unable to fetch Apple Pay domain association', { status: 502 });
+      }
+      return new Response(assocText, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
 
     // 1. CORS Preflight
     // Handle CORS preflight globally (supports REST + Stripe webhook)
@@ -7006,7 +7109,16 @@ export default {
         let phone = String(body.phone || '').trim();
         let demoUrl = String(body.demo || '').trim();
         const dealParam = String(body.deal || '').trim();
-        const flowParam = String(body.flow || 'outbound').trim() === 'inbound' ? 'inbound' : 'outbound';
+        const rawFlowParam = String(body.flow || '').trim();
+        const hasOutboundHint = Boolean(cid || slugHint || demoUrl);
+        const flowParam = rawFlowParam === 'inbound'
+          ? 'inbound'
+          : (rawFlowParam === 'outbound' ? 'outbound' : (hasOutboundHint ? 'outbound' : 'inbound'));
+
+        if (!_pmdEnsuredDomains.has(url.hostname)) {
+          _pmdEnsuredDomains.add(url.hostname);
+          runInBg(ctx, ensureStripePaymentMethodDomain(cfg, url.hostname, false).catch(() => {}));
+        }
 
         let cust = null;
         if (cid && cid.startsWith('cus_')) {
@@ -7024,8 +7136,8 @@ export default {
           cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
           if (cust && cust.id) cid = cust.id;
         }
-        if (!cust && (slugHint || demoUrl || bizName)) {
-          const fallbackSlug = slugHint || slugifyName(extractCleanHost(demoUrl).replace(/\.wynnpages\.com\.au$/i, '') || bizName);
+        if (!cust && (slugHint || demoUrl)) {
+          const fallbackSlug = slugHint || slugifyName(extractCleanHost(demoUrl).replace(/\.wynnpages\.com\.au$/i, ''));
           if (fallbackSlug) {
             cust = await ensureStripeCustomerMigrated(env, fallbackSlug, cfg.stripeSecretKey);
             if (cust && cust.id) cid = cust.id;
@@ -7037,7 +7149,7 @@ export default {
           if (!email) email = custRec.email || '';
           if (!bizName) bizName = custRec.businessName || custRec.name || '';
           if (!phone) phone = custRec.phone || custRec.displayPhone || '';
-          if (!demoUrl) demoUrl = custRec.demoUrl || (custRec.demoSlug ? `https://${custRec.demoSlug}.wynnpages.com.au` : '');
+          if (flowParam === 'outbound' && !demoUrl) demoUrl = custRec.demoUrl || (custRec.demoSlug ? `https://${custRec.demoSlug}.wynnpages.com.au` : '');
           if (!slugHint) slugHint = custRec.demoSlug || '';
         }
         const dbCheckout = getD1(env);
@@ -7066,7 +7178,7 @@ export default {
             if (!email && d1CheckoutRec.email) email = d1CheckoutRec.email;
             if (!bizName && d1CheckoutRec.businessName) bizName = d1CheckoutRec.businessName;
             if (!phone && d1CheckoutRec.phone) phone = d1CheckoutRec.phone;
-            if (!demoUrl && d1CheckoutRec.demoUrl) demoUrl = d1CheckoutRec.demoUrl;
+            if (flowParam === 'outbound' && !demoUrl && d1CheckoutRec.demoUrl) demoUrl = d1CheckoutRec.demoUrl;
             if (!slugHint && d1CheckoutRec.demoSlug) slugHint = d1CheckoutRec.demoSlug;
           }
         }
@@ -7086,8 +7198,8 @@ export default {
 
         const unitAmount = isFlashDeal50 ? 29900 : 59900;
         const amountAud = Math.round(unitAmount / 100);
-        const resolvedSlug = slugHint || slugifyName(bizName || '');
-        if (!demoUrl && resolvedSlug) demoUrl = `https://${resolvedSlug}.wynnpages.com.au`;
+        const resolvedSlug = slugHint || (custRec && custRec.demoSlug) || (d1CheckoutRec && d1CheckoutRec.demoSlug) || '';
+        const verifiedDemoUrl = (flowParam === 'outbound' && demoUrl && (custRec || d1CheckoutRec)) ? demoUrl : '';
 
         const piParams = new URLSearchParams();
         piParams.append('amount', String(unitAmount));
@@ -7117,7 +7229,7 @@ export default {
         if (email) piParams.append('metadata[customer_email]', email);
         if (phone) piParams.append('metadata[customer_phone]', phone);
         if (resolvedSlug) piParams.append('metadata[demo_slug]', resolvedSlug);
-        if (demoUrl) piParams.append('metadata[demo_url]', demoUrl);
+        if (verifiedDemoUrl) piParams.append('metadata[demo_url]', verifiedDemoUrl);
         if (isFlashDeal50) piParams.append('metadata[deal_type]', 'flash_deal_50');
 
         const piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
@@ -7153,7 +7265,7 @@ export default {
             phone,
             address: resolvedAddr,
             demoSlug: resolvedSlug,
-            demoUrl
+            demoUrl: verifiedDemoUrl
           }
         }), { status: 200, headers: corsHeaders });
       } catch (err) {
@@ -11094,6 +11206,17 @@ export default {
         if (action === 'save_cf_token') {
           await saveSyncedSettings(env, { cfApiToken: (body.cfToken || '').trim() }, { clearEmpty: true });
           return new Response(JSON.stringify({ ok: true, message: 'Cloudflare API Token updated' }), { status: 200, headers: corsHeaders });
+        }
+
+        if (action === 'ensure_payment_domain') {
+          const domains = Array.isArray(body.domains) && body.domains.length
+            ? body.domains
+            : [body.domain || 'wynnpages.com.au', 'www.wynnpages.com.au'];
+          const results = {};
+          for (const d of domains) {
+            results[d] = await ensureStripePaymentMethodDomain(effectiveCfg, d, true);
+          }
+          return new Response(JSON.stringify({ ok: true, results }), { status: 200, headers: corsHeaders });
         }
 
         if (action === 'send_sample_invoice') {

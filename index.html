@@ -2069,28 +2069,8 @@ Every website is hand-coded to highlight your unique craft, convert visitors, an
   }
 
   function openCheckoutDrawer(e) {
-    if(e) e.preventDefault();
-    const overlay = document.getElementById('checkout-overlay');
-    const drawer = document.getElementById('checkout-drawer');
-    const step1 = document.getElementById('checkout-step-1');
-    const step2 = document.getElementById('checkout-step-2');
-    
-    // Reset state
-    step1.classList.remove('hidden');
-    step1.classList.add('opacity-100');
-    step1.classList.remove('opacity-0');
-    step2.classList.add('hidden', 'opacity-0');
-    
-    // Lock scroll
-    document.body.style.overflow = 'hidden';
-    
-    // Animate in
-    overlay.classList.remove('pointer-events-none', 'opacity-0');
-    overlay.classList.add('opacity-100');
-    
-    setTimeout(() => {
-      drawer.style.transform = 'translate3d(0,0,0)';
-    }, 10);
+    if (e) e.preventDefault();
+    window.location.href = '/checkout?flow=inbound';
   }
 
   function closeCheckoutDrawer() {
