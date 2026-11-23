@@ -7312,68 +7312,51 @@ export default {
         const resolvedSlug = slugHint || (custRec && custRec.demoSlug) || (d1CheckoutRec && d1CheckoutRec.demoSlug) || '';
         const verifiedDemoUrl = (flowParam === 'outbound' && demoUrl && (custRec || d1CheckoutRec)) ? demoUrl : '';
 
-        const buildPiParams = (methodList) => {
-          const params = new URLSearchParams();
-          params.append('amount', String(unitAmount));
-          params.append('currency', 'aud');
-          methodList.forEach((mType) => params.append('payment_method_types[]', mType));
-          params.append('description', isFlashDeal50
-            ? `WynnPages Bespoke Website (50% Sponsorship) — ${bizName || 'Client'}`
-            : `WynnPages Bespoke Website Design & Build — ${bizName || 'Client'}`);
-          if (cust && cust.id) params.append('customer', cust.id);
-          if (email) params.append('receipt_email', email);
-          params.append('shipping[name]', shippingAu.name);
-          params.append('shipping[address][line1]', shippingAu.address.line1);
-          params.append('shipping[address][city]', shippingAu.address.city);
-          params.append('shipping[address][state]', shippingAu.address.state);
-          params.append('shipping[address][postal_code]', shippingAu.address.postal_code);
-          params.append('shipping[address][country]', 'AU');
-          if (phone) params.append('shipping[phone]', phone);
+        const piParams = new URLSearchParams();
+        piParams.append('amount', String(unitAmount));
+        piParams.append('currency', 'aud');
+        piParams.append('automatic_payment_methods[enabled]', 'true');
+        piParams.append('automatic_payment_methods[allow_redirects]', 'always');
+        piParams.append('description', isFlashDeal50
+          ? `WynnPages Bespoke Website (50% Sponsorship) — ${bizName || 'Client'}`
+          : `WynnPages Bespoke Website Design & Build — ${bizName || 'Client'}`);
+        if (cust && cust.id) piParams.append('customer', cust.id);
+        if (email) piParams.append('receipt_email', email);
+        piParams.append('shipping[name]', shippingAu.name);
+        piParams.append('shipping[address][line1]', shippingAu.address.line1);
+        piParams.append('shipping[address][city]', shippingAu.address.city);
+        piParams.append('shipping[address][state]', shippingAu.address.state);
+        piParams.append('shipping[address][postal_code]', shippingAu.address.postal_code);
+        piParams.append('shipping[address][country]', 'AU');
+        if (phone) piParams.append('shipping[phone]', phone);
 
-          params.append('metadata[studio]', 'WynnPages Australia');
-          params.append('metadata[flow_type]', flowParam);
-          if (cid) params.append('metadata[customer_id]', cid);
-          if (bizName) {
-            params.append('metadata[business_name]', bizName);
-            params.append('metadata[customer_name]', bizName);
-          }
-          if (email) params.append('metadata[customer_email]', email);
-          if (phone) params.append('metadata[customer_phone]', phone);
-          if (resolvedSlug) params.append('metadata[demo_slug]', resolvedSlug);
-          if (verifiedDemoUrl) params.append('metadata[demo_url]', verifiedDemoUrl);
-          if (isFlashDeal50) params.append('metadata[deal_type]', 'flash_deal_50');
-          return params;
-        };
+        piParams.append('metadata[studio]', 'WynnPages Australia');
+        piParams.append('metadata[flow_type]', flowParam);
+        if (cid) piParams.append('metadata[customer_id]', cid);
+        if (bizName) {
+          piParams.append('metadata[business_name]', bizName);
+          piParams.append('metadata[customer_name]', bizName);
+        }
+        if (email) piParams.append('metadata[customer_email]', email);
+        if (phone) piParams.append('metadata[customer_phone]', phone);
+        if (resolvedSlug) piParams.append('metadata[demo_slug]', resolvedSlug);
+        if (verifiedDemoUrl) piParams.append('metadata[demo_url]', verifiedDemoUrl);
+        if (isFlashDeal50) piParams.append('metadata[deal_type]', 'flash_deal_50');
 
-        // Explicitly prefer AU methods only (excludes Klarna & Link); gracefully fallback if Afterpay is disabled on Stripe Dashboard
-        const preferredMethods = ['card', 'afterpay_clearpay', 'zip'];
-        const fallbackMethods = ['card', 'zip'];
-        let activeMethodTypes = preferredMethods;
-        let piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
+        const piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${cfg.stripeSecretKey}`,
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: buildPiParams(preferredMethods).toString()
+          body: piParams.toString()
         });
-        let piData = await piRes.json();
-        if ((!piRes.ok || !piData.client_secret) && piData && piData.error && /afterpay|payment_method_type/i.test(String(piData.error.message || '') + ' ' + String(piData.error.param || ''))) {
-          activeMethodTypes = fallbackMethods;
-          piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: buildPiParams(fallbackMethods).toString()
-          });
-          piData = await piRes.json();
-        }
+        const piData = await piRes.json();
         if (!piRes.ok || !piData.client_secret) {
           const msg = piData.error ? piData.error.message : 'Unable to initialise PaymentIntent';
           return new Response(JSON.stringify({ ok: false, error: msg }), { status: 400, headers: corsHeaders });
         }
+        const activeMethodTypes = Array.isArray(piData.payment_method_types) ? piData.payment_method_types : ['card', 'afterpay_clearpay', 'zip'];
 
         return new Response(JSON.stringify({
           ok: true,
@@ -10821,227 +10804,6 @@ export default {
         };
 
         const computeLeadStats = (leadsArr = []) => {
-          const stats = {
-            total: leadsArr.length,
-            hotNoWeb: 0,
-            socialBooking: 0,
-            customWeb: 0,
-            imported: 0,
-            unimported: 0
-          };
-          const industryCounts = {
-            all: leadsArr.length,
-            nails: 0,
-            hair: 0,
-            lash_brow: 0,
-            spa: 0,
-            dining: 0,
-            other: 0
-          };
-
-          for (const l of leadsArr) {
-            if (l.imported) stats.imported++;
-            else stats.unimported++;
-
-            if (l.leadType === 'hot_lead_no_web') stats.hotNoWeb++;
-            else if (l.leadType === 'social_booking_only') stats.socialBooking++;
-            else stats.customWeb++;
-
-            const ind = l.industry || 'other';
-            if (industryCounts[ind] !== undefined) {
-              industryCounts[ind]++;
-            } else {
-              industryCounts.other++;
-            }
-          }
-          return { stats, industryCounts };
-        };
-
-        const sortLeads = (arr) => {
-          return arr.sort((a, b) => {
-            // Unimported first
-            if (Boolean(a.imported) !== Boolean(b.imported)) {
-              return a.imported ? 1 : -1;
-            }
-            // Higher priority score first (Hot Lead 3 -> Social 2 -> Custom Web 1)
-            if ((b.priorityScore || 0) !== (a.priorityScore || 0)) {
-              return (b.priorityScore || 0) - (a.priorityScore || 0);
-            }
-            // Higher review count first
-            if ((b.userRatingCount || 0) !== (a.userRatingCount || 0)) {
-              return (b.userRatingCount || 0) - (a.userRatingCount || 0);
-            }
-            return (b.rating || 0) - (a.rating || 0);
-          });
-        };
-
-        // Load existing stored leads from D1 (primary) or KV (fallback)
-        let storedLeads = [];
-        const dbLh = getD1(env);
-        if (dbLh) {
-          await ensureD1Schema(env);
-          const d1Res = await dbLh.prepare('SELECT data_json, imported FROM lead_hunter_leads ORDER BY updated_at DESC LIMIT 500').all().catch(() => null);
-          if (d1Res && Array.isArray(d1Res.results) && d1Res.results.length > 0) {
-            storedLeads = d1Res.results.map(r => {
-              try {
-                const parsed = JSON.parse(r.data_json || '{}');
-                if (r.imported) parsed.imported = true;
-                return parsed;
-              } catch (_) { return null; }
-            }).filter(Boolean);
-          }
-        }
-        if (storedLeads.length === 0 && env && env.WYNN_KV) {
-          const rawKv = await env.WYNN_KV.get('studio_lead_hunter_db', 'json').catch(() => null);
-          if (Array.isArray(rawKv)) {
-            storedLeads = rawKv;
-            if (dbLh && storedLeads.length > 0) {
-              runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
-            }
-          }
-        }
-
-        const persistLeads = async (leadsToSave) => {
-          if (dbLh) {
-            await mirrorLeadHunterToD1(env, leadsToSave);
-          } else if (env && env.WYNN_KV) {
-            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(leadsToSave)).catch(() => {});
-          }
-        };
-
-        // ACTION 1: LIST STORED LEADS (Immediate cached read)
-        if (action === 'list') {
-          const sorted = sortLeads([...storedLeads]);
-          const { stats, industryCounts } = computeLeadStats(sorted);
-          return new Response(
-            JSON.stringify({
-              ok: true,
-              totalLeads: sorted.length,
-              leads: sorted,
-              stats,
-              industryCounts
-            }),
-            { status: 200, headers: corsHeaders }
-          );
-        }
-
-        // ACTION 2: MARK IMPORTED
-        if (action === 'mark_imported') {
-          const targetId = body.placeId || body.id;
-          let found = false;
-          let updatedLead = null;
-
-          storedLeads = storedLeads.map((l) => {
-            if ((l.placeId && l.placeId === targetId) || (l.id && l.id === targetId)) {
-              found = true;
-              updatedLead = {
-                ...l,
-                imported: true,
-                importedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              };
-              return updatedLead;
-            }
-            return l;
-          });
-
-          if (found) {
-            await persistLeads(storedLeads);
-          }
-
-          const { stats, industryCounts } = computeLeadStats(storedLeads);
-          return new Response(
-            JSON.stringify({
-              ok: true,
-              found,
-              lead: updatedLead,
-              totalLeads: storedLeads.length,
-              stats,
-              industryCounts
-            }),
-            { status: 200, headers: corsHeaders }
-          );
-        }
-
-        // ACTION 3: DELETE LEAD
-        if (action === 'delete_lead') {
-          const targetId = body.placeId || body.id;
-          const initialLen = storedLeads.length;
-          storedLeads = storedLeads.filter((l) => !(l.placeId === targetId || l.id === targetId));
-
-          if (storedLeads.length !== initialLen) {
-            await persistLeads(storedLeads);
-          }
-
-          const { stats, industryCounts } = computeLeadStats(storedLeads);
-          return new Response(
-            JSON.stringify({
-              ok: true,
-              deleted: storedLeads.length !== initialLen,
-              totalLeads: storedLeads.length,
-              stats,
-              industryCounts
-            }),
-            { status: 200, headers: corsHeaders }
-          );
-        }
-
-        // ACTION 4: CLEAR LEADS (Per industry or all)
-        if (action === 'clear_leads') {
-          const indFilter = body.industry || 'all';
-          if (indFilter === 'all') {
-            storedLeads = [];
-          } else {
-            storedLeads = storedLeads.filter((l) => (l.industry || 'other') !== indFilter);
-          }
-          await persistLeads(storedLeads);
-          const { stats, industryCounts } = computeLeadStats(storedLeads);
-          return new Response(
-            JSON.stringify({
-              ok: true,
-              clearedIndustry: indFilter,
-              totalLeads: storedLeads.length,
-              stats,
-              industryCounts
-            }),
-            { status: 200, headers: corsHeaders }
-          );
-        }
-
-        // ACTION 5: SCAN GOOGLE MAPS AND ACCUMULATE (DEFAULT)
-        const effectivePlacesKey = (body.googlePlacesApiKey || cfg.googlePlacesApiKey || '').trim();
-        if (!effectivePlacesKey) {
-          return new Response(
-            JSON.stringify({
-              ok: false,
-              missingKey: true,
-              error: 'Chưa cấu hình Google Places API Key. Vui lòng bấm vào "Cài đặt Key ⚙️" và nhập key.'
-            }),
-            { status: 400, headers: corsHeaders }
-          );
-        }
-
-        const keyword = (body.keyword || 'Nail Salon').trim();
-        const location = (body.location || 'Brisbane QLD').trim();
-        const rawSelectedIndustry = (body.industry || '').trim();
-        const minRating = parseFloat(body.minRating) || 0;
-        const textQuery = `${keyword} in ${location}`;
-
-        // Call Google Places API (New): places.googleapis.com/v1/places:searchText
-        const fieldMask = [
-          'places.id',
-          'places.displayName',
-          'places.formattedAddress',
-          'places.nationalPhoneNumber',
-          'places.internationalPhoneNumber',
-          'places.rating',
-          'places.userRatingCount',
-          'places.websiteUri',
-          'places.googleMapsUri',
-          'places.regularOpeningHours',
-          'places.reviews',
-          'places.photos',
-          'places.parkingOptions',
           'places.editorialSummary'
         ].join(',');
 
@@ -11389,6 +11151,9 @@ export default {
                 if (body.configureMethods) {
                   const cfgParams = new URLSearchParams();
                   cfgParams.append('afterpay_clearpay[display_preference][preference]', 'on');
+                  cfgParams.append('zip[display_preference][preference]', 'on');
+                  cfgParams.append('apple_pay[display_preference][preference]', 'on');
+                  cfgParams.append('google_pay[display_preference][preference]', 'on');
                   cfgParams.append('klarna[display_preference][preference]', 'off');
                   cfgParams.append('link[display_preference][preference]', 'off');
                   const upPmc = await fetch(`https://api.stripe.com/v1/payment_method_configurations/${encodeURIComponent(defCfg.id)}`, {
