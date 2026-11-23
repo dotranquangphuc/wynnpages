@@ -1118,6 +1118,21 @@ async function processDueScheduledSms(env, ctx) {
       cfg
     });
     const sentAtIso = new Date().toISOString();
+    let schedClient = { businessName: row.client_name || 'Khách hàng', phone: row.to_phone, id: row.client_id || '' };
+    if (row.client_id) {
+      const cRow = await db.prepare('SELECT business_name, demo_slug, demo_url, email, view_count FROM clients WHERE id = ?').bind(row.client_id).first().catch(() => null);
+      if (cRow) {
+        schedClient = {
+          id: row.client_id,
+          businessName: cRow.business_name || schedClient.businessName,
+          demoSlug: cRow.demo_slug || '',
+          demoUrl: cRow.demo_url || '',
+          email: cRow.email || '',
+          phone: row.to_phone
+        };
+        schedClient._views = Number(cRow.view_count || 0);
+      }
+    }
     if (smsRes && smsRes.sent) {
       sentCount++;
       await db.prepare(
@@ -1136,6 +1151,19 @@ async function processDueScheduledSms(env, ctx) {
         });
         runInBg(ctx, histPromise);
       }
+      await notifyTelegramAutomatedComms({
+        env,
+        ctx,
+        client: schedClient,
+        triggerType: 'scheduled_sms_sent',
+        icon: '⏰',
+        title: `⏰ [SMS HẸN GIỜ] Đã tự động gửi SMS tới ${schedClient.businessName}`,
+        views: schedClient._views ?? null,
+        smsSent: true,
+        smsTo: smsRes.to || row.to_phone,
+        smsText: row.body_text,
+        extraNote: row.scheduled_for_au ? `Lịch Úc: ${row.scheduled_for_au}` : ''
+      });
       items.push({ id: row.id, status: 'sent', to: smsRes.to || row.to_phone, scheduledForAu: row.scheduled_for_au, sentAt: sentAtIso });
     } else {
       failedCount++;
@@ -1143,6 +1171,20 @@ async function processDueScheduledSms(env, ctx) {
       await db.prepare(
         `UPDATE scheduled_sms SET status = 'failed', error_reason = ? WHERE id = ?`
       ).bind(String(reason).slice(0, 480), row.id).run().catch(() => {});
+      await notifyTelegramAutomatedComms({
+        env,
+        ctx,
+        client: schedClient,
+        triggerType: 'scheduled_sms_failed',
+        icon: '⚠️',
+        title: `⚠️ [SMS HẸN GIỜ LỖI] Không gửi được tới ${schedClient.businessName}`,
+        views: schedClient._views ?? null,
+        smsSent: false,
+        smsSkippedReason: reason,
+        smsTo: row.to_phone,
+        smsText: row.body_text,
+        extraNote: row.scheduled_for_au ? `Lịch Úc: ${row.scheduled_for_au}` : ''
+      });
       items.push({ id: row.id, status: 'failed', to: row.to_phone, reason });
     }
   }
@@ -1756,49 +1798,75 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
 
       // 2. Official Tax Invoice + Portal Link Email via Resend
       (async () => {
+        let payEmailRes = { sent: false, reason: 'Chưa có Email' };
         try {
-          if (!resolvedEmail) return;
-          const emailRes = await sendResendEmail({ to: resolvedEmail, subject: emailSubject, html: emailHtml, cfg });
-          if (cust && cust.id && cfg.stripeSecretKey) {
-            const logP = new URLSearchParams();
-            logP.append(
-              'metadata[last_email_log]',
-              (emailRes.sent ? `OK (${resolvedEmail}) [tax_invoice] @ ${new Date().toISOString()}` : `ERR: ${emailRes.reason || 'Failed'} [tax_invoice]`).slice(0, 480)
-            );
-            await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              body: logP.toString()
-            }).catch(() => {});
+          if (resolvedEmail) {
+            payEmailRes = await sendResendEmail({ to: resolvedEmail, subject: emailSubject, html: emailHtml, cfg });
+            if (cust && cust.id && cfg.stripeSecretKey) {
+              const logP = new URLSearchParams();
+              logP.append(
+                'metadata[last_email_log]',
+                (payEmailRes.sent ? `OK (${resolvedEmail}) [tax_invoice] @ ${new Date().toISOString()}` : `ERR: ${payEmailRes.reason || 'Failed'} [tax_invoice]`).slice(0, 480)
+              );
+              await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cust.id)}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: logP.toString()
+              }).catch(() => {});
+            }
           }
         } catch (err) {
-          console.error('[post-payment email]', err && err.message ? err.message : err);
+          payEmailRes = { sent: false, reason: (err && err.message) || 'Email error' };
+          console.error('[post-payment email]', payEmailRes.reason);
         }
+        return payEmailRes;
       })(),
 
       // 3. Direct Portal Magic Link SMS via ClickSend (AU mobile 04/+614 only)
       (async () => {
+        let paySmsRes = { sent: false, reason: 'Không có SĐT di động Úc' };
         try {
-          if (!resolvedPhone || !isValidAuMobile(resolvedPhone)) return;
-          const smsRes = await sendClickSendSms(resolvedPhone, smsText, cfg);
-          await recordSmsHistory({
-            customerId: resolvedCid,
-            type: isOutbound ? 'outbound_paid_confirmed' : 'payment_confirmed',
-            to: smsRes.to || normalizeAuPhone(resolvedPhone),
-            text: smsText,
-            status: smsRes && smsRes.sent,
-            reason: smsRes && smsRes.reason,
-            env,
-            stripeSecretKey: cfg.stripeSecretKey
-          }).catch(() => {});
+          if (resolvedPhone && isValidAuMobile(resolvedPhone)) {
+            paySmsRes = await sendClickSendSms(resolvedPhone, smsText, cfg);
+            await recordSmsHistory({
+              customerId: resolvedCid,
+              type: isOutbound ? 'outbound_paid_confirmed' : 'payment_confirmed',
+              to: paySmsRes.to || normalizeAuPhone(resolvedPhone),
+              text: smsText,
+              status: paySmsRes && paySmsRes.sent,
+              reason: paySmsRes && paySmsRes.reason,
+              env,
+              stripeSecretKey: cfg.stripeSecretKey
+            }).catch(() => {});
+          }
         } catch (err) {
-          console.error('[post-payment sms]', err && err.message ? err.message : err);
+          paySmsRes = { sent: false, reason: (err && err.message) || 'SMS error' };
+          console.error('[post-payment sms]', paySmsRes.reason);
         }
+        return paySmsRes;
       })()
-    ]);
+    ]).then(async ([, payEmailRes, paySmsRes]) => {
+      await notifyTelegramAutomatedComms({
+        env,
+        ctx,
+        client: { id: resolvedCid, businessName: resolvedBiz, demoSlug: resolvedSlug, email: resolvedEmail, phone: resolvedPhone },
+        triggerType: 'post_payment_comms',
+        icon: '🧾',
+        title: `🧾 [SAU THANH TOÁN ${amountAudShort}] Đã gửi Invoice & Portal cho ${resolvedBiz}`,
+        smsSent: Boolean(paySmsRes && paySmsRes.sent),
+        smsSkippedReason: paySmsRes && paySmsRes.reason,
+        smsTo: (paySmsRes && paySmsRes.to) || resolvedPhone,
+        smsText,
+        emailSent: Boolean(payEmailRes && payEmailRes.sent),
+        emailSkippedReason: payEmailRes && payEmailRes.reason,
+        emailTo: resolvedEmail,
+        emailSubject,
+        waitForTelegram: true
+      });
+    });
 
     runInBg(ctx, notifyPipeline);
   }
@@ -1835,7 +1903,7 @@ function buildDomainGuideUrl({ origin, client = {}, tab = '', ns = '' }) {
   return `${origin}/domain-guide?${params.toString()}`;
 }
 
-async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
+async function triggerLifecycleNotification({ stage, client, origin, cfg, env = null, ctx = null, suppressTelegram = false, waitForTelegram = false }) {
   const firstName = (client.name || 'mate').split(' ')[0];
   const email = client.email || '';
   const phone = client.phone || '';
@@ -2203,7 +2271,43 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg }) {
     email ? Promise.resolve(sendResendEmail({ to: email, subject: emailSubject, html: emailHtml, cfg })).catch((err) => ({ sent: false, reason: (err && err.message) || 'Email delivery skipped' })) : Promise.resolve({ sent: false, reason: 'No email on record' })
   ]);
 
-  return { smsResult, emailResult, stage, smsText, phone };
+  let telegramRes = null;
+  if (!suppressTelegram && env && (smsResult.sent || emailResult.sent || phone || email)) {
+    const stageTitles = {
+      outbound_pitch: '🚀 [BƯỚC 1 - PITCH DEMO] Đã gửi SMS & Email chào hàng',
+      outbound_followup: client.dealStatus === 'flash_deal'
+        ? '🔥 [DEAL 50% $299] Đã gửi SMS & Email Follow-up'
+        : '💬 [CHĂM SÓC DEMO] Đã gửi SMS & Email Follow-up',
+      payment_confirmed: '💳 [XÁC NHẬN ĐƠN HÀNG] Đã gửi Tax Invoice + Portal',
+      outbound_paid_confirmed: '💳 [CHỐT SALE DEMO] Đã gửi Tax Invoice + Revision Portal',
+      brief_completed: '📝 [ONBOARDING BRIEF] Đã gửi SMS & Email hướng dẫn Domain',
+      outbound_revision_submitted: '✏️ [NHẬN YÊU CẦU CHỈNH SỬA] Đã gửi SMS & Email Domain Guide',
+      demo_ready: '🎨 [DEMO SẴN SÀNG] Đã gửi SMS & Email mời xem Web',
+      demo_reminder: '👋 [NHẮC XEM DEMO] Đã gửi SMS & Email check-in',
+      site_launched: '🌐 [LÊN SÓNG LIVE] Đã gửi SMS & Email chúc mừng khai trương'
+    };
+    const bizTitle = client.businessName || client.name || 'Khách hàng';
+    telegramRes = await notifyTelegramAutomatedComms({
+      env,
+      ctx,
+      client,
+      triggerType: `lifecycle_${stage}`,
+      icon: '📩',
+      title: `${stageTitles[stage] || `📩 [GỬI THÔNG BÁO: ${stage}]`} — ${bizTitle}`,
+      views: client.demoViewCount !== undefined ? client.demoViewCount : null,
+      smsSent: Boolean(smsResult && smsResult.sent),
+      smsSkippedReason: smsResult && smsResult.reason,
+      smsTo: (smsResult && smsResult.to) || phone,
+      smsText,
+      emailSent: Boolean(emailResult && emailResult.sent),
+      emailSkippedReason: emailResult && emailResult.reason,
+      emailTo: email,
+      emailSubject,
+      waitForTelegram
+    });
+  }
+
+  return { smsResult, emailResult, stage, smsText, phone, emailSubject, telegramNotified: Boolean(telegramRes && telegramRes.telegramSent) };
 }
 
 function buildNurtureStepSms({ stepKey, biz, demoUrl, views = 0 }) {
@@ -3702,13 +3806,13 @@ function buildClaimBarSnippet(client) {
       z-index: 999999;
       width: calc(100% - 28px);
       max-width: 820px;
-      background: linear-gradient(135deg, rgba(58, 35, 25, 0.92) 0%, rgba(43, 26, 19, 0.94) 100%) !important;
-      backdrop-filter: blur(22px) saturate(180%) !important;
-      -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
-      border: 1px solid rgba(212, 155, 40, 0.38) !important;
+      background: linear-gradient(135deg, rgba(54, 32, 23, 0.72) 0%, rgba(38, 22, 16, 0.76) 100%) !important;
+      backdrop-filter: blur(28px) saturate(190%) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+      border: 1px solid rgba(235, 192, 92, 0.44) !important;
       border-radius: 22px;
       padding: 22px 20px 14px 20px;
-      box-shadow: 0 20px 48px -12px rgba(54, 26, 16, 0.42), 0 4px 16px rgba(43, 25, 18, 0.24), inset 0 1px 0 rgba(255, 244, 228, 0.18) !important;
+      box-shadow: 0 22px 50px -10px rgba(28, 17, 12, 0.38), 0 4px 16px rgba(43, 25, 18, 0.20), inset 0 1px 0 rgba(255, 248, 236, 0.28), inset 0 -1px 0 rgba(212, 155, 40, 0.16) !important;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -3762,11 +3866,11 @@ function buildClaimBarSnippet(client) {
       align-items: center;
       justify-content: center;
       gap: 7px;
-      background: linear-gradient(135deg, rgba(58, 35, 25, 0.92) 0%, rgba(43, 26, 19, 0.94) 100%) !important;
-      backdrop-filter: blur(22px) saturate(180%) !important;
-      -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
+      background: linear-gradient(135deg, rgba(54, 32, 23, 0.74) 0%, rgba(38, 22, 16, 0.78) 100%) !important;
+      backdrop-filter: blur(28px) saturate(190%) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
       color: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(212, 155, 40, 0.38) !important;
+      border: 1px solid rgba(235, 192, 92, 0.44) !important;
       border-radius: 9999px;
       padding: 8px 16px;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -3774,15 +3878,15 @@ function buildClaimBarSnippet(client) {
       font-weight: 700;
       letter-spacing: 0.01em;
       white-space: nowrap;
-      box-shadow: 0 20px 48px -12px rgba(54, 26, 16, 0.42), 0 4px 16px rgba(43, 25, 18, 0.24), inset 0 1px 0 rgba(255, 244, 228, 0.18) !important;
+      box-shadow: 0 20px 48px -12px rgba(28, 17, 12, 0.38), 0 4px 16px rgba(43, 25, 18, 0.20), inset 0 1px 0 rgba(255, 248, 236, 0.28), inset 0 -1px 0 rgba(212, 155, 40, 0.16) !important;
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .claim-restore-tab:hover {
-      background: linear-gradient(135deg, rgba(72, 43, 30, 0.96) 0%, rgba(52, 31, 22, 0.96) 100%) !important;
-      border-color: rgba(212, 155, 40, 0.56) !important;
+      background: linear-gradient(135deg, rgba(72, 43, 30, 0.84) 0%, rgba(52, 31, 22, 0.86) 100%) !important;
+      border-color: rgba(235, 192, 92, 0.62) !important;
       color: #ffffff;
     }
     .claim-restore-tab.visible {
@@ -4688,13 +4792,77 @@ async function recordStudioActivity(env, payload = {}, ctx = null) {
     slug: payload.slug || '',
     dedupeKey: payload.dedupeKey || '',
     dedupeTtl: payload.dedupeTtl || 3600,
+    waitForTelegram: Boolean(payload.waitForTelegram),
     env,
     ctx
   });
 }
 
+async function notifyTelegramAutomatedComms({
+  env,
+  ctx = null,
+  client = {},
+  triggerType = 'automated_comms',
+  icon = '📲',
+  title,
+  views = null,
+  smsSent = false,
+  smsSkippedReason = '',
+  smsTo = '',
+  smsText = '',
+  emailSent = false,
+  emailSkippedReason = '',
+  emailTo = '',
+  emailSubject = '',
+  extraNote = '',
+  waitForTelegram = false
+}) {
+  if (!env) return null;
+  const biz = (client && (client.businessName || client.name)) || 'Khách hàng';
+  const slug = (client && (client.demoSlug || slugifyName(biz))) || '';
+  const demoUrl = (client && (client.demoUrl || client.brandedDemoUrl)) || (slug ? `https://${slug}.wynnpages.com.au` : '');
+  const lines = [];
+  lines.push(`🏢 Khách: ${biz}`);
+  if (demoUrl) lines.push(`🌐 Web Demo: ${demoUrl}`);
+  if (views !== null && views !== undefined) lines.push(`👀 Lượt xem Demo: ${Number(views || 0)}`);
+  if (extraNote) lines.push(`ℹ️ Ghi chú: ${extraNote}`);
+
+  if (smsText || smsTo || smsSent || smsSkippedReason) {
+    lines.push(
+      smsSent
+        ? `📱 SMS: ✅ Đã gửi tới ${smsTo || (client && client.phone) || 'N/A'}`
+        : `📱 SMS: ⚠️ Chưa gửi (${smsSkippedReason || 'Chưa có SĐT / Bỏ qua'})`
+    );
+    if (smsText) {
+      const trimmedSms = String(smsText).trim();
+      lines.push(`💬 Nội dung SMS:\n"${trimmedSms.length > 440 ? trimmedSms.slice(0, 437) + '...' : trimmedSms}"`);
+    }
+  }
+
+  if (emailSubject || emailTo || emailSent || emailSkippedReason) {
+    lines.push(
+      emailSent
+        ? `📧 Email: ✅ Đã gửi tới ${emailTo || (client && client.email) || 'N/A'}${emailSubject ? `\n📝 Tiêu đề Email: ${emailSubject}` : ''}`
+        : `📧 Email: ⚠️ Chưa gửi (${emailSkippedReason || 'Chưa có Email / Chưa cấu hình'})`
+    );
+  }
+
+  return recordActivityAndNotify({
+    type: triggerType,
+    icon,
+    title: title || `Thông báo gửi SMS/Email: ${biz}`,
+    message: lines.join('\n'),
+    clientName: biz,
+    slug,
+    dedupeKey: '',
+    waitForTelegram,
+    env,
+    ctx
+  }).catch(() => null);
+}
+
 // Record in-app activity feed event in D1/KV and broadcast instant push (Telegram Bot)
-async function recordActivityAndNotify({ type, icon: customIcon = '', title, message, clientName, slug, dedupeKey = '', dedupeTtl = 86400, env, ctx }) {
+async function recordActivityAndNotify({ type, icon: customIcon = '', title, message, clientName, slug, dedupeKey = '', dedupeTtl = 86400, waitForTelegram = false, env, ctx }) {
   if (!env) return null;
   if (dedupeKey) {
     const acquired = await acquireD1RateLock(env, dedupeKey, dedupeTtl);
@@ -4766,26 +4934,32 @@ async function recordActivityAndNotify({ type, icon: customIcon = '', title, mes
             disable_web_page_preview: true
           })
         });
-        if (!res.ok) {
-          // Plain-text fallback guarantee
-          const plainText = `${icon} ${title || 'WynnPages Activity'}\n\n${message || ''}\n\n🕒 ${timeStr}\n👉 https://wynnpages.com.au/admin${cleanSlugLink ? `\n🌐 ${cleanSlugLink}` : ''}`;
-          await fetch(tgUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: plainText,
-              disable_web_page_preview: true
-            })
-          }).catch(() => {});
-        }
+        if (res.ok) return true;
+        // Plain-text fallback guarantee
+        const plainText = `${icon} ${title || 'WynnPages Activity'}\n\n${message || ''}\n\n🕒 ${timeStr}\n👉 https://wynnpages.com.au/admin${cleanSlugLink ? `\n🌐 ${cleanSlugLink}` : ''}`;
+        const fbRes = await fetch(tgUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: plainText,
+            disable_web_page_preview: true
+          })
+        }).catch(() => null);
+        return Boolean(fbRes && fbRes.ok);
       }
     } catch (tgErr) {
       console.error('[Telegram notify error]', tgErr);
     }
+    return false;
   };
 
-  runInBg(ctx, sendTelegram());
+  if (waitForTelegram || !ctx || typeof ctx.waitUntil !== 'function') {
+    newEvent.telegramSent = await sendTelegram();
+  } else {
+    runInBg(ctx, sendTelegram());
+    newEvent.telegramSent = true;
+  }
   return newEvent;
 }
 
@@ -5722,14 +5896,20 @@ async function runScheduledAutopilot(env, options = {}) {
           reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'} - FB] Nhắc Admin gửi FB hỏi thăm (${d3Views} views): ${biz}`);
         }
         continue;
-      } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
+      } else if ((settings.autoSms || force || isTurbo) && ((c.phone && cfg.clicksendApiKey) || (c.email && cfg.resendApiKey))) {
         const reminderMsg = buildNurtureStepSms({ stepKey: 'step2', biz, demoUrl, views: d3Views });
-        const smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
+        let smsRes = { sent: false, reason: c.phone ? 'Chưa cấu hình ClickSend' : 'Chưa có SĐT' };
+        if (c.phone && cfg.clicksendApiKey) {
+          smsRes = await sendClickSendSms(c.phone, reminderMsg, cfg);
+        }
         let emailSent = false;
+        let emailRes = { sent: false, reason: c.email ? 'Chưa cấu hình Resend' : 'Chưa có Email' };
+        let mailPayload = null;
         if (c.email && cfg.resendApiKey) {
-          const mailPayload = buildNurtureStepEmail({ stepKey: 'step2', client: c, demoUrl, views: d3Views });
+          mailPayload = buildNurtureStepEmail({ stepKey: 'step2', client: c, demoUrl, views: d3Views });
           if (mailPayload) {
-            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
+            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch((e) => ({ sent: false, reason: e.message }));
+            if (mRes) emailRes = mRes;
             emailSent = Boolean(mRes && mRes.sent);
           }
         }
@@ -5737,18 +5917,38 @@ async function runScheduledAutopilot(env, options = {}) {
         uP.append('metadata[nurture_step]', 'day3_reminder');
         uP.append('metadata[step2_sent_at]', nowIso);
         uP.append('metadata[fb_due_step]', '');
-        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
+        if (c.phone && smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
         if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day3_reminder] @ ${nowIso}`.slice(0, 480));
         await patchCustAndSync(c.id, uP);
-        await recordSmsHistory({
-          customerId: c.id,
+        if (c.phone) {
+          await recordSmsHistory({
+            customerId: c.id,
+            env,
+            stripeSecretKey: cfg.stripeSecretKey,
+            type: 'day3_reminder',
+            to: c.phone,
+            text: reminderMsg,
+            status: smsRes.sent,
+            reason: smsRes.reason
+          });
+        }
+        await notifyTelegramAutomatedComms({
           env,
-          stripeSecretKey: cfg.stripeSecretKey,
-          type: 'day3_reminder',
-          to: c.phone,
-          text: reminderMsg,
-          status: smsRes.sent,
-          reason: smsRes.reason
+          ctx: options.ctx || null,
+          client: c,
+          triggerType: 'autopilot_step2',
+          icon: isTurbo ? '⚡' : '🤖',
+          title: `${isTurbo ? '⚡ [TURBO T+15p - BƯỚC 2]' : '🤖 [AUTOPILOT NGÀY 3 - BƯỚC 2]'} Đã gửi chăm sóc: ${biz}`,
+          views: d3Views,
+          smsSent: Boolean(smsRes && smsRes.sent),
+          smsSkippedReason: smsRes && smsRes.reason,
+          smsTo: (smsRes && smsRes.to) || c.phone,
+          smsText: reminderMsg,
+          emailSent,
+          emailSkippedReason: emailRes && emailRes.reason,
+          emailTo: c.email,
+          emailSubject: (mailPayload && mailPayload.subject) || '',
+          waitForTelegram: true
         });
         if (smsRes.sent) smsSentCount++;
         reports.push(`[${isTurbo ? 'Phút 15' : 'Ngày 3'}] Gửi SMS${emailSent ? '+Email' : ''} Hỏi thăm (${d3Views} views): ${biz}`);
@@ -5786,7 +5986,8 @@ async function runScheduledAutopilot(env, options = {}) {
               title: `Đã Hạ Giá $299 & Đến Hạn Gửi FB Bước 3: ${biz}`,
               message: `Web Demo của "${biz}" đã tự động giảm xuống $299 AUD (72h). Mở Admin bấm vào Bước 3 đang sáng xanh để Copy lời chào Deal 50% & gửi qua Messenger!`,
               clientName: biz,
-              slug: c.demoSlug || ''
+              slug: c.demoSlug || '',
+              waitForTelegram: true
             }, options.ctx);
           }
           reports.push(`[${isTurbo ? 'Phút 30' : 'Ngày 6'} - FB] Hạ Demo $299 AUD (72h) + Nhắc Admin gửi FB: ${biz}`);
@@ -5796,26 +5997,28 @@ async function runScheduledAutopilot(env, options = {}) {
         uP.append('metadata[nurture_step]', 'day7_deal_active');
         uP.append('metadata[fb_due_step]', '');
         let smsSent = false;
-        let dealMsg = '';
-        let smsRes = null;
+        let dealMsg = buildNurtureStepSms({ stepKey: 'step3', biz, demoUrl });
+        let smsRes = { sent: false, reason: c.phone ? 'Chưa cấu hình ClickSend' : 'Chưa có SĐT' };
         if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
-          dealMsg = buildNurtureStepSms({ stepKey: 'step3', biz, demoUrl });
           smsRes = await sendClickSendSms(c.phone, dealMsg, cfg);
           smsSent = Boolean(smsRes && smsRes.sent);
           if (smsSent) smsSentCount++;
           if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day7_deal] @ ${nowIso}`.slice(0, 480));
         }
         let emailSent = false;
+        let emailRes = { sent: false, reason: c.email ? 'Chưa cấu hình Resend' : 'Chưa có Email' };
+        let mailPayload = null;
         if (c.email && cfg.resendApiKey) {
-          const mailPayload = buildNurtureStepEmail({ stepKey: 'step3', client: c, demoUrl });
+          mailPayload = buildNurtureStepEmail({ stepKey: 'step3', client: c, demoUrl });
           if (mailPayload) {
-            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
+            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch((e) => ({ sent: false, reason: e.message }));
+            if (mRes) emailRes = mRes;
             emailSent = Boolean(mRes && mRes.sent);
             if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day7_deal] @ ${nowIso}`.slice(0, 480));
           }
         }
         await patchCustAndSync(c.id, uP);
-        if (smsRes) {
+        if (c.phone && smsRes) {
           await recordSmsHistory({
             customerId: c.id,
             env,
@@ -5827,6 +6030,25 @@ async function runScheduledAutopilot(env, options = {}) {
             reason: smsRes.reason
           });
         }
+        await notifyTelegramAutomatedComms({
+          env,
+          ctx: options.ctx || null,
+          client: c,
+          triggerType: 'autopilot_step3_deal299',
+          icon: '🔥',
+          title: `${isTurbo ? '⚡ [TURBO T+30p - BƯỚC 3]' : '🔥 [AUTOPILOT NGÀY 6/7 - BƯỚC 3]'} Kích hoạt Deal $299 & gửi SMS/Email: ${biz}`,
+          views: Number(c.demoViewCount || 0),
+          smsSent,
+          smsSkippedReason: smsRes && smsRes.reason,
+          smsTo: (smsRes && smsRes.to) || c.phone,
+          smsText: dealMsg,
+          emailSent,
+          emailSkippedReason: emailRes && emailRes.reason,
+          emailTo: c.email,
+          emailSubject: (mailPayload && mailPayload.subject) || '',
+          extraNote: `Hết hạn Flash Deal $299 AUD lúc: ${formatAuDateTime(new Date(dealExpiresAt), AU_TIMEZONE)}`,
+          waitForTelegram: true
+        });
         dealActivatedCount++;
         reports.push(`[${isTurbo ? 'Phút 30' : 'Ngày 6'}] Kích hoạt Deal 50% ($299 AUD / 72h)${smsSent ? ' + gửi SMS' : ''}${emailSent ? '+Email' : ''}: ${biz}`);
         continue;
@@ -5857,20 +6079,27 @@ async function runScheduledAutopilot(env, options = {}) {
               title: `Đến Hạn Gửi FB Bước 4 (24h Cuối): ${biz}`,
               message: `Đã đến ${isTurbo ? 'phút 45 (Test)' : 'Ngày 9'} cho khách Facebook "${biz}". Mở Admin bấm vào Bước 4 đang sáng xanh để Copy tin nhắc 24h cuối & mở Messenger!`,
               clientName: biz,
-              slug: c.demoSlug || ''
+              slug: c.demoSlug || '',
+              waitForTelegram: true
             }, options.ctx);
           }
           reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'} - FB] Nhắc Admin gửi tin 24h cuối: ${biz}`);
         }
         continue;
-      } else if ((settings.autoSms || force || isTurbo) && c.phone && cfg.clicksendApiKey) {
+      } else if ((settings.autoSms || force || isTurbo) && ((c.phone && cfg.clicksendApiKey) || (c.email && cfg.resendApiKey))) {
         const warningMsg = buildNurtureStepSms({ stepKey: 'step4', biz, demoUrl });
-        const smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
+        let smsRes = { sent: false, reason: c.phone ? 'Chưa cấu hình ClickSend' : 'Chưa có SĐT' };
+        if (c.phone && cfg.clicksendApiKey) {
+          smsRes = await sendClickSendSms(c.phone, warningMsg, cfg);
+        }
         let emailSent = false;
+        let emailRes = { sent: false, reason: c.email ? 'Chưa cấu hình Resend' : 'Chưa có Email' };
+        let mailPayload = null;
         if (c.email && cfg.resendApiKey) {
-          const mailPayload = buildNurtureStepEmail({ stepKey: 'step4', client: c, demoUrl });
+          mailPayload = buildNurtureStepEmail({ stepKey: 'step4', client: c, demoUrl });
           if (mailPayload) {
-            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch(() => null);
+            const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg }).catch((e) => ({ sent: false, reason: e.message }));
+            if (mRes) emailRes = mRes;
             emailSent = Boolean(mRes && mRes.sent);
           }
         }
@@ -5878,18 +6107,38 @@ async function runScheduledAutopilot(env, options = {}) {
         uP.append('metadata[nurture_step]', 'day9_warning');
         uP.append('metadata[step4_sent_at]', nowIso);
         uP.append('metadata[fb_due_step]', '');
-        if (smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day9_warning] @ ${nowIso}`.slice(0, 480));
+        if (c.phone && smsRes) uP.append('metadata[last_sms_log]', `${smsRes.sent ? 'OK' : 'ERR'} (${c.phone}) [day9_warning] @ ${nowIso}`.slice(0, 480));
         if (emailSent) uP.append('metadata[last_email_log]', `OK (${c.email}) [day9_warning] @ ${nowIso}`.slice(0, 480));
         await patchCustAndSync(c.id, uP);
-        await recordSmsHistory({
-          customerId: c.id,
+        if (c.phone) {
+          await recordSmsHistory({
+            customerId: c.id,
+            env,
+            stripeSecretKey: cfg.stripeSecretKey,
+            type: 'day9_warning',
+            to: c.phone,
+            text: warningMsg,
+            status: smsRes.sent,
+            reason: smsRes.reason
+          });
+        }
+        await notifyTelegramAutomatedComms({
           env,
-          stripeSecretKey: cfg.stripeSecretKey,
-          type: 'day9_warning',
-          to: c.phone,
-          text: warningMsg,
-          status: smsRes.sent,
-          reason: smsRes.reason
+          ctx: options.ctx || null,
+          client: c,
+          triggerType: 'autopilot_step4_warning',
+          icon: '⏳',
+          title: `${isTurbo ? '⚡ [TURBO T+45p - BƯỚC 4]' : '⏳ [AUTOPILOT NGÀY 9 - BƯỚC 4]'} Cảnh báo 24h cuối: ${biz}`,
+          views: Number(c.demoViewCount || 0),
+          smsSent: Boolean(smsRes && smsRes.sent),
+          smsSkippedReason: smsRes && smsRes.reason,
+          smsTo: (smsRes && smsRes.to) || c.phone,
+          smsText: warningMsg,
+          emailSent,
+          emailSkippedReason: emailRes && emailRes.reason,
+          emailTo: c.email,
+          emailSubject: (mailPayload && mailPayload.subject) || '',
+          waitForTelegram: true
         });
         if (smsRes.sent) smsSentCount++;
         reports.push(`[${isTurbo ? 'Phút 45' : 'Ngày 9'}] Gửi SMS${emailSent ? '+Email' : ''} Cảnh báo 24h cuối: ${biz}`);
@@ -5922,7 +6171,8 @@ async function runScheduledAutopilot(env, options = {}) {
           title: `Đã Khoá Demo Tự Động (${isTurbo ? 'Test 60p' : 'Ngày 10'}): ${biz}`,
           message: `Bản Demo (${demoUrl}) đã tự động khoá HTTP 403 sau khi kết thúc chu trình chốt sale.`,
           clientName: biz,
-          slug: c.demoSlug || ''
+          slug: c.demoSlug || '',
+          waitForTelegram: true
         }, options.ctx);
         reports.push(`[${isTurbo ? 'Phút 60' : `Ngày ${Math.round(daysElapsed)}`}] Khoá Demo 403: ${biz}`);
         continue;
@@ -6851,7 +7101,10 @@ export default {
           stage: 'brief_completed',
           client: clientRecord,
           origin: url.origin,
-          cfg
+          cfg,
+          env,
+          ctx,
+          waitForTelegram: true
         });
 
         const nsList = resolvedNsStr ? resolvedNsStr.split(',').map((s) => s.trim()).filter(Boolean) : [];
@@ -8016,7 +8269,10 @@ export default {
             domainConciergeRequested: Boolean(revPayload.domainConciergeRequested)
           },
           origin: url.origin,
-          cfg
+          cfg,
+          env,
+          ctx,
+          waitForTelegram: true
         }).catch((err) => ({ error: err.message }));
 
         let adminEmailTask = Promise.resolve(null);
@@ -10405,6 +10661,22 @@ export default {
             let updated0 = custToNotify;
             if (patch0.ok) updated0 = formatCustomerRecord(await patch0.json());
             if (updated0) await upsertD1Client(env, updated0);
+            if (body.notify && nudgeRes) {
+              await notifyTelegramAutomatedComms({
+                env,
+                ctx,
+                client: updated0 || custToNotify,
+                triggerType: 'nurture_day7_nudge_0views',
+                icon: '👋',
+                title: `👋 [NGÀY 7 - 0 VIEW] Đã gửi SMS nhắc nhẹ xem Demo: ${biz}`,
+                views: realViews,
+                smsSent: Boolean(nudgeRes && nudgeRes.sent),
+                smsSkippedReason: nudgeRes && nudgeRes.reason,
+                smsTo: (nudgeRes && nudgeRes.to) || custToNotify.phone,
+                smsText: nudgeText,
+                waitForTelegram: true
+              });
+            }
             return new Response(JSON.stringify({
               ok: true,
               skippedDealSms: true,
@@ -10416,6 +10688,8 @@ export default {
 
           let notifyRes = null;
           let emailRes = null;
+          let dealSmsText = '';
+          let dealMailSubject = '';
           let logMsg = '';
           const uP = new URLSearchParams();
           uP.append('metadata[deal_status]', 'flash_deal');
@@ -10429,8 +10703,8 @@ export default {
           const demoLink = (custToNotify && (custToNotify.demoUrl || custToNotify.brandedDemoUrl)) || ( custToNotify && custToNotify.demoSlug ? `https://${custToNotify.demoSlug}.wynnpages.com.au` : `https://${customerId}.wynnpages.com.au`);
 
           if (body.notify && custToNotify && custToNotify.phone && effectiveCfg.clicksendApiKey) {
-            const text = buildNurtureStepSms({ stepKey: 'step3', biz, demoUrl: demoLink, views: Number((custToNotify && custToNotify.views) || 0) });
-            notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: text, cfg: effectiveCfg });
+            dealSmsText = buildNurtureStepSms({ stepKey: 'step3', biz, demoUrl: demoLink, views: Number((custToNotify && custToNotify.views) || 0) });
+            notifyRes = await sendClickSendSms({ to: custToNotify.phone, message: dealSmsText, cfg: effectiveCfg });
             if (notifyRes) {
               const nowIso = new Date().toISOString();
               logMsg = notifyRes.sent
@@ -10443,7 +10717,7 @@ export default {
                 stripeSecretKey: effectiveCfg.stripeSecretKey,
                 type: 'deal_50_active',
                 to: custToNotify.phone,
-                text,
+                text: dealSmsText,
                 status: notifyRes.sent,
                 reason: notifyRes.reason
               });
@@ -10452,6 +10726,7 @@ export default {
           if (body.notify && custToNotify && custToNotify.email && effectiveCfg.resendApiKey) {
             const mailPayload = buildNurtureStepEmail({ stepKey: 'step3', client: custToNotify, demoUrl: demoLink });
             if (mailPayload) {
+              dealMailSubject = mailPayload.subject || '';
               emailRes = await sendResendEmail({ to: custToNotify.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
               if (emailRes && emailRes.sent) {
                 uP.append('metadata[last_email_log]', `OK (${custToNotify.email}) [deal_50_active] @ ${dealActivatedAt}`.slice(0, 480));
@@ -10477,6 +10752,27 @@ export default {
           }
           if (updatedCust) {
             await upsertD1Client(env, updatedCust);
+          }
+
+          if (body.notify && (notifyRes || emailRes)) {
+            await notifyTelegramAutomatedComms({
+              env,
+              ctx,
+              client: updatedCust || custToNotify,
+              triggerType: 'nurture_flash_deal_299',
+              icon: '🔥',
+              title: `🔥 [DEAL 50% $299] Đã gửi SMS/Email giảm giá 72h cho ${biz}`,
+              views: realViews,
+              smsSent: Boolean(notifyRes && notifyRes.sent),
+              smsSkippedReason: notifyRes && notifyRes.reason,
+              smsTo: (notifyRes && notifyRes.to) || (custToNotify && custToNotify.phone) || '',
+              smsText: dealSmsText,
+              emailSent: Boolean(emailRes && emailRes.sent),
+              emailSkippedReason: emailRes && emailRes.reason,
+              emailTo: (custToNotify && custToNotify.email) || '',
+              emailSubject: dealMailSubject,
+              waitForTelegram: true
+            });
           }
 
           return new Response(JSON.stringify({ ok: true, dealStatus: 'flash_deal', dealExpiresAt, client: updatedCust, notifyRes }), { status: 200, headers: corsHeaders });
@@ -10644,9 +10940,11 @@ export default {
             smsRes = await sendClickSendSms({ to: formatted.phone, message: smsText, cfg: effectiveCfg });
           }
           let emailRes = null;
+          let sentMailSubject = '';
           if (formatted.email && effectiveCfg.resendApiKey) {
             const mailPayload = buildNurtureStepEmail({ stepKey: templateKey, client: formatted, demoUrl, views: realViews });
             if (mailPayload) {
+              sentMailSubject = mailPayload.subject || '';
               emailRes = await sendResendEmail({ to: formatted.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
             }
           }
@@ -10719,10 +11017,43 @@ export default {
             runInBg(ctx, syncClientsKvSnapshot(env));
           }
 
+          const stepTitleMap = {
+            aussie_pitch: '🚀 [BƯỚC 1 - PITCH DEMO]',
+            pitch: '🚀 [BƯỚC 1 - PITCH DEMO]',
+            day3_reminder: '💬 [BƯỚC 2 - NGÀY 3 HỎI THĂM]',
+            aussie_followup_views: '👀 [BƯỚC 2 - KHÁCH ĐÃ XEM DEMO]',
+            followup_views: '👀 [BƯỚC 2 - KHÁCH ĐÃ XEM DEMO]',
+            day7_nudge_0views: '👋 [NGÀY 7 - NHẮC NHẸ 0 VIEW]',
+            day7_deal: '🔥 [BƯỚC 3 - FLASH DEAL $299]',
+            aussie_flash_deal_299: '🔥 [BƯỚC 3 - FLASH DEAL $299]',
+            flash_deal_299: '🔥 [BƯỚC 3 - FLASH DEAL $299]',
+            day9_warning: '⏳ [BƯỚC 4 - CẢNH BÁO 24H CUỐI]'
+          };
+          const tgStepLabel = stepTitleMap[templateKey] || `📲 [NURTURE: ${templateKey}]`;
+          const tgNotifyRes = await notifyTelegramAutomatedComms({
+            env,
+            ctx,
+            client: updatedCust || formatted,
+            triggerType: `nurture_${templateKey}`,
+            icon: '📲',
+            title: `${tgStepLabel} Đã gửi SMS/Email cho ${biz}`,
+            views: realViews,
+            smsSent: Boolean(smsRes && smsRes.sent),
+            smsSkippedReason: smsRes && smsRes.reason,
+            smsTo: (smsRes && smsRes.to) || formatted.phone,
+            smsText,
+            emailSent: Boolean(emailRes && emailRes.sent),
+            emailSkippedReason: emailRes && emailRes.reason,
+            emailTo: formatted.email,
+            emailSubject: sentMailSubject,
+            waitForTelegram: true
+          });
+
           return new Response(JSON.stringify({
             ok: Boolean((smsRes && smsRes.sent) || (emailRes && emailRes.sent)),
             result: smsRes,
             emailResult: emailRes,
+            telegramNotified: Boolean(tgNotifyRes && tgNotifyRes.telegramSent),
             client: updatedCust
           }), { status: 200, headers: corsHeaders });
         }
@@ -10845,16 +11176,43 @@ export default {
             uP.append('metadata[step1_sent_at]', shiftedIso);
             uP.append('metadata[stage]', 'outbound_pitched');
             uP.append('metadata[nurture_step]', 'aussie_pitch');
+            const biz = c.businessName || c.name || 'Boutique';
+            const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
+            const pitchSms = buildNurtureStepSms({ stepKey: 'step1', biz, demoUrl });
+            let ffSmsRes = { sent: false, reason: c.phone ? 'Chưa cấu hình ClickSend' : 'Chưa có SĐT' };
             if (!isFbMode && c.phone && effectiveCfg.clicksendApiKey) {
-              const biz = c.businessName || c.name || 'Boutique';
-              const demoUrl = c.demoUrl || c.brandedDemoUrl || `https://${c.demoSlug || c.id}.wynnpages.com.au`;
-              const pitchSms = buildNurtureStepSms({ stepKey: 'step1', biz, demoUrl });
-              const sRes = await sendClickSendSms(c.phone, pitchSms, effectiveCfg);
-              await recordSmsHistory({ customerId: c.id, env, stripeSecretKey: effectiveCfg.stripeSecretKey, type: 'aussie_pitch', to: c.phone, text: pitchSms, status: sRes.sent, reason: sRes.reason });
+              ffSmsRes = await sendClickSendSms(c.phone, pitchSms, effectiveCfg);
+              await recordSmsHistory({ customerId: c.id, env, stripeSecretKey: effectiveCfg.stripeSecretKey, type: 'aussie_pitch', to: c.phone, text: pitchSms, status: ffSmsRes.sent, reason: ffSmsRes.reason });
             }
+            let ffEmailRes = { sent: false, reason: c.email ? 'Chưa cấu hình Resend' : 'Chưa có Email' };
+            let ffMailSubject = '';
             if (!isFbMode && c.email && effectiveCfg.resendApiKey) {
               const mailPayload = buildNurtureStepEmail({ stepKey: 'step1', client: c });
-              if (mailPayload) await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch(() => null);
+              if (mailPayload) {
+                ffMailSubject = mailPayload.subject || '';
+                const mRes = await sendResendEmail({ to: c.email, subject: mailPayload.subject, html: mailPayload.html, cfg: effectiveCfg }).catch((e) => ({ sent: false, reason: e.message }));
+                if (mRes) ffEmailRes = mRes;
+              }
+            }
+            if (!isFbMode && (ffSmsRes.sent || ffEmailRes.sent)) {
+              await notifyTelegramAutomatedComms({
+                env,
+                ctx,
+                client: c,
+                triggerType: 'turbo_step1_pitch',
+                icon: '⚡',
+                title: `⚡ [TURBO BƯỚC 1] Đã gửi Pitch Demo SMS/Email: ${biz}`,
+                views: Number(c.demoViewCount || 0),
+                smsSent: Boolean(ffSmsRes.sent),
+                smsSkippedReason: ffSmsRes.reason,
+                smsTo: ffSmsRes.to || c.phone,
+                smsText: pitchSms,
+                emailSent: Boolean(ffEmailRes.sent),
+                emailSkippedReason: ffEmailRes.reason,
+                emailTo: c.email,
+                emailSubject: ffMailSubject,
+                waitForTelegram: true
+              });
             }
           }
           const patchRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(customerId)}`, {
@@ -11145,9 +11503,10 @@ export default {
           const firstName = (formatted.name || formatted.businessName || 'there').split(' ')[0];
           const parts = nsToSend.split(',').map(s => s.trim());
 
+          const dnsSubject = `Network Nameservers for ${formatted.liveUrl} — WynnPages Studio`;
           const mailRes = await sendResendEmail({
             to: formatted.email,
-            subject: `Network Nameservers for ${formatted.liveUrl} — WynnPages Studio`,
+            subject: dnsSubject,
             html: buildAtelierEmailHtml({
               preheader: `Network Nameservers for ${formatted.liveUrl}`,
               heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
@@ -11170,6 +11529,21 @@ export default {
               }
             }),
             cfg: effectiveCfg
+          });
+
+          await notifyTelegramAutomatedComms({
+            env,
+            ctx,
+            client: formatted,
+            triggerType: 'dns_email_sent',
+            icon: '🌐',
+            title: `🌐 [HƯỚNG DẪN DNS] Đã gửi Email Nameservers cho ${formatted.businessName || formatted.name || formatted.liveUrl}`,
+            emailSent: Boolean(mailRes && mailRes.sent),
+            emailSkippedReason: mailRes && mailRes.reason,
+            emailTo: formatted.email,
+            emailSubject: dnsSubject,
+            extraNote: `Nameservers: ${nsToSend}`,
+            waitForTelegram: true
           });
 
           return new Response(JSON.stringify({ ok: Boolean(mailRes && mailRes.sent), result: mailRes, guideUrl }), { status: 200, headers: corsHeaders });
@@ -11367,7 +11741,10 @@ export default {
               stage: effectiveNotifyStage,
               client: formatted,
               origin: url.origin,
-              cfg: effectiveCfg
+              cfg: effectiveCfg,
+              env,
+              ctx,
+              waitForTelegram: true
             });
 
             if (effectiveNotifyStage === 'site_launched') {
@@ -11488,7 +11865,7 @@ export default {
         }
 
         if (subAction === 'run_now') {
-          const result = await runScheduledAutopilot(env, { force: true });
+          const result = await runScheduledAutopilot(env, { force: true, ctx });
           return new Response(JSON.stringify(result), { status: 200, headers: corsHeaders });
         }
 

@@ -1041,6 +1041,42 @@
       font-weight: 600;
     }
 
+    @keyframes quizStepEnter {
+      0% {
+        opacity: 0;
+        transform: translate3d(12px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes quizStepBackEnter {
+      0% {
+        opacity: 0;
+        transform: translate3d(-12px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    .quiz-step-enter {
+      animation: quizStepEnter 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .quiz-step-back-enter {
+      animation: quizStepBackEnter 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .quiz-choice-selected {
+      border-color: var(--accent-primary) !important;
+      background-color: var(--pill-bg) !important;
+      box-shadow: 0 8px 20px -8px rgba(150, 67, 43, 0.25);
+    }
+
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -1086,7 +1122,7 @@
       salonSubtitle: "Nail & Hand Sanctuary",
       monogram: "C",
       logoUrl: "", // Client custom logo URL; leave empty to fall back to default 24K gold-leaf Lux script logo
-      fallbackLogoUrl: "https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim",
+      fallbackLogoUrl: "https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261123hd",
       suburb: "Australia",
       state: "",
       address: "Australia",
@@ -1107,9 +1143,9 @@
       parkingNote: "Convenient local client parking right near our boutique entrance.",
       images: {
         hero: "https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg",
-        beforeNail: "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg",
-        afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg",
-        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg",
+        beforeNail: "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd",
+        afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123hd",
+        biabFeature: "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123hd",
         pedicureFeature: "https://wynnpages.com.au/assets/atelier/nails/botanical-pedicure.jpg",
         lookbook: [
           {
@@ -1220,7 +1256,7 @@
         <!-- Brand Identity: Client Custom Logo with Fallback to 24K Gold-Leaf Calligraphic Lux Logo -->
         <a href="#top" data-smooth-anchor="#top" class="flex flex-col items-start justify-center gap-1 group min-w-0 flex-1 lg:flex-initial overflow-hidden pl-1 py-0.5">
           <div id="brand-logo-slot" class="flex items-center justify-start shrink-0 transition-transform duration-500 group-hover:scale-[1.03]" style="flex: 0 0 auto !important;">
-            <img id="nav-logo-img" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim" alt="Lux" class="h-8 sm:h-9 w-auto max-w-[165px] sm:max-w-[200px] object-contain block">
+            <img id="nav-logo-img" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261123hd" alt="Lux" class="h-8 sm:h-9 w-auto max-w-[165px] sm:max-w-[200px] object-contain block">
           </div>
           <span id="nav-salon-sub" class="text-[8.5px] sm:text-[9.5px] uppercase tracking-[0.15em] font-medium block leading-none truncate max-w-full" style="color: var(--ink-muted);">South Brisbane, QLD</span>
         </a>
@@ -1406,32 +1442,6 @@
               style="border-radius: inherit;"
               class="w-full h-full object-cover block"
             >
-            <!-- Subtle Architectural / Painted Limewash Wall Brand Signage -->
-            <div
-              id="hero-wall-signage"
-              aria-hidden="true"
-              class="pointer-events-none select-none absolute z-[2] flex flex-col items-center text-center"
-              style="top: 12%; left: 67.5%; width: 27%; max-width: 126px; transform: translate(-50%, 0) perspective(480px) rotateY(-7deg) rotateZ(-1.4deg); opacity: 0.62; mix-blend-mode: multiply;"
-            >
-              <img
-                id="hero-wall-logo-img"
-                src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim"
-                alt=""
-                class="w-full max-w-[88px] sm:max-w-[102px] h-auto object-contain block"
-                style="filter: brightness(0.38) sepia(0.92) hue-rotate(-18deg) saturate(1.75) drop-shadow(0 1px 0 rgba(255, 250, 240, 0.45));"
-              >
-              <span
-                id="hero-wall-wordmark"
-                class="hidden font-editorial italic font-semibold text-base sm:text-lg leading-tight tracking-wide truncate max-w-full"
-                style="color: #4A2518; text-shadow: 0 1px 0 rgba(255, 250, 240, 0.45);"
-              >Lux</span>
-              <span class="w-10 sm:w-12 h-[0.75px] my-1 block" style="background: rgba(110, 44, 26, 0.42);"></span>
-              <span
-                id="hero-wall-sub"
-                class="text-[5.5px] sm:text-[6.5px] uppercase tracking-[0.15em] font-semibold block leading-none whitespace-nowrap"
-                style="color: #4A2518; text-shadow: 0 1px 0 rgba(255, 250, 240, 0.4);"
-              >South Brisbane, QLD</span>
-            </div>
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
           <!-- Interactive Floating Craft Capsule (Glides to Treatment Matchmaker) -->
@@ -1587,13 +1597,28 @@
 
       <!-- 3-Step Interactive Quiz Container -->
       <div data-apple-reveal="center" class="atelier-card rounded-[32px] p-6 sm:p-9 max-w-3xl mx-auto space-y-6 relative overflow-hidden shadow-xl" style="border-color: var(--foil-gold);">
-        <!-- Quiz Progress Bar -->
-        <div class="flex items-center justify-between gap-3 border-b pb-4" style="border-color: var(--border-hairline);">
-          <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background: var(--accent-primary);" id="quiz-step-indicator">1</span>
-            <span class="text-xs font-semibold uppercase tracking-wider text-stone-600" id="quiz-step-title">Step 1: Your Occasion</span>
+        <!-- Quiz Progress Header & Animated Bar -->
+        <div class="space-y-3 border-b pb-4" style="border-color: var(--border-hairline);">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                id="quiz-btn-back"
+                class="hidden px-2.5 py-1 rounded-full text-[11px] font-semibold border items-center gap-1 cursor-pointer transition-colors hover:opacity-85 shrink-0"
+                style="background: var(--bg-canvas-alt); border-color: var(--border-hairline); color: var(--ink-primary);"
+                aria-label="Go back to previous question"
+              >
+                <span aria-hidden="true">←</span>
+                <span>Back</span>
+              </button>
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style="background: var(--accent-primary);" id="quiz-step-indicator">1</span>
+              <span class="text-xs font-semibold uppercase tracking-wider truncate" style="color: var(--ink-muted);" id="quiz-step-title">Step 1: Your Occasion</span>
+            </div>
+            <span class="text-xs font-mono font-semibold shrink-0" style="color: var(--accent-primary);" id="quiz-step-counter">1 of 3 • 33%</span>
           </div>
-          <span class="text-xs font-mono font-semibold" style="color: var(--accent-primary);" id="quiz-step-counter">1 of 3</span>
+          <div id="quiz-progress-track" class="w-full h-1.5 rounded-full overflow-hidden" style="background: var(--bg-canvas-alt);" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33">
+            <div id="quiz-progress-fill" class="h-full rounded-full" style="width: 33.33%; background: linear-gradient(90deg, var(--accent-primary) 0%, var(--foil-gold) 100%); transition: width 0.52s cubic-bezier(0.16, 1, 0.3, 1);"></div>
+          </div>
         </div>
 
         <!-- Quiz Step 1: Occasion -->
@@ -1662,9 +1687,21 @@
           </div>
         </div>
 
+        <!-- Quiz Analyzing Spinner Screen (Shown briefly before unveiling match) -->
+        <div id="quiz-analyzing" class="py-10 flex flex-col items-center justify-center text-center space-y-4 hidden" aria-live="polite">
+          <div class="relative w-14 h-14 flex items-center justify-center" aria-hidden="true">
+            <div class="w-14 h-14 rounded-full border-2 animate-spin" style="border-color: var(--pill-bg); border-top-color: var(--accent-primary); border-right-color: var(--foil-gold);"></div>
+            <svg class="w-5 h-5 absolute" style="color: var(--accent-primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/></svg>
+          </div>
+          <div class="space-y-1 max-w-sm">
+            <h3 class="font-editorial text-2xl font-semibold">Curating Your Bespoke Ritual...</h3>
+            <p id="quiz-analyzing-status" class="text-xs font-medium leading-relaxed" style="color: var(--ink-muted);">Analysing your nail structure &amp; matching live menu treatments...</p>
+          </div>
+        </div>
+
         <!-- Quiz Result Screen (Dynamically populated from window.SALON_MENU_DATA) -->
         <div id="quiz-result" class="space-y-5 hidden">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="text-[10px] uppercase tracking-[0.2em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Your Tailored Match</span>
             <span class="text-xs text-stone-500 font-medium" id="quiz-match-fit">98% Compatibility</span>
           </div>
@@ -1676,21 +1713,32 @@
             </div>
             <div class="text-left sm:text-right">
               <span class="font-editorial text-3xl sm:text-4xl font-bold block" style="color: var(--accent-primary);" id="quiz-matched-price">$85 AUD</span>
-              <span class="text-[11px] text-stone-400">All inclusive</span>
+              <span class="text-[11px] text-stone-400" id="quiz-matched-price-note">All inclusive (GST incl.)</span>
             </div>
           </div>
 
-          <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);" id="quiz-matched-desc">
-            Detailed e-file cuticle refinement, structured builder apex, sheer cashmere tint &amp; organic cuticle oil.
-          </p>
+          <div id="quiz-addon-row" class="hidden rounded-2xl px-4 py-3 border text-xs flex items-center justify-between gap-3" style="background: var(--bg-canvas-alt); border-color: var(--border-hairline);">
+            <div class="min-w-0">
+              <span class="uppercase tracking-[0.15em] text-[9.5px] font-semibold block" style="color: var(--accent-primary);">Recommended Artistry Pairing</span>
+              <span class="font-semibold block truncate" id="quiz-addon-name">+ Minimalist Line, Chrome or Pearl Glaze</span>
+            </div>
+            <span class="font-editorial text-lg font-bold shrink-0" style="color: var(--accent-primary);" id="quiz-addon-price">+$20</span>
+          </div>
 
-          <div class="flex flex-wrap items-center gap-3 pt-2">
+          <div class="space-y-2">
+            <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);" id="quiz-matched-desc">
+              Detailed e-file cuticle refinement, structured builder apex, sheer cashmere tint &amp; organic cuticle oil.
+            </p>
+            <p class="text-xs leading-relaxed px-3.5 py-2.5 rounded-xl border" style="background: rgba(251, 222, 185, 0.25); border-color: var(--border-hairline); color: var(--ink-primary);" id="quiz-match-reason"></p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
             <button type="button" id="quiz-btn-book" data-open-booking="" class="btn-atelier-primary rounded-full px-6 py-3 text-xs sm:text-sm font-semibold tracking-wide inline-flex items-center justify-center gap-2 cursor-pointer shadow-md flex-1 sm:flex-initial">
               <span>Book This Ritual</span>
               <span aria-hidden="true">→</span>
             </button>
             <button type="button" id="quiz-btn-retake" class="btn-atelier-secondary rounded-full px-5 py-3 text-xs font-semibold cursor-pointer">
-              <span>↻ Retake Quiz</span>
+              <span>↻ Start Over</span>
             </button>
           </div>
         </div>
@@ -1713,11 +1761,11 @@
           <!-- AFTER Layer (Underneath - Full Width) -->
           <img
             id="ba-after-img"
-            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg"
+            src="https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123hd"
             alt="After BIAB structured overlay and Russian cuticle refinement"
             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.04); transform-origin: 50% 55%; filter: saturate(1.12) contrast(1.04);"
-            onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg';"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.04); transform-origin: 50% 55%; filter: saturate(1.04) contrast(1.02);"
+            onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123hd';"
             loading="lazy"
             decoding="async"
           >
@@ -1729,11 +1777,11 @@
           <div id="ba-before-layer" class="absolute inset-0 overflow-hidden pointer-events-none" style="clip-path: inset(0 50% 0 0); -webkit-clip-path: inset(0 50% 0 0);">
             <img
               id="ba-before-img"
-              src="https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg"
+              src="https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd"
               alt="Before natural unpolished fingernails prior to BIAB restoration"
               class="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.04); transform-origin: 50% 55%; filter: saturate(0.76) brightness(0.97) sepia(0.08);"
-              onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg';"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; transform: scale(1.04); transform-origin: 50% 55%; filter: saturate(1.04) contrast(1.02);"
+              onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd';"
               loading="lazy"
               decoding="async"
             >
@@ -1762,9 +1810,12 @@
               <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Most Requested</span>
               <span class="text-xs font-semibold" style="color: var(--ink-muted);">3–4 Weeks Wear</span>
             </div>
-            <div>
-              <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Structured BIAB</h3>
-              <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Natural Nail Strengthening</p>
+            <div class="flex items-baseline justify-between gap-2">
+              <div>
+                <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Structured BIAB</h3>
+                <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Natural Nail Strengthening</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full border shrink-0" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">From $85</span>
             </div>
             <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
               A thick, flexible builder gel that creates a reinforced apex over your natural nails. Perfect for growing out fragile or bitten nails without tips or damage.
@@ -1797,9 +1848,12 @@
               <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Instant Length</span>
               <span class="text-xs font-semibold" style="color: var(--ink-muted);">3–4 Weeks Wear</span>
             </div>
-            <div>
-              <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Après Gel-X™</h3>
-              <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Soft Gel Extension System</p>
+            <div class="flex items-baseline justify-between gap-2">
+              <div>
+                <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Après Gel-X™</h3>
+                <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Soft Gel Extension System</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full border shrink-0" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">From $110</span>
             </div>
             <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
               Full-cover tips sculpted from 100% soak-off soft gel. Lightweight, perfectly contoured, and applied with gentle LED gel—zero monomer chemical smell.
@@ -1832,9 +1886,12 @@
               <span class="text-[10px] uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-full border" style="background: var(--pill-bg); border-color: var(--foil-gold); color: var(--accent-primary);">Nourish &amp; Shine</span>
               <span class="text-xs font-semibold" style="color: var(--ink-muted);">2–3 Weeks Wear</span>
             </div>
-            <div>
-              <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Botanical Gel Care</h3>
-              <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Clean Cuticle &amp; Spa Polish</p>
+            <div class="flex items-baseline justify-between gap-2">
+              <div>
+                <h3 class="font-editorial text-2xl sm:text-3xl font-semibold">Botanical Gel Care</h3>
+                <p class="text-xs font-medium tracking-wide mt-0.5" style="color: var(--accent-primary);">Clean Cuticle &amp; Spa Polish</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full border shrink-0" style="background: var(--pill-bg); border-color: var(--border-hairline); color: var(--accent-primary);">From $60</span>
             </div>
             <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
               Meticulous waterless e-manicure cuticle restoration followed by non-toxic Japanese gel polish, hot botanical towels, and cold-pressed botanical cuticle oils.
@@ -1871,9 +1928,9 @@
         <div data-parallax-frame class="rounded-[22px] sm:rounded-[24px] gold-foil-frame overflow-hidden aspect-[5/4]" style="background-color: var(--bg-canvas-alt);">
           <img
             id="feature-biab-img"
-            src="https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg"
-            alt="Fine-art oil study of luminous sheer BIAB manicure"
-            onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg';"
+            src="https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123hd"
+            alt="Fine-art oil study of luminous sheer BIAB manicure on champagne silk"
+            onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123hd';"
             loading="lazy"
             width="800"
             height="640"
@@ -2121,7 +2178,7 @@
       <div data-apple-reveal="right" class="lg:col-span-5 atelier-card rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col justify-between space-y-6 relative overflow-hidden" style="background: linear-gradient(160deg, var(--bg-card-solid) 0%, var(--pill-bg) 140%);">
         <div class="space-y-4">
           <div class="inline-flex items-center justify-start">
-            <img id="footer-monogram" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim" alt="Salon Logo" class="h-10 sm:h-11 w-auto max-w-[190px] object-contain block">
+            <img id="footer-monogram" src="https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261123hd" alt="Salon Logo" class="h-10 sm:h-11 w-auto max-w-[190px] object-contain block">
           </div>
           <h3 class="font-editorial text-3xl sm:text-4xl font-semibold leading-tight text-balance">
             Reserve your <span class="accent-italic">table today.</span>
@@ -2178,7 +2235,6 @@
         <a id="footer-ig-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Instagram</a>
         <a id="footer-fb-link" href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Facebook</a>
         <a href="#menu" data-smooth-anchor="#menu" class="hover:underline">Price Menu</a>
-        <a href="https://wynnpages.com.au" target="_blank" rel="noopener noreferrer" class="hover:underline">About Studio</a>
         <button type="button" data-open-booking="" class="font-semibold underline cursor-pointer" style="color: var(--accent-primary);">Book Visit</button>
       </div>
     </div>
@@ -2244,9 +2300,9 @@
       const PALETTE_ART_VAULT = {
         '01': {
           hero: `${VAULT_BASE}/hero-sanctuary.jpg`,
-          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
-          afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
-          biabFeature: `${VAULT_BASE}/sheer-biab-architecture.jpg`,
+          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
+          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`,
+          biabFeature: `${VAULT_BASE}/sheer-biab-architecture.jpg?v=20261123hd`,
           pedicureFeature: `${VAULT_BASE}/botanical-pedicure.jpg`,
           lookbook: [
             { src: `${VAULT_BASE}/lookbook-gilded-french.jpg`, title: 'Champagne Micro-French', tag: 'BIAB Structured Overlay' },
@@ -2257,8 +2313,8 @@
         },
         '02': {
           hero: `${VAULT_BASE}/p02/hero.jpg`,
-          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
-          afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
+          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
+          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`,
           biabFeature: `${VAULT_BASE}/p02/biab.jpg`,
           pedicureFeature: `${VAULT_BASE}/p02/pedicure.jpg`,
           lookbook: [
@@ -2270,8 +2326,8 @@
         },
         '03': {
           hero: `${VAULT_BASE}/p03/hero.jpg`,
-          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
-          afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
+          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
+          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`,
           biabFeature: `${VAULT_BASE}/p03/biab.jpg`,
           pedicureFeature: `${VAULT_BASE}/p03/pedicure.jpg`,
           lookbook: [
@@ -2283,8 +2339,8 @@
         },
         '04': {
           hero: `${VAULT_BASE}/p04/hero.jpg`,
-          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
-          afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
+          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
+          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`,
           biabFeature: `${VAULT_BASE}/p04/biab.jpg`,
           pedicureFeature: `${VAULT_BASE}/p04/pedicure.jpg`,
           lookbook: [
@@ -2296,8 +2352,8 @@
         },
         '05': {
           hero: `${VAULT_BASE}/p05/hero.jpg`,
-          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg`,
-          afterNail: `${VAULT_BASE}/biab-artistry.jpg`,
+          beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
+          afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`,
           biabFeature: `${VAULT_BASE}/p05/biab.jpg`,
           pedicureFeature: `${VAULT_BASE}/p05/pedicure.jpg`,
           lookbook: [
@@ -2318,10 +2374,10 @@
           : activeVault.hero,
         beforeNail: (!forceVault && cfg.images && cfg.images.beforeNail && !isAtelierVaultAsset(cfg.images.beforeNail))
           ? cfg.images.beforeNail
-          : (activeVault.beforeNail || `${VAULT_BASE}/before-natural-nails.jpg`),
+          : (activeVault.beforeNail || `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`),
         afterNail: (!forceVault && cfg.images && cfg.images.afterNail && !isAtelierVaultAsset(cfg.images.afterNail))
           ? cfg.images.afterNail
-          : (activeVault.afterNail || `${VAULT_BASE}/biab-artistry.jpg`),
+          : (activeVault.afterNail || `${VAULT_BASE}/biab-artistry.jpg?v=20261123hd`),
         biabFeature: (!forceVault && cfg.images && cfg.images.biabFeature && !isAtelierVaultAsset(cfg.images.biabFeature))
           ? cfg.images.biabFeature
           : activeVault.biabFeature,
@@ -2401,7 +2457,7 @@
       // 2. Hydrate Brand, Hero, Socials, SEO & Contact
       const fullTitle = `${cfg.salonName || 'Nail Atelier'} — Bespoke BIAB & Nail Sanctuary | ${locSpaceLabel}`.trim();
       document.title = fullTitle;
-      const defaultFallbackLogo = (cfg.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261120slim').trim();
+      const defaultFallbackLogo = (cfg.fallbackLogoUrl || 'https://wynnpages.com.au/assets/atelier/nails/default-lux-logo.svg?v=20261123hd').trim();
       const customLogo = (cfg.wordmarkUrl || cfg.logoUrl || '').trim();
       const activeLogoSrc = customLogo || defaultFallbackLogo;
       const isFallbackLogo = !customLogo;
@@ -2442,33 +2498,6 @@
         fSeal.innerHTML = `<img id="footer-monogram" src="${activeLogoSrc}" alt="${cfg.salonName || 'Salon Logo'}" class="${footImgCls}"${fallbackAttr}>`;
       }
 
-      const wallSignEl = document.getElementById('hero-wall-signage');
-      const wallLogoImg = document.getElementById('hero-wall-logo-img');
-      const wallWordmark = document.getElementById('hero-wall-wordmark');
-      const wallSubEl = document.getElementById('hero-wall-sub');
-      const heroWallSubText = typeof resolvedNavSub !== 'undefined'
-        ? resolvedNavSub
-        : (locLabel.replace(/,\s*$/, '') || 'Australia');
-      if (wallSignEl) {
-        if (wallSubEl) wallSubEl.textContent = heroWallSubText;
-        const cleanSalon = (cfg.salonName || '').trim();
-        const defaultNames = ['Maison Élan', 'cafe', 'Your Business', 'Lux Nails Bar'];
-        if (customLogo && wallLogoImg) {
-          wallLogoImg.onerror = function () { this.onerror = null; this.src = defaultFallbackLogo; };
-          wallLogoImg.src = customLogo;
-          wallLogoImg.classList.remove('hidden');
-          if (wallWordmark) wallWordmark.classList.add('hidden');
-        } else if (cleanSalon && !defaultNames.includes(cleanSalon) && wallWordmark) {
-          wallWordmark.textContent = cleanSalon;
-          wallWordmark.classList.remove('hidden');
-          if (wallLogoImg) wallLogoImg.classList.add('hidden');
-        } else if (wallLogoImg) {
-          wallLogoImg.src = defaultFallbackLogo;
-          wallLogoImg.classList.remove('hidden');
-          if (wallWordmark) wallWordmark.classList.add('hidden');
-        }
-      }
-
       const resolvedBadge = (cfg.heroBadge && !/^\d+\s/.test(cfg.heroBadge))
         ? cfg.heroBadge
         : `${resolvedSuburb || 'Boutique'} • BIAB & Non-Toxic Nail Sanctuary`;
@@ -2484,9 +2513,6 @@
         if (heroImg && resolvedImages.hero && heroImg.getAttribute('src') !== resolvedImages.hero) {
           heroImg.src = resolvedImages.hero;
         }
-        if (wallSignEl && resolvedImages.hero && !isAtelierVaultAsset(resolvedImages.hero)) {
-          wallSignEl.style.display = 'none';
-        }
         const biabImg = document.getElementById('feature-biab-img');
         if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;
         const pediImg = document.getElementById('feature-pedicure-img') || document.getElementById('feature-pedi-img');
@@ -2495,7 +2521,7 @@
         if (baAfterImg) baAfterImg.src = resolvedImages.afterNail || resolvedImages.biabFeature;
         const baBeforeImg = document.getElementById('ba-before-img');
         if (baBeforeImg) {
-          baBeforeImg.src = resolvedImages.beforeNail || `${VAULT_BASE}/before-natural-nails.jpg`;
+          baBeforeImg.src = resolvedImages.beforeNail || `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`;
         }
       }
 
@@ -2576,6 +2602,21 @@
       // Sync JSON-LD Structured Data for Google Local SEO
       const jsonLdEl = document.getElementById('salon-jsonld');
       if (jsonLdEl) {
+        const ldOffers = [];
+        menu.slice(0, 3).forEach((cat) => {
+          if (cat && Array.isArray(cat.items) && cat.items[0]) {
+            const it = cat.items[0];
+            const numPrice = String(it.price || '').replace(/[^\d.]/g, '');
+            if (numPrice) {
+              ldOffers.push({
+                '@type': 'Offer',
+                priceCurrency: 'AUD',
+                price: numPrice,
+                itemOffered: { '@type': 'Service', name: it.name }
+              });
+            }
+          }
+        });
         const ldObj = {
           '@context': 'https://schema.org',
           '@type': 'NailSalon',
@@ -2585,6 +2626,7 @@
           image: window.location.origin + '/og-share.jpg',
           priceRange: '$$',
           currenciesAccepted: 'AUD',
+          areaServed: locSpaceLabel ? { '@type': 'City', name: locSpaceLabel } : undefined,
           telephone: cfg.displayPhone || cfg.smsPhone || '',
           address: {
             '@type': 'PostalAddress',
@@ -2593,7 +2635,12 @@
             addressRegion: resolvedState || '',
             postalCode: parsedAddr.postcode || '',
             addressCountry: 'AU'
-          }
+          },
+          hasOfferCatalog: ldOffers.length ? {
+            '@type': 'OfferCatalog',
+            name: 'BIAB, Gel-X & Botanical Spa Services',
+            itemListElement: ldOffers
+          } : undefined
         };
         if (cfg.googleRating) {
           ldObj.aggregateRating = {
@@ -2762,94 +2809,369 @@
       if (menu.length) renderMenuCategory(0);
 
       // ======================================================================
-      // 3b. INTERACTIVE TREATMENT MATCHMAKER (DYNAMIC LIVE MENU SYNC)
+      // 3b. INTERACTIVE TREATMENT MATCHMAKER (DYNAMIC LIVE MENU SYNC + BACK + SPINNER)
       // ======================================================================
       const quizChoices = { occasion: null, health: null, style: null };
       const step1El = document.getElementById('quiz-step-1');
       const step2El = document.getElementById('quiz-step-2');
       const step3El = document.getElementById('quiz-step-3');
+      const analyzingEl = document.getElementById('quiz-analyzing');
+      const analyzingStatusEl = document.getElementById('quiz-analyzing-status');
       const resultEl = document.getElementById('quiz-result');
       const indicatorEl = document.getElementById('quiz-step-indicator');
       const titleEl = document.getElementById('quiz-step-title');
       const counterEl = document.getElementById('quiz-step-counter');
+      const backBtnEl = document.getElementById('quiz-btn-back');
+      const progressTrackEl = document.getElementById('quiz-progress-track');
+      const progressFillEl = document.getElementById('quiz-progress-fill');
+      let currentQuizStep = 1;
+      let quizAnalysisTimer = null;
+      let quizStatusTimer = null;
+
+      function parsePriceNumber(rawPrice) {
+        const m = String(rawPrice || '').match(/\d+(?:\.\d+)?/);
+        return m ? Number(m[0]) : 0;
+      }
+
+      function parseDurationMins(rawDur) {
+        const m = String(rawDur || '').match(/\d+/);
+        return m ? Number(m[0]) : 0;
+      }
 
       function findMatchingRitual(choices) {
-        let allItems = [];
+        const allItems = [];
         menu.forEach(cat => {
           if (Array.isArray(cat.items)) {
-            cat.items.forEach(it => allItems.push({ ...it, catName: cat.category }));
+            cat.items.forEach(it => allItems.push({ ...it, catId: cat.id || '', catName: cat.category || '' }));
           }
         });
         if (!allItems.length) {
-          return { name: "Signature BIAB Natural Overlay", price: "$85 AUD", duration: "60 mins", desc: "Structured builder gel strengthening natural nails." };
+          return {
+            primary: { name: 'Signature BIAB Natural Overlay', price: '$85', duration: '60 mins', desc: 'Structured builder gel strengthening natural nails.' },
+            addon: null,
+            compatibility: '98% Compatibility',
+            reason: 'Balanced builder architecture tailored for effortless daily wear.'
+          };
         }
 
-        if (choices.occasion === 'rehab' || choices.health === 'brittle') {
-          const rehab = allItems.find(it => it.name.toLowerCase().includes('restorative') || it.name.toLowerCase().includes('naked')) ||
-                        allItems.find(it => it.name.toLowerCase().includes('biab')) || allItems[0];
-          return rehab;
+        const findByRegex = (reList, excludeRe = null) => {
+          for (const re of reList) {
+            const hit = allItems.find(it => {
+              const hay = `${it.name} ${it.desc || ''} ${it.catName}`.toLowerCase();
+              if (excludeRe && excludeRe.test(hay)) return false;
+              return re.test(hay);
+            });
+            if (hit) return hit;
+          }
+          return null;
+        };
+
+        const addOns = allItems.filter(it => {
+          const catLower = `${it.catId} ${it.catName}`.toLowerCase();
+          return catLower.includes('art') || catLower.includes('add-on') || String(it.duration || '').includes('+');
+        });
+        const tier1Art = addOns.find(it => /minimalist|chrome|pearl|cat-eye|glaze/i.test(it.name)) || addOns[0] || null;
+        const tier2Art = addOns.find(it => /tier\s*ii|bespoke|editorial|artistry|tortoiseshell|floral/i.test(it.name)) || addOns[1] || addOns[0] || null;
+
+        const occ = choices.occasion || 'daily';
+        const hlth = choices.health || 'healthy';
+        const sty = choices.style || 'nude';
+
+        let primary = null;
+        let addon = null;
+        let compatibility = '98% Compatibility';
+        let reason = '';
+
+        const nakedItem = findByRegex([/restorative|naked|botanical spa manicure/i]);
+        const gelPolishItem = findByRegex([/luxe gel polish manicure|gel polish manicure|classic manicure/i], /pedicure/);
+        const biabBaseItem = findByRegex([/signature biab natural overlay/i, /biab/i], /infill|french|extension/);
+        const biabFrenchItem = findByRegex([/biab overlay \+ classic french/i, /french tip/i, /french/i]);
+        const apresItem = findByRegex([/apres soft gel extension|gel-x/i]);
+        const hardGelItem = findByRegex([/hard gel sculpted|sculpted extension/i]);
+
+        if (occ === 'rehab') {
+          if (hlth === 'short') {
+            primary = apresItem || biabBaseItem || allItems[0];
+            if (sty === 'art' && tier1Art) addon = tier1Art;
+            compatibility = '97% Compatibility';
+            reason = sty === 'art'
+              ? 'Chosen because recovering short or bitten nails benefit from ultra-thin soak-off extensions paired with lightweight nail art while your natural plate rests underneath.'
+              : 'Apres soft-gel extensions protect stressed short nail beds with zero acrylic monomer damage while instantly giving graceful, even length.';
+          } else if (hlth === 'brittle') {
+            if (sty === 'french') {
+              primary = biabFrenchItem || biabBaseItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'Reinforced HEMA-free BIAB shields thinning, peeling nails against snaps while a crisp micro-French tip elongates your natural shape cleanly.';
+            } else if (sty === 'art') {
+              primary = biabBaseItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '98% Compatibility';
+              reason = 'Builds protective strength with flexible BIAB first, accented by feather-light pearl chrome or minimalist line art that never stresses weak nails.';
+            } else {
+              primary = biabBaseItem || nakedItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'Designed specifically for thin, fragile nail plates needing keratin care and a protective sheer-nude BIAB shield while growing out.';
+            }
+          } else {
+            if (sty === 'french') {
+              primary = biabFrenchItem || gelPolishItem || allItems[0];
+              compatibility = '97% Compatibility';
+              reason = 'Combines non-toxic strengthening with timeless micro-French elegance for healthy recovery between heavy enhancements.';
+            } else if (sty === 'art') {
+              primary = gelPolishItem || nakedItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '96% Compatibility';
+              reason = 'Clean cuticle restoration and gentle non-toxic gel finished with subtle botanical gold-leaf or pearl glaze accents.';
+            } else {
+              primary = nakedItem || gelPolishItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'A restorative, toxin-free keratin serum & botanical cuticle reset ideal for healthy natural nails craving a breather.';
+            }
+          }
+        } else if (occ === 'event') {
+          if (hlth === 'short') {
+            if (sty === 'art') {
+              primary = hardGelItem || apresItem || allItems[0];
+              addon = tier2Art || tier1Art;
+              compatibility = '99% Compatibility';
+              reason = 'Sculpted length creates a sleek, camera-ready silhouette for bespoke event artistry that lasts cleanly well beyond your celebration.';
+            } else if (sty === 'french') {
+              primary = apresItem || hardGelItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '98% Compatibility';
+              reason = 'Combines instant tailored almond/oval length with luminous French or Akoya pearl glaze for effortless bridal & event photographs.';
+            } else {
+              primary = apresItem || hardGelItem || allItems[0];
+              compatibility = '98% Compatibility';
+              reason = 'Delivers instant, seamless extension length tailored to your hand proportions with a refined porcelain cashmere sheen.';
+            }
+          } else if (hlth === 'brittle') {
+            if (sty === 'art') {
+              primary = apresItem || biabBaseItem || allItems[0];
+              addon = tier2Art || tier1Art;
+              compatibility = '98% Compatibility';
+              reason = 'Protects event nails prone to snapping with cushiony soft-gel structure and bespoke statement art so not a single tip chips.';
+            } else if (sty === 'french') {
+              primary = biabFrenchItem || biabBaseItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'Locks in structural apex reinforcement for brittle plates while keeping a timeless, crisp hand-painted micro-French finish.';
+            } else {
+              primary = biabBaseItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '98% Compatibility';
+              reason = 'Pairs our strongest sheer BIAB apex with a luminous Akoya pearl chrome veil so weaker nails glow with bridal-level poise.';
+            }
+          } else {
+            if (sty === 'art') {
+              primary = apresItem || biabBaseItem || allItems[0];
+              addon = tier2Art || tier1Art;
+              compatibility = '99% Compatibility';
+              reason = 'Your healthy nail canvas allows seamless extension styling paired with our Tier II hand-painted editorial nail art.';
+            } else if (sty === 'french') {
+              primary = biabFrenchItem || biabBaseItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'Celebrates your strong natural nail length with a sculptural BIAB glow and razor-sharp champagne or ivory micro-French tips.';
+            } else {
+              primary = biabBaseItem || gelPolishItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '98% Compatibility';
+              reason = 'Elevates healthy natural nails for special occasions with subtle glazed pearl shimmer that catches light cleanly in photos.';
+            }
+          }
+        } else {
+          if (hlth === 'short') {
+            primary = apresItem || biabBaseItem || allItems[0];
+            if (sty === 'art' || sty === 'french') addon = tier1Art;
+            compatibility = '97% Compatibility';
+            reason = sty === 'nude'
+              ? 'Gives short nails effortless everyday almond elegance without bulk or acrylic odour, wearing comfortably for 3–4 weeks.'
+              : 'Instantly achieves balanced everyday length dressed in clean micro-French or understated pearl detail.';
+          } else if (hlth === 'brittle') {
+            if (sty === 'french') {
+              primary = biabFrenchItem || biabBaseItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'Ideal everyday armour: flexible HEMA-free builder stops breaks at the stress point while the micro-French conceals natural regrowth.';
+            } else if (sty === 'art') {
+              primary = biabBaseItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '98% Compatibility';
+              reason = 'Daily apex reinforcement keeps brittle nails protected for 4 weeks, elevated by low-maintenance minimalist line or cat-eye art.';
+            } else {
+              primary = biabBaseItem || allItems[0];
+              compatibility = '99% Compatibility';
+              reason = 'Our signature daily choice for thin or snapping nails—grows out invisibly for 3–4 weeks with a milky porcelain finish.';
+            }
+          } else {
+            if (sty === 'french') {
+              primary = biabFrenchItem || gelPolishItem || allItems[0];
+              compatibility = '98% Compatibility';
+              reason = 'Perfect match for healthy nails wanting crisp, chip-free micro-French elegance that holds effortlessly through busy weeks.';
+            } else if (sty === 'art') {
+              primary = gelPolishItem || biabBaseItem || allItems[0];
+              addon = tier1Art;
+              compatibility = '97% Compatibility';
+              reason = 'Combines lightweight Japanese soft gel polish with delicate cat-eye shimmer or pearl chrome for effortless everyday art.';
+            } else {
+              primary = gelPolishItem || biabBaseItem || allItems[0];
+              compatibility = '98% Compatibility';
+              reason = 'Your healthy nail plates don’t need heavy overlays—ultra-thin Japanese gel polish gives weightless 3-week mirror shine.';
+            }
+          }
         }
-        if (choices.health === 'short' || choices.occasion === 'event' || choices.style === 'art') {
-          const ext = allItems.find(it => it.name.toLowerCase().includes('extension') || it.name.toLowerCase().includes('apres') || it.name.toLowerCase().includes('sculpted')) ||
-                      allItems.find(it => it.name.toLowerCase().includes('french')) || allItems[0];
-          return ext;
-        }
-        if (choices.style === 'french') {
-          const french = allItems.find(it => it.name.toLowerCase().includes('french')) || allItems[0];
-          return french;
-        }
-        const biab = allItems.find(it => it.name.toLowerCase().includes('biab')) || allItems[0];
-        return biab;
+
+        return { primary, addon, compatibility, reason };
       }
 
-      function updateQuizUI(step) {
+      function highlightSelectedQuizChoices() {
+        document.querySelectorAll('#quiz-step-1 [data-quiz-choice]').forEach(btn => {
+          btn.classList.toggle('quiz-choice-selected', btn.getAttribute('data-quiz-choice') === quizChoices.occasion);
+        });
+        document.querySelectorAll('#quiz-step-2 [data-quiz-choice]').forEach(btn => {
+          btn.classList.toggle('quiz-choice-selected', btn.getAttribute('data-quiz-choice') === quizChoices.health);
+        });
+        document.querySelectorAll('#quiz-step-3 [data-quiz-choice]').forEach(btn => {
+          btn.classList.toggle('quiz-choice-selected', btn.getAttribute('data-quiz-choice') === quizChoices.style);
+        });
+      }
+
+      function applyQuizPanelAnimation(panelEl, isBack) {
+        if (!panelEl) return;
+        panelEl.classList.remove('quiz-step-enter', 'quiz-step-back-enter');
+        void panelEl.offsetWidth;
+        panelEl.classList.add(isBack ? 'quiz-step-back-enter' : 'quiz-step-enter');
+      }
+
+      function updateQuizUI(step, opts = {}) {
         if (!indicatorEl || !titleEl || !counterEl) return;
-        indicatorEl.textContent = step <= 3 ? String(step) : '✓';
+        const isBack = Boolean(opts.isBack);
+        if (quizAnalysisTimer) { clearTimeout(quizAnalysisTimer); quizAnalysisTimer = null; }
+        if (quizStatusTimer) { clearTimeout(quizStatusTimer); quizStatusTimer = null; }
+        currentQuizStep = step;
+        highlightSelectedQuizChoices();
+
+        const pctMap = { 1: 33.33, 2: 66.67, 3: 100, analyzing: 100, 4: 100 };
+        const pctVal = Math.round(pctMap[step] || 33.33);
+        if (progressFillEl) progressFillEl.style.width = `${pctMap[step] || 33.33}%`;
+        if (progressTrackEl) progressTrackEl.setAttribute('aria-valuenow', String(pctVal));
+
+        if (backBtnEl) {
+          if (step === 2 || step === 3) {
+            backBtnEl.classList.remove('hidden');
+            backBtnEl.classList.add('inline-flex');
+          } else {
+            backBtnEl.classList.add('hidden');
+            backBtnEl.classList.remove('inline-flex');
+          }
+        }
+
+        [step1El, step2El, step3El, analyzingEl, resultEl].forEach(el => {
+          if (el) el.classList.add('hidden');
+        });
+
+        indicatorEl.textContent = (typeof step === 'number' && step <= 3) ? String(step) : '✓';
+
         if (step === 1) {
           titleEl.textContent = 'Step 1: Your Occasion';
-          counterEl.textContent = '1 of 3';
-          if (step1El) step1El.classList.remove('hidden');
-          if (step2El) step2El.classList.add('hidden');
-          if (step3El) step3El.classList.add('hidden');
-          if (resultEl) resultEl.classList.add('hidden');
+          counterEl.textContent = '1 of 3 • 33%';
+          if (step1El) {
+            step1El.classList.remove('hidden');
+            applyQuizPanelAnimation(step1El, isBack);
+          }
         } else if (step === 2) {
           titleEl.textContent = 'Step 2: Natural Nail Health';
-          counterEl.textContent = '2 of 3';
-          if (step1El) step1El.classList.add('hidden');
-          if (step2El) step2El.classList.remove('hidden');
-          if (step3El) step3El.classList.add('hidden');
-          if (resultEl) resultEl.classList.add('hidden');
+          counterEl.textContent = '2 of 3 • 67%';
+          if (step2El) {
+            step2El.classList.remove('hidden');
+            applyQuizPanelAnimation(step2El, isBack);
+          }
         } else if (step === 3) {
           titleEl.textContent = 'Step 3: Preferred Artistry';
-          counterEl.textContent = '3 of 3';
-          if (step1El) step1El.classList.add('hidden');
-          if (step2El) step2El.classList.add('hidden');
-          if (step3El) step3El.classList.remove('hidden');
-          if (resultEl) resultEl.classList.add('hidden');
+          counterEl.textContent = '3 of 3 • 100%';
+          if (step3El) {
+            step3El.classList.remove('hidden');
+            applyQuizPanelAnimation(step3El, isBack);
+          }
+        } else if (step === 'analyzing') {
+          indicatorEl.textContent = '✦';
+          titleEl.textContent = 'Matching Your Nail Profile';
+          counterEl.textContent = 'Analysing...';
+          if (analyzingStatusEl) analyzingStatusEl.textContent = 'Analysing your nail structure & matching live menu treatments...';
+          if (analyzingEl) {
+            analyzingEl.classList.remove('hidden');
+            applyQuizPanelAnimation(analyzingEl, false);
+          }
+          quizStatusTimer = setTimeout(() => {
+            if (analyzingStatusEl) analyzingStatusEl.textContent = 'Selecting optimal HEMA-free strength & artisan finish...';
+          }, 430);
+          quizAnalysisTimer = setTimeout(() => {
+            updateQuizUI(4);
+          }, 950);
         } else if (step === 4) {
           titleEl.textContent = 'Your Tailored Result';
-          counterEl.textContent = 'Complete';
-          if (step1El) step1El.classList.add('hidden');
-          if (step2El) step2El.classList.add('hidden');
-          if (step3El) step3El.classList.add('hidden');
-          if (resultEl) resultEl.classList.remove('hidden');
+          counterEl.textContent = 'Complete • 100%';
+          if (resultEl) {
+            resultEl.classList.remove('hidden');
+            applyQuizPanelAnimation(resultEl, false);
+          }
 
-          const matched = findMatchingRitual(quizChoices);
+          const { primary, addon, compatibility, reason } = findMatchingRitual(quizChoices);
           const nameEl = document.getElementById('quiz-matched-name');
           const durationEl = document.getElementById('quiz-matched-duration');
           const priceEl = document.getElementById('quiz-matched-price');
+          const priceNoteEl = document.getElementById('quiz-matched-price-note');
+          const fitEl = document.getElementById('quiz-match-fit');
           const descEl = document.getElementById('quiz-matched-desc');
+          const reasonEl = document.getElementById('quiz-match-reason');
+          const addonRowEl = document.getElementById('quiz-addon-row');
+          const addonNameEl = document.getElementById('quiz-addon-name');
+          const addonPriceEl = document.getElementById('quiz-addon-price');
           const bookBtn = document.getElementById('quiz-btn-book');
 
-          if (nameEl) nameEl.textContent = matched.name;
-          if (durationEl) durationEl.textContent = (matched.duration ? `${matched.duration} • ` : '') + 'Unhurried One-on-One Care';
-          if (priceEl) priceEl.textContent = String(matched.price).includes('$') ? matched.price : `$${matched.price}`;
-          if (descEl) descEl.textContent = matched.desc || 'Detailed e-file cuticle refinement, structured builder apex & organic cuticle oil.';
+          const basePriceNum = parsePriceNumber(primary.price);
+          const addonPriceNum = addon ? parsePriceNumber(addon.price) : 0;
+          const totalNum = basePriceNum + addonPriceNum;
+          const hasPlus = String(primary.price || '').includes('+') || (addon && String(addon.price || '').includes('+'));
+          const combinedPriceStr = totalNum > 0
+            ? `$${totalNum}${hasPlus ? '+' : ''} AUD`
+            : (String(primary.price).includes('$') ? `${primary.price} AUD` : `$${primary.price} AUD`);
+
+          const baseMins = parseDurationMins(primary.duration);
+          const addonMins = addon ? parseDurationMins(addon.duration) : 0;
+          const totalMinsStr = baseMins > 0 ? `${baseMins + addonMins} mins` : (primary.duration || '60 mins');
+
+          if (fitEl) fitEl.textContent = compatibility;
+          if (nameEl) nameEl.textContent = primary.name;
+          if (durationEl) durationEl.textContent = `${totalMinsStr} • Unhurried One-on-One Care`;
+          if (priceEl) priceEl.textContent = combinedPriceStr;
+          if (priceNoteEl) priceNoteEl.textContent = addon ? `Includes base ritual (${primary.price}) + finishing add-on (${addon.price})` : 'All inclusive (GST incl.)';
+          if (descEl) descEl.textContent = primary.desc || 'Detailed e-file cuticle refinement, structured builder apex & organic cuticle oil.';
+          if (reasonEl) {
+            reasonEl.innerHTML = `<strong style="color: var(--accent-primary);">Why this fits you:</strong> ${reason}`;
+          }
+          if (addonRowEl && addonNameEl && addonPriceEl) {
+            if (addon) {
+              addonRowEl.classList.remove('hidden');
+              addonNameEl.textContent = `+ ${addon.name}`;
+              addonPriceEl.textContent = `+${String(addon.price).includes('$') ? addon.price : `$${addon.price}`}`;
+            } else {
+              addonRowEl.classList.add('hidden');
+            }
+          }
+          const bookingSummary = addon
+            ? `${primary.name} + ${addon.name} (${combinedPriceStr})`
+            : `${primary.name} (${primary.price})`;
           if (bookBtn) {
-            bookBtn.setAttribute('data-open-booking', `${matched.name} (${matched.price})`);
-            bookBtn.onclick = () => openBookingFlow(`${matched.name} (${matched.price})`);
+            bookBtn.setAttribute('data-open-booking', bookingSummary);
+            bookBtn.onclick = () => openBookingFlow(bookingSummary);
           }
         }
+      }
+
+      if (backBtnEl) {
+        backBtnEl.addEventListener('click', () => {
+          if (currentQuizStep === 2) updateQuizUI(1, { isBack: true });
+          else if (currentQuizStep === 3) updateQuizUI(2, { isBack: true });
+        });
       }
 
       document.querySelectorAll('#quiz-step-1 [data-quiz-choice]').forEach(btn => {
@@ -2867,7 +3189,7 @@
       document.querySelectorAll('#quiz-step-3 [data-quiz-choice]').forEach(btn => {
         btn.addEventListener('click', () => {
           quizChoices.style = btn.getAttribute('data-quiz-choice');
-          updateQuizUI(4);
+          updateQuizUI('analyzing');
         });
       });
       const retakeBtn = document.getElementById('quiz-btn-retake');
@@ -2876,7 +3198,7 @@
           quizChoices.occasion = null;
           quizChoices.health = null;
           quizChoices.style = null;
-          updateQuizUI(1);
+          updateQuizUI(1, { isBack: true });
         });
       }
 
