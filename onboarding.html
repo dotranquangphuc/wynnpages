@@ -782,9 +782,10 @@
       const emailParam = (urlParams.get('email') || '').trim();
       const cidParam = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
       const sessionId = (urlParams.get('session_id') || '').trim();
+      const paymentIntentId = (urlParams.get('payment_intent') || urlParams.get('pi') || '').trim();
       const briefType = (urlParams.get('type') || 'organic').toLowerCase() === 'demo' ? 'demo' : 'organic';
 
-      document.getElementById('hidden-session-id').value = sessionId;
+      document.getElementById('hidden-session-id').value = sessionId || paymentIntentId;
       document.getElementById('hidden-brief-type').value = briefType;
 
       // Elements
@@ -869,12 +870,12 @@
         emailFallbackWrap.classList.remove('hidden');
       }
 
-      // 1b. Verify Stripe payment (tax invoice, SMS, Telegram) & prefill account if arriving from Checkout
-      if (sessionId && sessionId.startsWith('cs_')) {
+      // 1b. Verify payment (tax invoice, SMS, Telegram) & prefill account if arriving from Checkout
+      if ((sessionId && sessionId.startsWith('cs_')) || (paymentIntentId && paymentIntentId.startsWith('pi_'))) {
         fetch('/api/verify-payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ sessionId, paymentIntentId })
         })
           .then((r) => r.json())
           .then((v) => {

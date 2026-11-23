@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Reserve Your Website • WynnPages Digital Atelier</title>
+  <meta name="description" content="Complete your bespoke WynnPages Studio reservation with Apple Pay, Google Pay, Afterpay, Zip, or Card and unlock your private Customisation Portal.">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: {
+              50: '#fdfcf9',
+              100: '#fbf8f2',
+              200: '#f6f1e8',
+              300: '#ede4d3',
+              800: '#3a3329',
+              900: '#231f1a'
+            },
+            terracotta: {
+              500: '#96432b',
+              600: '#7d3520'
+            },
+            gold: {
+              400: '#f0c765',
+              500: '#e8b948',
+              600: '#c88a1b'
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: clip;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f6f1e8;
+      background-image:
+        radial-gradient(circle at 12% 10%, rgba(212, 155, 40, 0.11), transparent 44%),
+        radial-gradient(circle at 88% 85%, rgba(150, 67, 43, 0.08), transparent 48%);
+      color: #231f1a;
+      -webkit-font-smoothing: antialiased;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .atelier-panel {
+      background-color: #fcf9f3;
+      border: 1px solid #e5dec9;
+      box-shadow: 0 22px 50px -22px rgba(35, 31, 26, 0.14), 0 4px 14px rgba(35, 31, 26, 0.04);
+    }
+    .atelier-input {
+      background-color: #ffffff;
+      border: 1.5px solid #e2d9c8;
+      border-radius: 14px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .atelier-input:hover {
+      border-color: #cbbba0;
+    }
+    .atelier-input:focus {
+      border-color: #96432b;
+      box-shadow: 0 0 0 4px rgba(150, 67, 43, 0.1);
+      outline: none;
+    }
+    @media (max-width: 639px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    .btn-pay-atelier {
+      background: linear-gradient(135deg, #a64a2e 0%, #83361f 100%);
+      color: #fffcf7;
+      box-shadow: 0 12px 26px -8px rgba(150, 67, 43, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, opacity 0.2s ease;
+    }
+    .btn-pay-atelier:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px -10px rgba(150, 67, 43, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+    .btn-pay-atelier:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .btn-pay-atelier:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      animation: spin 0.85s linear infinite;
+    }
+  </style>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-[#96432b] selection:text-white">
+
+  <!-- Sticky Bespoke Header -->
+  <header class="sticky top-0 z-40 bg-[#f6f1e8]/92 backdrop-blur-md border-b border-[#e5dec9] px-4 sm:px-8 py-3.5">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+      <a href="https://wynnpages.com.au" class="flex items-center gap-3 min-w-0 group">
+        <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#96432b] to-[#7d3520] ring-1 ring-[#e8b948]/45 shadow-sm flex items-center justify-center text-white font-editorial italic font-bold text-lg shrink-0 group-hover:scale-[1.03] transition-transform">
+          W
+        </span>
+        <div class="min-w-0">
+          <div class="font-editorial text-lg font-bold tracking-tight text-[#231f1a] leading-none">WynnPages</div>
+          <div class="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8c6b32] mt-1 truncate">Australian Digital Atelier</div>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <a id="co-back-demo-btn" href="https://wynnpages.com.au" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#dfd5c1] bg-white/80 hover:bg-white text-xs font-semibold text-[#4a433b] transition-colors">
+          <span>&larr; Preview Site</span>
+        </a>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#e9f2e6] border border-[#c5dcc0] text-[11px] font-bold text-[#2b4d26]">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>256-Bit Encrypted</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+
+    <!-- Loading Skeleton -->
+    <div id="co-loading" class="atelier-panel rounded-[28px] p-8 sm:p-14 text-center space-y-4">
+      <div class="w-10 h-10 rounded-full border-2 border-[#e5dec9] border-t-[#96432b] spinner mx-auto"></div>
+      <p class="font-editorial italic text-2xl text-[#231f1a]">Preparing your bespoke studio reservation&hellip;</p>
+      <p class="text-xs text-[#6f665c]">Securing Apple Pay, Google Pay, Afterpay, Zip &amp; Card options in AUD</p>
+    </div>
+
+    <!-- Error Fallback -->
+    <div id="co-init-error" class="hidden atelier-panel rounded-[28px] p-8 sm:p-12 text-center space-y-4 max-w-xl mx-auto">
+      <div class="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-center mx-auto font-bold text-lg">!</div>
+      <h1 class="font-editorial text-3xl font-semibold text-[#231f1a]">Unable to initialise checkout</h1>
+      <p id="co-init-error-msg" class="text-sm text-[#6f665c]"></p>
+      <button type="button" onclick="window.location.reload()" class="btn-pay-atelier rounded-full px-7 py-3 text-sm font-semibold inline-flex items-center justify-center">
+        Try Again
+      </button>
+    </div>
+
+    <!-- Active 2-Column Bespoke Checkout -->
+    <div id="co-layout" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+      <!-- LEFT COLUMN: BESPOKE RESERVATION SUMMARY (5 cols) -->
+      <section class="lg:col-span-5 atelier-panel rounded-[28px] p-6 sm:p-7 space-y-6">
+        <div class="space-y-3">
+          <span id="co-reserved-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fdf3e7] border border-[#ebd2b4] text-[10px] uppercase tracking-[0.16em] font-bold text-[#96432b]">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#96432b]"></span>
+            <span id="co-reserved-label">Bespoke Studio Reservation</span>
+          </span>
+          <h1 id="co-biz-heading" class="font-editorial text-3xl sm:text-[34px] font-semibold leading-[1.12] text-[#231f1a]">
+            Claim Your Custom Website
+          </h1>
+          <p id="co-demo-url-wrap" class="hidden text-xs text-[#6f665c] flex items-center gap-1.5 flex-wrap">
+            <span>Preview concept:</span>
+            <a id="co-demo-url-link" href="#" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#96432b] underline break-all"></a>
+          </p>
+        </div>
+
+        <!-- Flash Deal Banner -->
+        <div id="co-deal-banner" class="hidden rounded-2xl p-4 bg-gradient-to-br from-[#fef7e6] to-[#fdf0d5] border border-[#e3b95c] space-y-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[10px] uppercase tracking-[0.16em] font-extrabold text-[#946200]">50% Studio Sponsorship Applied</span>
+            <span id="co-deal-countdown" class="font-mono text-[11px] font-bold text-[#7d3520] bg-white/80 px-2 py-0.5 rounded-md border border-[#e3b95c]/60">--:--:--</span>
+          </div>
+          <p class="text-xs text-[#4f4331] leading-relaxed">
+            Your custom build is pre-designed — claim it at half price before archival.
+          </p>
+        </div>
+
+        <!-- Price Box -->
+        <div class="rounded-2xl bg-white border border-[#e7dfd0] p-5 space-y-3">
+          <div class="flex items-baseline justify-between gap-3">
+            <div>
+              <span class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64] block">One-Off Ownership Fee</span>
+              <span class="text-xs text-[#6f665c]">Zero monthly fees forever</span>
+            </div>
+            <div class="text-right">
+              <div id="co-price-strike" class="hidden text-xs text-[#9c9285] line-through font-medium">$599.00 AUD</div>
+              <div class="flex items-baseline justify-end gap-1">
+                <span id="co-price-main" class="font-editorial text-4xl font-bold text-[#231f1a] leading-none">$599</span>
+                <span class="text-xs font-bold text-[#6f665c]">AUD</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-[#efe9dc] flex items-center justify-between gap-2 text-xs">
+            <span class="text-[#5c5349]">Pay in 4 interest-free fortnightly instalments</span>
+            <span id="co-bnpl-rate" class="font-bold text-[#231f1a] shrink-0">$149.75 × 4</span>
+          </div>
+        </div>
+
+        <!-- Included Guarantees -->
+        <div class="space-y-3">
+          <div class="text-[11px] uppercase tracking-[0.16em] font-bold text-[#786f64]">Everything Included Today</div>
+          <ul class="space-y-2.5 text-xs sm:text-[13px] text-[#3d3730] leading-relaxed">
+            <li class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+              <span><strong>100% Tailored to Your Salon:</strong> Upload your real photos, logo, colours &amp; exact price menu straight into your Customisation Portal right after payment.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+              <span><strong>Complimentary <code>.com.au</code> Domain Setup:</strong> Connected personally on the <em>WynnPages Studio Australian High-Speed Network</em> with free SSL.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+              <span><strong>100% Client Ownership ($0/month):</strong> No subscriptions, no hosting retainers, and no lock-in contracts.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-[#e9f2e6] text-[#2f5d2a] flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">&#10003;</span>
+              <span><strong>Official Australian Tax Invoice:</strong> Sent immediately to your email with printable PDF receipt.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Accepted Payment Methods Badges -->
+        <div class="pt-4 border-t border-[#e7dfd0] flex flex-wrap items-center gap-1.5">
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#231f1a]">Apple Pay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#231f1a]">Google Pay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-[#e6fbf4] border border-[#b2eedb] text-[10px] font-bold text-[#0c4a3e]">Afterpay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-[#f3efff] border border-[#d6c9fb] text-[10px] font-bold text-[#3f1f85]">Zip Pay</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-[#e2d9c8] text-[10px] font-bold text-[#4a433b]">Visa &bull; Mastercard &bull; Amex</span>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: ON-SITE EXPRESS & FLEXIBLE PAYMENT FORM (7 cols) -->
+      <section class="lg:col-span-7 atelier-panel rounded-[28px] p-6 sm:p-8 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-[#ece4d4]">
+          <div>
+            <h2 class="font-editorial text-2xl sm:text-3xl font-semibold text-[#231f1a]">Complete Your Order</h2>
+            <p class="text-xs text-[#6f665c] mt-0.5">Instant unlock of your Private Customisation Portal &amp; Official Tax Invoice</p>
+          </div>
+          <span id="co-step-badge" class="px-3 py-1 rounded-full bg-[#f6f1e8] border border-[#e5dec9] text-[11px] font-bold text-[#5c5349]">
+            Secure AUD Payment
+          </span>
+        </div>
+
+        <!-- Client Contact Fields -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <label for="co-biz-input" class="block text-xs font-bold uppercase tracking-wider text-[#5c5349] mb-1.5">Business / Salon Name</label>
+            <input id="co-biz-input" type="text" autocomplete="organization" placeholder="e.g. Lux Nails Bar" class="atelier-input w-full px-4 py-3 text-sm font-medium text-[#231f1a]">
+          </div>
+          <div>
+            <label for="co-email-input" class="block text-xs font-bold uppercase tracking-wider text-[#5c5349] mb-1.5">Email (for Tax Invoice &amp; Portal)</label>
+            <input id="co-email-input" type="email" autocomplete="email" placeholder="owner@yoursalon.com.au" class="atelier-input w-full px-4 py-3 text-sm font-medium text-[#231f1a]">
+          </div>
+          <div>
+            <label for="co-phone-input" class="block text-xs font-bold uppercase tracking-wider text-[#5c5349] mb-1.5">Australian Mobile (Launch Updates)</label>
+            <input id="co-phone-input" type="tel" autocomplete="tel" placeholder="04XX XXX XXX" class="atelier-input w-full px-4 py-3 text-sm font-medium text-[#231f1a]">
+          </div>
+        </div>
+
+        <!-- 1-Tap Express Checkout (Apple Pay / Google Pay) -->
+        <div id="co-express-wrap" class="hidden space-y-2.5">
+          <div class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64]">Instant 1-Tap Wallet</div>
+          <div id="express-checkout-element" class="min-h-[48px]"></div>
+          <div class="relative py-2 flex items-center justify-center">
+            <span class="absolute inset-x-0 h-px bg-[#e5dec9]"></span>
+            <span class="relative bg-[#fcf9f3] px-3 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#8c8273]">Or Pay With Card, Afterpay or Zip</span>
+          </div>
+        </div>
+
+        <!-- Unified Payment Element (Card + Afterpay + Zip) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#786f64]">Select Payment Method</span>
+            <span class="text-[11px] text-[#6f665c]">Afterpay &amp; Zip supported</span>
+          </div>
+          <div id="payment-element" class="min-h-[160px] rounded-2xl bg-white/70 p-3 sm:p-4 border border-[#e5dec9]"></div>
+        </div>
+
+        <!-- Inline Error Message -->
+        <div id="co-error-box" class="hidden rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-xs sm:text-sm font-medium text-red-800"></div>
+
+        <!-- Primary Submit Button -->
+        <form id="co-payment-form" class="space-y-3">
+          <button type="submit" id="co-submit-btn" class="btn-pay-atelier w-full rounded-full py-4 px-6 text-sm sm:text-base font-bold tracking-wide flex items-center justify-center gap-2.5 cursor-pointer">
+            <span id="co-submit-label">Claim Website &amp; Unlock Portal &mdash; $599 AUD &rarr;</span>
+          </button>
+          <p class="text-[11px] text-center text-[#786f64] leading-relaxed">
+            Instant redirect to your private Customisation Portal upon approval. Official Australian Tax Invoice emailed straight away.
+          </p>
+        </form>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-[#e5dec9] py-6 px-4 text-center text-xs text-[#786f64]">
+    <p class="font-editorial text-sm font-semibold text-[#3a3329]">WynnPages Digital Atelier &bull; Australian High-Speed Network</p>
+    <p class="text-[11px] text-[#8c8273] mt-1">Need a hand? <a href="mailto:hello@wynnpages.com.au" class="text-[#96432b] font-semibold underline">hello@wynnpages.com.au</a></p>
+  </footer>
+
+  <script>
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const loadingEl = document.getElementById('co-loading');
+      const initErrEl = document.getElementById('co-init-error');
+      const initErrMsg = document.getElementById('co-init-error-msg');
+      const layoutEl = document.getElementById('co-layout');
+
+      const bizHeadingEl = document.getElementById('co-biz-heading');
+      const reservedLabelEl = document.getElementById('co-reserved-label');
+      const backDemoBtn = document.getElementById('co-back-demo-btn');
+      const demoUrlWrap = document.getElementById('co-demo-url-wrap');
+      const demoUrlLink = document.getElementById('co-demo-url-link');
+      const dealBanner = document.getElementById('co-deal-banner');
+      const dealCountdown = document.getElementById('co-deal-countdown');
+      const priceStrikeEl = document.getElementById('co-price-strike');
+      const priceMainEl = document.getElementById('co-price-main');
+      const bnplRateEl = document.getElementById('co-bnpl-rate');
+
+      const bizInput = document.getElementById('co-biz-input');
+      const emailInput = document.getElementById('co-email-input');
+      const phoneInput = document.getElementById('co-phone-input');
+
+      const expressWrap = document.getElementById('co-express-wrap');
+      const formEl = document.getElementById('co-payment-form');
+      const submitBtn = document.getElementById('co-submit-btn');
+      const submitLabel = document.getElementById('co-submit-label');
+      const errorBox = document.getElementById('co-error-box');
+
+      let stripe = null;
+      let elements = null;
+      let paymentIntentId = '';
+      let clientCid = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
+      let flowType = (urlParams.get('flow') || 'outbound').trim();
+      let shippingAu = { name: '', address: { line1: '100 Studio Lane', city: 'Brisbane', state: 'QLD', postal_code: '4000', country: 'AU' } };
+      let amountAudNumber = 599;
+
+      function showInitError(msg) {
+        loadingEl.classList.add('hidden');
+        layoutEl.classList.add('hidden');
+        initErrMsg.textContent = msg || 'Please refresh and try again.';
+        initErrEl.classList.remove('hidden');
+      }
+
+      function showFormError(msg) {
+        if (!msg) {
+          errorBox.classList.add('hidden');
+          errorBox.textContent = '';
+          return;
+        }
+        errorBox.textContent = msg;
+        errorBox.classList.remove('hidden');
+      }
+
+      function startCountdown(expiresIso) {
+        if (!expiresIso) return;
+        const endMs = new Date(expiresIso).getTime();
+        if (!endMs || endMs <= Date.now()) return;
+        function tick() {
+          const diff = Math.max(0, endMs - Date.now());
+          const hrs = Math.floor(diff / 3600000);
+          const mins = Math.floor((diff % 3600000) / 60000);
+          const secs = Math.floor((diff % 60000) / 1000);
+          dealCountdown.textContent = [hrs, mins, secs].map((n) => String(n).padStart(2, '0')).join(':');
+        }
+        tick();
+        setInterval(tick, 1000);
+      }
+
+      function buildSuccessRedirectUrl(piId) {
+        const currentEmail = (emailInput.value || '').trim();
+        const currentCid = encodeURIComponent(clientCid || '');
+        const encodedEmail = encodeURIComponent(currentEmail);
+        const encodedPi = encodeURIComponent(piId || paymentIntentId || '');
+        if (flowType === 'inbound') {
+          return `${window.location.origin}/onboarding?type=organic&payment_intent=${encodedPi}&client_id=${currentCid}&email=${encodedEmail}`;
+        }
+        return `${window.location.origin}/revision?payment_intent=${encodedPi}&cid=${currentCid}&client_id=${currentCid}&email=${encodedEmail}`;
+      }
+
+      async function verifyAndProceed(piId) {
+        try {
+          await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              paymentIntentId: piId,
+              email: (emailInput.value || '').trim(),
+              businessName: (bizInput.value || '').trim(),
+              phone: (phoneInput.value || '').trim(),
+              customerId: clientCid
+            })
+          }).catch(() => {});
+        } catch (_) {}
+        window.location.href = buildSuccessRedirectUrl(piId);
+      }
+
+      async function bootCheckout() {
+        try {
+          const res = await fetch('/api/checkout-intent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cid: clientCid,
+              slug: (urlParams.get('slug') || '').trim(),
+              email: (urlParams.get('email') || '').trim(),
+              name: (urlParams.get('name') || '').trim(),
+              phone: (urlParams.get('phone') || '').trim(),
+              demo: (urlParams.get('demo') || '').trim(),
+              deal: (urlParams.get('deal') || '').trim(),
+              flow: flowType
+            })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok || !data.clientSecret || !data.publishableKey) {
+            throw new Error(data.error || 'Could not load payment session.');
+          }
+
+          paymentIntentId = data.paymentIntentId || '';
+          clientCid = data.clientId || clientCid;
+          flowType = data.flowType || flowType;
+          amountAudNumber = Number(data.amountAud || 599);
+          if (data.shipping) shippingAu = data.shipping;
+
+          const c = data.client || {};
+          const bizLabel = c.businessName || c.name || 'Your Business';
+          bizHeadingEl.textContent = flowType === 'inbound'
+            ? 'Reserve Your Bespoke Studio Build'
+            : `Claim Website for ${bizLabel}`;
+          reservedLabelEl.textContent = flowType === 'inbound'
+            ? 'New Website Build Slot'
+            : `Exclusively Reserved for ${bizLabel}`;
+
+          if (c.demoUrl && c.demoUrl.startsWith('http')) {
+            backDemoBtn.href = c.demoUrl;
+            backDemoBtn.classList.remove('hidden');
+            backDemoBtn.classList.add('inline-flex');
+            demoUrlLink.href = c.demoUrl;
+            demoUrlLink.textContent = c.demoUrl;
+            demoUrlWrap.classList.remove('hidden');
+          }
+
+          bizInput.value = bizLabel !== 'Your Business' ? bizLabel : '';
+          emailInput.value = c.email || '';
+          phoneInput.value = c.phone || '';
+
+          if (data.isFlashDeal) {
+            priceStrikeEl.classList.remove('hidden');
+            priceMainEl.textContent = `$${amountAudNumber}`;
+            bnplRateEl.textContent = `$${(amountAudNumber / 4).toFixed(2)} × 4`;
+            dealBanner.classList.remove('hidden');
+            startCountdown(data.dealExpiresAt);
+          } else {
+            priceMainEl.textContent = `$${amountAudNumber}`;
+            bnplRateEl.textContent = `$${(amountAudNumber / 4).toFixed(2)} × 4`;
+          }
+
+          submitLabel.innerHTML = flowType === 'inbound'
+            ? `Lock Build Slot &amp; Start Brief &mdash; $${amountAudNumber} AUD &rarr;`
+            : `Claim Website &amp; Unlock Portal &mdash; $${amountAudNumber} AUD &rarr;`;
+
+          if (typeof window.Stripe !== 'function') {
+            throw new Error('Secure payment library could not load.');
+          }
+
+          stripe = window.Stripe(data.publishableKey);
+          elements = stripe.elements({
+            clientSecret: data.clientSecret,
+            appearance: {
+              theme: 'flat',
+              variables: {
+                colorPrimary: '#96432b',
+                colorBackground: '#ffffff',
+                colorText: '#231f1a',
+                colorTextSecondary: '#6f665c',
+                colorDanger: '#b91c1c',
+                fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+                spacingUnit: '4px',
+                borderRadius: '12px'
+              },
+              rules: {
+                '.Input': {
+                  border: '1.5px solid #e2d9c8',
+                  boxShadow: 'none'
+                },
+                '.Input:focus': {
+                  borderColor: '#96432b',
+                  boxShadow: '0 0 0 3px rgba(150, 67, 43, 0.12)'
+                },
+                '.Tab': {
+                  border: '1.5px solid #e5dec9',
+                  backgroundColor: '#fdfbf7'
+                },
+                '.Tab--selected': {
+                  borderColor: '#96432b',
+                  backgroundColor: '#ffffff'
+                }
+              }
+            }
+          });
+
+          const expressCheckoutEl = elements.create('expressCheckout', {
+            buttonType: { applePay: 'buy', googlePay: 'buy' },
+            buttonTheme: { applePay: 'black', googlePay: 'black' },
+            buttonHeight: 48
+          });
+          expressCheckoutEl.on('ready', (ev) => {
+            if (ev && ev.availablePaymentMethods && (ev.availablePaymentMethods.applePay || ev.availablePaymentMethods.googlePay)) {
+              expressWrap.classList.remove('hidden');
+            }
+          });
+          expressCheckoutEl.on('confirm', async () => {
+            showFormError('');
+            const { error, paymentIntent } = await stripe.confirmPayment({
+              elements,
+              confirmParams: {
+                return_url: buildSuccessRedirectUrl(paymentIntentId),
+                receipt_email: (emailInput.value || '').trim() || undefined
+              },
+              redirect: 'if_required'
+            });
+            if (error) {
+              showFormError(error.message || 'Express payment was cancelled or declined.');
+            } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+              await verifyAndProceed(paymentIntent.id);
+            }
+          });
+          expressCheckoutEl.mount('#express-checkout-element');
+
+          const paymentElement = elements.create('payment', {
+            layout: { type: 'tabs', defaultCollapsed: false },
+            wallets: { applePay: 'never', googlePay: 'never' },
+            paymentMethodOrder: ['card', 'afterpay_clearpay', 'zip'],
+            defaultValues: {
+              billingDetails: {
+                name: bizInput.value.trim() || undefined,
+                email: emailInput.value.trim() || undefined,
+                phone: phoneInput.value.trim() || undefined,
+                address: shippingAu.address || { country: 'AU' }
+              }
+            }
+          });
+          paymentElement.mount('#payment-element');
+
+          loadingEl.classList.add('hidden');
+          layoutEl.classList.remove('hidden');
+        } catch (err) {
+          showInitError(err && err.message ? err.message : 'Unable to start checkout.');
+        }
+      }
+
+      formEl.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        showFormError('');
+        if (!stripe || !elements) return;
+
+        const bizVal = (bizInput.value || '').trim();
+        const emailVal = (emailInput.value || '').trim();
+        const phoneVal = (phoneInput.value || '').trim();
+        if (!emailVal || !emailVal.includes('@')) {
+          showFormError('Please enter a valid email address so we can send your Tax Invoice and Customisation Portal link.');
+          emailInput.focus();
+          return;
+        }
+
+        const prevHtml = submitLabel.innerHTML;
+        submitBtn.disabled = true;
+        submitLabel.innerHTML = `<span class="inline-block w-4 h-4 rounded-full border-2 border-white/40 border-t-white spinner"></span><span>Processing Secure Payment&hellip;</span>`;
+
+        try {
+          await fetch('/api/checkout-intent-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              paymentIntentId,
+              cid: clientCid,
+              businessName: bizVal,
+              email: emailVal,
+              phone: phoneVal
+            })
+          }).catch(() => {});
+
+          const { error, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+              return_url: buildSuccessRedirectUrl(paymentIntentId),
+              receipt_email: emailVal
+            },
+            redirect: 'if_required'
+          });
+
+          if (error) {
+            showFormError(error.message || 'Payment could not be completed. Please check your details and try again.');
+            submitBtn.disabled = false;
+            submitLabel.innerHTML = prevHtml;
+            return;
+          }
+
+          if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+            await verifyAndProceed(paymentIntent.id);
+            return;
+          }
+
+          window.location.href = buildSuccessRedirectUrl(paymentIntentId);
+        } catch (err) {
+          showFormError((err && err.message) || 'Payment error. Please try again.');
+          submitBtn.disabled = false;
+          submitLabel.innerHTML = prevHtml;
+        }
+      });
+
+      bootCheckout();
+    })();
+  </script>
+</body>
+</html>

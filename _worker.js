@@ -10,6 +10,8 @@ import {
   ADMIN_NOTIFY_PHONE as ADMIN_NOTIFY_PHONE_FALLBACK
 } from './stripe_key.js';
 
+const LIVE_STRIPE_PUBLISHABLE_FALLBACK = 'pk_live_51UWZM9CnfRX8GWxTLl2q82GIPAA8i09K7tukxcaqXnOcgORh5tJwM1ErXtqt1PJxPnn8fTKBQjcBfhyrhdrhPamv00pB6gDmKP';
+
 function isValidStripeSecretKey(val) {
   const s = String(val || '').trim();
   return s.startsWith('sk_') || s.startsWith('rk_');
@@ -17,8 +19,11 @@ function isValidStripeSecretKey(val) {
 
 function getConfig(env, overrides = {}) {
   const overrideStripe = isValidStripeSecretKey(overrides.stripeSecretKey) ? String(overrides.stripeSecretKey).trim() : '';
+  const resolvedSecret = overrideStripe || env.STRIPE_SECRET_KEY || STRIPE_SECRET_KEY_FALLBACK || '';
+  const overridePub = String(overrides.stripePublishableKey || '').trim();
   return {
-    stripeSecretKey: overrideStripe || env.STRIPE_SECRET_KEY || STRIPE_SECRET_KEY_FALLBACK || '',
+    stripeSecretKey: resolvedSecret,
+    stripePublishableKey: (overridePub && overridePub.startsWith('pk_') ? overridePub : '') || env.STRIPE_PUBLISHABLE_KEY || LIVE_STRIPE_PUBLISHABLE_FALLBACK,
     clicksendUsername: overrides.clicksendUsername || env.CLICKSEND_USERNAME || CLICKSEND_USERNAME_FALLBACK || '',
     clicksendApiKey: overrides.clicksendApiKey || env.CLICKSEND_API_KEY || CLICKSEND_API_KEY_FALLBACK || '',
     clicksendFrom: overrides.clicksendFrom || env.CLICKSEND_FROM || CLICKSEND_FROM_FALLBACK || 'WynnPages',
@@ -210,6 +215,7 @@ async function sendClickSendSms(toPhone, bodyText, cfg) {
 
 const WYNN_SYNCED_SETTING_KEYS = [
   'stripeSecretKey',
+  'stripePublishableKey',
   'stripeWebhookSecret',
   'clicksendUsername',
   'clicksendApiKey',
@@ -1389,6 +1395,285 @@ function escapeEmailHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+function buildPrintableTaxInvoicePageHtml({
+  businessName = 'Lux Nails Bar',
+  customerName = '',
+  customerEmail = 'owner@salon.com.au',
+  customerPhone = '0478 679 679',
+  businessAddress = 'South Brisbane QLD 4101, Australia',
+  amountAud = '$599.00 AUD',
+  invoiceNumber = 'WP-20260001',
+  paidAtAu = '',
+  abn = '',
+  portalUrl = 'https://wynnpages.com.au/revision',
+  isFlashDeal = false
+}) {
+  const displayBiz = businessName || customerName || 'Valued Client';
+  const issuedStr = paidAtAu || formatAuDateTime(new Date(), AU_TIMEZONE);
+  return `<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tax Invoice #${escapeEmailHtml(invoiceNumber)} &bull; WynnPages Studio</title>
+  <link href="/assets/fonts.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 16px 48px;
+      background: #f6f1e8;
+      color: #231f1a;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .toolbar {
+      max-width: 780px;
+      margin: 0 auto 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid #dfd5c1;
+      background: #ffffff;
+      color: #231f1a;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #a64a2e 0%, #83361f 100%);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 10px 24px -8px rgba(150, 67, 43, 0.42);
+    }
+    .sheet {
+      max-width: 780px;
+      margin: 0 auto;
+      background: #fffefb;
+      border: 1px solid #e5dec9;
+      border-radius: 24px;
+      padding: 40px 44px;
+      box-shadow: 0 24px 60px -24px rgba(35, 31, 26, 0.14);
+    }
+    .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 1.5px solid #ede4d3;
+    }
+    .brand-row { display: flex; align-items: center; gap: 14px; }
+    .seal {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #96432b, #7d3520);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-style: italic;
+      font-weight: 700;
+      font-size: 22px;
+      border: 1px solid rgba(232, 185, 72, 0.5);
+    }
+    .paid-pill {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: #e5f1e2;
+      border: 1px solid #bcd6b5;
+      color: #244820;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      padding: 24px 0;
+      border-bottom: 1px solid #ede4d3;
+    }
+    .meta-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8c8273;
+      margin-bottom: 6px;
+    }
+    table.items {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 22px;
+    }
+    table.items th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8c8273;
+      padding: 0 0 12px;
+      border-bottom: 1px solid #ede4d3;
+    }
+    table.items td {
+      padding: 15px 0;
+      border-bottom: 1px solid #f2ece0;
+      vertical-align: top;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .totals {
+      margin-top: 22px;
+      margin-left: auto;
+      max-width: 310px;
+      background: #fcf9f3;
+      border: 1px solid #e5dec9;
+      border-radius: 16px;
+      padding: 16px 20px;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 4px 0;
+      color: #5c5349;
+    }
+    .totals-row.grand {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #e5dec9;
+      font-size: 16px;
+      font-weight: 800;
+      color: #231f1a;
+    }
+    .footer-note {
+      margin-top: 30px;
+      padding-top: 18px;
+      border-top: 1px dashed #e2d9c8;
+      font-size: 12px;
+      color: #6f665c;
+      line-height: 1.65;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    @media (max-width: 600px) {
+      .sheet { padding: 24px 20px; border-radius: 18px; }
+      .meta-grid { grid-template-columns: 1fr; gap: 14px; }
+    }
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .toolbar { display: none !important; }
+      .sheet { box-shadow: none; border: none; padding: 12px 0; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a href="${escapeEmailHtml(portalUrl)}" class="btn">&larr; Open Customisation Portal</a>
+    <button type="button" onclick="window.print()" class="btn btn-primary">&#128424; Print / Save Official PDF Tax Invoice</button>
+  </div>
+
+  <article class="sheet">
+    <div class="header">
+      <div class="brand-row">
+        <div class="seal">W</div>
+        <div>
+          <div class="serif" style="font-size:24px;font-weight:700;line-height:1.05;">WynnPages Digital Atelier</div>
+          <div style="font-size:12px;color:#6f665c;margin-top:3px;">hello@wynnpages.com.au &bull; wynnpages.com.au</div>
+          ${abn ? `<div style="font-size:11.5px;color:#786f64;margin-top:2px;">ABN: ${escapeEmailHtml(abn)}</div>` : ''}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div class="serif" style="font-size:28px;font-weight:700;color:#96432b;line-height:1;">TAX INVOICE</div>
+        <div style="font-family:monospace;font-size:13px;color:#574f46;margin:6px 0 8px;">#${escapeEmailHtml(invoiceNumber)}</div>
+        <span class="paid-pill">Paid in Full</span>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div>
+        <div class="meta-label">Billed To</div>
+        <div style="font-size:15px;font-weight:700;color:#231f1a;">${escapeEmailHtml(displayBiz)}</div>
+        ${customerEmail ? `<div style="font-size:13px;color:#574f46;margin-top:3px;">${escapeEmailHtml(customerEmail)}</div>` : ''}
+        ${customerPhone ? `<div style="font-size:13px;color:#574f46;margin-top:2px;">${escapeEmailHtml(customerPhone)}</div>` : ''}
+        ${businessAddress ? `<div style="font-size:12.5px;color:#6f665c;margin-top:2px;">${escapeEmailHtml(businessAddress)}</div>` : ''}
+      </div>
+      <div style="text-align:right;">
+        <div class="meta-label">Invoice Details</div>
+        <div style="font-size:13px;color:#3d3730;"><strong>Date Issued:</strong> ${escapeEmailHtml(issuedStr)}</div>
+        <div style="font-size:13px;color:#3d3730;margin-top:3px;"><strong>Currency:</strong> Australian Dollars (AUD)</div>
+        <div style="font-size:13px;color:#3d3730;margin-top:3px;"><strong>Plan Type:</strong> One-Off Ownership ($0/month)</div>
+      </div>
+    </div>
+
+    <table class="items">
+      <thead>
+        <tr>
+          <th>Description of Service</th>
+          <th style="text-align:right;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong style="color:#231f1a;">Bespoke Website Design &amp; Custom Build Package</strong><br>
+            <span style="font-size:12px;color:#6f665c;">Hand-crafted mobile-first layout, oil-painting &amp; 24k gold-leaf visual styling, interactive menu &amp; local SEO schema.</span>
+          </td>
+          <td style="text-align:right;font-weight:700;white-space:nowrap;">${isFlashDeal ? '$299.00 AUD' : escapeEmailHtml(amountAud)}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong style="color:#231f1a;">Private Customisation Portal &amp; Personal Tailoring</strong><br>
+            <span style="font-size:12px;color:#6f665c;">Replacement of all sample photos, logo, brand colours &amp; exact salon service pricing menu by WynnPages Studio.</span>
+          </td>
+          <td style="text-align:right;font-weight:600;color:#2f5d2a;white-space:nowrap;">Included</td>
+        </tr>
+        <tr>
+          <td>
+            <strong style="color:#231f1a;">Custom <code>.com.au</code> Domain Setup &amp; High-Speed Hosting</strong><br>
+            <span style="font-size:12px;color:#6f665c;">Connected on the WynnPages Studio Australian High-Speed Network with free SSL &amp; $0 ongoing retainers forever.</span>
+          </td>
+          <td style="text-align:right;font-weight:600;color:#2f5d2a;white-space:nowrap;">Included</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-row"><span>Total Amount Paid</span><strong>${escapeEmailHtml(amountAud)}</strong></div>
+      <div class="totals-row"><span>Monthly Retainer</span><span>$0.00 / month</span></div>
+      <div class="totals-row grand"><span>Balance Due</span><span style="color:#2f5d2a;">$0.00 AUD</span></div>
+    </div>
+
+    <div class="footer-note">
+      <div><strong>100% Client Ownership Guarantee:</strong> Your website, branding, and custom domain remain yours permanently without subscription lock-in.</div>
+      <div>Issued by WynnPages Studio Australia</div>
+    </div>
+  </article>
+</body>
+</html>`;
+}
+
 function buildTaxInvoiceEmailHtml({
   businessName = '',
   customerName = '',
@@ -1405,79 +1690,91 @@ function buildTaxInvoiceEmailHtml({
 }) {
   const displayBiz = businessName || customerName || 'Valued Client';
   const greetingName = (customerName || displayBiz).split(' ')[0] || 'there';
-  const stepTitle = isOutbound ? 'Submit Your 1-Round Revision Form' : 'Complete Your Onboarding Brief';
+  const stepTitle = isOutbound ? 'Personalise Your Website in 2 Minutes' : 'Complete Your Onboarding Brief';
   const introCopy = isOutbound
-    ? `Thank you for choosing <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed and your bespoke website for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially yours.`
-    : `Welcome to <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed and your 7-day bespoke build slot for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially locked in.`;
+    ? `Thank you so much for choosing <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed, and your bespoke website for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially yours.`
+    : `Welcome to <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed, and your dedicated bespoke build slot for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially locked in.`;
   const nextStepCopy = isOutbound
-    ? `Use your interactive <strong>1-Round Revision Portal</strong> below to confirm your trading hours, phone number, menu pricing, or photos so we can launch your site cleanly within 24–48 hours. Need more time? You can click <strong>Save Draft (Finish Later)</strong> inside the form at any time and return via this same link.`
-    : `Please complete your quick 2-minute <strong>Onboarding Brief</strong> using the button below so our design engineers can begin crafting your website right away. Need more time to gather your logo or menu? Click <strong>Save Draft (Finish Later)</strong> inside the form and resume whenever you are ready.`;
+    ? `Your private <strong>Customisation Portal</strong> is now unlocked. Upload your real salon photos, logo, opening hours, and exact service pricing menu whenever you're ready &mdash; I'll personally swap everything in and connect your <code>.com.au</code> domain within <strong>24&ndash;48 hours</strong>.`
+    : `Please share your logo, photos, services, and domain preferences in your 2-minute <strong>Onboarding Brief</strong> below so our design team can begin building right away.`;
 
   const bodyHtml = `
     <p>G'day ${escapeEmailHtml(greetingName)},</p>
     <p>${introCopy}</p>
-    <div style="background-color:#fdf8f3;border:2px solid #96432b;border-radius:16px;padding:18px 20px;margin:20px 0;">
-      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#96432b;margin-bottom:6px;">Action Required • Next Step</div>
-      <div style="font-size:15px;font-weight:700;color:#231f1a;margin-bottom:8px;">${escapeEmailHtml(stepTitle)}</div>
-      <div style="font-size:13.5px;line-height:1.6;color:#4a433b;margin-bottom:14px;">${nextStepCopy}</div>
-      <a href="${escapeEmailHtml(portalUrl)}" style="display:inline-block;background-color:#96432b;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:13px 24px;border-radius:12px;">
-        ${escapeEmailHtml(portalLabel || stepTitle)} &rarr;
+    <div style="background-color:#fdf8f3;border:2px solid #96432b;border-radius:16px;padding:20px 22px;margin:20px 0;">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#96432b;margin-bottom:6px;">Unlocked &bull; Next Step</div>
+      <div style="font-size:16px;font-weight:700;color:#231f1a;margin-bottom:8px;">${escapeEmailHtml(stepTitle)}</div>
+      <div style="font-size:13.5px;line-height:1.65;color:#4a433b;margin-bottom:16px;">${nextStepCopy}</div>
+      <a href="${escapeEmailHtml(portalUrl)}" style="display:inline-block;background-color:#96432b;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:13px 24px;border-radius:999px;">
+        ${escapeEmailHtml(portalLabel || 'Open Private Customisation Portal')} &rarr;
       </a>
     </div>
-    <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:16px;padding:18px 20px;margin:20px 0;font-size:13px;line-height:1.65;color:#3d3730;">
+    <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:18px;padding:20px 22px;margin:20px 0;font-size:13px;line-height:1.65;color:#3d3730;">
       <table role="presentation" style="width:100%;border-collapse:collapse;">
         <tr>
-          <td style="vertical-align:top;padding-bottom:12px;border-bottom:1px solid #e5dec9;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#786f64;">Tax Invoice / Payment Receipt</div>
-            <div style="font-size:16px;font-weight:700;color:#231f1a;margin-top:2px;">WynnPages Studio (Australia)</div>
-            ${abn ? `<div style="font-size:12px;color:#6f665c;">ABN: ${escapeEmailHtml(abn)}</div>` : ''}
+          <td style="vertical-align:top;padding-bottom:14px;border-bottom:1px solid #e5dec9;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#786f64;">Official Australian Tax Invoice</div>
+            <div style="font-size:17px;font-weight:700;color:#231f1a;margin-top:3px;">WynnPages Digital Atelier</div>
+            <div style="font-size:11.5px;color:#6f665c;">hello@wynnpages.com.au &bull; Australia</div>
+            ${abn ? `<div style="font-size:11.5px;color:#6f665c;">ABN: ${escapeEmailHtml(abn)}</div>` : ''}
           </td>
-          <td style="vertical-align:top;text-align:right;padding-bottom:12px;border-bottom:1px solid #e5dec9;">
-            <span style="display:inline-block;background-color:#d4e4ce;color:#2f442c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:99px;">Paid in Full</span>
-            ${invoiceNumber ? `<div style="font-family:monospace;font-size:12px;color:#574f46;margin-top:6px;">#${escapeEmailHtml(invoiceNumber)}</div>` : ''}
+          <td style="vertical-align:top;text-align:right;padding-bottom:14px;border-bottom:1px solid #e5dec9;">
+            <span style="display:inline-block;background-color:#e5f1e2;border:1px solid #bcd6b5;color:#244820;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;padding:4px 12px;border-radius:99px;">Paid in Full</span>
+            ${invoiceNumber ? `<div style="font-family:monospace;font-size:12px;color:#574f46;margin-top:7px;">Invoice #${escapeEmailHtml(invoiceNumber)}</div>` : ''}
           </td>
         </tr>
         <tr>
-          <td style="padding-top:12px;vertical-align:top;">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8c8275;">Billed To</div>
-            <div style="font-weight:700;color:#231f1a;">${escapeEmailHtml(displayBiz)}</div>
+          <td style="padding-top:14px;vertical-align:top;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8c8275;margin-bottom:3px;">Billed To</div>
+            <div style="font-weight:700;color:#231f1a;font-size:14px;">${escapeEmailHtml(displayBiz)}</div>
             ${customerEmail ? `<div style="color:#574f46;">${escapeEmailHtml(customerEmail)}</div>` : ''}
             ${customerPhone ? `<div style="color:#574f46;">${escapeEmailHtml(customerPhone)}</div>` : ''}
           </td>
-          <td style="padding-top:12px;vertical-align:top;text-align:right;">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8c8275;">Date Issued (AU)</div>
+          <td style="padding-top:14px;vertical-align:top;text-align:right;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8c8275;margin-bottom:3px;">Date Issued (AU)</div>
             <div style="font-weight:600;color:#231f1a;">${escapeEmailHtml(paidAtAu)}</div>
+            <div style="font-size:11.5px;color:#6f665c;margin-top:2px;">Currency: AUD</div>
           </td>
         </tr>
       </table>
-      <table role="presentation" style="width:100%;border-collapse:collapse;margin-top:14px;border-top:1px solid #e5dec9;">
+      <table role="presentation" style="width:100%;border-collapse:collapse;margin-top:16px;border-top:1px solid #e5dec9;">
         <tr>
-          <td style="padding:10px 0 4px 0;color:#231f1a;font-weight:600;">Bespoke Website Design &amp; Build Package (100% Ownership)</td>
-          <td style="padding:10px 0 4px 0;text-align:right;font-weight:700;color:#231f1a;">${escapeEmailHtml(amountAud)}</td>
+          <td style="padding:12px 0 6px 0;color:#231f1a;">
+            <strong>Bespoke Website Design &amp; Build Package</strong><br>
+            <span style="font-size:12px;color:#6f665c;">100% Ownership &bull; Real Photos &amp; Menu Tailoring Included</span>
+          </td>
+          <td style="padding:12px 0 6px 0;text-align:right;font-weight:700;color:#231f1a;vertical-align:top;">${escapeEmailHtml(amountAud)}</td>
         </tr>
         <tr>
-          <td style="padding:4px 0;color:#786f64;font-size:12px;">Zero monthly studio retainers &bull; Hosted on WynnPages Studio Australian High-Speed Network</td>
-          <td style="padding:4px 0;text-align:right;color:#4c6b47;font-size:12px;font-weight:700;">Paid</td>
+          <td style="padding:6px 0;color:#231f1a;">
+            <strong>.com.au Domain Connection &amp; High-Speed Hosting</strong><br>
+            <span style="font-size:12px;color:#6f665c;">WynnPages Studio Australian High-Speed Network &bull; $0/mth forever</span>
+          </td>
+          <td style="padding:6px 0;text-align:right;color:#2f5d2a;font-size:12.5px;font-weight:700;vertical-align:top;">Included</td>
+        </tr>
+        <tr style="border-top:1px solid #e5dec9;">
+          <td style="padding:10px 0 2px 0;font-weight:800;color:#231f1a;font-size:14px;">Total Paid (Balance Due: $0.00 AUD)</td>
+          <td style="padding:10px 0 2px 0;text-align:right;font-weight:800;color:#96432b;font-size:15px;">${escapeEmailHtml(amountAud)}</td>
         </tr>
       </table>
       ${invoiceUrl ? `
-        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #d8ccb8;">
-          <a href="${escapeEmailHtml(invoiceUrl)}" style="display:inline-block;background-color:#ffffff;color:#231f1a;border:1px solid #d8ccb8;font-weight:700;font-size:12px;text-decoration:none;padding:9px 16px;border-radius:10px;">
-            &#128196; Download Official PDF Tax Invoice / Receipt &rarr;
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed #d8ccb8;">
+          <a href="${escapeEmailHtml(invoiceUrl)}" style="display:inline-block;background-color:#ffffff;color:#231f1a;border:1px solid #d8ccb8;font-weight:700;font-size:12.5px;text-decoration:none;padding:10px 18px;border-radius:999px;">
+            &#128196; View &amp; Print Official PDF Tax Invoice &rarr;
           </a>
         </div>
       ` : ''}
     </div>
-    <p style="font-size:13px;color:#6f665c;">Need a hand at any stage? Reply to this email or write to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
+    <p style="font-size:13px;color:#6f665c;">Need a hand at any stage? Simply reply directly to this email or write to <a href="mailto:hello@wynnpages.com.au" style="color:#96432b;font-weight:bold;">hello@wynnpages.com.au</a>.</p>
   `;
 
   return buildAtelierEmailHtml({
-    preheader: 'Official Tax Invoice & Next Step Portal Inside',
+    preheader: `Official Tax Invoice #${invoiceNumber || 'WP'} & Private Customisation Portal Inside`,
     heading: `Payment Confirmed for ${escapeEmailHtml(displayBiz)}.`,
     bodyHtml,
     secondaryCta: {
-      label: 'Save Link or Visit WynnPages Studio',
-      url: portalUrl
+      label: 'Open WynnPages Studio',
+      url: 'https://wynnpages.com.au'
     }
   });
 }
@@ -1552,32 +1849,96 @@ async function retrieveStripeInvoiceUrls(sessionData, stripeSecretKey) {
   return { invoiceUrl, invoicePdf, invoiceNumber };
 }
 
-async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = null, origin = 'https://wynnpages.com.au', env, ctx, cfg }) {
+async function fetchExpandedPaymentIntent(piId, stripeSecretKey) {
+  if (!piId || !stripeSecretKey) return null;
+  try {
+    const res = await fetch(
+      `https://api.stripe.com/v1/payment_intents/${encodeURIComponent(piId)}?expand[]=latest_charge`,
+      {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${stripeSecretKey}` }
+      }
+    );
+    if (!res.ok) return null;
+    return await res.json().catch(() => null);
+  } catch (_) {
+    return null;
+  }
+}
+
+function parseAuShippingFromAddress(rawAddress = '', recipientName = '') {
+  const clean = String(rawAddress || '').replace(/\s+/g, ' ').trim();
+  const mStatePost = clean.match(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\s*(\d{4})\b/i);
+  const state = mStatePost ? mStatePost[1].toUpperCase() : 'QLD';
+  const postalCode = mStatePost ? mStatePost[2] : '4000';
+  let city = 'Brisbane';
+  let line1 = clean || '100 Studio Lane';
+  if (clean.includes(',')) {
+    const parts = clean.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts[0]) line1 = parts[0];
+    if (parts[1]) {
+      const sub = parts[1].replace(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\s*\d{4}\b/gi, '').trim();
+      if (sub) city = sub;
+    }
+  }
+  return {
+    name: recipientName || 'Studio Owner',
+    address: {
+      line1: line1.slice(0, 180),
+      city: city.slice(0, 80),
+      state,
+      postal_code: postalCode,
+      country: 'AU'
+    }
+  };
+}
+
+async function finalizeStripePaymentAndNotify({ sessionId = '', paymentIntentId = '', sessionObj = null, paymentIntentObj = null, origin = 'https://wynnpages.com.au', env, ctx, cfg }) {
   const sid = String(sessionId || (sessionObj && sessionObj.id) || '').trim();
-  if (!sid || !sid.startsWith('cs_')) {
-    return { ok: false, paid: false, reason: 'Invalid session ID' };
+  let piId = String(paymentIntentId || (paymentIntentObj && paymentIntentObj.id) || '').trim();
+  if ((!sid || !sid.startsWith('cs_')) && (!piId || !piId.startsWith('pi_'))) {
+    return { ok: false, paid: false, reason: 'Invalid session or payment intent ID' };
   }
 
-  let sessionData = await fetchExpandedCheckoutSession(sid, cfg.stripeSecretKey);
-  if (!sessionData) sessionData = sessionObj;
-  if (!sessionData) {
-    return { ok: false, paid: false, reason: 'Checkout session not found' };
+  let sessionData = null;
+  let piData = null;
+  if (sid && sid.startsWith('cs_')) {
+    sessionData = await fetchExpandedCheckoutSession(sid, cfg.stripeSecretKey);
+    if (!sessionData) sessionData = sessionObj;
+    if (sessionData && !piId) {
+      piId = typeof sessionData.payment_intent === 'string'
+        ? sessionData.payment_intent
+        : ((sessionData.payment_intent && sessionData.payment_intent.id) || '');
+    }
+  }
+  if (!sessionData && piId && piId.startsWith('pi_')) {
+    piData = await fetchExpandedPaymentIntent(piId, cfg.stripeSecretKey);
+    if (!piData) piData = paymentIntentObj;
   }
 
-  const isPaid = sessionData.payment_status === 'paid' || sessionData.status === 'complete';
-  const meta = sessionData.metadata || {};
-  const cd = sessionData.customer_details || {};
-  const email = (cd.email || sessionData.customer_email || meta.customer_email || '').trim();
-  const name = (meta.customer_name || cd.name || '').trim();
-  const phone = (cd.phone || meta.customer_phone || '').trim();
+  const sourceObj = sessionData || piData;
+  if (!sourceObj) {
+    return { ok: false, paid: false, reason: 'Payment record not found' };
+  }
+
+  const isPaid = sessionData
+    ? (sessionData.payment_status === 'paid' || sessionData.status === 'complete')
+    : (piData && piData.status === 'succeeded');
+  const meta = sourceObj.metadata || {};
+  const cd = (sessionData && sessionData.customer_details) || {};
+  const chgBilling = (piData && piData.latest_charge && typeof piData.latest_charge === 'object' && piData.latest_charge.billing_details) || {};
+  const email = (cd.email || (sessionData && sessionData.customer_email) || (piData && piData.receipt_email) || chgBilling.email || meta.customer_email || '').trim();
+  const name = (meta.customer_name || cd.name || chgBilling.name || (piData && piData.shipping && piData.shipping.name) || '').trim();
+  const phone = (cd.phone || chgBilling.phone || meta.customer_phone || '').trim();
 
   if (!isPaid) {
-    return { ok: true, paid: false, sessionId: sid, email, name, phone };
+    return { ok: true, paid: false, sessionId: sid || piId, paymentIntentId: piId, email, name, phone };
   }
 
+  const txId = piId || sid;
   const flowTypeRaw = meta.flow_type || (meta.flow === 'outbound_demo' ? 'outbound' : 'inbound');
-  const customerIdHint = (typeof sessionData.customer === 'string' && sessionData.customer)
-    || sessionData.client_reference_id
+  const customerIdHint = (typeof sourceObj.customer === 'string' && sourceObj.customer)
+    || (sessionData && sessionData.client_reference_id)
     || meta.customer_id
     || '';
 
@@ -1628,18 +1989,26 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
   const resolvedBiz = (cust && cust.metadata && cust.metadata.business_name) || meta.business_name || resolvedName || resolvedEmail || 'New Client';
   const resolvedSlug = (cust && cust.metadata && cust.metadata.demo_slug) || meta.demo_slug || slugifyName(resolvedBiz);
   const resolvedDemoUrl = (cust && cust.metadata && cust.metadata.demo_url) || meta.demo_url || (resolvedSlug ? `https://${resolvedSlug}.wynnpages.com.au` : '');
-  const resolvedCid = (cust && cust.id) || customerIdHint || `cs_${sid}`;
+  const resolvedCid = (cust && cust.id) || customerIdHint || txId;
 
-  const { invoiceUrl, invoicePdf, invoiceNumber } = await retrieveStripeInvoiceUrls(sessionData, cfg.stripeSecretKey);
-  const effectiveInvoiceUrl = invoiceUrl || invoicePdf || '';
-  const amountTotal = Number(sessionData.amount_total || 59900);
+  const { invoiceUrl: stripeInvUrl, invoicePdf, invoiceNumber: rawInvNo } = sessionData
+    ? await retrieveStripeInvoiceUrls(sessionData, cfg.stripeSecretKey)
+    : {
+        invoiceUrl: (piData && piData.latest_charge && typeof piData.latest_charge === 'object' ? (piData.latest_charge.receipt_url || '') : ''),
+        invoicePdf: '',
+        invoiceNumber: 'WP-' + String(txId).slice(-8).toUpperCase()
+      };
+  const invoiceNumber = rawInvNo || ('WP-' + String(txId).slice(-8).toUpperCase());
+  const amountTotal = Number((sessionData ? sessionData.amount_total : (piData && (piData.amount_received || piData.amount))) || 59900);
   const amountAudShort = `$${Math.round(amountTotal / 100)} AUD`;
   const amountAudExact = `$${(amountTotal / 100).toFixed(2)} AUD`;
   const paidAtAu = formatAuDateTime(new Date(), AU_TIMEZONE);
 
   const portalUrl = isOutbound
     ? `${origin}/revision?client_id=${encodeURIComponent(resolvedCid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`
-    : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic&session_id=${encodeURIComponent(sid)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
+    : `${origin}/onboarding?client_id=${encodeURIComponent(resolvedCid)}&type=organic&payment_intent=${encodeURIComponent(txId)}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
+  const brandedInvoiceUrl = `${origin}/invoice?cid=${encodeURIComponent(resolvedCid)}&inv=${encodeURIComponent(invoiceNumber)}&amt=${encodeURIComponent(String(Math.round(amountTotal / 100)))}${piId ? `&pi=${encodeURIComponent(piId)}` : ''}${sid ? `&sid=${encodeURIComponent(sid)}` : ''}`;
+  const effectiveInvoiceUrl = brandedInvoiceUrl || stripeInvUrl || invoicePdf || '';
 
   // Check unified idempotency flag so post-payment alerts/email/SMS never fire twice
   const db = getD1(env);
@@ -1657,7 +2026,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
   const custAlreadyNotified = Boolean(cust && cust.metadata && (cust.metadata.payment_notified === 'true' || cust.metadata.welcome_sent === 'true'));
   let shouldNotify = !custAlreadyNotified && !d1Notified;
   if (shouldNotify) {
-    shouldNotify = await acquireD1RateLock(env, `payment_notified:${sid}`, 31536000);
+    shouldNotify = await acquireD1RateLock(env, `payment_notified:${txId}`, 31536000);
   }
 
   // Persist paid status, phone, and invoice metadata to Stripe Customer
@@ -1678,7 +2047,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
     uParams.append('metadata[turbo_test_mode]', 'false');
     uParams.append('metadata[fb_due_step]', '');
     uParams.append('metadata[flow_type]', resolvedFlow);
-    uParams.append('metadata[checkout_session_id]', sid);
+    uParams.append('metadata[checkout_session_id]', txId);
     if (effectiveInvoiceUrl) uParams.append('metadata[invoice_url]', effectiveInvoiceUrl.slice(0, 490));
     if (invoiceNumber) uParams.append('metadata[invoice_number]', invoiceNumber.slice(0, 120));
     if (isOutbound) {
@@ -1707,7 +2076,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
     cust.metadata.turbo_test_mode = 'false';
     cust.metadata.fb_due_step = '';
     cust.metadata.flow_type = resolvedFlow;
-    cust.metadata.checkout_session_id = sid;
+    cust.metadata.checkout_session_id = txId;
     cust.metadata.payment_notified = 'true';
     cust.metadata.welcome_sent = 'true';
     if (isOutbound) cust.metadata.stage = 'outbound_paid';
@@ -1735,7 +2104,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
     stage: isOutbound ? 'outbound_paid' : 'paid',
     paymentStatus: 'paid',
     dealStatus: 'claimed',
-    checkoutSessionId: sid
+    checkoutSessionId: txId
   };
   await upsertD1Client(env, {
     ...baseRecord,
@@ -1744,15 +2113,15 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
     paymentNotified: true,
     invoiceUrl: effectiveInvoiceUrl,
     invoiceNumber,
-    checkoutSessionId: sid
+    checkoutSessionId: txId
   });
   await syncClientsKvSnapshot(env);
 
   if (shouldNotify) {
-    const portalLabel = isOutbound ? 'Review Website Details & Choose Domain' : 'Complete Your 2-Min Business Details';
+    const portalLabel = isOutbound ? 'Open Your Private Customisation Portal' : 'Complete Your 2-Min Business Details';
     const emailSubject = isOutbound
-      ? `Tax Invoice & Next Step: Finalise Your ${resolvedBiz} Website (${invoiceNumber})`
-      : `Tax Invoice & Welcome: Let's Build Your ${resolvedBiz} Website (${invoiceNumber})`;
+      ? `Tax Invoice #${invoiceNumber} & Your Private Customisation Portal — ${resolvedBiz}`
+      : `Tax Invoice #${invoiceNumber} & Welcome to WynnPages Studio — ${resolvedBiz}`;
     const emailHtml = buildTaxInvoiceEmailHtml({
       businessName: resolvedBiz,
       customerName: resolvedName,
@@ -1791,7 +2160,7 @@ async function finalizeStripePaymentAndNotify({ sessionId = '', sessionObj = nul
         message: tgMessage,
         clientName: resolvedBiz,
         slug: resolvedSlug,
-        dedupeKey: `paid_notified:${sid}`,
+        dedupeKey: `paid_notified:${txId}`,
         env,
         ctx
       }).catch((err) => {
@@ -6542,130 +6911,257 @@ export default {
       );
     }
 
-    // 1c. Outbound Demo 1-Click Claim -> Pre-configured Stripe Checkout -> Redirects to /demo-success
-    if (url.pathname === '/api/claim' && (request.method === 'GET' || request.method === 'POST')) {
+    // 1c-invoice. Printable Official Australian Tax Invoice Page (GET /invoice)
+    if (url.pathname === '/invoice' && request.method === 'GET') {
+      const cid = (url.searchParams.get('cid') || url.searchParams.get('client_id') || '').trim();
+      const piParam = (url.searchParams.get('pi') || url.searchParams.get('payment_intent') || '').trim();
+      const sidParam = (url.searchParams.get('sid') || url.searchParams.get('session_id') || '').trim();
+      const invNoParam = (url.searchParams.get('inv') || '').trim();
+      const amtParam = (url.searchParams.get('amt') || '').trim();
+
+      let invClient = null;
+      if (cid && cfg.stripeSecretKey) {
+        invClient = await findCustomerBySlugOrId(cid, cfg.stripeSecretKey).catch(() => null);
+      }
+      let d1Inv = null;
+      const dbInv = getD1(env);
+      if (dbInv && cid) {
+        await ensureD1Schema(env);
+        d1Inv = await dbInv.prepare('SELECT * FROM clients WHERE id = ? OR LOWER(demo_slug) = LOWER(?) LIMIT 1').bind(cid, cid).first().catch(() => null);
+      }
+      const d1Meta = (d1Inv && d1Inv.metadata_json) ? (() => { try { return JSON.parse(d1Inv.metadata_json); } catch (_) { return {}; } })() : {};
+      const resolvedBiz = (invClient && invClient.businessName) || (d1Inv && (d1Inv.business_name || d1Inv.name)) || (url.searchParams.get('biz') || 'Lux Nails Bar');
+      const resolvedEmail = (invClient && invClient.email) || (d1Inv && d1Inv.email) || (url.searchParams.get('email') || '');
+      const resolvedPhone = (invClient && invClient.phone) || (d1Inv && d1Inv.phone) || (url.searchParams.get('phone') || '');
+      const resolvedAddr = (invClient && invClient.businessAddress) || d1Meta.businessAddress || 'Brisbane QLD, Australia';
+      const isFlash = amtParam === '299' || (invClient && invClient.dealStatus === 'flash_deal');
+      const resolvedAmt = amtParam ? `$${Number(amtParam).toFixed(2)} AUD` : (isFlash ? '$299.00 AUD' : '$599.00 AUD');
+      const resolvedInv = invNoParam || (invClient && invClient.invoiceNumber) || d1Meta.invoiceNumber || ('WP-' + String(piParam || sidParam || cid || '20260001').slice(-8).toUpperCase());
+      const portalLink = `${url.origin}/revision?client_id=${encodeURIComponent(cid || 'sample')}${resolvedEmail ? `&email=${encodeURIComponent(resolvedEmail)}` : ''}`;
+
+      return new Response(buildPrintableTaxInvoicePageHtml({
+        businessName: resolvedBiz,
+        customerEmail: resolvedEmail,
+        customerPhone: resolvedPhone,
+        businessAddress: resolvedAddr,
+        amountAud: resolvedAmt,
+        invoiceNumber: resolvedInv,
+        paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
+        abn: cfg.abn || '',
+        portalUrl: portalLink,
+        isFlashDeal: isFlash
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate'
+        }
+      });
+    }
+
+    // 1c-intent. Create On-Site PaymentIntent (POST /api/checkout-intent) supporting Apple Pay, Google Pay, Afterpay, Zip & Card
+    if (url.pathname === '/api/checkout-intent' && request.method === 'POST') {
       try {
         if (!cfg.stripeSecretKey) {
-          return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY' }), { status: 500, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: false, error: 'Payment gateway not configured' }), { status: 500, headers: corsHeaders });
         }
-        let cid = (url.searchParams.get('cid') || '').trim();
-        let email = (url.searchParams.get('email') || '').trim();
-        let bizName = (url.searchParams.get('name') || '').trim();
-        let demoUrl = (url.searchParams.get('demo') || '').trim();
-        const wantJson = url.searchParams.get('format') === 'json';
+        const body = await request.json().catch(() => ({}));
+        let cid = String(body.cid || body.client_id || '').trim();
+        let slugHint = slugifyName(String(body.slug || ''));
+        let email = String(body.email || '').trim();
+        let bizName = String(body.name || body.businessName || '').trim();
+        let phone = String(body.phone || '').trim();
+        let demoUrl = String(body.demo || '').trim();
+        const dealParam = String(body.deal || '').trim();
+        const flowParam = String(body.flow || 'outbound').trim() === 'inbound' ? 'inbound' : 'outbound';
 
         let cust = null;
         if (cid && cid.startsWith('cus_')) {
           const cRes = await fetch(`https://api.stripe.com/v1/customers/${encodeURIComponent(cid)}`, {
-            method: 'GET',
             headers: { 'Authorization': `Bearer ${cfg.stripeSecretKey}` }
-          });
-          if (cRes.ok) {
-            cust = await cRes.json();
+          }).catch(() => null);
+          if (cRes && cRes.ok) {
+            cust = await cRes.json().catch(() => null);
           } else {
             cust = await ensureStripeCustomerMigrated(env, cid, cfg.stripeSecretKey);
             if (cust && cust.id) cid = cust.id;
           }
-          if (cust) {
-            if (!email) email = cust.email || (cust.metadata && cust.metadata.customer_email) || '';
-            if (!bizName) bizName = (cust.metadata && cust.metadata.business_name) || cust.name || '';
-            if (!demoUrl) demoUrl = (cust.metadata && cust.metadata.demo_url) || '';
-          }
-        } else if (email) {
-          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
-          if (cust) cid = cust.id;
         }
-        if (!cust && (demoUrl || bizName)) {
-          const fallbackSlug = slugifyName(extractCleanHost(demoUrl).replace(/\.wynnpages\.com\.au$/i, '') || bizName);
+        if (!cust && email) {
+          cust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
+          if (cust && cust.id) cid = cust.id;
+        }
+        if (!cust && (slugHint || demoUrl || bizName)) {
+          const fallbackSlug = slugHint || slugifyName(extractCleanHost(demoUrl).replace(/\.wynnpages\.com\.au$/i, '') || bizName);
           if (fallbackSlug) {
             cust = await ensureStripeCustomerMigrated(env, fallbackSlug, cfg.stripeSecretKey);
-            if (cust && cust.id) {
-              cid = cust.id;
-              if (!email) email = cust.email || (cust.metadata && cust.metadata.customer_email) || '';
-              if (!bizName) bizName = (cust.metadata && cust.metadata.business_name) || cust.name || '';
-            }
+            if (cust && cust.id) cid = cust.id;
           }
         }
 
-        const origin = url.origin;
-        const successUrl = `${origin}/revision?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}&client_id=${encodeURIComponent(cid)}&cid=${encodeURIComponent(cid)}`;
-        const cancelUrl = demoUrl && demoUrl.startsWith('http') ? demoUrl : `${origin}/?canceled=true`;
-
-        const params = new URLSearchParams();
-        params.append('mode', 'payment');
-        if (cust && cust.id) {
-          params.append('customer', cust.id);
-        } else if (email) {
-          params.append('customer_email', email);
+        const custRec = cust ? formatCustomerRecord(cust) : null;
+        if (custRec) {
+          if (!email) email = custRec.email || '';
+          if (!bizName) bizName = custRec.businessName || custRec.name || '';
+          if (!phone) phone = custRec.phone || custRec.displayPhone || '';
+          if (!demoUrl) demoUrl = custRec.demoUrl || (custRec.demoSlug ? `https://${custRec.demoSlug}.wynnpages.com.au` : '');
+          if (!slugHint) slugHint = custRec.demoSlug || '';
         }
-        if (cid) params.append('client_reference_id', cid);
-        params.append('success_url', successUrl);
-        params.append('cancel_url', cancelUrl);
-        params.append('allow_promotion_codes', 'true');
-        params.append('billing_address_collection', 'auto');
-        params.append('phone_number_collection[enabled]', 'true');
-        params.append('invoice_creation[enabled]', 'true');
-        params.append('metadata[flow_type]', 'outbound');
-        const outboundSlugMeta = slugifyName((cust && cust.metadata && cust.metadata.demo_slug) || bizName || '');
-        if (outboundSlugMeta) params.append('metadata[demo_slug]', outboundSlugMeta);
+        const resolvedAddr = (custRec && custRec.businessAddress) || '';
+        const shippingAu = parseAuShippingFromAddress(resolvedAddr, bizName || 'Studio Owner');
 
-        let isFlashDeal50 = (url.searchParams.get('deal') === 'flash50');
-        if (cust && cust.metadata && cust.metadata.deal_status === 'flash_deal') {
-          const expMs = new Date(cust.metadata.deal_expires_at).getTime();
+        let isFlashDeal50 = dealParam === 'flash50';
+        let dealExpiresAt = '';
+        if (custRec && custRec.dealStatus === 'flash_deal' && custRec.dealExpiresAt) {
+          const expMs = new Date(custRec.dealExpiresAt).getTime();
           if (expMs > Date.now()) {
             isFlashDeal50 = true;
+            dealExpiresAt = custRec.dealExpiresAt;
           }
         }
 
-        if (isFlashDeal50) {
-          params.append('line_items[0][price_data][currency]', 'aud');
-          params.append('line_items[0][price_data][unit_amount]', '29900');
-          params.append('line_items[0][price_data][product_data][name]', bizName ? `WynnPages — Atelier Sponsorship Deal (50% OFF) for ${bizName}` : 'WynnPages — Claim Website (50% OFF Sponsorship)');
-          params.append('line_items[0][price_data][product_data][description]', 'Exclusive 72h Atelier Sponsorship • 100% Full Ownership • Zero Monthly Retainers • $299 AUD Flat (Save $300 AUD)');
-          params.append('line_items[0][quantity]', '1');
-          params.append('metadata[deal_type]', 'flash_deal_50');
-        } else if (env.STRIPE_PRICE_ID) {
-          params.append('line_items[0][price]', env.STRIPE_PRICE_ID);
-          params.append('line_items[0][quantity]', '1');
-        } else {
-          params.append('line_items[0][price_data][currency]', 'aud');
-          params.append('line_items[0][price_data][unit_amount]', '59900');
-          params.append('line_items[0][price_data][product_data][name]', bizName ? `WynnPages — Bespoke Website for ${bizName}` : 'WynnPages — Claim Your Custom Artisan Website');
-          params.append('line_items[0][price_data][product_data][description]', 'Full Ownership • Custom Demo Ready • Zero Monthly Retainers • Flat $599 AUD');
-          params.append('line_items[0][quantity]', '1');
+        const unitAmount = isFlashDeal50 ? 29900 : 59900;
+        const amountAud = Math.round(unitAmount / 100);
+        const resolvedSlug = slugHint || slugifyName(bizName || '');
+        if (!demoUrl && resolvedSlug) demoUrl = `https://${resolvedSlug}.wynnpages.com.au`;
+
+        const piParams = new URLSearchParams();
+        piParams.append('amount', String(unitAmount));
+        piParams.append('currency', 'aud');
+        piParams.append('automatic_payment_methods[enabled]', 'true');
+        piParams.append('automatic_payment_methods[allow_redirects]', 'always');
+        piParams.append('description', isFlashDeal50
+          ? `WynnPages Bespoke Website (50% Sponsorship) — ${bizName || 'Client'}`
+          : `WynnPages Bespoke Website Design & Build — ${bizName || 'Client'}`);
+        if (cust && cust.id) piParams.append('customer', cust.id);
+        if (email) piParams.append('receipt_email', email);
+        piParams.append('shipping[name]', shippingAu.name);
+        piParams.append('shipping[address][line1]', shippingAu.address.line1);
+        piParams.append('shipping[address][city]', shippingAu.address.city);
+        piParams.append('shipping[address][state]', shippingAu.address.state);
+        piParams.append('shipping[address][postal_code]', shippingAu.address.postal_code);
+        piParams.append('shipping[address][country]', 'AU');
+        if (phone) piParams.append('shipping[phone]', phone);
+
+        piParams.append('metadata[studio]', 'WynnPages Australia');
+        piParams.append('metadata[flow_type]', flowParam);
+        if (cid) piParams.append('metadata[customer_id]', cid);
+        if (bizName) {
+          piParams.append('metadata[business_name]', bizName);
+          piParams.append('metadata[customer_name]', bizName);
         }
+        if (email) piParams.append('metadata[customer_email]', email);
+        if (phone) piParams.append('metadata[customer_phone]', phone);
+        if (resolvedSlug) piParams.append('metadata[demo_slug]', resolvedSlug);
+        if (demoUrl) piParams.append('metadata[demo_url]', demoUrl);
+        if (isFlashDeal50) piParams.append('metadata[deal_type]', 'flash_deal_50');
 
-        params.append('metadata[studio]', 'WynnPages Australia');
-        params.append('metadata[flow]', 'outbound_demo');
-        if (cid) params.append('metadata[customer_id]', cid);
-        if (bizName) params.append('metadata[customer_name]', bizName);
-        if (email) params.append('metadata[customer_email]', email);
-        if (demoUrl) params.append('metadata[demo_url]', demoUrl);
-
-        const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+        const piRes = await fetch('https://api.stripe.com/v1/payment_intents', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${cfg.stripeSecretKey}`,
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: params.toString()
+          body: piParams.toString()
         });
-        const session = await stripeRes.json();
-        if (!stripeRes.ok || !session.url) {
-          const msg = session.error ? session.error.message : 'Could not create Stripe Checkout session';
-          return new Response(JSON.stringify({ error: msg }), { status: 400, headers: corsHeaders });
+        const piData = await piRes.json();
+        if (!piRes.ok || !piData.client_secret) {
+          const msg = piData.error ? piData.error.message : 'Unable to initialise PaymentIntent';
+          return new Response(JSON.stringify({ ok: false, error: msg }), { status: 400, headers: corsHeaders });
         }
 
-        if (wantJson) {
-          return new Response(JSON.stringify({ ok: true, sessionId: session.id, url: session.url }), { status: 200, headers: corsHeaders });
+        return new Response(JSON.stringify({
+          ok: true,
+          clientSecret: piData.client_secret,
+          paymentIntentId: piData.id,
+          publishableKey: cfg.stripePublishableKey,
+          amountAud,
+          isFlashDeal: isFlashDeal50,
+          dealExpiresAt,
+          flowType: flowParam,
+          clientId: cid,
+          shipping: shippingAu,
+          client: {
+            id: cid,
+            businessName: bizName,
+            name: (custRec && custRec.name) || bizName,
+            email,
+            phone,
+            address: resolvedAddr,
+            demoSlug: resolvedSlug,
+            demoUrl
+          }
+        }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 1c-intent-sync. Sync user-edited email/business name/phone before confirming PaymentIntent
+    if (url.pathname === '/api/checkout-intent-sync' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const piId = String(body.paymentIntentId || '').trim();
+        const cid = String(body.cid || '').trim();
+        const bizName = String(body.businessName || '').trim();
+        const email = String(body.email || '').trim();
+        const phone = String(body.phone || '').trim();
+        if (piId && piId.startsWith('pi_') && cfg.stripeSecretKey) {
+          const up = new URLSearchParams();
+          if (email) {
+            up.append('receipt_email', email);
+            up.append('metadata[customer_email]', email);
+          }
+          if (bizName) {
+            up.append('metadata[business_name]', bizName);
+            up.append('metadata[customer_name]', bizName);
+            up.append('shipping[name]', bizName);
+          }
+          if (phone) up.append('metadata[customer_phone]', phone);
+          if (cid) up.append('metadata[customer_id]', cid);
+          await fetch(`https://api.stripe.com/v1/payment_intents/${encodeURIComponent(piId)}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.stripeSecretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: up.toString()
+          }).catch(() => {});
         }
-        return Response.redirect(session.url, 303);
+        return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // 1c. Outbound Demo 1-Click Claim -> Redirects to On-Site Haute Couture /checkout
+    if (url.pathname === '/api/claim' && (request.method === 'GET' || request.method === 'POST')) {
+      try {
+        let cid = (url.searchParams.get('cid') || '').trim();
+        let email = (url.searchParams.get('email') || '').trim();
+        let bizName = (url.searchParams.get('name') || '').trim();
+        let demoUrl = (url.searchParams.get('demo') || '').trim();
+        const deal = (url.searchParams.get('deal') || '').trim();
+        const wantJson = url.searchParams.get('format') === 'json';
+
+        const coUrl = new URL('/checkout', url.origin);
+        if (cid) coUrl.searchParams.set('cid', cid);
+        if (email) coUrl.searchParams.set('email', email);
+        if (bizName) coUrl.searchParams.set('name', bizName);
+        if (demoUrl) coUrl.searchParams.set('demo', demoUrl);
+        if (deal) coUrl.searchParams.set('deal', deal);
+        coUrl.searchParams.set('flow', 'outbound');
+
+        if (wantJson) {
+          return new Response(JSON.stringify({ ok: true, url: coUrl.toString() }), { status: 200, headers: corsHeaders });
+        }
+        return Response.redirect(coUrl.toString(), 303);
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 
-    // 2. Stripe Checkout Session Endpoint
+    // 2. Homepage Onboarding Checkout Session -> Redirects to On-Site Haute Couture /checkout
     if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
       try {
         const body = await request.json().catch(() => ({}));
@@ -6687,7 +7183,6 @@ export default {
           );
         }
 
-        // Pre-create or update Stripe Customer so we always have their Name + Mobile Phone saved!
         const existingCust = await findStripeCustomerByEmail(email, cfg.stripeSecretKey);
         const custParams = new URLSearchParams();
         custParams.append('email', email);
@@ -6713,72 +7208,19 @@ export default {
           body: custParams.toString()
         });
         const savedCustomer = await custRes.json().catch(() => ({}));
-
-        const origin = url.origin;
-        const baseBriefUrl = env.TALLY_BRIEF_URL || `${origin}/onboarding?type=organic`;
-        const separator = baseBriefUrl.includes('?') ? '&' : '?';
         const inboundCid = (savedCustomer && savedCustomer.id) ? savedCustomer.id : '';
-        const successUrl = `${baseBriefUrl}${separator}session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(email)}${inboundCid ? `&client_id=${encodeURIComponent(inboundCid)}` : ''}`;
-        const cancelUrl = `${origin}/?canceled=true`;
 
-        const params = new URLSearchParams();
-        params.append('mode', 'payment');
-        if (savedCustomer && savedCustomer.id) {
-          params.append('customer', savedCustomer.id);
-          params.append('client_reference_id', savedCustomer.id);
-        } else {
-          params.append('customer_email', email);
-        }
-        params.append('success_url', successUrl);
-        params.append('cancel_url', cancelUrl);
-        params.append('allow_promotion_codes', 'true');
-        params.append('billing_address_collection', 'auto');
-        params.append('phone_number_collection[enabled]', 'true');
-        params.append('invoice_creation[enabled]', 'true');
-        params.append('metadata[flow_type]', 'inbound');
-        if (inboundCid) params.append('metadata[customer_id]', inboundCid);
-        const inboundSlugMeta = slugifyName(name || email.split('@')[0] || '');
-        if (inboundSlugMeta) params.append('metadata[demo_slug]', inboundSlugMeta);
-
-        if (env.STRIPE_PRICE_ID) {
-          params.append('line_items[0][price]', env.STRIPE_PRICE_ID);
-          params.append('line_items[0][quantity]', '1');
-        } else {
-          params.append('line_items[0][price_data][currency]', 'aud');
-          params.append('line_items[0][price_data][unit_amount]', '59900');
-          params.append('line_items[0][price_data][product_data][name]', 'WynnPages — Complete Studio Build Slot');
-          params.append('line_items[0][price_data][product_data][description]', 'Delivered in 1 week • Flat $599 AUD • Handcrafted Bespoke Web Atelier');
-          params.append('line_items[0][quantity]', '1');
-        }
-
-        if (name) params.append('metadata[customer_name]', name);
-        if (phone) params.append('metadata[customer_phone]', phone);
-        if (email) params.append('metadata[customer_email]', email);
-        params.append('metadata[studio]', 'WynnPages Australia');
-
-        const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${cfg.stripeSecretKey}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: params.toString()
-        });
-
-        const session = await stripeRes.json();
-
-        if (!stripeRes.ok) {
-          const errMsg = session.error ? session.error.message : 'Stripe API returned an error';
-          return new Response(JSON.stringify({ error: errMsg }), {
-            status: stripeRes.status,
-            headers: corsHeaders
-          });
-        }
+        const coUrl = new URL('/checkout', url.origin);
+        coUrl.searchParams.set('flow', 'inbound');
+        if (inboundCid) coUrl.searchParams.set('cid', inboundCid);
+        if (email) coUrl.searchParams.set('email', email);
+        if (name) coUrl.searchParams.set('name', name);
+        if (phone) coUrl.searchParams.set('phone', phone);
 
         return new Response(
           JSON.stringify({
-            sessionId: session.id,
-            url: session.url
+            sessionId: inboundCid,
+            url: coUrl.toString()
           }),
           { status: 200, headers: corsHeaders }
         );
@@ -6790,20 +7232,23 @@ export default {
       }
     }
 
-    // 3. Post-Payment Session Verification & Automated Tax Invoice / Email / SMS / Telegram Trigger
+    // 3. Post-Payment Verification & Automated Tax Invoice / Email / SMS / Telegram Trigger
     if ((url.pathname === '/api/verify-session' || url.pathname === '/api/verify-payment') && (request.method === 'POST' || request.method === 'GET')) {
       try {
         let sessionId = (url.searchParams.get('session_id') || url.searchParams.get('sessionId') || '').trim();
+        let paymentIntentId = (url.searchParams.get('payment_intent') || url.searchParams.get('paymentIntentId') || url.searchParams.get('pi') || '').trim();
         if (request.method === 'POST') {
           const body = await request.json().catch(() => ({}));
           if (!sessionId) sessionId = (body.sessionId || body.session_id || '').trim();
+          if (!paymentIntentId) paymentIntentId = (body.paymentIntentId || body.payment_intent || '').trim();
         }
-        if (!sessionId || !sessionId.startsWith('cs_') || !cfg.stripeSecretKey) {
-          return new Response(JSON.stringify({ ok: false, error: 'Missing or invalid sessionId' }), { status: 200, headers: corsHeaders });
+        if (((!sessionId || !sessionId.startsWith('cs_')) && (!paymentIntentId || !paymentIntentId.startsWith('pi_'))) || !cfg.stripeSecretKey) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing or invalid payment identifier' }), { status: 200, headers: corsHeaders });
         }
 
         const result = await finalizeStripePaymentAndNotify({
           sessionId,
+          paymentIntentId,
           origin: url.origin,
           env,
           ctx,
@@ -7729,11 +8174,13 @@ export default {
         const cid = (url.searchParams.get('cid') || url.searchParams.get('client_id') || '').trim();
         const email = (url.searchParams.get('email') || '').trim();
         const sessionId = (url.searchParams.get('session_id') || '').trim();
+        const paymentIntentId = (url.searchParams.get('payment_intent') || url.searchParams.get('pi') || '').trim();
 
         let paymentReconcile = null;
-        if (sessionId && sessionId.startsWith('cs_') && cfg.stripeSecretKey) {
+        if (((sessionId && sessionId.startsWith('cs_')) || (paymentIntentId && paymentIntentId.startsWith('pi_'))) && cfg.stripeSecretKey) {
           paymentReconcile = await finalizeStripePaymentAndNotify({
             sessionId,
+            paymentIntentId,
             origin: url.origin,
             env,
             ctx,
@@ -9874,8 +10321,8 @@ export default {
 
       if (cfg.stripeWebhookSecret) {
         const validSig = await verifyStripeWebhookSig(rawBody, sigHeader, cfg.stripeWebhookSecret);
-        // If signature fails (e.g. stale test whsec_ after switching to sk_live_), allow checkout.session.completed to proceed only because finalizeStripePaymentAndNotify verifies the session ID directly against Stripe API using cfg.stripeSecretKey
-        if (!validSig && event.type !== 'checkout.session.completed') {
+        // If signature fails (e.g. stale test whsec_ after switching to sk_live_), allow checkout.session.completed / payment_intent.succeeded to proceed only because finalizeStripePaymentAndNotify verifies directly against Stripe API using cfg.stripeSecretKey
+        if (!validSig && event.type !== 'checkout.session.completed' && event.type !== 'payment_intent.succeeded') {
           return new Response(JSON.stringify({ error: 'Invalid Stripe webhook signature' }), { status: 400, headers: corsHeaders });
         }
       }
@@ -9885,6 +10332,16 @@ export default {
         runInBg(ctx, finalizeStripePaymentAndNotify({
           sessionId: sessionObj.id,
           sessionObj: null, // Force direct verification from Stripe API via cfg.stripeSecretKey
+          origin: url.origin,
+          env,
+          ctx,
+          cfg
+        }));
+      } else if (event.type === 'payment_intent.succeeded' && event.data && event.data.object) {
+        const piObj = event.data.object;
+        runInBg(ctx, finalizeStripePaymentAndNotify({
+          paymentIntentId: piObj.id,
+          paymentIntentObj: null, // Force direct verification from Stripe API via cfg.stripeSecretKey
           origin: url.origin,
           env,
           ctx,
@@ -10573,6 +11030,36 @@ export default {
         if (action === 'save_cf_token') {
           await saveSyncedSettings(env, { cfApiToken: (body.cfToken || '').trim() }, { clearEmpty: true });
           return new Response(JSON.stringify({ ok: true, message: 'Cloudflare API Token updated' }), { status: 200, headers: corsHeaders });
+        }
+
+        if (action === 'send_sample_invoice') {
+          const toEmail = String(body.toEmail || effectiveCfg.adminNotifyEmail || 'dotranquangphuc@gmail.com').trim();
+          const sampleBiz = String(body.businessName || 'Lux Nails Bar').trim();
+          const sampleAmt = String(body.amountAud || '$599.00 AUD').trim();
+          const sampleInv = 'WP-2026SAMPLE';
+          const sampleUrl = `${url.origin}/invoice?cid=luxnailbarcosouthbank&inv=${sampleInv}&amt=599`;
+          const samplePortalUrl = `${url.origin}/revision?cid=cus_VUU712d9b8f39ecbb5682a46f95f97e2`;
+          const sampleHtml = buildTaxInvoiceEmailHtml({
+            businessName: sampleBiz,
+            customerName: 'Studio Owner',
+            customerEmail: toEmail,
+            customerPhone: '0478 679 679',
+            amountAud: sampleAmt,
+            invoiceNumber: sampleInv,
+            paidAtAu: formatAuDateTime(new Date(), AU_TIMEZONE),
+            invoiceUrl: sampleUrl,
+            portalUrl: samplePortalUrl,
+            portalLabel: 'Open Your Private Customisation Portal',
+            abn: effectiveCfg.abn || '',
+            isOutbound: true
+          });
+          const mailRes = await sendResendEmail({
+            to: toEmail,
+            subject: `[MẪU TAX INVOICE] Tax Invoice #${sampleInv} & Your Private Customisation Portal — ${sampleBiz}`,
+            html: sampleHtml,
+            cfg: effectiveCfg
+          });
+          return new Response(JSON.stringify({ ok: Boolean(mailRes && mailRes.sent), to: toEmail, mailRes, sampleInvoicePage: sampleUrl }), { status: 200, headers: corsHeaders });
         }
 
         if (action === 'delete_client' && customerId) {
@@ -11956,6 +12443,8 @@ export default {
       const newHeaders = new Headers(assetRes.headers);
       if (
         url.pathname.startsWith('/admin') ||
+        url.pathname.startsWith('/checkout') ||
+        url.pathname.startsWith('/invoice') ||
         url.pathname.startsWith('/templates') ||
         url.pathname.startsWith('/clients') ||
         url.pathname.startsWith('/preview') ||

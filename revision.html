@@ -662,6 +662,7 @@
       const cid = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
       const email = (urlParams.get('email') || '').trim();
       const sessionId = (urlParams.get('session_id') || '').trim();
+      const paymentIntentId = (urlParams.get('payment_intent') || urlParams.get('pi') || '').trim();
 
       const loadingState = document.getElementById('loading-state');
       const errorState = document.getElementById('error-state');
@@ -738,13 +739,13 @@
 
       // Initialize
       async function loadPortal() {
-        if (!cid && !email && !sessionId) {
+        if (!cid && !email && !sessionId && !paymentIntentId) {
           showError('Missing customer identifier in URL (?cid=... or ?email=...). Please use the link provided in your welcome message.');
           return;
         }
 
         try {
-          const res = await fetch(`/api/revision/get-demo-data?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&session_id=${encodeURIComponent(sessionId)}`);
+          const res = await fetch(`/api/revision/get-demo-data?cid=${encodeURIComponent(cid)}&email=${encodeURIComponent(email)}&session_id=${encodeURIComponent(sessionId)}&payment_intent=${encodeURIComponent(paymentIntentId)}`);
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             showError(err.error || 'Failed to retrieve demo data');
