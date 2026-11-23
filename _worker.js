@@ -1334,7 +1334,10 @@ function buildAtelierEmailHtml({ preheader, heading, bodyHtml, primaryCta, secon
 <body style="margin:0;padding:0;background-color:#f6f1e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#231f1a;">
   <div style="max-width:580px;margin:0 auto;padding:36px 20px;">
     <div style="text-align:center;margin-bottom:24px;">
-      <span style="font-family:Georgia,serif;font-size:24px;font-weight:bold;color:#231f1a;letter-spacing:-0.02em;">WynnPages</span>
+      <span style="display:inline-block;width:30px;height:30px;border-radius:9px;background-color:#96432b;border:1px solid #d49b28;padding:4px;vertical-align:middle;margin-right:8px;">
+        <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="W" width="20" height="20" style="display:block;width:20px;height:20px;object-fit:contain;">
+      </span>
+      <span style="font-family:Georgia,serif;font-size:24px;font-weight:bold;color:#231f1a;letter-spacing:-0.02em;vertical-align:middle;">WynnPages</span>
       <span style="display:inline-block;margin-left:8px;background-color:#fbdeb9;color:#96432b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:3px 9px;border-radius:99px;vertical-align:middle;">Atelier Studio</span>
     </div>
     <div style="background-color:#ffffff;border:1px solid #e5dec9;border-radius:24px;padding:36px 32px;box-shadow:0 8px 24px rgba(35,31,26,0.05);">
@@ -1415,8 +1418,10 @@ function buildPrintableTaxInvoicePageHtml({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
   <meta name="robots" content="noindex, nofollow">
   <title>Tax Invoice #${escapeEmailHtml(invoiceNumber)} &bull; WynnPages Studio</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link href="/assets/fonts.css" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
@@ -1482,15 +1487,13 @@ function buildPrintableTaxInvoicePageHtml({
       height: 44px;
       border-radius: 13px;
       background: linear-gradient(135deg, #96432b, #7d3520);
-      color: #ffffff;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-style: italic;
-      font-weight: 700;
-      font-size: 22px;
-      border: 1px solid rgba(232, 185, 72, 0.5);
+      border: 1px solid rgba(232, 185, 72, 0.55);
+      overflow: hidden;
+      flex-shrink: 0;
     }
     .paid-pill {
       display: inline-block;
@@ -1577,14 +1580,44 @@ function buildPrintableTaxInvoicePageHtml({
       justify-content: space-between;
       gap: 12px;
     }
-    @media (max-width: 600px) {
+    @media screen and (max-width: 600px) {
       .sheet { padding: 24px 20px; border-radius: 18px; }
       .meta-grid { grid-template-columns: 1fr; gap: 14px; }
     }
+    @page {
+      size: A4 portrait;
+      margin: 10mm 14mm;
+    }
     @media print {
-      body { background: #ffffff; padding: 0; }
+      html, body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
       .toolbar { display: none !important; }
-      .sheet { box-shadow: none; border: none; padding: 12px 0; max-width: 100%; }
+      .sheet {
+        box-shadow: none !important;
+        border: 1px solid #e5dec9 !important;
+        border-radius: 16px !important;
+        padding: 22px 26px !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .header { padding-bottom: 14px !important; }
+      .meta-grid {
+        grid-template-columns: 1.2fr 1fr !important;
+        gap: 16px !important;
+        padding: 14px 0 !important;
+      }
+      table.items { margin-top: 12px !important; }
+      table.items th { padding-bottom: 8px !important; }
+      table.items td { padding: 10px 0 !important; font-size: 12.5px !important; }
+      .totals { margin-top: 14px !important; padding: 12px 16px !important; }
+      .footer-note { margin-top: 16px !important; padding-top: 12px !important; font-size: 11px !important; }
     }
   </style>
 </head>
@@ -1597,7 +1630,7 @@ function buildPrintableTaxInvoicePageHtml({
   <article class="sheet">
     <div class="header">
       <div class="brand-row">
-        <div class="seal">W</div>
+        <div class="seal"><img src="https://wynnpages.com.au/assets/favicon-light.png" alt="WynnPages" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
         <div>
           <div class="serif" style="font-size:24px;font-weight:700;line-height:1.05;">WynnPages Digital Atelier</div>
           <div style="font-size:12px;color:#6f665c;margin-top:3px;">hello@wynnpages.com.au &bull; wynnpages.com.au</div>
@@ -7007,16 +7040,47 @@ export default {
           if (!demoUrl) demoUrl = custRec.demoUrl || (custRec.demoSlug ? `https://${custRec.demoSlug}.wynnpages.com.au` : '');
           if (!slugHint) slugHint = custRec.demoSlug || '';
         }
-        const resolvedAddr = (custRec && custRec.businessAddress) || '';
+        const dbCheckout = getD1(env);
+        let d1CheckoutRec = null;
+        if (dbCheckout && (cid || slugHint || email)) {
+          await ensureD1Schema(env);
+          const lookupKey = cid || slugHint || email;
+          const d1Row = await dbCheckout.prepare(
+            'SELECT * FROM clients WHERE id = ? OR LOWER(demo_slug) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1'
+          ).bind(lookupKey, slugHint || lookupKey, email || lookupKey).first().catch(() => null);
+          if (d1Row) {
+            let metaParsed = {};
+            if (d1Row.metadata_json) { try { metaParsed = JSON.parse(d1Row.metadata_json); } catch (_) {} }
+            d1CheckoutRec = {
+              id: d1Row.id,
+              businessName: d1Row.business_name || d1Row.name || metaParsed.businessName || '',
+              email: d1Row.email || metaParsed.email || '',
+              phone: d1Row.phone || metaParsed.phone || '',
+              demoUrl: d1Row.demo_url || metaParsed.demoUrl || '',
+              demoSlug: d1Row.demo_slug || metaParsed.demoSlug || '',
+              businessAddress: metaParsed.businessAddress || '',
+              dealStatus: metaParsed.dealStatus || '',
+              dealExpiresAt: metaParsed.dealExpiresAt || ''
+            };
+            if (!cid && d1CheckoutRec.id) cid = d1CheckoutRec.id;
+            if (!email && d1CheckoutRec.email) email = d1CheckoutRec.email;
+            if (!bizName && d1CheckoutRec.businessName) bizName = d1CheckoutRec.businessName;
+            if (!phone && d1CheckoutRec.phone) phone = d1CheckoutRec.phone;
+            if (!demoUrl && d1CheckoutRec.demoUrl) demoUrl = d1CheckoutRec.demoUrl;
+            if (!slugHint && d1CheckoutRec.demoSlug) slugHint = d1CheckoutRec.demoSlug;
+          }
+        }
+        const resolvedAddr = (custRec && custRec.businessAddress) || (d1CheckoutRec && d1CheckoutRec.businessAddress) || '';
         const shippingAu = parseAuShippingFromAddress(resolvedAddr, bizName || 'Studio Owner');
 
         let isFlashDeal50 = dealParam === 'flash50';
         let dealExpiresAt = '';
-        if (custRec && custRec.dealStatus === 'flash_deal' && custRec.dealExpiresAt) {
-          const expMs = new Date(custRec.dealExpiresAt).getTime();
+        const activeDealSource = (custRec && custRec.dealStatus === 'flash_deal') ? custRec : d1CheckoutRec;
+        if (activeDealSource && activeDealSource.dealStatus === 'flash_deal' && activeDealSource.dealExpiresAt) {
+          const expMs = new Date(activeDealSource.dealExpiresAt).getTime();
           if (expMs > Date.now()) {
             isFlashDeal50 = true;
-            dealExpiresAt = custRec.dealExpiresAt;
+            dealExpiresAt = activeDealSource.dealExpiresAt;
           }
         }
 

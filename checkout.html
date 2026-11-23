@@ -116,8 +116,8 @@
   <header class="sticky top-0 z-40 bg-[#f6f1e8]/92 backdrop-blur-md border-b border-[#e5dec9] px-4 sm:px-8 py-3.5">
     <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
       <a href="https://wynnpages.com.au" class="flex items-center gap-3 min-w-0 group">
-        <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#96432b] to-[#7d3520] ring-1 ring-[#e8b948]/45 shadow-sm flex items-center justify-center text-white font-editorial italic font-bold text-lg shrink-0 group-hover:scale-[1.03] transition-transform">
-          W
+        <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#96432b] to-[#7d3520] ring-1 ring-[#e8b948]/55 shadow-sm flex items-center justify-center p-1.5 shrink-0 group-hover:scale-[1.03] transition-transform overflow-hidden">
+          <img src="/assets/favicon-light.png" alt="WynnPages" class="w-full h-full object-contain block">
         </span>
         <div class="min-w-0">
           <div class="font-editorial text-lg font-bold tracking-tight text-[#231f1a] leading-none">WynnPages</div>
@@ -501,11 +501,22 @@
                 },
                 '.Tab': {
                   border: '1.5px solid #e5dec9',
-                  backgroundColor: '#fdfbf7'
+                  backgroundColor: '#fdfbf7',
+                  color: '#5c5349'
                 },
                 '.Tab--selected': {
                   borderColor: '#96432b',
-                  backgroundColor: '#ffffff'
+                  backgroundColor: '#ffffff',
+                  color: '#231f1a',
+                  boxShadow: '0 0 0 1px #96432b'
+                },
+                '.TabLabel--selected': {
+                  color: '#231f1a',
+                  fontWeight: '700'
+                },
+                '.TabIcon--selected': {
+                  fill: '#96432b',
+                  color: '#96432b'
                 }
               }
             }
