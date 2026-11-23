@@ -4578,7 +4578,7 @@ function injectClaimBarIntoHtml(rawHtml, client) {
     })();
   </script>` : '';
 
-  const spacer = `<style>.wynn-claim-clearance{height:96px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:144px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
+  const spacer = `<style>.wynn-claim-clearance{height:96px;width:100%;pointer-events:none;}@media(max-width:640px){.wynn-claim-clearance{height:168px;}}</style><div class="wynn-claim-clearance" aria-hidden="true"></div>`;
   const snippet = spacer + buildClaimBarSnippet(client) + beaconScript;
   let html = rawHtml;
 
