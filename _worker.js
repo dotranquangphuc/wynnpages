@@ -234,7 +234,20 @@ const WYNN_SYNCED_SETTING_KEYS = [
 ];
 
 function isBotUserAgent(ua = '') {
-  return /bot|crawler|spider|facebookexternalhit|Facebot|WhatsApp|TelegramBot|Slackbot|Discordbot|LinkedInBot|Twitterbot|Googlebot|bingbot|Applebot|curl|python|headless|Bytespider|GPTBot|PetalBot/i.test(String(ua || ''));
+  return /bot|crawler|spider|facebookexternalhit|Facebot|WhatsApp|TelegramBot|Slackbot|Discordbot|LinkedInBot|Twitterbot|Googlebot|bingbot|Applebot|curl|python|headless|Bytespider|GPTBot|PetalBot|HeadlessChrome|PhantomJS|Playwright|Puppeteer/i.test(String(ua || ''));
+}
+
+function isCloudScannerRequest(request, uaRaw = '') {
+  if (isBotUserAgent(uaRaw)) return true;
+  const cf = (request && request.cf) || {};
+  const asOrg = String(cf.asOrganization || '');
+  if (/(?:amazon|aws|google\s*llc|google cloud|microsoft|azure|digitalocean|hetzner|ovh|linode|akamai|choopa|vultr|datacamp|m247|contabo|censys|shodan|zscaler|proofpoint|mimecast|palo alto|barracuda|cloudflare|fastly|oracle cloud|alibaba)/i.test(asOrg)) {
+    return true;
+  }
+  const bm = cf.botManagement || {};
+  if (bm.verifiedBot) return true;
+  if (typeof bm.score === 'number' && bm.score > 0 && bm.score < 30) return true;
+  return false;
 }
 
 function getRequestClientIp(request) {
@@ -5036,13 +5049,25 @@ function injectClaimBarIntoHtml(rawHtml, client) {
             delayReady = true;
             tryFireHumanView();
           }, 3000);
-          var markHuman = function() {
+          var markHuman = function(ev) {
+            if (!ev || ev.isTrusted === false) return;
             humanInteracted = true;
             tryFireHumanView();
           };
-          ['scroll', 'touchstart', 'mousemove', 'keydown'].forEach(function(evtName) {
+          var initX = null, initY = null;
+          var onMoveHuman = function(ev) {
+            if (!ev || ev.isTrusted === false) return;
+            if (initX === null) { initX = ev.clientX; initY = ev.clientY; return; }
+            if (Math.abs(ev.clientX - initX) + Math.abs(ev.clientY - initY) > 12) {
+              humanInteracted = true;
+              window.removeEventListener('mousemove', onMoveHuman, true);
+              tryFireHumanView();
+            }
+          };
+          ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function(evtName) {
             window.addEventListener(evtName, markHuman, { once: true, passive: true });
           });
+          window.addEventListener('mousemove', onMoveHuman, { passive: true, capture: true });
         }
         document.addEventListener('click', function(ev) {
           var el = ev.target && ev.target.closest ? ev.target.closest('.claim-btn') : null;
@@ -8060,9 +8085,15 @@ export default {
       }
       const db = getD1(env);
       let events = [];
+      let recentTracking = [];
+      let rateLocks = [];
       if (db) {
         await ensureD1Schema(env);
-        const rowsRes = await db.prepare('SELECT id, type, icon, title, message, client_name, slug, timestamp FROM activity_events ORDER BY timestamp DESC LIMIT 20').all().catch(() => null);
+        const [rowsRes, trkRes, lockRes] = await Promise.all([
+          db.prepare('SELECT id, type, icon, title, message, client_name, slug, timestamp FROM activity_events ORDER BY timestamp DESC LIMIT 20').all().catch(() => null),
+          db.prepare('SELECT id, slug, client_id, event_type, device, user_agent, created_at FROM tracking_events ORDER BY created_at DESC LIMIT 15').all().catch(() => null),
+          db.prepare("SELECT lock_key, expires_at FROM rate_locks WHERE lock_key LIKE 'demo_notify_lock:%' OR lock_key LIKE 'demo_view_ip_lock:%' ORDER BY expires_at DESC LIMIT 20").all().catch(() => null)
+        ]);
         if (rowsRes && Array.isArray(rowsRes.results)) {
           events = rowsRes.results.map((r) => ({
             id: r.id,
@@ -8075,10 +8106,12 @@ export default {
             timestamp: r.timestamp
           }));
         }
+        if (trkRes && Array.isArray(trkRes.results)) recentTracking = trkRes.results;
+        if (lockRes && Array.isArray(lockRes.results)) rateLocks = lockRes.results;
       } else if (env && env.WYNN_KV) {
         events = ((await env.WYNN_KV.get('activity_events', 'json').catch(() => null)) || []).slice(0, 20);
       }
-      return new Response(JSON.stringify({ ok: true, events }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
+      return new Response(JSON.stringify({ ok: true, events, recentTracking, rateLocks }), { status: 200, headers: buildAdminHeaders(corsHeaders) });
     }
 
     if (url.pathname === '/api/activity-feed/clear' && request.method === 'POST') {
@@ -10343,11 +10376,13 @@ export default {
         return new Response(JSON.stringify({ error: 'Missing slug or clientId' }), { status: 400, headers: corsHeaders });
       }
 
-      // 1. Strict Bot & Crawler Filtering
+      // 1. Strict Bot, Headless & Cloud Security Scanner Filtering
       const uaRaw = request.headers.get('user-agent') || '';
       const ua = uaRaw.toLowerCase();
-      if (!ua || isBotUserAgent(uaRaw)) {
-        return new Response(JSON.stringify({ ok: true, ignored: 'bot' }), { status: 200, headers: corsHeaders });
+      const cfInfo = (request && request.cf) || {};
+      const cfAsOrg = String(cfInfo.asOrganization || '');
+      if (!ua || isCloudScannerRequest(request, uaRaw)) {
+        return new Response(JSON.stringify({ ok: true, ignored: 'bot_or_scanner', asOrg: cfAsOrg }), { status: 200, headers: corsHeaders });
       }
 
       // 2. Strict Admin Exclusion (Cross-subdomain cookie + ?preview=admin + recorded admin IPs) — except for explicit 48h self-unlock action
@@ -10536,7 +10571,7 @@ export default {
         clientId: effectiveClient.id || rawCid,
         eventType,
         device,
-        userAgent: ua,
+        userAgent: [uaRaw, ipSafe, cfAsOrg].filter(Boolean).join(' | ').slice(0, 240),
         businessName: effectiveClient.businessName || effectiveClient.name || body.businessName || '',
         knownClient: effectiveClient
       });
@@ -12817,6 +12852,9 @@ export default {
       }
       const newHeaders = new Headers(assetRes.headers);
       if (
+        url.pathname === '/' ||
+        url.pathname === '/index.html' ||
+        url.pathname.startsWith('/onboarding') ||
         url.pathname.startsWith('/admin') ||
         url.pathname.startsWith('/checkout') ||
         url.pathname.startsWith('/invoice') ||

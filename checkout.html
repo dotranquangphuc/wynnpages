@@ -65,27 +65,12 @@
       border: 1px solid #e5dec9;
       box-shadow: 0 22px 50px -22px rgba(35, 31, 26, 0.13), 0 4px 14px rgba(35, 31, 26, 0.04);
     }
-    .atelier-field-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .atelier-field-icon {
-      position: absolute;
-      left: 14px;
-      color: #a69986;
-      pointer-events: none;
-      transition: color 0.2s ease;
-    }
-    .atelier-field-wrap:focus-within .atelier-field-icon {
-      color: #96432b;
-    }
     .atelier-input {
       width: 100%;
       background-color: #ffffff;
       border: 1.5px solid #dfd5c3;
       border-radius: 14px;
-      padding: 12px 14px 12px 42px;
+      padding: 13px 16px !important;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 14.5px;
       font-weight: 600;
@@ -93,12 +78,14 @@
       box-shadow: 0 1px 2px rgba(35, 31, 26, 0.03);
       transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
     }
+
     .atelier-input::placeholder {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #a99d8b;
-      font-weight: 400;
-      font-size: 13.5px;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      color: #a99d8b !important;
+      font-weight: 400 !important;
+      font-size: 13.5px !important;
       letter-spacing: 0.005em;
+      opacity: 1 !important;
     }
     .atelier-input:hover {
       border-color: #c8b89d;
@@ -259,26 +246,17 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
           <div class="sm:col-span-2">
             <label for="co-biz-input" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#5c5349] mb-1.5">Business / Brand Name</label>
-            <div class="atelier-field-wrap">
-              <svg class="atelier-field-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              <input id="co-biz-input" type="text" autocomplete="organization" placeholder="e.g. Lumière Studio" class="atelier-input">
-            </div>
+            <input id="co-biz-input" type="text" autocomplete="organization" placeholder="e.g. Lumière Studio" class="atelier-input">
           </div>
 
           <div>
             <label for="co-email-input" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#5c5349] mb-1.5">Your Email <span class="font-normal normal-case tracking-normal text-[#8a7f70]">(Tax Invoice &amp; Portal)</span></label>
-            <div class="atelier-field-wrap">
-              <svg class="atelier-field-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <input id="co-email-input" type="email" autocomplete="email" inputmode="email" placeholder="e.g. sarah.nguyen@gmail.com" class="atelier-input">
-            </div>
+            <input id="co-email-input" type="email" autocomplete="email" inputmode="email" placeholder="e.g. sarah.nguyen@gmail.com" class="atelier-input">
           </div>
 
           <div>
             <label for="co-phone-input" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#5c5349] mb-1.5">Australian Mobile <span class="font-normal normal-case tracking-normal text-[#8a7f70]">(Launch SMS)</span></label>
-            <div class="atelier-field-wrap">
-              <svg class="atelier-field-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <input id="co-phone-input" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. 0412 345 678" class="atelier-input">
-            </div>
+            <input id="co-phone-input" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. 0412 345 678" class="atelier-input">
           </div>
         </div>
 
@@ -549,9 +527,10 @@
             throw new Error('Secure payment library could not load.');
           }
 
-          stripe = window.Stripe(data.publishableKey);
+          stripe = window.Stripe(data.publishableKey, { locale: 'en' });
           elements = stripe.elements({
             clientSecret: data.clientSecret,
+            locale: 'en',
             appearance: {
               theme: 'flat',
               variables: {

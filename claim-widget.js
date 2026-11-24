@@ -291,13 +291,30 @@
         delayReady = true;
         tryHumanTrack();
       }, 3000);
-      var onHuman = function () {
+      var onHuman = function (ev) {
+        if (!ev || ev.isTrusted === false) return;
         humanInteracted = true;
         tryHumanTrack();
       };
-      ['scroll', 'touchstart', 'mousemove', 'keydown'].forEach(function (evName) {
+      var firstMoveX = null;
+      var firstMoveY = null;
+      var onPointerMove = function (ev) {
+        if (!ev || ev.isTrusted === false) return;
+        if (firstMoveX === null) {
+          firstMoveX = ev.clientX;
+          firstMoveY = ev.clientY;
+          return;
+        }
+        if (Math.abs(ev.clientX - firstMoveX) + Math.abs(ev.clientY - firstMoveY) > 12) {
+          humanInteracted = true;
+          window.removeEventListener('mousemove', onPointerMove, true);
+          tryHumanTrack();
+        }
+      };
+      ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (evName) {
         window.addEventListener(evName, onHuman, { once: true, passive: true });
       });
+      window.addEventListener('mousemove', onPointerMove, { passive: true, capture: true });
     }
   }
 
