@@ -737,9 +737,15 @@
               }
             }
           });
+          let paymentReadyMounted = false;
+          paymentElement.on('ready', () => {
+            setTimeout(() => { paymentReadyMounted = true; }, 250);
+          });
           paymentElement.on('change', (ev) => {
-            selectedPaymentMethod = (ev && ev.value && ev.value.type) || '';
-            if (errorBox && !errorBox.classList.contains('hidden')) {
+            const nextType = (ev && ev.value && ev.value.type) || '';
+            const collapsed = Boolean(ev && ev.collapsed);
+            selectedPaymentMethod = collapsed ? '' : nextType;
+            if (paymentReadyMounted && (!collapsed || nextType) && errorBox && !errorBox.classList.contains('hidden')) {
               showFormError('');
             }
           });
@@ -760,6 +766,10 @@
         if (!emailVal || !emailVal.includes('@') || !emailVal.includes('.')) {
           showFormError('Please enter your email address so we can send your Tax Invoice and Customisation Portal link.');
           emailInput.focus();
+          return;
+        }
+        if (!selectedPaymentMethod) {
+          showFormError('Please select a payment option above (Afterpay, Zip, or Card), or tap Buy with Apple Pay / Google Pay.');
           return;
         }
 
