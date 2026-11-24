@@ -10804,6 +10804,227 @@ export default {
         };
 
         const computeLeadStats = (leadsArr = []) => {
+          const stats = {
+            total: leadsArr.length,
+            hotNoWeb: 0,
+            socialBooking: 0,
+            customWeb: 0,
+            imported: 0,
+            unimported: 0
+          };
+          const industryCounts = {
+            all: leadsArr.length,
+            nails: 0,
+            hair: 0,
+            lash_brow: 0,
+            spa: 0,
+            dining: 0,
+            other: 0
+          };
+
+          for (const l of leadsArr) {
+            if (l.imported) stats.imported++;
+            else stats.unimported++;
+
+            if (l.leadType === 'hot_lead_no_web') stats.hotNoWeb++;
+            else if (l.leadType === 'social_booking_only') stats.socialBooking++;
+            else stats.customWeb++;
+
+            const ind = l.industry || 'other';
+            if (industryCounts[ind] !== undefined) {
+              industryCounts[ind]++;
+            } else {
+              industryCounts.other++;
+            }
+          }
+          return { stats, industryCounts };
+        };
+
+        const sortLeads = (arr) => {
+          return arr.sort((a, b) => {
+            // Unimported first
+            if (Boolean(a.imported) !== Boolean(b.imported)) {
+              return a.imported ? 1 : -1;
+            }
+            // Higher priority score first (Hot Lead 3 -> Social 2 -> Custom Web 1)
+            if ((b.priorityScore || 0) !== (a.priorityScore || 0)) {
+              return (b.priorityScore || 0) - (a.priorityScore || 0);
+            }
+            // Higher review count first
+            if ((b.userRatingCount || 0) !== (a.userRatingCount || 0)) {
+              return (b.userRatingCount || 0) - (a.userRatingCount || 0);
+            }
+            return (b.rating || 0) - (a.rating || 0);
+          });
+        };
+
+        // Load existing stored leads from D1 (primary) or KV (fallback)
+        let storedLeads = [];
+        const dbLh = getD1(env);
+        if (dbLh) {
+          await ensureD1Schema(env);
+          const d1Res = await dbLh.prepare('SELECT data_json, imported FROM lead_hunter_leads ORDER BY updated_at DESC LIMIT 500').all().catch(() => null);
+          if (d1Res && Array.isArray(d1Res.results) && d1Res.results.length > 0) {
+            storedLeads = d1Res.results.map(r => {
+              try {
+                const parsed = JSON.parse(r.data_json || '{}');
+                if (r.imported) parsed.imported = true;
+                return parsed;
+              } catch (_) { return null; }
+            }).filter(Boolean);
+          }
+        }
+        if (storedLeads.length === 0 && env && env.WYNN_KV) {
+          const rawKv = await env.WYNN_KV.get('studio_lead_hunter_db', 'json').catch(() => null);
+          if (Array.isArray(rawKv)) {
+            storedLeads = rawKv;
+            if (dbLh && storedLeads.length > 0) {
+              runInBg(ctx, mirrorLeadHunterToD1(env, storedLeads));
+            }
+          }
+        }
+
+        const persistLeads = async (leadsToSave) => {
+          if (dbLh) {
+            await mirrorLeadHunterToD1(env, leadsToSave);
+          } else if (env && env.WYNN_KV) {
+            await env.WYNN_KV.put('studio_lead_hunter_db', JSON.stringify(leadsToSave)).catch(() => {});
+          }
+        };
+
+        // ACTION 1: LIST STORED LEADS (Immediate cached read)
+        if (action === 'list') {
+          const sorted = sortLeads([...storedLeads]);
+          const { stats, industryCounts } = computeLeadStats(sorted);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              totalLeads: sorted.length,
+              leads: sorted,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 2: MARK IMPORTED
+        if (action === 'mark_imported') {
+          const targetId = body.placeId || body.id;
+          let found = false;
+          let updatedLead = null;
+
+          storedLeads = storedLeads.map((l) => {
+            if ((l.placeId && l.placeId === targetId) || (l.id && l.id === targetId)) {
+              found = true;
+              updatedLead = {
+                ...l,
+                imported: true,
+                importedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              return updatedLead;
+            }
+            return l;
+          });
+
+          if (found) {
+            await persistLeads(storedLeads);
+          }
+
+          const { stats, industryCounts } = computeLeadStats(storedLeads);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              found,
+              lead: updatedLead,
+              totalLeads: storedLeads.length,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 3: DELETE LEAD
+        if (action === 'delete_lead') {
+          const targetId = body.placeId || body.id;
+          const initialLen = storedLeads.length;
+          storedLeads = storedLeads.filter((l) => !(l.placeId === targetId || l.id === targetId));
+
+          if (storedLeads.length !== initialLen) {
+            await persistLeads(storedLeads);
+          }
+
+          const { stats, industryCounts } = computeLeadStats(storedLeads);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              deleted: storedLeads.length !== initialLen,
+              totalLeads: storedLeads.length,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 4: CLEAR LEADS (Per industry or all)
+        if (action === 'clear_leads') {
+          const indFilter = body.industry || 'all';
+          if (indFilter === 'all') {
+            storedLeads = [];
+          } else {
+            storedLeads = storedLeads.filter((l) => (l.industry || 'other') !== indFilter);
+          }
+          await persistLeads(storedLeads);
+          const { stats, industryCounts } = computeLeadStats(storedLeads);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              clearedIndustry: indFilter,
+              totalLeads: storedLeads.length,
+              stats,
+              industryCounts
+            }),
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        // ACTION 5: SCAN GOOGLE MAPS AND ACCUMULATE (DEFAULT)
+        const effectivePlacesKey = (body.googlePlacesApiKey || cfg.googlePlacesApiKey || '').trim();
+        if (!effectivePlacesKey) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              missingKey: true,
+              error: 'Chưa cấu hình Google Places API Key. Vui lòng bấm vào "Cài đặt Key ⚙️" và nhập key.'
+            }),
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const keyword = (body.keyword || 'Nail Salon').trim();
+        const location = (body.location || 'Brisbane QLD').trim();
+        const rawSelectedIndustry = (body.industry || '').trim();
+        const minRating = parseFloat(body.minRating) || 0;
+        const textQuery = `${keyword} in ${location}`;
+
+        // Call Google Places API (New): places.googleapis.com/v1/places:searchText
+        const fieldMask = [
+          'places.id',
+          'places.displayName',
+          'places.formattedAddress',
+          'places.nationalPhoneNumber',
+          'places.internationalPhoneNumber',
+          'places.rating',
+          'places.userRatingCount',
+          'places.websiteUri',
+          'places.googleMapsUri',
+          'places.regularOpeningHours',
+          'places.reviews',
+          'places.photos',
+          'places.parkingOptions',
           'places.editorialSummary'
         ].join(',');
 
