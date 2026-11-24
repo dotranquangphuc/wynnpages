@@ -783,7 +783,18 @@
       const cidParam = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
       const sessionId = (urlParams.get('session_id') || '').trim();
       const paymentIntentId = (urlParams.get('payment_intent') || urlParams.get('pi') || '').trim();
+      const redirectStatus = (urlParams.get('redirect_status') || '').trim().toLowerCase();
       const briefType = (urlParams.get('type') || 'organic').toLowerCase() === 'demo' ? 'demo' : 'organic';
+
+      if (redirectStatus === 'failed' || redirectStatus === 'canceled') {
+        const backParams = new URLSearchParams();
+        backParams.set('flow', 'inbound');
+        backParams.set('payment_cancelled', '1');
+        if (cidParam) backParams.set('cid', cidParam);
+        if (emailParam) backParams.set('email', emailParam);
+        window.location.replace('/checkout?' + backParams.toString());
+        return;
+      }
 
       document.getElementById('hidden-session-id').value = sessionId || paymentIntentId;
       document.getElementById('hidden-brief-type').value = briefType;
@@ -879,7 +890,15 @@
         })
           .then((r) => r.json())
           .then((v) => {
-            if (!v) return;
+            if (!v || v.paid !== true) {
+              const backParams = new URLSearchParams();
+              backParams.set('flow', 'inbound');
+              backParams.set('payment_cancelled', '1');
+              if (cidParam) backParams.set('cid', cidParam);
+              if (emailParam) backParams.set('email', emailParam);
+              window.location.replace('/checkout?' + backParams.toString());
+              return;
+            }
             if (v.email && !emailInput.value) {
               emailInput.value = v.email;
               emailDisplay.textContent = 'Account: ' + v.email;

@@ -663,6 +663,16 @@
       const email = (urlParams.get('email') || '').trim();
       const sessionId = (urlParams.get('session_id') || '').trim();
       const paymentIntentId = (urlParams.get('payment_intent') || urlParams.get('pi') || '').trim();
+      const redirectStatus = (urlParams.get('redirect_status') || '').trim().toLowerCase();
+
+      if (redirectStatus === 'failed' || redirectStatus === 'canceled') {
+        const backParams = new URLSearchParams();
+        backParams.set('payment_cancelled', '1');
+        if (cid) backParams.set('cid', cid);
+        if (email) backParams.set('email', email);
+        window.location.replace('/checkout?' + backParams.toString());
+        return;
+      }
 
       const loadingState = document.getElementById('loading-state');
       const errorState = document.getElementById('error-state');
@@ -742,6 +752,25 @@
         if (!cid && !email && !sessionId && !paymentIntentId) {
           showError('Missing customer identifier in URL (?cid=... or ?email=...). Please use the link provided in your welcome message.');
           return;
+        }
+
+        if ((sessionId && sessionId.startsWith('cs_')) || (paymentIntentId && paymentIntentId.startsWith('pi_'))) {
+          try {
+            const vRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId, paymentIntentId, customerId: cid, email })
+            });
+            const vData = await vRes.json().catch(() => null);
+            if (!vData || vData.paid !== true) {
+              const backParams = new URLSearchParams();
+              backParams.set('payment_cancelled', '1');
+              if (cid) backParams.set('cid', cid);
+              if (email) backParams.set('email', email);
+              window.location.replace('/checkout?' + backParams.toString());
+              return;
+            }
+          } catch (_) {}
         }
 
         try {

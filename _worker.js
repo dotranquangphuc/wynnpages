@@ -238,8 +238,17 @@ function isBotUserAgent(ua = '') {
 }
 
 function isCloudScannerRequest(request, uaRaw = '') {
-  if (isBotUserAgent(uaRaw)) return true;
+  const uaStr = String(uaRaw || '');
+  if (!uaStr.trim() || isBotUserAgent(uaStr)) return true;
+  const uaLow = uaStr.toLowerCase();
+  if (/x11;\s*linux\s*x86_64/i.test(uaLow) && !/android/i.test(uaLow)) {
+    return true;
+  }
   const cf = (request && request.cf) || {};
+  const cfCountry = String(cf.country || '').toUpperCase();
+  if (cfCountry && cfCountry !== 'AU' && cfCountry !== 'VN') {
+    return true;
+  }
   const asOrg = String(cf.asOrganization || '');
   if (/(?:amazon|aws|google\s*llc|google cloud|microsoft|azure|digitalocean|hetzner|ovh|linode|akamai|choopa|vultr|datacamp|m247|contabo|censys|shodan|zscaler|proofpoint|mimecast|palo alto|barracuda|cloudflare|fastly|oracle cloud|alibaba)/i.test(asOrg)) {
     return true;
@@ -5520,6 +5529,9 @@ async function trackDemoView({ slug, request, env, client, stripeSecretKey, ctx 
     }
     const cleanSlug = slugifyName(slug);
     const userAgent = (request && request.headers.get('user-agent')) || '';
+    if (request && (!userAgent || isCloudScannerRequest(request, userAgent))) {
+      return null;
+    }
     const isMobile = /mobile|iphone|android|ipad/i.test(userAgent);
     const device = isMobile ? 'Mobile' : 'Desktop';
     const now = new Date().toISOString();
@@ -12854,6 +12866,8 @@ export default {
       if (
         url.pathname === '/' ||
         url.pathname === '/index.html' ||
+        url.pathname.startsWith('/desktop') ||
+        url.pathname.startsWith('/mobile') ||
         url.pathname.startsWith('/onboarding') ||
         url.pathname.startsWith('/admin') ||
         url.pathname.startsWith('/checkout') ||
@@ -12865,7 +12879,9 @@ export default {
         url.pathname === '/sw.js' ||
         url.pathname === '/manifest.json'
       ) {
-        newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        newHeaders.set('CDN-Cache-Control', 'no-store');
+        newHeaders.set('Cloudflare-CDN-Cache-Control', 'no-store');
       } else if (/\.svg$/i.test(url.pathname)) {
         newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate');
       } else if (

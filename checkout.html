@@ -260,13 +260,21 @@
           </div>
         </div>
 
-        <!-- Unified Single Payment Method Accordion (Apple Pay, Google Pay, Afterpay/Zip, Card) -->
+        <!-- Unified Payment Method Block (1-Tap Apple Pay / Google Pay + Compact Afterpay / Zip / Card Accordion) -->
         <div class="space-y-2.5">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6f665c]">Payment Method</span>
-            <span id="co-methods-caption" class="text-[11px] font-medium text-[#786f64]">Apple Pay &bull; Google Pay &bull; Zip &bull; Card</span>
+          <div class="flex items-center justify-between gap-1.5 whitespace-nowrap overflow-hidden">
+            <span class="text-[9.5px] sm:text-[11px] uppercase tracking-[0.06em] sm:tracking-[0.12em] font-bold text-[#6f665c] shrink-0">Payment Method</span>
+            <span id="co-methods-caption" class="text-[9.5px] sm:text-[11px] font-medium text-[#786f64] whitespace-nowrap shrink-0">Apple Pay &bull; Google Pay &bull; Zip &bull; Card</span>
           </div>
-          <div id="payment-element" class="min-h-[140px] rounded-2xl bg-white/80 p-2.5 sm:p-3.5 border border-[#dfd5c3]"></div>
+          <div id="co-express-wrap" class="hidden space-y-2.5">
+            <div id="express-checkout-element"></div>
+            <div class="flex items-center gap-2.5 text-[10px] uppercase tracking-[0.14em] font-bold text-[#8a7f70]">
+              <span class="flex-1 h-px bg-[#e5dec9]"></span>
+              <span>Or pay with Afterpay, Zip or Card</span>
+              <span class="flex-1 h-px bg-[#e5dec9]"></span>
+            </div>
+          </div>
+          <div id="payment-element" class="min-h-[120px] rounded-2xl bg-white/80 p-2.5 sm:p-3.5 border border-[#dfd5c3]"></div>
         </div>
 
         <!-- Inline Error Message -->
@@ -359,6 +367,8 @@
 
       let stripe = null;
       let elements = null;
+      let paymentElement = null;
+      let selectedPaymentMethod = '';
       let paymentIntentId = '';
       let clientCid = (urlParams.get('cid') || urlParams.get('client_id') || '').trim();
       const rawFlowParam = (urlParams.get('flow') || '').trim();
@@ -367,6 +377,7 @@
       let shippingAu = { name: '', address: { line1: '100 Studio Lane', city: 'Brisbane', state: 'QLD', postal_code: '4000', country: 'AU' } };
       let amountAudNumber = 599;
       let syncTimer = null;
+      let initialNoticeError = '';
 
       function showInitError(msg) {
         loadingEl.classList.add('hidden');
@@ -400,25 +411,30 @@
         setInterval(tick, 1000);
       }
 
+      function pushContactMetadata(useKeepalive = false) {
+        if (!paymentIntentId) return;
+        fetch('/api/checkout-intent-sync', {
+          method: 'POST',
+          keepalive: Boolean(useKeepalive),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentIntentId,
+            cid: clientCid,
+            businessName: (bizInput.value || '').trim(),
+            email: (emailInput.value || '').trim(),
+            phone: (phoneInput.value || '').trim()
+          })
+        }).catch(() => {});
+      }
+
       function syncContactDetailsSoon() {
         clearTimeout(syncTimer);
-        syncTimer = setTimeout(() => {
-          if (!paymentIntentId) return;
-          fetch('/api/checkout-intent-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              paymentIntentId,
-              cid: clientCid,
-              businessName: (bizInput.value || '').trim(),
-              email: (emailInput.value || '').trim(),
-              phone: (phoneInput.value || '').trim()
-            })
-          }).catch(() => {});
-        }, 450);
+        syncTimer = setTimeout(() => pushContactMetadata(false), 350);
       }
       [bizInput, emailInput, phoneInput].forEach((el) => {
-        if (el) el.addEventListener('input', syncContactDetailsSoon);
+        if (!el) return;
+        el.addEventListener('input', syncContactDetailsSoon);
+        el.addEventListener('blur', () => pushContactMetadata(false));
       });
 
       function buildSuccessRedirectUrl(piId) {
@@ -432,9 +448,29 @@
         return `${window.location.origin}/revision?payment_intent=${encodedPi}&cid=${currentCid}&client_id=${currentCid}&email=${encodedEmail}`;
       }
 
+      function buildCheckoutReturnUrl(piId) {
+        const p = new URLSearchParams();
+        if (flowType) p.set('flow', flowType);
+        if (clientCid) p.set('cid', clientCid);
+        const slugVal = (urlParams.get('slug') || '').trim();
+        const dealVal = (urlParams.get('deal') || '').trim();
+        const demoVal = (urlParams.get('demo') || '').trim();
+        if (slugVal) p.set('slug', slugVal);
+        if (dealVal) p.set('deal', dealVal);
+        if (demoVal) p.set('demo', demoVal);
+        const curName = (bizInput.value || '').trim();
+        const curEmail = (emailInput.value || '').trim();
+        const curPhone = (phoneInput.value || '').trim();
+        if (curName) p.set('name', curName);
+        if (curEmail) p.set('email', curEmail);
+        if (curPhone) p.set('phone', curPhone);
+        if (piId) p.set('pi_ref', piId);
+        return `${window.location.origin}/checkout?${p.toString()}`;
+      }
+
       async function verifyAndProceed(piId) {
         try {
-          await fetch('/api/verify-payment', {
+          const vRes = await fetch('/api/verify-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -444,13 +480,56 @@
               phone: (phoneInput.value || '').trim(),
               customerId: clientCid
             })
-          }).catch(() => {});
+          });
+          const vData = await vRes.json().catch(() => ({}));
+          if (vRes.ok && vData && vData.paid === true) {
+            window.location.href = buildSuccessRedirectUrl(piId);
+            return true;
+          }
         } catch (_) {}
-        window.location.href = buildSuccessRedirectUrl(piId);
+        showFormError('Payment has not been completed yet. Please complete payment or select another method below.');
+        return false;
       }
 
       async function bootCheckout() {
         try {
+          const returnedPi = (urlParams.get('payment_intent') || '').trim();
+          const redirectStatus = (urlParams.get('redirect_status') || '').trim().toLowerCase();
+          const cancelledFlag = urlParams.get('payment_cancelled') === '1';
+
+          if (returnedPi || redirectStatus || cancelledFlag) {
+            const cleanParams = new URLSearchParams(window.location.search);
+            ['payment_intent', 'payment_intent_client_secret', 'redirect_status', 'source_type', 'payment_cancelled', 'pi_ref'].forEach((k) => cleanParams.delete(k));
+            const cleanQs = cleanParams.toString();
+            try {
+              window.history.replaceState({}, '', `${window.location.pathname}${cleanQs ? '?' + cleanQs : ''}`);
+            } catch (_) {}
+
+            if (returnedPi && returnedPi.startsWith('pi_') && redirectStatus !== 'failed' && redirectStatus !== 'canceled') {
+              try {
+                const vRes = await fetch('/api/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    paymentIntentId: returnedPi,
+                    email: (urlParams.get('email') || '').trim(),
+                    businessName: (urlParams.get('name') || '').trim(),
+                    phone: (urlParams.get('phone') || '').trim(),
+                    customerId: clientCid
+                  })
+                });
+                const vData = await vRes.json().catch(() => ({}));
+                if (vRes.ok && vData && vData.paid === true) {
+                  if (vData.cid && !clientCid) clientCid = vData.cid;
+                  window.location.replace(buildSuccessRedirectUrl(returnedPi));
+                  return;
+                }
+              } catch (_) {}
+            }
+
+            initialNoticeError = 'Your payment was cancelled or not completed. No charge was made — please try again or select another payment method below.';
+          }
+
           const res = await fetch('/api/checkout-intent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -569,20 +648,86 @@
 
           loadingEl.classList.add('hidden');
           layoutEl.classList.remove('hidden');
+          if (initialNoticeError) showFormError(initialNoticeError);
 
-          const paymentElement = elements.create('payment', {
+          const expressWrapEl = document.getElementById('co-express-wrap');
+          const expressCheckoutElement = elements.create('expressCheckout', {
+            wallets: {
+              applePay: 'always',
+              googlePay: 'always',
+              link: 'never'
+            },
+            buttonType: {
+              applePay: 'buy',
+              googlePay: 'buy'
+            },
+            buttonTheme: {
+              applePay: 'black',
+              googlePay: 'black'
+            },
+            buttonHeight: 48
+          });
+          expressCheckoutElement.on('ready', ({ availablePaymentMethods }) => {
+            if (expressWrapEl && availablePaymentMethods && (availablePaymentMethods.applePay || availablePaymentMethods.googlePay)) {
+              expressWrapEl.classList.remove('hidden');
+            }
+          });
+          expressCheckoutElement.on('click', ({ resolve }) => {
+            showFormError('');
+            resolve({
+              emailRequired: !(emailInput.value || '').trim(),
+              phoneNumberRequired: false
+            });
+          });
+          expressCheckoutElement.on('confirm', async (event) => {
+            showFormError('');
+            const walletBilling = (event && event.billingDetails) || {};
+            if (!bizInput.value.trim() && walletBilling.name) bizInput.value = walletBilling.name;
+            if (!emailInput.value.trim() && walletBilling.email) emailInput.value = walletBilling.email;
+            if (!phoneInput.value.trim() && walletBilling.phone) phoneInput.value = walletBilling.phone;
+            const resolvedEmail = (emailInput.value || '').trim() || walletBilling.email || undefined;
+            pushContactMetadata(true);
+            const { error, paymentIntent } = await stripe.confirmPayment({
+              elements,
+              clientSecret: data.clientSecret,
+              confirmParams: {
+                return_url: buildCheckoutReturnUrl(paymentIntentId),
+                receipt_email: resolvedEmail
+              },
+              redirect: 'if_required'
+            });
+            if (error) {
+              showFormError(error.message || 'Apple Pay / Google Pay payment could not be completed. Please try again or choose a method below.');
+              return;
+            }
+            if (paymentIntent && paymentIntent.status === 'succeeded') {
+              await verifyAndProceed(paymentIntent.id);
+              return;
+            }
+            showFormError('Wallet payment was not completed. No charge was made.');
+          });
+          expressCheckoutElement.mount('#express-checkout-element');
+
+          paymentElement = elements.create('payment', {
             layout: {
               type: 'accordion',
-              defaultCollapsed: false,
+              defaultCollapsed: true,
               radios: true,
               spacedAccordionItems: true
             },
             wallets: {
-              applePay: 'auto',
-              googlePay: 'auto',
+              applePay: 'never',
+              googlePay: 'never',
               link: 'never'
             },
-            paymentMethodOrder: ['apple_pay', 'google_pay', 'afterpay_clearpay', 'zip', 'card'],
+            paymentMethodOrder: ['afterpay_clearpay', 'zip', 'card'],
+            fields: {
+              billingDetails: {
+                name: 'never',
+                email: 'never',
+                phone: 'never'
+              }
+            },
             defaultValues: {
               billingDetails: {
                 name: bizInput.value.trim() || undefined,
@@ -590,6 +735,12 @@
                 phone: phoneInput.value.trim() || undefined,
                 address: shippingAu.address || { country: 'AU' }
               }
+            }
+          });
+          paymentElement.on('change', (ev) => {
+            selectedPaymentMethod = (ev && ev.value && ev.value.type) || '';
+            if (errorBox && !errorBox.classList.contains('hidden')) {
+              showFormError('');
             }
           });
           paymentElement.mount('#payment-element');
@@ -613,44 +764,64 @@
         }
 
         const prevHtml = submitLabel.innerHTML;
-        submitBtn.disabled = true;
-        submitLabel.innerHTML = `Processing Secure Payment&hellip;`;
 
         try {
-          await fetch('/api/checkout-intent-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              paymentIntentId,
-              cid: clientCid,
-              businessName: bizVal,
-              email: emailVal,
-              phone: phoneVal
-            })
-          }).catch(() => {});
-
-          const { error, paymentIntent } = await stripe.confirmPayment({
+          // IMPORTANT: Call stripe.confirmPayment SYNCHRONOUSLY before any await or button lock
+          // so iOS Safari retains the user activation gesture needed for Apple Pay.
+          const confirmPromise = stripe.confirmPayment({
             elements,
             confirmParams: {
-              return_url: buildSuccessRedirectUrl(paymentIntentId),
-              receipt_email: emailVal
+              return_url: buildCheckoutReturnUrl(paymentIntentId),
+              receipt_email: emailVal,
+              payment_method_data: {
+                billing_details: {
+                  name: bizVal || 'WynnPages Client',
+                  email: emailVal,
+                  phone: phoneVal || undefined
+                }
+              }
             },
             redirect: 'if_required'
           });
 
+          submitBtn.disabled = true;
+          submitLabel.innerHTML = `Processing Secure Payment&hellip;`;
+          pushContactMetadata(true);
+
+          const { error, paymentIntent } = await confirmPromise;
+
           if (error) {
-            showFormError(error.message || 'Payment could not be completed. Please check your details and try again.');
+            const rawMsg = error.message || '';
+            const isWalletErr = (selectedPaymentMethod === 'apple_pay' || selectedPaymentMethod === 'google_pay') && /card details|thông tin thẻ/i.test(rawMsg);
+            showFormError(
+              isWalletErr
+                ? 'Apple Pay / Google Pay could not open a wallet prompt on this browser. Please tap an active card in Apple Wallet or select Afterpay, Zip, or Card below.'
+                : (rawMsg || 'Payment could not be completed. Please check your details and try again.')
+            );
             submitBtn.disabled = false;
             submitLabel.innerHTML = prevHtml;
             return;
           }
 
-          if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
-            await verifyAndProceed(paymentIntent.id);
+          if (paymentIntent && paymentIntent.status === 'succeeded') {
+            const verified = await verifyAndProceed(paymentIntent.id);
+            if (!verified) {
+              submitBtn.disabled = false;
+              submitLabel.innerHTML = prevHtml;
+            }
             return;
           }
 
-          window.location.href = buildSuccessRedirectUrl(paymentIntentId);
+          if (paymentIntent && paymentIntent.status === 'processing') {
+            showFormError('Your payment is processing with your bank. Please wait a moment or check your email shortly for confirmation.');
+            submitBtn.disabled = false;
+            submitLabel.innerHTML = prevHtml;
+            return;
+          }
+
+          showFormError('Payment was not completed. No charge was made — please try again or choose another method.');
+          submitBtn.disabled = false;
+          submitLabel.innerHTML = prevHtml;
         } catch (err) {
           showFormError((err && err.message) || 'Payment error. Please try again.');
           submitBtn.disabled = false;
