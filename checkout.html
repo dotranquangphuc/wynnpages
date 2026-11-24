@@ -260,21 +260,13 @@
           </div>
         </div>
 
-        <!-- Unified Payment Method Block (1-Tap Apple Pay / Google Pay + Compact Afterpay / Zip / Card Accordion) -->
+        <!-- Unified Single Payment Method Accordion (Browser-Aware Apple Pay / Google Pay + Afterpay / Zip / Card) -->
         <div class="space-y-2.5">
           <div class="flex items-center justify-between gap-1.5 whitespace-nowrap overflow-hidden">
             <span class="text-[9.5px] sm:text-[11px] uppercase tracking-[0.06em] sm:tracking-[0.12em] font-bold text-[#6f665c] shrink-0">Payment Method</span>
             <span id="co-methods-caption" class="text-[9.5px] sm:text-[11px] font-medium text-[#786f64] whitespace-nowrap shrink-0">Apple Pay &bull; Google Pay &bull; Zip &bull; Card</span>
           </div>
-          <div id="co-express-wrap" class="hidden space-y-2.5">
-            <div id="express-checkout-element"></div>
-            <div class="flex items-center gap-2.5 text-[10px] uppercase tracking-[0.14em] font-bold text-[#8a7f70]">
-              <span class="flex-1 h-px bg-[#e5dec9]"></span>
-              <span>Or pay with Afterpay, Zip or Card</span>
-              <span class="flex-1 h-px bg-[#e5dec9]"></span>
-            </div>
-          </div>
-          <div id="payment-element" class="min-h-[120px] rounded-2xl bg-white/80 p-2.5 sm:p-3.5 border border-[#dfd5c3]"></div>
+          <div id="payment-element" class="min-h-[140px] rounded-2xl bg-white/80 p-2.5 sm:p-3.5 border border-[#dfd5c3]"></div>
         </div>
 
         <!-- Inline Error Message -->
@@ -433,7 +425,12 @@
       }
       [bizInput, emailInput, phoneInput].forEach((el) => {
         if (!el) return;
-        el.addEventListener('input', syncContactDetailsSoon);
+        el.addEventListener('input', () => {
+          if (errorBox && !errorBox.classList.contains('hidden')) {
+            showFormError('');
+          }
+          syncContactDetailsSoon();
+        });
         el.addEventListener('blur', () => pushContactMetadata(false));
       });
 
@@ -650,64 +647,6 @@
           layoutEl.classList.remove('hidden');
           if (initialNoticeError) showFormError(initialNoticeError);
 
-          const expressWrapEl = document.getElementById('co-express-wrap');
-          const expressCheckoutElement = elements.create('expressCheckout', {
-            wallets: {
-              applePay: 'always',
-              googlePay: 'always',
-              link: 'never'
-            },
-            buttonType: {
-              applePay: 'buy',
-              googlePay: 'buy'
-            },
-            buttonTheme: {
-              applePay: 'black',
-              googlePay: 'black'
-            },
-            buttonHeight: 48
-          });
-          expressCheckoutElement.on('ready', ({ availablePaymentMethods }) => {
-            if (expressWrapEl && availablePaymentMethods && (availablePaymentMethods.applePay || availablePaymentMethods.googlePay)) {
-              expressWrapEl.classList.remove('hidden');
-            }
-          });
-          expressCheckoutElement.on('click', ({ resolve }) => {
-            showFormError('');
-            resolve({
-              emailRequired: !(emailInput.value || '').trim(),
-              phoneNumberRequired: false
-            });
-          });
-          expressCheckoutElement.on('confirm', async (event) => {
-            showFormError('');
-            const walletBilling = (event && event.billingDetails) || {};
-            if (!bizInput.value.trim() && walletBilling.name) bizInput.value = walletBilling.name;
-            if (!emailInput.value.trim() && walletBilling.email) emailInput.value = walletBilling.email;
-            if (!phoneInput.value.trim() && walletBilling.phone) phoneInput.value = walletBilling.phone;
-            const resolvedEmail = (emailInput.value || '').trim() || walletBilling.email || undefined;
-            pushContactMetadata(true);
-            const { error, paymentIntent } = await stripe.confirmPayment({
-              elements,
-              clientSecret: data.clientSecret,
-              confirmParams: {
-                return_url: buildCheckoutReturnUrl(paymentIntentId),
-                receipt_email: resolvedEmail
-              },
-              redirect: 'if_required'
-            });
-            if (error) {
-              showFormError(error.message || 'Apple Pay / Google Pay payment could not be completed. Please try again or choose a method below.');
-              return;
-            }
-            if (paymentIntent && paymentIntent.status === 'succeeded') {
-              await verifyAndProceed(paymentIntent.id);
-              return;
-            }
-            showFormError('Wallet payment was not completed. No charge was made.');
-          });
-          expressCheckoutElement.mount('#express-checkout-element');
-
           paymentElement = elements.create('payment', {
             layout: {
               type: 'accordion',
@@ -716,11 +655,11 @@
               spacedAccordionItems: true
             },
             wallets: {
-              applePay: 'never',
-              googlePay: 'never',
+              applePay: 'auto',
+              googlePay: 'auto',
               link: 'never'
             },
-            paymentMethodOrder: ['afterpay_clearpay', 'zip', 'card'],
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'afterpay_clearpay', 'zip', 'card'],
             fields: {
               billingDetails: {
                 name: 'never',
@@ -763,13 +702,25 @@
         const bizVal = (bizInput.value || '').trim();
         const emailVal = (emailInput.value || '').trim();
         const phoneVal = (phoneInput.value || '').trim();
-        if (!emailVal || !emailVal.includes('@') || !emailVal.includes('.')) {
-          showFormError('Please enter your email address so we can send your Tax Invoice and Customisation Portal link.');
+        const phoneDigits = phoneVal.replace(/\D/g, '');
+
+        if (!bizVal || bizVal.length < 2) {
+          showFormError('Please enter your Business or Brand Name above before proceeding to payment.');
+          bizInput.focus();
+          return;
+        }
+        if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+          showFormError('Please enter a valid email address above so we can send your Tax Invoice and Customisation Portal link.');
           emailInput.focus();
           return;
         }
+        if (!phoneVal || phoneDigits.length < 8) {
+          showFormError('Please enter your Australian mobile number above so we can send your live website launch SMS.');
+          phoneInput.focus();
+          return;
+        }
         if (!selectedPaymentMethod) {
-          showFormError('Please select a payment option above (Afterpay, Zip, or Card), or tap Buy with Apple Pay / Google Pay.');
+          showFormError('Please select a payment method (Apple Pay, Afterpay, Zip, or Card) to complete your order.');
           return;
         }
 
@@ -802,12 +753,23 @@
 
           if (error) {
             const rawMsg = error.message || '';
-            const isWalletErr = (selectedPaymentMethod === 'apple_pay' || selectedPaymentMethod === 'google_pay') && /card details|thông tin thẻ/i.test(rawMsg);
-            showFormError(
-              isWalletErr
-                ? 'Apple Pay / Google Pay could not open a wallet prompt on this browser. Please tap an active card in Apple Wallet or select Afterpay, Zip, or Card below.'
-                : (rawMsg || 'Payment could not be completed. Please check your details and try again.')
-            );
+            let friendlyMsg = rawMsg || 'Payment could not be completed. Please check your details and try again.';
+            if (selectedPaymentMethod === 'apple_pay') {
+              friendlyMsg = /cancel|canceled|cancelled|abort/i.test(rawMsg)
+                ? 'Apple Pay was cancelled. No charge was made — tap the button below to try Apple Pay again, or select Afterpay, Zip, or Card.'
+                : 'Apple Pay could not be completed on this browser. Please ensure you have an active card set up in Apple Wallet on Safari, or choose Afterpay, Zip, or Card below.';
+            } else if (selectedPaymentMethod === 'google_pay') {
+              friendlyMsg = /cancel|canceled|cancelled|abort/i.test(rawMsg)
+                ? 'Google Pay was cancelled. No charge was made — please try again or select Afterpay, Zip, or Card.'
+                : 'Google Pay could not be completed on this browser. Please ensure you have an active card saved in Google Pay, or choose Afterpay, Zip, or Card below.';
+            } else if (selectedPaymentMethod === 'afterpay_clearpay' || selectedPaymentMethod === 'zip') {
+              friendlyMsg = (rawMsg && !/card details|thông tin thẻ/i.test(rawMsg))
+                ? rawMsg
+                : 'Unable to redirect to Afterpay / Zip. Please check your contact details above or try another payment method.';
+            } else if (selectedPaymentMethod === 'card') {
+              friendlyMsg = rawMsg || 'Please check your card number, expiry date, and CVC code, then try again.';
+            }
+            showFormError(friendlyMsg);
             submitBtn.disabled = false;
             submitLabel.innerHTML = prevHtml;
             return;
