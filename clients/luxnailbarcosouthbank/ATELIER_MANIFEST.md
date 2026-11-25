@@ -19,6 +19,7 @@
 ## Bespoke Brand Identity & Gold-Leaf Assets
 - **Gold-Leaf Calligraphic Logo (`assets/lux-logo.svg`):** Custom 24K gold-leaf 3D vector redraw of the calligraphic `"Lux"` script from the salon's storefront sign, harmonized inside the pearl-gold medallion (`#brand-logo-slot` in Header & Reserve Card seal in `#visit`).
 - **Gold-Leaf `"L"` Favicon (`favicon.svg`, `favicon.png`):** Embossed Palette `01` wax seal bearing the custom 24K gold-leaf calligraphic `"L"` matching the storefront script.
+- **Bespoke Branded Hero Oil Painting (`assets/client-photo-hero.jpg`):** Custom Palette `01` sunlit sanctuary oil painting featuring mounted 24K gold-leaf `"Lux NAIL BAR & Co."` plaster-wall signage, framed inside the `aspect-[9/10]` arched gold-foil canvas (`object-position: 52% 50%`).
 
 ## Antigravity Editing Rules
 1. Always preserve the **WynnPages Digital Atelier** standards in `clients/GEMINI.md` (oil-painting + gold-leaf aesthetic, zero emojis, italic accent heading signature).

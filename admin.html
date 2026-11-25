@@ -968,21 +968,31 @@
           </a>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
-          <button
-            type="button"
-            id="btn-undo-ai-revision"
-            class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1.5"
-            title="Khôi phục lại nguyên trạng bản HTML trước khi chạy Gemini AI"
-          >
-            <span>⏪ Hoàn Tác Bản Trước Khi AI Sửa (Undo)</span>
-          </button>
+        <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-2 pt-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              id="btn-undo-ai-revision"
+              class="px-3 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1.5"
+              title="Khôi phục lại nguyên trạng bản HTML trước khi chạy Gemini AI"
+            >
+              <span>⏪ Hoàn Tác (Undo)</span>
+            </button>
+            <button
+              type="button"
+              id="btn-copy-rev-ag"
+              class="px-3 py-2.5 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 text-[#96432b] border border-[#d8ccb8] font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1.5"
+              title="Copy lệnh chi tiết để dán vào khung chat Antigravity sửa miễn phí 100%"
+            >
+              <span>⚡ Copy Lệnh Antigravity (Miễn Phí)</span>
+            </button>
+          </div>
           <button
             type="button"
             id="btn-run-ai-revision"
             class="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-[#96432b] hover:from-amber-700 hover:to-[#7d3520] text-white font-extrabold text-xs shadow-md transition-all hover:scale-[1.01] cursor-pointer inline-flex items-center justify-center gap-2"
           >
-            <span>🤖 Bấm 1-Click: Gemini AI Cập Nhật Web Demo</span>
+            <span>🤖 Bấm 1-Click: AI Cập Nhật Web Demo</span>
             <span>→</span>
           </button>
         </div>
@@ -1038,7 +1048,7 @@
         </a>
       </div>
 
-      <!-- 3 Cloud Action Buttons (Zero Antigravity Required) -->
+      <!-- 3 Cloud Action Buttons + Free Antigravity Fallback -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
         <button
           type="button"
@@ -1063,6 +1073,15 @@
         >
           <span>🏛️ 3. Khôi Phục Tranh Mặc Định</span>
           <span class="text-[10px] font-medium text-stone-500">Về bộ tranh chuẩn theo Bảng Màu</span>
+        </button>
+      </div>
+      <div class="pt-1 flex justify-end">
+        <button
+          type="button"
+          id="btn-copy-art-ag"
+          class="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#fcf9f3] hover:bg-[#fbdeb9]/60 text-[#96432b] border border-[#d8ccb8] font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1.5"
+        >
+          <span>⚡ Copy Lệnh Nhờ Antigravity Vẽ Tranh &amp; Gắn Lên Web (Miễn Phí)</span>
         </button>
       </div>
     </div>
@@ -7450,8 +7469,30 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         btnCloseAiRev.addEventListener('click', closeAiRevisionModal);
       }
 
+      function showAiModalOutcome(boxEl, textEl, linkEl, { ok = true, message = '', previewUrl = '' }) {
+        if (!boxEl) return;
+        boxEl.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-300', 'text-emerald-900', 'bg-red-50', 'border-red-300', 'text-red-900');
+        if (ok) {
+          boxEl.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-900');
+        } else {
+          boxEl.classList.add('bg-red-50', 'border-red-300', 'text-red-900');
+        }
+        if (textEl) textEl.textContent = message;
+        if (linkEl) {
+          if (ok && previewUrl) {
+            linkEl.classList.remove('hidden');
+            linkEl.href = previewUrl;
+          } else {
+            linkEl.classList.add('hidden');
+          }
+        }
+      }
+
+      let currentAiRevHasSubmission = false;
+
       async function openAiRevisionModal(client) {
         currentAiRevClient = client;
+        currentAiRevHasSubmission = client.revisionStatus === 'submitted' || client.revisionStatus === 'applied';
         const bizName = client.businessName || client.name || client.demoSlug || 'Tiệm';
         if (aiRevBizName) aiRevBizName.textContent = bizName;
 
@@ -7459,7 +7500,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
         if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
         if (btnRunAiRevision) {
           btnRunAiRevision.disabled = false;
-          btnRunAiRevision.innerHTML = '<span>🤖 Bấm 1-Click: Gemini AI Cập Nhật Web Demo</span><span>→</span>';
+          btnRunAiRevision.innerHTML = '<span>🤖 Bấm 1-Click: AI Cập Nhật Web Demo</span><span>→</span>';
         }
 
         if (aiRevDetailsBody) {
@@ -7475,6 +7516,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const res = await fetch(`/api/revision/get-demo-data?cid=${encodeURIComponent(client.id)}`);
           const data = await res.json().catch(() => ({}));
           const rev = data.revisionData || null;
+          if (rev) currentAiRevHasSubmission = true;
 
           if (!rev && client.revisionStatus !== 'submitted' && client.revisionStatus !== 'applied') {
             aiRevDetailsBody.innerHTML = `
@@ -7626,12 +7668,21 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const adminInstructionsEl = document.getElementById('ai-rev-admin-instructions');
           const adminInstructions = adminInstructionsEl ? adminInstructionsEl.value.trim() : '';
 
+          if (!currentAiRevHasSubmission && !adminInstructions) {
+            showAiModalOutcome(aiRevResultBox, aiRevResultText, aiRevPreviewBtn, {
+              ok: false,
+              message: '⚠️ Khách chưa nộp form Portal Sửa. Bạn hãy gõ yêu cầu vào ô "Chỉ đạo thêm của Admin" phía trên (VD: Đổi bảng màu 02; SĐT: 0412 345 678; BIAB $90) rồi bấm lại nhé!'
+            });
+            if (adminInstructionsEl) adminInstructionsEl.focus();
+            return;
+          }
+
           btnRunAiRevision.disabled = true;
-          btnRunAiRevision.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Đang chạy Gemini Vision OCR & cập nhật website...';
+          btnRunAiRevision.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Đang chạy AI cập nhật website...';
 
           if (aiRevStatusBox) {
             aiRevStatusBox.classList.remove('hidden');
-            if (aiRevStatusText) aiRevStatusText.textContent = `Đang lưu bản Backup & gửi yêu cầu + hình ảnh tới Gemini AI để cập nhật website của "${bizName}"...`;
+            if (aiRevStatusText) aiRevStatusText.textContent = `Đang lưu bản Backup & xử lý cập nhật website cho "${bizName}"...`;
           }
           if (aiRevResultBox) aiRevResultBox.classList.add('hidden');
 
@@ -7646,6 +7697,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
               },
               body: JSON.stringify({
                 cid: target.id,
+                slug: target.demoSlug || '',
                 geminiApiKey: gKey,
                 adminInstructions
               })
@@ -7654,32 +7706,50 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok || !data.ok) {
-              throw new Error(data.error || 'Gemini AI cập nhật không thành công');
+              throw new Error(data.error || 'AI cập nhật không thành công');
             }
 
             if (aiRevStatusBox) aiRevStatusBox.classList.add('hidden');
-            if (aiRevResultBox) {
-              aiRevResultBox.classList.remove('hidden');
-              if (aiRevResultText) {
-                aiRevResultText.innerHTML = `✓ Thành công! ${escapeHtml(data.changesSummary || 'Đã cập nhật cấu hình và giá menu.')}`;
-              }
-              if (aiRevPreviewBtn) {
-                aiRevPreviewBtn.href = data.previewUrl || `https://${target.demoSlug}.wynnpages.com.au`;
-              }
-            }
+            showAiModalOutcome(aiRevResultBox, aiRevResultText, aiRevPreviewBtn, {
+              ok: true,
+              message: `✓ Thành công! ${data.changesSummary || 'Đã cập nhật cấu hình và bảng giá mới.'}`,
+              previewUrl: data.previewUrl || `https://${target.demoSlug}.wynnpages.com.au`
+            });
 
             btnRunAiRevision.disabled = false;
             btnRunAiRevision.innerHTML = '<span>✓ Đã Áp Dụng Thành Công (Bấm để chạy lại)</span>';
 
             target.revisionStatus = 'applied';
-            showToast(`🎉 Gemini AI đã cập nhật xong web demo của "${bizName}"!`);
+            showToast(`🎉 Đã cập nhật xong web demo của "${bizName}"!`);
             applyFiltersAndRender();
           } catch (err) {
             if (aiRevStatusBox) aiRevStatusBox.classList.add('hidden');
-            showToast(`Lỗi Gemini AI Auto-Editor: ${err.message}`, true);
+            showAiModalOutcome(aiRevResultBox, aiRevResultText, aiRevPreviewBtn, {
+              ok: false,
+              message: `❌ ${err.message}`
+            });
+            showToast(`Lỗi AI Sửa Web: ${err.message}`, true);
             btnRunAiRevision.disabled = false;
-            btnRunAiRevision.innerHTML = '<span>❌ Thử Lại: Gemini AI Auto-Edit</span>';
+            btnRunAiRevision.innerHTML = '<span>🤖 Thử Lại: AI Cập Nhật Web Demo</span>';
           }
+        });
+      }
+
+      const btnCopyRevAg = document.getElementById('btn-copy-rev-ag');
+      if (btnCopyRevAg) {
+        btnCopyRevAg.addEventListener('click', () => {
+          if (!currentAiRevClient) return;
+          const target = currentAiRevClient;
+          const slug = target.demoSlug || target.id;
+          const bizName = target.businessName || target.name || slug;
+          const adminInstructionsEl = document.getElementById('ai-rev-admin-instructions');
+          const inst = (adminInstructionsEl && adminInstructionsEl.value.trim()) || '[Điền yêu cầu sửa web/menu/logo]';
+          const cmd = `Sửa website demo "${bizName}" (clients/${slug}/): ${inst} — Sau khi sửa nhớ push live lên https://${slug}.wynnpages.com.au nhé.`;
+          navigator.clipboard.writeText(cmd).then(() => {
+            showToast('⚡ Đã copy lệnh! Dán vào khung chat Antigravity để sửa miễn phí 100% nhé!');
+          }).catch(() => {
+            prompt('Copy lệnh dưới đây dán vào Antigravity:', cmd);
+          });
         });
       }
 
@@ -7843,16 +7913,38 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             throw new Error(data.error || 'Không thực hiện được thao tác.');
           }
           if (aiArtStatusBox) aiArtStatusBox.classList.add('hidden');
-          if (aiArtResultBox) {
-            aiArtResultBox.classList.remove('hidden');
-            if (aiArtResultText) aiArtResultText.textContent = `✓ ${data.summary || 'Đã cập nhật hình ảnh lên trang Demo thành công!'}`;
-            if (aiArtPreviewBtn) aiArtPreviewBtn.href = data.previewUrl || `https://${target.demoSlug}.wynnpages.com.au`;
-          }
+          showAiModalOutcome(aiArtResultBox, aiArtResultText, aiArtPreviewBtn, {
+            ok: true,
+            message: `✓ ${data.summary || 'Đã cập nhật hình ảnh lên trang Demo thành công!'}`,
+            previewUrl: data.previewUrl || `https://${target.demoSlug}.wynnpages.com.au`
+          });
           showToast(`🎨 ${data.summary || `Đã cập nhật hình ảnh cho "${bizName}"!`}`);
         } catch (err) {
           if (aiArtStatusBox) aiArtStatusBox.classList.add('hidden');
+          showAiModalOutcome(aiArtResultBox, aiArtResultText, aiArtPreviewBtn, {
+            ok: false,
+            message: `❌ ${err.message}`
+          });
           showToast(err.message, true);
         }
+      }
+
+      const btnCopyArtAg = document.getElementById('btn-copy-art-ag');
+      if (btnCopyArtAg) {
+        btnCopyArtAg.addEventListener('click', () => {
+          if (!currentAiArtClient) return;
+          const target = currentAiArtClient;
+          const slug = target.demoSlug || target.id;
+          const bizName = target.businessName || target.name || slug;
+          const pal = target.demoPalette || '01';
+          const customP = (aiArtPromptInput && aiArtPromptInput.value.trim()) || '';
+          const cmd = `Hãy dùng image-generator tạo bộ tranh sơn dầu & vàng lá Kintsugi (Bảng màu ${pal}) cho tiệm "${bizName}" (clients/${slug}/) và cập nhật lên https://${slug}.wynnpages.com.au${customP ? `\nYêu cầu chi tiết: ${customP}` : ''}`;
+          navigator.clipboard.writeText(cmd).then(() => {
+            showToast('⚡ Đã copy lệnh vẽ tranh! Dán vào chat Antigravity để tạo miễn phí 100%!');
+          }).catch(() => {
+            prompt('Copy lệnh dưới đây dán vào Antigravity:', cmd);
+          });
+        });
       }
 
       if (btnCloudGenerateOil) {
