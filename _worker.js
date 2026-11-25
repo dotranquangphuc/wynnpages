@@ -124,12 +124,17 @@ function sanitizeSmsUrlsForClickSend(str) {
     safeTokens.push(match);
     return `__WYNN_SAFE_URL_${idx}__`;
   });
+  // 2b. Replace standalone TLD mentions (e.g. ".com.au domain" or ".com.au") before domain stripping
+  out = out.replace(/(?<![a-z0-9-])\.(?:com\.au|net\.au|org\.au|id\.au|au|com|net|org)\s+domain\b/gi, 'custom domain');
+  out = out.replace(/(?<![a-z0-9-])\.(?:com\.au|net\.au|org\.au|id\.au|au)\b/gi, 'custom domain');
   // 3. Remove any email addresses
   out = out.replace(/\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g, 'our studio email');
   // 4. Remove any non-wynnpages URLs (http:// or https://...)
-  out = out.replace(/https?:\/\/[^\s)]+/gi, 'your domain');
-  // 5. Remove any bare client/third-party domain names (e.g. cafe.com.au, salon.com, shop.au) so ClickSend never blocks the SMS
-  out = out.replace(/\b[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.(?:com\.au|net\.au|org\.au|id\.au|asn\.au|edu\.au|gov\.au|au|com|net|org|co|io|biz|info|me|site|online|store|shop|beauty|salon|studio|melbourne|sydney)\b/gi, 'your domain');
+  out = out.replace(/https?:\/\/[^\s)]+/gi, 'your custom domain');
+  // 5. Remove any bare client/third-party domain names (e.g. cafe.com.au, salon.com) without leaving stray leading dots or duplicate "domain"
+  out = out.replace(/(?<![a-z0-9.-])\b[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.(?:com\.au|net\.au|org\.au|id\.au|asn\.au|edu\.au|gov\.au|au|com|net|org|co|io|biz|info|me|site|online|store|shop|beauty|salon|studio|melbourne|sydney)\b/gi, 'your domain');
+  out = out.replace(/\.(your (?:custom )?domain)\b/gi, '$1');
+  out = out.replace(/\byour domain(?:\s+domain)+\b/gi, 'custom domain');
   // 6. Restore legitimate wynnpages.com.au URLs
   out = out.replace(/__WYNN_SAFE_URL_(\d+)__/g, (_, idx) => safeTokens[Number(idx)] || '');
   return out;
@@ -1331,49 +1336,74 @@ async function recordSmsHistory({ customerId, env, stripeSecretKey, type, to, te
   return { entry, totalCount };
 }
 
-function buildAtelierEmailHtml({ preheader, heading, bodyHtml, primaryCta, secondaryCta }) {
+function formatCleanBusinessDisplayName(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return 'your business';
+  if (trimmed === trimmed.toLowerCase()) {
+    return trimmed.replace(/\b([a-z])/g, (_, ch) => ch.toUpperCase());
+  }
+  return trimmed;
+}
+
+function resolveClientDisplayNames(client) {
+  const bizRaw = (client && (client.businessName || client.name)) || '';
+  const biz = formatCleanBusinessDisplayName(bizRaw);
+  const rawName = String((client && client.name) || '').trim();
+  const firstWord = rawName ? rawName.split(/\s+/)[0] : '';
+  const isSuspiciousName = !firstWord || firstWord.toLowerCase() === biz.toLowerCase() || /^cus_/i.test(firstWord);
+  const firstName = isSuspiciousName ? biz : formatCleanBusinessDisplayName(firstWord);
+  return { biz, firstName, greetingName: biz };
+}
+
+function buildAtelierEmailHtml({ preheader, badge, heading, bodyHtml, primaryCta, secondaryCta }) {
   const primaryBtn = primaryCta
-    ? `<div style="margin-top:24px;margin-bottom:12px;">
-         <a href="${primaryCta.url}" style="display:inline-block;background-color:#96432b;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;padding:14px 28px;border-radius:14px;">
+    ? `<div style="margin-top:22px;margin-bottom:8px;">
+         <a href="${primaryCta.url}" style="display:inline-block;background-color:#96432b;color:#ffffff;font-weight:700;font-size:14.5px;text-decoration:none;padding:14px 28px;border-radius:999px;">
            ${primaryCta.label} &rarr;
          </a>
        </div>`
     : '';
 
   const secondaryBtn = secondaryCta
-    ? `<div style="margin-top:12px;">
-         <a href="${secondaryCta.url}" style="display:inline-block;background-color:#f6f1e8;color:#231f1a;border:1px solid #d8ccb8;font-weight:600;font-size:13px;text-decoration:none;padding:11px 22px;border-radius:12px;">
+    ? `<div style="margin-top:10px;">
+         <a href="${secondaryCta.url}" style="display:inline-block;background-color:#f6f1e8;color:#231f1a;border:1px solid #d8ccb8;font-weight:600;font-size:13px;text-decoration:none;padding:11px 22px;border-radius:999px;">
            ${secondaryCta.label}
          </a>
        </div>`
+    : '';
+
+  const pillBadgeHtml = badge
+    ? `<div style="display:inline-block;background-color:#f9efe4;border:1px solid #e7d6be;color:#96432b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;padding:5px 12px;border-radius:999px;margin-bottom:14px;white-space:nowrap;">${badge}</div>`
     : '';
 
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${heading}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f6f1e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#231f1a;">
-  <div style="max-width:580px;margin:0 auto;padding:36px 20px;">
-    <div style="text-align:center;margin-bottom:24px;">
+  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;</div>` : ''}
+  <div style="max-width:580px;margin:0 auto;padding:32px 16px;">
+    <div style="text-align:center;margin-bottom:22px;">
       <span style="display:inline-block;width:30px;height:30px;border-radius:9px;background-color:#96432b;border:1px solid #d49b28;padding:4px;vertical-align:middle;margin-right:8px;">
         <img src="https://wynnpages.com.au/assets/favicon-light.png" alt="W" width="20" height="20" style="display:block;width:20px;height:20px;object-fit:contain;">
       </span>
       <span style="font-family:Georgia,serif;font-size:24px;font-weight:bold;color:#231f1a;letter-spacing:-0.02em;vertical-align:middle;">WynnPages</span>
-      <span style="display:inline-block;margin-left:8px;background-color:#fbdeb9;color:#96432b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:3px 9px;border-radius:99px;vertical-align:middle;">Atelier Studio</span>
+      <span style="display:inline-block;margin-left:8px;background-color:#fbdeb9;color:#96432b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:3px 9px;border-radius:999px;vertical-align:middle;">Atelier Studio</span>
     </div>
-    <div style="background-color:#ffffff;border:1px solid #e5dec9;border-radius:24px;padding:36px 32px;box-shadow:0 8px 24px rgba(35,31,26,0.05);">
-      ${preheader ? `<div style="display:inline-block;background-color:#d4e4ce;color:#4c6b47;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:99px;margin-bottom:14px;">${preheader}</div>` : ''}
-      <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.2;color:#231f1a;margin:0 0 16px 0;">${heading}</h1>
-      <div style="font-size:15px;line-height:1.65;color:#4a433b;">
+    <div style="background-color:#ffffff;border:1px solid #e5dec9;border-radius:24px;padding:32px 28px;box-shadow:0 8px 24px rgba(35,31,26,0.05);">
+      ${pillBadgeHtml}
+      <h1 style="font-family:Georgia,serif;font-size:27px;line-height:1.22;color:#231f1a;margin:0 0 14px 0;">${heading}</h1>
+      <div style="font-size:14.5px;line-height:1.65;color:#4a433b;">
         ${bodyHtml}
       </div>
       ${primaryBtn}
       ${secondaryBtn}
     </div>
-    <div style="text-align:center;margin-top:24px;font-size:12px;color:#8c8275;">
-      WynnPages Australia &bull; Hand-crafted bespoke digital craftsmanship &bull; <a href="https://wynnpages.com.au" style="color:#96432b;text-decoration:none;">wynnpages.com.au</a>
+    <div style="text-align:center;margin-top:22px;font-size:12px;color:#8c8275;">
+      WynnPages Digital Atelier &bull; Handcrafted in Australia &bull; <a href="https://wynnpages.com.au" style="color:#96432b;text-decoration:none;">wynnpages.com.au</a>
     </div>
   </div>
 </body>
@@ -1744,8 +1774,8 @@ function buildTaxInvoiceEmailHtml({
   abn = '',
   isOutbound = false
 }) {
-  const displayBiz = businessName || customerName || 'Valued Client';
-  const greetingName = (customerName || displayBiz).split(' ')[0] || 'there';
+  const displayBiz = formatCleanBusinessDisplayName(businessName || customerName || 'Valued Client');
+  const greetingName = isOutbound ? displayBiz : (formatCleanBusinessDisplayName(customerName || displayBiz));
   const stepTitle = isOutbound ? 'Personalise Your Website in 2 Minutes' : 'Complete Your Onboarding Brief';
   const introCopy = isOutbound
     ? `Thank you so much for choosing <strong>WynnPages Studio</strong>! Your payment of <strong>${escapeEmailHtml(amountAud)}</strong> is confirmed, and your bespoke website for <strong>${escapeEmailHtml(displayBiz)}</strong> is officially yours.`
@@ -1826,6 +1856,7 @@ function buildTaxInvoiceEmailHtml({
 
   return buildAtelierEmailHtml({
     preheader: `Official Tax Invoice #${invoiceNumber || 'WP'} & Private Customisation Portal Inside`,
+    badge: 'OFFICIAL TAX INVOICE',
     heading: `Payment Confirmed for ${escapeEmailHtml(displayBiz)}.`,
     bodyHtml,
     secondaryCta: {
@@ -2395,7 +2426,8 @@ function buildDomainGuideUrl({ origin, client = {}, tab = '', ns = '' }) {
 }
 
 async function triggerLifecycleNotification({ stage, client, origin, cfg, env = null, ctx = null, suppressTelegram = false, waitForTelegram = false }) {
-  const firstName = (client.name || 'mate').split(' ')[0];
+  const { biz: cleanBizLabel, firstName: cleanFirstName } = resolveClientDisplayNames(client);
+  const firstName = cleanFirstName || cleanBizLabel || 'there';
   const email = client.email || '';
   const phone = client.phone || '';
   const demoUrl = client.demoUrl || (client.demoSlug ? `https://${client.demoSlug}.wynnpages.com.au` : `${origin}`);
@@ -2446,7 +2478,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       emailSubject = `All received, ${firstName}! I'm connecting ${domainInfo} for you now`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Personal Note from Wynn • Hands-Free Domain Setup Underway',
-        heading: `Thank you, ${firstName} — I'm preparing your launch!`,
+        badge: 'DOMAIN SETUP',
+        heading: `Thank you, ${cleanBizLabel} — I'm preparing your launch!`,
         bodyHtml: `
           <p>Hi ${firstName},</p>
           <p>Just letting you know I've received all your final details for <strong>${domainInfo}</strong>.</p>
@@ -2470,7 +2503,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       emailSubject = `Your domain nameservers for ${domainInfo} (from Wynn)`;
       emailHtml = buildAtelierEmailHtml({
         preheader: `Nameservers Ready for ${domainInfo}`,
-        heading: `Your domain nameservers are ready, ${firstName}.`,
+        badge: 'NAMESERVERS READY',
+        heading: `Your domain nameservers are ready, ${cleanBizLabel}.`,
         bodyHtml: `
           <p>Hi ${firstName},</p>
           <p>Thank you for sending your details through! I've set up <strong>${domainInfo}</strong> on our Australian high-speed network.</p>
@@ -2496,7 +2530,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       emailSubject = `Got your details, ${firstName}! Next step: connecting ${domainInfo}`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Personal Note from Wynn • Free Domain Connection Help',
-        heading: `I'm putting the finishing touches on your website, ${firstName}.`,
+        badge: 'DOMAIN CONNECTION',
+        heading: `I'm putting the finishing touches on your website, ${cleanBizLabel}.`,
         bodyHtml: `
           <p>Hi ${firstName},</p>
           <p>Thank you so much for sending your details through! I've got everything logged and I'm preparing your website for launch.</p>
@@ -2526,7 +2561,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       emailSubject = `Got your details, ${firstName}! Here is your easy 2-minute domain guide`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Personal Note from Wynn • 2-Minute Domain Guide Inside',
-        heading: `Getting ready for your launch, ${firstName}.`,
+        badge: 'DOMAIN GUIDE',
+        heading: `Getting ready for your launch, ${cleanBizLabel}.`,
         bodyHtml: `
           <p>Hi ${firstName},</p>
           <p>Thank you for sending your details through! Your website is ready to be connected to <strong>${domainInfo}</strong>.</p>
@@ -2557,7 +2593,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
     emailSubject = `Your custom website preview is ready to explore, ${firstName}!`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Personal Note from Wynn • Live Website Preview Inside',
-      heading: `I've finished crafting your website preview, ${firstName}!`,
+      badge: 'PREVIEW READY',
+      heading: `I've finished crafting your website preview, ${cleanBizLabel}!`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
         <p>I've just finished hand-crafting the initial version of your website, and I'd love for you to take it for a spin on your phone or laptop:</p>
@@ -2581,7 +2618,8 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
     emailSubject = `Friendly check-in on your website preview, ${firstName}`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Quick check-in from Wynn',
-      heading: `How are you feeling about your website preview, ${firstName}?`,
+      badge: 'FRIENDLY CHECK-IN',
+      heading: `How are you feeling about your website preview, ${cleanBizLabel}?`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
         <p>Hope you're having a great week! I just wanted to check in and see what you thought of your live website preview:</p>
@@ -2601,33 +2639,12 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       }
     });
   } else if (stage === 'outbound_pitch') {
-    const bizLabel = client.businessName || client.name || 'your business';
+    const bizLabel = cleanBizLabel;
     const previewLink = shortDemoUrl;
     smsText = buildNurtureStepSms({ stepKey: 'step1', biz: bizLabel, demoUrl: previewLink });
-    emailSubject = `A little website concept I put together for ${bizLabel}`;
-    emailHtml = buildAtelierEmailHtml({
-      preheader: 'Personal note from Wynn at WynnPages Studio',
-      heading: `Something I put together for ${bizLabel}.`,
-      bodyHtml: `
-        <p>Hi ${firstName},</p>
-        <p>I hope your week is going really well! My name is Wynn, and I'm a web designer here in Australia.</p>
-        <p>I came across <strong>${bizLabel}</strong> recently and really loved what you do. Rather than sending a boring cold pitch, I decided to actually sit down and hand-craft a complete, mobile-ready website concept tailored specifically to your business so you could see how it looks and feels in real life:</p>
-        <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
-          <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
-        </p>
-        <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;">
-          <strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>
-          Please note that the preview currently uses stand-in concept photos and sample service details just to demonstrate the layout. The moment you claim the website via our secure checkout, you'll be redirected straight to your private <strong>WynnPages Customisation Portal</strong> where you can upload your real photos, logo, exact pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.
-        </div>
-        <p>There's zero pressure at all — please just have a browse whenever you get a quiet cuppa ($599 AUD flat one-off build, 100% owned by you with $0 ongoing monthly fees forever).</p>
-        <p>Feel free to reply to this email anytime if you have any thoughts or questions!</p>
-        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>
-      `,
-      primaryCta: {
-        label: 'Have a Look at Your Website Concept',
-        url: previewLink
-      }
-    });
+    const pitchMail = buildNurtureStepEmail({ stepKey: 'step1', client: { ...client, businessName: bizLabel }, demoUrl: previewLink });
+    emailSubject = pitchMail.subject;
+    emailHtml = pitchMail.html;
   } else if (stage === 'outbound_paid_confirmed') {
     const bizLabel = client.businessName || client.name || 'your business';
     const revisionUrl = `${origin}/revision?client_id=${encodeURIComponent(client.id || '')}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
@@ -2664,9 +2681,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       emailSubject = `Got your updates, ${firstName}! I'm preparing ${bizLabel} for launch`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Personal Note from Wynn • Preparing Your Official Launch',
-        heading: `Thank you, ${firstName} — I'm polishing ${bizLabel} for launch!`,
+        badge: 'LAUNCHING SOON',
+        heading: `Thank you — I'm polishing ${cleanBizLabel} for launch!`,
         bodyHtml: `
-          <p>Hi ${firstName},</p>
+          <p>Hi ${cleanBizLabel},</p>
           <p>Just letting you know I've received your website updates${domainLabel ? ` and domain details for <strong>${domainLabel}</strong>` : ''}.</p>
           <p>I'm personally applying your final touches and connecting your domain on our Australian high-speed network over the next <strong>24–48 hours</strong>.</p>
           <p>I'll send you a text and email the moment your official website is live!</p>
@@ -2682,9 +2700,10 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       emailSubject = `Got your updates! Next step: connecting the domain for ${bizLabel}`;
       emailHtml = buildAtelierEmailHtml({
         preheader: 'Personal Note from Wynn • 2-Minute Domain Guide Inside',
-        heading: `I'm polishing ${bizLabel} for launch, ${firstName}!`,
+        badge: 'FINAL STEP • DOMAIN',
+        heading: `I'm polishing ${cleanBizLabel} for launch!`,
         bodyHtml: `
-          <p>Hi ${firstName},</p>
+          <p>Hi ${cleanBizLabel},</p>
           <p>Thank you for sending your website updates through! I've started applying your tweaks so everything is ready for launch within <strong>24–48 hours</strong>.</p>
           <p><strong>While I polish the site, let's get your domain connected${domainLabel ? ` (<strong>${domainLabel}</strong>)` : ''}:</strong> I always make sure you own your domain <strong>100% directly under your own name</strong> with zero middleman markups.</p>
           <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:13px;line-height:1.7;">
@@ -2704,45 +2723,29 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
       });
     }
   } else if (stage === 'outbound_followup') {
-    const bizLabel = client.businessName || client.name || 'your business';
+    const bizLabel = cleanBizLabel;
     const previewLink = shortDemoUrl;
     const isDeal = client.dealStatus === 'flash_deal';
+    const viewsCnt = Number(client.demoViewCount || 0);
+    const stepKey = isDeal ? 'step3' : 'step2';
     smsText = buildNurtureStepSms({
-      stepKey: isDeal ? 'step3' : 'step2',
+      stepKey,
       biz: bizLabel,
       demoUrl: previewLink,
-      views: Number(client.demoViewCount || 0)
+      views: viewsCnt
     });
-    emailSubject = isDeal
-      ? `I'd love to see ${bizLabel} use this design (a personal note from Wynn)`
-      : `Just checking in on the website concept I made for ${bizLabel}`;
-    emailHtml = buildAtelierEmailHtml({
-      preheader: isDeal ? 'Personal studio gesture — $299 AUD all-up, zero monthly fees' : 'A friendly note from Wynn at WynnPages Studio',
-      heading: `Hope your week is going well, ${firstName}.`,
-      bodyHtml: `
-        <p>Hi ${firstName},</p>
-        <p>I know how busy things get running <strong>${bizLabel}</strong>, so I just wanted to send a warm follow-up in case my previous note got buried.</p>
-        <p>I'm still holding the custom website concept I hand-crafted for your business right here:</p>
-        <p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;">
-          <a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a>
-        </p>
-        ${isDeal ? `<div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#44403c;"><strong>A personal gesture from me:</strong> Since the design is already built for you, I've halved the one-off build fee on your preview link down to <strong>$299 AUD all-up</strong> (save $300 AUD, with zero monthly fees forever).</div>` : ''}
-        <p><strong>100% Tailored After Checkout:</strong> The preview currently uses sample photos and placeholder details just to show the layout. Once you claim the website on the preview page, you'll get instant access to your private <strong>Customisation Portal</strong> where you can upload your real photos, logo, and exact pricing/details for me to personally update before connecting your <code>.com.au</code> domain.</p>
-        <p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>
-      `,
-      primaryCta: {
-        label: isDeal ? 'View Preview & Claim for $299 AUD' : 'Open Your Website Preview',
-        url: previewLink
-      }
-    });
+    const followMail = buildNurtureStepEmail({ stepKey, client: { ...client, businessName: bizLabel }, demoUrl: previewLink, views: viewsCnt });
+    emailSubject = followMail.subject;
+    emailHtml = followMail.html;
   } else if (stage === 'site_launched') {
     const rawLiveDomain = (client.liveUrl || client.existingDomain || client.desiredDomains || '').trim();
     const liveUrl = rawLiveDomain.startsWith('http') ? rawLiveDomain : `https://${rawLiveDomain}`;
-    smsText = `Hi ${firstName}, it's Wynn here! I'm so excited to let you know that your new custom website is officially LIVE on your domain — 100% yours with $0 ongoing monthly fees! Check your email for your live link or take a look here: ${shortDemoUrl} — Thank you so much for trusting me with your website! Warmly, Wynn`;
-    emailSubject = `Congratulations, ${firstName}! Your new website is officially LIVE`;
+    smsText = `Hi ${cleanBizLabel}, Wynn here! Your new custom website is officially LIVE on your domain — 100% yours with $0 monthly fees forever! Take a look here: ${shortDemoUrl} — Thank you so much for trusting me with your website! Warmly, Wynn`;
+    emailSubject = `Congratulations! Your ${cleanBizLabel} website is officially LIVE`;
     emailHtml = buildAtelierEmailHtml({
       preheader: 'Personal Note from Wynn • Your Website is Officially Live',
-      heading: `Your bespoke website is now live, ${firstName}!`,
+      badge: 'OFFICIALLY LIVE',
+      heading: `${cleanBizLabel} is now officially live!`,
       bodyHtml: `
         <p>Hi ${firstName},</p>
         <p>Pop the champagne! I've just finished connecting everything, and your hand-crafted website is officially live on our Australian high-speed network and ready to welcome your clients.</p>
@@ -2802,82 +2805,110 @@ async function triggerLifecycleNotification({ stage, client, origin, cfg, env = 
 }
 
 function buildNurtureStepSms({ stepKey, biz, demoUrl, views = 0 }) {
-  const b = (biz || 'there').trim();
+  const b = formatCleanBusinessDisplayName(biz || 'your business');
   const url = (demoUrl || 'https://wynnpages.com.au').trim();
   if (stepKey === 'step1' || stepKey === 'aussie_pitch' || stepKey === 'pitch') {
-    return `Hi ${b}, Wynn here from WynnPages Studio! I came across your business recently and genuinely loved your local reputation, so I sat down and hand-crafted a custom website preview specifically around your brand just so you could see how it looks and feels on your phone: ${url} — the photos & menu shown are just sample placeholders to demonstrate the layout (if you ever decide to use it, I personally swap in all your real photos, logo & exact price list via our Customisation Portal). Zero pressure at all, just thought I'd share it for you to have a look whenever you get a quiet coffee break! Warmly, Wynn`;
+    return `Hi ${b}, Wynn here from WynnPages Studio! I came across your business and loved your local reputation, so I hand-crafted a custom website preview for you: ${url} — Sample photos & prices are just placeholders for now; once claimed, our Customisation Portal lets me personally swap in your real photos, logo, menu & custom domain ($599 AUD one-off, $0/mth forever). No pressure — take a look whenever you're free! Warmly, Wynn`;
   }
   if (stepKey === 'aussie_followup_views' || stepKey === 'followup_views') {
-    return `Hi ${b}, hope you're having a lovely week! Wynn here from WynnPages Studio — just following up on the custom website preview I put together for you (${url}) to make sure the link opened smoothly on your phone. I also wanted to reassure you that all photos, colours & service prices on the preview are simply stand-in samples: the moment you claim it, our private Customisation Portal lets you send through your real photos, logo & exact menu so I can tailor every detail 100% to your brand (incl. your .com.au domain, $599 flat, $0/mth). Feel free to text back if you have any questions! Warmly, Wynn`;
+    return `Hi ${b}, Wynn here from WynnPages Studio! Saw you opened your custom website preview (${url}) and wanted to check it loaded smoothly on your phone. Quick reminder: sample photos & prices are 100% replaced with your real photos, logo, menu & custom domain via our Customisation Portal once claimed ($599 AUD flat, $0/mth). Text back anytime if you have questions! Warmly, Wynn`;
   }
   if (stepKey === 'step2' || stepKey === 'day3_reminder') {
     if (Number(views || 0) >= 2) {
-      return `Hi ${b}, hope you're having a lovely week! Wynn here from WynnPages Studio — just following up on the custom website preview I put together for you (${url}) to make sure the link opened smoothly on your phone. I also wanted to reassure you that all photos, colours & service prices on the preview are simply stand-in samples: the moment you claim it, our private Customisation Portal lets you send through your real photos, logo & exact menu so I can tailor every detail 100% to your brand (incl. your .com.au domain, $599 flat, $0/mth). Feel free to text back if you have any questions! Warmly, Wynn`;
+      return `Hi ${b}, Wynn here from WynnPages Studio! Saw you opened your custom website preview (${url}) and wanted to check it loaded smoothly on your phone. Quick reminder: sample photos & prices are 100% replaced with your real photos, logo, menu & custom domain via our Customisation Portal once claimed ($599 AUD flat, $0/mth). Text back anytime if you have questions! Warmly, Wynn`;
     }
-    return `Hi ${b}, hope your week is going really well! Wynn here from WynnPages Studio — I know how busy things get running the business, so I just wanted to pop your custom website preview back to the top of your messages in case my earlier text got buried: ${url} — all photos & prices shown are just sample placeholders for now (if you like the feel of it, I personally tailor everything with your real photos, logo, menu & .com.au domain via our Customisation Portal). Have a look whenever you get a quiet coffee break! Warmly, Wynn`;
+    return `Hi ${b}, hope your week is going well! Wynn here from WynnPages Studio — just popping your custom website preview back to the top in case my first text got buried: ${url} — All sample photos & prices are replaced 100% with your real photos, logo, menu & custom domain once claimed ($599 AUD flat, $0/mth). Have a browse over a coffee break! Warmly, Wynn`;
   }
   if (stepKey === 'day7_nudge_0views') {
-    return `Hi ${b}, hope your week is going really well! Wynn here from WynnPages Studio — I know how busy things get running the business, so I just wanted to pop your custom website preview back to the top of your messages in case my earlier text got buried: ${url} — all photos & prices shown are just sample placeholders for now (if you like the feel of it, I personally tailor everything with your real photos, logo, menu & .com.au domain via our Customisation Portal). Have a look whenever you get a quiet coffee break! Warmly, Wynn`;
+    return `Hi ${b}, hope your week is going well! Wynn here from WynnPages Studio — just popping your custom website preview back to the top in case my first text got buried: ${url} — All sample photos & prices are replaced 100% with your real photos, logo, menu & custom domain once claimed ($599 AUD flat, $0/mth). Have a browse over a coffee break! Warmly, Wynn`;
   }
   if (stepKey === 'step3' || stepKey === 'day7_deal' || stepKey === 'aussie_flash_deal_299' || stepKey === 'flash_deal_299') {
-    return `Hi ${b}, Wynn from WynnPages Studio here — hope you're having a great week! Since I've already poured the time into designing and building your custom website concept around your brand, I'd genuinely much rather see you using and enjoying it than archiving it in my studio folder. As a personal gesture, for the next 72 hours I've halved the one-off build fee on your preview page down to $299 AUD all-up (usually $599, still $0/mth forever) — including 100% full tailoring with your real photos, menu, logo & free .com.au domain setup: ${url} Warmly, Wynn`;
+    return `Hi ${b}, Wynn here from WynnPages Studio! Since I've already designed and built the website preview for ${b}, I'd much rather see you using it than archiving it. For the next 72 hours, I'm offering 50% OFF — just $299 AUD one-off (normally $599 AUD, save $300 AUD, still $0/mth forever), including full tailoring with your real photos, logo, menu & free custom domain setup: ${url} Warmly, Wynn`;
   }
   if (stepKey === 'step4' || stepKey === 'day9_warning') {
-    return `Hi ${b}, Wynn here from WynnPages Studio — I promise this is my last text so I don't clutter your phone! Just a gentle heads-up that I'll be archiving your private website preview (${url}) tomorrow as I clear studio server space for upcoming builds. If you'd still love to make this website yours at the $299 AUD one-off rate ($0 ongoing monthly fees, including full tailoring with your real photos, menu & .com.au domain via our Customisation Portal), you can claim it directly on the preview link anytime before tomorrow. Wishing you and the team all the very best! Warmly, Wynn`;
+    return `Hi ${b}, Wynn here from WynnPages Studio — last message so I don't clutter your phone! Gentle heads-up that your 50% OFF offer ($299 AUD one-off instead of $599 AUD, $0/mth forever) and private website preview (${url}) expire tomorrow as I archive the folder. Claim it anytime before tomorrow and I'll tailor it 100% with your real photos, menu & custom domain! Warmly, Wynn`;
   }
   return '';
 }
 
 function buildNurtureStepEmail({ stepKey, client, demoUrl, views = 0 }) {
-  const biz = (client && (client.businessName || client.name)) || 'your boutique';
-  const firstName = ((client && client.name) || biz).split(/\s+/)[0] || 'there';
+  const { biz } = resolveClientDisplayNames(client);
   const previewLink = demoUrl || (client && (client.demoUrl || client.brandedDemoUrl)) || 'https://wynnpages.com.au';
-  const pBox = `<p style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:13px;"><a href="${previewLink}" style="color:#96432b;font-weight:bold;">${previewLink}</a></p>`;
+  const pBox = `<div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:12px;padding:12px 16px;margin:14px 0;font-family:monospace;font-size:13px;"><a href="${previewLink}" style="color:#96432b;font-weight:700;text-decoration:none;">${previewLink}</a></div>`;
 
   if (stepKey === 'step1' || stepKey === 'aussie_pitch' || stepKey === 'pitch') {
     return {
-      subject: `A little website concept I put together for ${biz}`,
+      subject: `A custom website preview I hand-crafted for ${biz}`,
       html: buildAtelierEmailHtml({
-        preheader: 'Personal note from Wynn at WynnPages Studio',
+        preheader: `Custom mobile-ready website concept for ${biz} — $599 AUD one-off, $0/month forever.`,
+        badge: 'BESPOKE PREVIEW',
         heading: `Something I hand-crafted for ${biz}.`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>I hope your week is going really well! My name is Wynn, and I'm a web designer here in Australia.</p><p>I came across <strong>${biz}</strong> recently and genuinely loved your vibe and reputation. Rather than sending a generic pitch, I decided to sit down and put together a complete, mobile-ready website concept tailored specifically to your business so you could see how it looks and feels in real life:</p>${pBox}<div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.65;color:#231f1a;"><strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored to Your Business After Checkout:</strong>Please note that the preview currently uses stand-in concept photos and sample details just to demonstrate the layout. The moment you claim the website via our secure checkout, you'll be redirected straight to your private <strong>WynnPages Customisation Portal</strong> where you can upload your real photos, logo, exact service pricing/licences, and domain preferences — and I will personally tailor every detail for you before launch.</div><p>There's no pressure at all — just have a browse whenever you get a quiet moment ($599 AUD flat one-off build, with $0 monthly fees forever). Feel free to reply directly to this email if you have any thoughts!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
-        primaryCta: { label: 'Have a Look at Your Website Preview', url: previewLink }
+        bodyHtml: `
+          <p>Hi ${biz},</p>
+          <p>I'm Wynn, an independent web designer here in Australia. I came across <strong>${biz}</strong> and loved your local reputation, so rather than sending a generic pitch, I built a custom, mobile-ready website preview around your brand:</p>
+          ${pBox}
+          <div style="background-color:#fcf9f3;border:1px solid #e5dec9;border-radius:14px;padding:14px 18px;margin:16px 0;font-size:13.5px;line-height:1.65;color:#3d3730;">
+            <strong style="color:#96432b;display:block;margin-bottom:4px;">✓ 100% Tailored After Checkout</strong>
+            The current photos and prices are sample placeholders just to showcase the layout. Claiming unlocks your private <strong>Customisation Portal</strong> to upload your real photos, logo &amp; menu — I personally update everything and connect your <code>.com.au</code> domain (<strong>$599 AUD flat, $0/month forever</strong>).
+          </div>
+          <p style="margin-top:14px;">Warmly,<br><strong>Wynn</strong><br><span style="font-size:13px;color:#6f665c;">Founder &amp; Designer, WynnPages Studio</span></p>
+        `,
+        primaryCta: { label: 'Open Your Website Preview', url: previewLink }
       })
     };
   }
   if (stepKey === 'step2' || stepKey === 'day3_reminder' || stepKey === 'aussie_followup_views' || stepKey === 'followup_views') {
     const sawMultiple = Number(views || 0) >= 2;
     return {
-      subject: sawMultiple ? `Just checking in on your ${biz} website preview (+ customisation info)` : `Just checking in on the website concept I made for ${biz}`,
+      subject: sawMultiple ? `Checking in on your ${biz} preview (+ customisation details)` : `Quick check-in on the website I built for ${biz}`,
       html: buildAtelierEmailHtml({
-        preheader: sawMultiple ? 'Happy to tailor any photos, colours, or prices for you' : 'A friendly note from Wynn at WynnPages Studio',
-        heading: sawMultiple ? `Happy to tailor anything for ${biz}, ${firstName}!` : `Hope your week is going well, ${firstName}!`,
+        preheader: sawMultiple ? `Ready whenever you want me to tailor your real photos, logo, and menu.` : `Holding your custom preview for ${biz} ($599 AUD flat, $0/month).`,
+        badge: 'FRIENDLY CHECK-IN',
+        heading: sawMultiple ? `Happy to tailor everything for ${biz}.` : `Just checking in on your ${biz} preview.`,
         bodyHtml: sawMultiple
-          ? `<p>Hi ${firstName},</p><p>I hope your week is going smoothly! I just wanted to check in on the custom website preview I put together for <strong>${biz}</strong> to make sure the link opened fine on your phone, and share a quick note on how easy it is to personalise:</p>${pBox}<p>Please rest assured that the current photos, colour styling, and service prices on the preview are simply stand-in placeholders to showcase the layout. The moment you claim the website on the preview page, you'll unlock your private <strong>WynnPages Customisation Portal</strong> where you can upload your favourite real photos, update any service prices/details, or adjust colours before I connect it to your own <code>.com.au</code> domain ($599 AUD flat, $0 ongoing monthly fees).</p><p>Simply reply to this email with any questions, or claim it right on the preview page whenever you're ready!</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`
-          : `<p>Hi ${firstName},</p><p>I know how busy things get running <strong>${biz}</strong>, so I just wanted to send a warm follow-up in case my earlier note got buried during a busy week!</p><p>Here is the custom website preview I put together for your business:</p>${pBox}<p>Please note I've used sample photos and placeholder details just to show the layout — once claimed on the preview page, you'll get instant access to our <strong>Customisation Portal</strong> where I personally swap in your real photos, pricing, and details so it feels 100% like you ($599 AUD one-off, zero monthly fees).</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
+          ? `<p>Hi ${biz},</p><p>Just checking in on your custom website preview to make sure the link opened cleanly on your phone:</p>${pBox}<p>Remember, all photos and prices shown are sample placeholders. Once claimed, our private <strong>Customisation Portal</strong> lets you send through your real photos, logo &amp; exact menu so I can personally tailor everything and connect your <code>.com.au</code> domain (<strong>$599 AUD one-off, $0/month forever</strong>).</p><p style="margin-top:14px;">Warmly,<br><strong>Wynn</strong><br><span style="font-size:13px;color:#6f665c;">Founder &amp; Designer, WynnPages Studio</span></p>`
+          : `<p>Hi ${biz},</p><p>I know how busy things get running the business, so I'm popping your custom website preview back to the top in case my earlier note got buried:</p>${pBox}<p>Sample photos and prices are swapped 100% with your real photos, logo, menu &amp; <code>.com.au</code> domain via your private Customisation Portal right after checkout (<strong>$599 AUD flat, $0/month forever</strong>).</p><p style="margin-top:14px;">Warmly,<br><strong>Wynn</strong><br><span style="font-size:13px;color:#6f665c;">Founder &amp; Designer, WynnPages Studio</span></p>`,
         primaryCta: { label: 'Open Your Website Preview', url: previewLink }
       })
     };
   }
   if (stepKey === 'step3' || stepKey === 'day7_deal' || stepKey === 'aussie_flash_deal_299' || stepKey === 'flash_deal_299') {
     return {
-      subject: `I'd love to see ${biz} use this design (a personal note from Wynn)`,
+      subject: `50% OFF ($299 AUD) for your ${biz} website — a personal note from Wynn`,
       html: buildAtelierEmailHtml({
-        preheader: 'Personal studio gesture for your business — $299 AUD all-up, zero monthly fees',
-        heading: `I'd love this design to go to ${biz}, ${firstName}.`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>I hope you're having a lovely week! I was looking over the custom website concept I hand-crafted for <strong>${biz}</strong>, and since I've already poured the time and care into building it specifically around your brand, I would genuinely much rather see you using and enjoying it than archiving the work in my studio folder.</p><div style="background-color:#fcf9f3;border:1px solid #d49b28;border-radius:14px;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.7;color:#44403c;"><strong>A personal gesture from me:</strong> For the next 3 days, I've halved the one-off build fee on your preview page down to <strong>$299 AUD all-up</strong> (instead of $599 AUD, and still <strong>$0 monthly fees forever</strong>). Claiming on the preview page immediately unlocks your private <strong>Customisation Portal</strong> where I personally swap in your real photos, exact pricing/details, and connect your <code>.com.au</code> domain for free.</div>${pBox}<p>If you'd love to make it yours, you can claim it directly on the preview page or reply here and I'll help you get everything sorted.</p><p style="margin-top:16px;">Warm regards,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
-        primaryCta: { label: 'View Preview & Claim for $299 AUD', url: previewLink }
+        preheader: `50% OFF ($299 AUD instead of $599 AUD, $0/month forever) — valid for 72 hours.`,
+        badge: '50% OFF • 72 HOURS',
+        heading: `50% Off the website I built for ${biz}.`,
+        bodyHtml: `
+          <p>Hi ${biz},</p>
+          <p>Since I've already designed and built a custom website concept for <strong>${biz}</strong>, I'd much rather see you welcoming clients with it than archiving the work in my studio folder.</p>
+          <div style="background-color:#fcf9f3;border:1.5px solid #d49b28;border-radius:16px;padding:18px 20px;margin:16px 0;">
+            <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#96432b;margin-bottom:6px;">50% OFF Studio Offer &bull; Next 72 Hours</div>
+            <div style="font-size:21px;font-weight:800;color:#231f1a;line-height:1.25;">$299 AUD One-Off <span style="font-size:14px;font-weight:500;color:#8c8273;text-decoration:line-through;margin-left:6px;">$599 AUD</span></div>
+            <div style="font-size:13px;color:#4a433b;margin-top:6px;line-height:1.6;">Save $300 AUD &bull; <strong>$0/month forever</strong> &bull; Full tailoring with your real photos, logo, menu &amp; free <code>.com.au</code> domain setup via your Customisation Portal.</div>
+          </div>
+          ${pBox}
+          <p style="margin-top:14px;">Warmly,<br><strong>Wynn</strong><br><span style="font-size:13px;color:#6f665c;">Founder &amp; Designer, WynnPages Studio</span></p>
+        `,
+        primaryCta: { label: 'Claim Website for $299 AUD (50% Off)', url: previewLink }
       })
     };
   }
   if (stepKey === 'step4' || stepKey === 'day9_warning') {
     return {
-      subject: `A gentle final note regarding the ${biz} website preview`,
+      subject: `Final 24 hours: 50% OFF ($299 AUD) for your ${biz} website preview`,
       html: buildAtelierEmailHtml({
-        preheader: 'Archiving your private preview link tomorrow',
-        heading: `A quick, friendly note before I tidy up my studio archive`,
-        bodyHtml: `<p>Hi ${firstName},</p><p>I promise this is my last note so I don't clutter your inbox! I just wanted to give you a gentle heads up that I'll be archiving the private website preview I built for <strong>${biz}</strong> tomorrow as I clear server space for upcoming projects:</p>${pBox}<p>If you'd still like to keep this design at the <strong>$299 AUD one-off rate</strong> (with $0 monthly fees and full post-checkout access to our Customisation Portal to swap in your real photos, pricing/details, and <code>.com.au</code> domain), you can grab it on the preview link anytime before tomorrow.</p><p>Either way, thank you so much for your time, and I wish you and everyone at <strong>${biz}</strong> all the very best!</p><p style="margin-top:16px;">Warmly,<br><strong>Wynn</strong><br>Founder &amp; Designer, WynnPages Studio</p>`,
-        primaryCta: { label: 'Open Your Website Preview Before It Archives', url: previewLink }
+        preheader: `Last reminder: 50% OFF ($299 AUD, save $300) expires tomorrow when your preview archives.`,
+        badge: 'FINAL 24 HOURS • 50% OFF',
+        heading: `Archiving your ${biz} preview tomorrow.`,
+        bodyHtml: `
+          <p>Hi ${biz},</p>
+          <p>I promise this is my last note so I don't clutter your inbox! Just a gentle heads-up that your private website preview and <strong>50% OFF offer ($299 AUD one-off instead of $599 AUD — save $300 AUD, $0/month forever)</strong> expire tomorrow as I clear studio archive space:</p>
+          ${pBox}
+          <p>Claiming anytime before tomorrow immediately unlocks your <strong>Customisation Portal</strong> so I can swap in your real photos, logo, exact menu &amp; connect your <code>.com.au</code> domain.</p>
+          <p style="margin-top:14px;">Wishing you all the very best,<br><strong>Wynn</strong><br><span style="font-size:13px;color:#6f665c;">Founder &amp; Designer, WynnPages Studio</span></p>
+        `,
+        primaryCta: { label: 'Claim for $299 AUD Before It Archives', url: previewLink }
       })
     };
   }
@@ -12489,7 +12520,8 @@ export default {
             subject: dnsSubject,
             html: buildAtelierEmailHtml({
               preheader: `Network Nameservers for ${formatted.liveUrl}`,
-              heading: `Connect your domain ${formatted.liveUrl}, ${firstName}!`,
+              badge: 'DNS SETUP GUIDE',
+              heading: `Connect ${formatted.liveUrl} for ${formatCleanBusinessDisplayName(formatted.businessName || formatted.name || 'your site')}!`,
               bodyHtml: `
                 <p>We have provisioned the <strong>WynnPages Studio Australian High-Speed Network</strong> configuration for your official domain: <strong>${formatted.liveUrl}</strong>.</p>
                 <p>If your IT team prefers to point DNS manually, please update the <strong>Nameservers</strong> at your domain registrar to:</p>
