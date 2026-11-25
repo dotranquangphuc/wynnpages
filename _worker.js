@@ -3190,6 +3190,8 @@ async function executeGeminiAutoRevision({ currentHtml, revData = {}, menuImageB
   const cleanAdminInst = String(adminInstructions || '').trim();
   const hasAiWork = Boolean(combinedMenuText || combinedFinalNotes || cleanAdminInst || allMenuB64.length > 0);
 
+  let lastGeminiErrMsg = '';
+  let geminiSuccess = false;
   if (hasAiWork && geminiApiKey) {
     try {
       const parts = [
@@ -3290,8 +3292,6 @@ ${cleanAdminInst || '(None)'}`
       });
 
       const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-      let geminiSuccess = false;
-      let lastGeminiErrMsg = '';
       for (const modelName of modelsToTry) {
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
           method: 'POST',
@@ -3360,35 +3360,132 @@ ${cleanAdminInst || '(None)'}`
           lastGeminiErrMsg = (errJson && errJson.error && errJson.error.message) || `HTTP ${geminiRes.status}`;
         }
       }
-      if (!geminiSuccess) {
-        // Deterministic fallback parser for palette/price instructions when Gemini API is restricted or not configured
-        const allDirectives = `${combinedMenuText}\n${combinedFinalNotes}\n${cleanAdminInst}`;
-        const palMatch = allDirectives.match(/(?:palette|bảng\s*màu|màu\s*số)\s*#?\s*(0?[1-5])\b/i);
-        if (palMatch) {
-          const pNum = palMatch[1].padStart(2, '0');
-          config.palette = pNum;
-          changesSummaryList.push(`Switched palette to ${pNum}`);
-        }
-        if (allMenuB64.length > 0 && lastGeminiErrMsg.includes('blocked')) {
-          changesSummaryList.push('⚠️ Lưu ý: Key Google hiện tại chỉ bật Places API (chưa bật Gemini Vision OCR). Hãy dán Gemini API Key (từ aistudio.google.com/apikey) vào mục ⚙️ Cấu hình API để AI tự động đọc chữ từ ảnh Menu!');
-        } else if (combinedMenuText && updatedMenu) {
-          changesSummaryList.push('Applied text menu notes');
-        }
-      }
     } catch (gErr) {
-      if (combinedMenuText && updatedMenu) {
-        changesSummaryList.push('Applied fallback price tweaks to menu');
+      lastGeminiErrMsg = (gErr && gErr.message) || 'Gemini request failed';
+    }
+  }
+
+  if (hasAiWork && !geminiSuccess) {
+    // Shared deterministic parser: handles palette, phone, salon name, address, booking URL & menu prices without LLM credits
+    const allDirectives = [combinedMenuText, combinedFinalNotes, cleanAdminInst].filter(Boolean).join('\n');
+    const palNumMatch = allDirectives.match(/(?:palette|bảng\s*màu|màu(?:\s*số)?|theme)\s*[:=#-]?\s*(0?[1-5])\b/i);
+    if (palNumMatch) {
+      const pNum = palNumMatch[1].padStart(2, '0');
+      config.palette = pNum;
+      changesSummaryList.push(`Đổi sang Bảng màu ${pNum}`);
+    } else if (/rose\s*silk|hồng\s*phấn/i.test(allDirectives)) {
+      config.palette = '02';
+      changesSummaryList.push('Đổi sang Bảng màu 02 (Rose Silk)');
+    } else if (/botanical\s*sage|xanh\s*lá/i.test(allDirectives)) {
+      config.palette = '03';
+      changesSummaryList.push('Đổi sang Bảng màu 03 (Botanical Sage)');
+    } else if (/espresso|nâu\s*trầm/i.test(allDirectives)) {
+      config.palette = '04';
+      changesSummaryList.push('Đổi sang Bảng màu 04 (Espresso Cashmere)');
+    } else if (/coastal|xanh\s*biển|ngọc\s*trai/i.test(allDirectives)) {
+      config.palette = '05';
+      changesSummaryList.push('Đổi sang Bảng màu 05 (Coastal Pearl)');
+    }
+
+    const phoneDirMatch = allDirectives.match(/(?:phone|sđt|số\s*điện\s*thoại|tel|mobile)\s*[:=-]?\s*([+\d][\d\s]{7,15})/i);
+    if (phoneDirMatch) {
+      const cleanPh = phoneDirMatch[1].trim();
+      config.displayPhone = cleanPh;
+      config.smsPhone = cleanPh;
+      changesSummaryList.push(`Cập nhật SĐT: ${cleanPh}`);
+    }
+
+    const bizDirMatch = allDirectives.match(/(?:tên\s*tiệm|salon\s*name|business\s*name|đổi\s*tên(?:\s*thành)?)\s*[:=-]\s*([^\n;]+)/i);
+    if (bizDirMatch) {
+      const cleanBiz = bizDirMatch[1].trim().replace(/^["']|["']$/g, '');
+      if (cleanBiz) {
+        config.salonName = cleanBiz;
+        changesSummaryList.push(`Đổi tên tiệm: ${cleanBiz}`);
       }
     }
-  } else if (hasAiWork && combinedMenuText && updatedMenu) {
-    changesSummaryList.push('Applied text menu directives');
+
+    const addrDirMatch = allDirectives.match(/(?:địa\s*chỉ|address)\s*[:=-]\s*([^\n;]+)/i);
+    if (addrDirMatch) {
+      const cleanAddr = addrDirMatch[1].trim();
+      if (cleanAddr) {
+        config.address = cleanAddr;
+        config.mapsQuery = `${cleanAddr}, Australia`;
+        changesSummaryList.push(`Cập nhật địa chỉ: ${cleanAddr}`);
+      }
+    }
+
+    const bookDirMatch = allDirectives.match(/(?:booking|link\s*đặt\s*lịch)\s*[:=-]?\s*(https?:\/\/\S+)/i);
+    if (bookDirMatch) {
+      config.bookingUrl = bookDirMatch[1].trim();
+      changesSummaryList.push('Cập nhật link đặt lịch');
+    }
+
+    if (Array.isArray(updatedMenu) && updatedMenu.length > 0) {
+      const segments = allDirectives.split(/[\n;]+/).map((s) => s.trim()).filter(Boolean);
+      let priceUpdatedCount = 0;
+      for (const seg of segments) {
+        const mPrice = seg.match(/^([^$:\n]{3,60}?)\s*[:=-]?\s*\$(\d{2,4}(?:\.\d{1,2})?)/);
+        if (!mPrice) continue;
+        const targetName = mPrice[1].toLowerCase().trim();
+        const newPriceStr = `${mPrice[2]}`;
+        for (const cat of updatedMenu) {
+          if (!Array.isArray(cat.items)) continue;
+          for (const item of cat.items) {
+            const iName = String(item.name || '').toLowerCase();
+            if (iName.includes(targetName) || targetName.includes(iName)) {
+              item.price = newPriceStr;
+              priceUpdatedCount++;
+            }
+          }
+        }
+      }
+      if (priceUpdatedCount > 0) {
+        changesSummaryList.push(`Cập nhật giá ${priceUpdatedCount} dịch vụ trong Menu`);
+      }
+    }
+
+    if (changesSummaryList.length === 0) {
+      const errLow = String(lastGeminiErrMsg || '').toLowerCase();
+      if (!geminiApiKey) {
+        return {
+          ok: false,
+          error: 'Chưa cấu hình Gemini API Key trong ⚙️ Cấu hình API. Bạn có thể dán Key mới, dùng cú pháp nhanh ("Bảng màu 02; SĐT: 0412 345 678; BIAB $90"), hoặc bấm "⚡ Copy Lệnh Antigravity (Miễn Phí)"!'
+        };
+      }
+      if (errLow.includes('prepayment credits are depleted') || errLow.includes('quota') || errLow.includes('billing')) {
+        return {
+          ok: false,
+          error: 'Tài khoản Gemini API hiện đang hết tín dụng trả trước (Prepayment credits depleted tại aistudio.google.com). Hãy nạp/đổi Gemini API Key mới trong ⚙️ Cấu hình API, dùng cú pháp nhanh ("Bảng màu 02; SĐT: 0412 345 678; BIAB $90"), hoặc bấm "⚡ Copy Lệnh Antigravity (Miễn Phí)" để AI sửa trực tiếp!'
+        };
+      }
+      if (errLow.includes('blocked')) {
+        return {
+          ok: false,
+          error: 'API Key hiện tại chưa bật quyền Gemini API. Hãy dán Gemini API Key mới từ aistudio.google.com/apikey vào ⚙️ Cấu hình API, hoặc dùng cú pháp nhanh ("Bảng màu 02; SĐT: ...")!'
+        };
+      }
+      return {
+        ok: false,
+        error: lastGeminiErrMsg
+          ? `Không chạy được Gemini AI (${lastGeminiErrMsg}). Hãy dùng cú pháp nhanh ("Bảng màu 02; SĐT: ...") hoặc bấm "⚡ Copy Lệnh Antigravity"!`
+          : 'Chưa nhận diện được thay đổi nào từ chỉ đạo. Hãy ghi rõ theo dạng "Bảng màu 02; SĐT: 0412 345 678; BIAB $90".'
+      };
+    }
+  }
+
+  if (changesSummaryList.length === 0) {
+    return {
+      ok: false,
+      error: 'Chưa có yêu cầu chỉnh sửa cụ thể nào được áp dụng. Vui lòng nhập thay đổi vào ô Chỉ đạo của Admin.'
+    };
   }
 
   const updatedHtml = updateHtmlWithConfigAndMenu(currentHtml, config, updatedMenu);
   return {
     ok: true,
     updatedHtml,
-    changesSummary: changesSummaryList.join(' • ') || 'Config updated successfully'
+    config,
+    changesSummary: changesSummaryList.join(' • ')
   };
 }
 
@@ -9632,11 +9729,16 @@ export default {
         }
 
         if (!generatedBase64) {
+          const errLow = String(lastApiError || '').toLowerCase();
+          let friendlyArtErr = `Không tạo được tranh từ Gemini API (${lastApiError || 'Kiểm tra lại Gemini API Key tại aistudio.google.com/apikey'}).`;
+          if (errLow.includes('prepayment credits are depleted') || errLow.includes('billing') || errLow.includes('quota')) {
+            friendlyArtErr = 'Tài khoản Gemini API đang hết tín dụng trả trước (Prepayment credits depleted tại aistudio.google.com). Hãy nạp/đổi Gemini API Key mới trong ⚙️ Cấu hình API, hoặc dùng nút "📸 2. Dùng Ảnh Thật Google Maps" / "⚡ Copy Lệnh Antigravity (Miễn Phí)" ở ngay dưới!';
+          } else if (errLow.includes('blocked')) {
+            friendlyArtErr = 'Key hiện tại bị khoá quyền gọi Gemini API (API_KEY_SERVICE_BLOCKED). Hãy tạo 1 Gemini API Key mới tại aistudio.google.com/apikey và dán vào mục ⚙️ Cấu hình API!';
+          }
           return new Response(JSON.stringify({
             ok: false,
-            error: lastApiError.includes('blocked')
-              ? 'Key hiện tại bị khoá quyền gọi Gemini API (API_KEY_SERVICE_BLOCKED). Hãy tạo 1 Gemini API Key miễn phí tại aistudio.google.com/apikey và dán vào mục ⚙️ Cấu hình API!'
-              : `Không tạo được tranh từ Gemini API (${lastApiError || 'Kiểm tra lại Gemini API Key tại aistudio.google.com/apikey'}).`
+            error: friendlyArtErr
           }), { status: 400, headers: corsHeaders });
         }
 
@@ -9815,7 +9917,7 @@ export default {
         });
 
         if (!applyRes.ok || !applyRes.updatedHtml) {
-          return new Response(JSON.stringify({ ok: false, error: applyRes.error || 'AI revision failed' }), { status: 500, headers: corsHeaders });
+          return new Response(JSON.stringify({ ok: false, error: applyRes.error || 'AI revision failed' }), { status: 400, headers: corsHeaders });
         }
 
         // Save pre-AI backup snapshot + Save updated HTML to KV
@@ -9844,13 +9946,14 @@ export default {
           }).catch(() => {});
         }
 
-        const finalBizName = revData.bizName || clientRecord.businessName || cleanSlug;
+        const finalBizName = (applyRes.config && applyRes.config.salonName) || revData.bizName || clientRecord.businessName || cleanSlug;
         const updatedClientForD1 = {
           ...clientRecord,
           id: resolvedClientId,
           businessName: finalBizName,
-          displayPhone: revData.phone || clientRecord.displayPhone,
-          businessAddress: revData.address || clientRecord.businessAddress,
+          displayPhone: (applyRes.config && applyRes.config.displayPhone) || revData.phone || clientRecord.displayPhone,
+          businessAddress: (applyRes.config && applyRes.config.address) || revData.address || clientRecord.businessAddress,
+          demoPalette: (applyRes.config && applyRes.config.palette) || clientRecord.demoPalette,
           revisionStatus: 'applied',
           revisionAppliedAt: nowIso
         };
