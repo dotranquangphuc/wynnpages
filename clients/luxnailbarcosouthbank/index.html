@@ -1166,7 +1166,7 @@
   "heroStory": "Structured BIAB overlays, fine-art manicure design, and botanical spa rituals—performed unhurriedly with hospital-grade sterilisation.",
   "parkingNote": "Convenient client parking right near Grey St with effortless ground-level boutique arrival.",
   "images": {
-    "hero": "/assets/client-photo-hero.jpg?v=20261126v2",
+    "hero": "/assets/client-photo-hero.jpg?v=20261126",
     "beforeNail": "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd",
     "afterNail": "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123p1",
     "biabFeature": "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123p1",
@@ -1550,17 +1550,17 @@
 
       <!-- Right Arched Oil-Painting Frame (5 Cols) -->
       <div id="hero-art-col" class="lg:col-span-5 relative max-w-md mx-auto lg:max-w-none w-full will-change-transform">
-        <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
+        <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[9/10] relative" style="background-color: var(--bg-canvas-alt);">
           <div id="hero-canvas-stage" class="w-full h-full relative animate-canvas-breathe will-change-transform" style="border-radius: inherit;">
             <img
               id="hero-oil-img"
-              src="/assets/client-photo-hero.jpg?v=20261126v2"
+              src="/assets/client-photo-hero.jpg?v=20261126"
               alt="Lux Nail Bar &amp; Co. sunlit artisanal nail sanctuary interior oil painting with 24k gold-leaf wall signage"
               fetchpriority="high"
-              width="896"
-              height="1200"
+              width="1024"
+              height="571"
               onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg';"
-              style="border-radius: inherit; object-position: 50% 45%;"
+              style="border-radius: inherit; object-position: 52% 50%;"
               class="w-full h-full object-cover block"
             >
           </div>
@@ -2664,10 +2664,67 @@
       setText('hero-rating', cfg.googleRating);
       setText('hero-review-count', cfg.reviewCount);
 
+      const livingCfg = cfg.livingHero || {};
+      const staticHeroParam = qsParams.get('static-hero') === '1';
+      const useLivingHero = !forceVault && !staticHeroParam && livingCfg.enabled === true && livingCfg.cleanBg && livingCfg.flowersLayer;
+      const heroStage = document.getElementById('hero-canvas-stage');
+      const heroSceneLock = document.getElementById('hero-scene-lock');
+      const heroFlowersImg = document.getElementById('hero-flowers-img');
+      const heroMotionToggle = document.getElementById('btn-hero-motion-toggle');
+      const heroMotionIcon = document.getElementById('hero-motion-icon');
+
       if (resolvedImages) {
         const heroImg = document.getElementById('hero-oil-img');
-        if (heroImg && resolvedImages.hero && heroImg.getAttribute('src') !== resolvedImages.hero) {
-          heroImg.src = resolvedImages.hero;
+        if (useLivingHero) {
+          if (heroImg && heroImg.getAttribute('src') !== livingCfg.cleanBg) {
+            heroImg.src = livingCfg.cleanBg;
+          }
+          if (heroFlowersImg && heroFlowersImg.getAttribute('src') !== livingCfg.flowersLayer) {
+            heroFlowersImg.src = livingCfg.flowersLayer;
+          }
+          if (heroMotionToggle) {
+            if (prefersReducedMotion) {
+              heroMotionToggle.style.display = 'none';
+            } else {
+              heroMotionToggle.addEventListener('click', () => {
+                if (!heroStage) return;
+                const nextPaused = heroStage.getAttribute('data-motion-paused') !== 'true';
+                if (nextPaused) {
+                  heroStage.setAttribute('data-motion-paused', 'true');
+                  heroMotionToggle.setAttribute('aria-label', 'Play ambient painting motion');
+                  heroMotionToggle.setAttribute('title', 'Play ambient painting motion');
+                  if (heroMotionIcon) {
+                    heroMotionIcon.innerHTML = '<path d="M5 3.5l8 4.5-8 4.5V3.5z"></path>';
+                  }
+                } else {
+                  heroStage.removeAttribute('data-motion-paused');
+                  heroMotionToggle.setAttribute('aria-label', 'Pause ambient painting motion');
+                  heroMotionToggle.setAttribute('title', 'Pause ambient painting motion');
+                  if (heroMotionIcon) {
+                    heroMotionIcon.innerHTML = '<rect x="4" y="3" width="2.8" height="10" rx="0.9"></rect><rect x="9.2" y="3" width="2.8" height="10" rx="0.9"></rect>';
+                  }
+                }
+              });
+            }
+          }
+        } else {
+          document.querySelectorAll('.hero-living-layer').forEach((el) => {
+            el.style.display = 'none';
+          });
+          if (heroMotionToggle) heroMotionToggle.style.display = 'none';
+          const fallbackSrc = forceVault
+            ? activeVault.hero
+            : (livingCfg.staticFallback || resolvedImages.hero);
+          if (heroImg && fallbackSrc && heroImg.getAttribute('src') !== fallbackSrc) {
+            heroImg.src = fallbackSrc;
+          }
+          if (forceVault && heroSceneLock && heroImg) {
+            heroSceneLock.style.inset = '0';
+            heroSceneLock.style.top = '0';
+            heroSceneLock.style.height = '100%';
+            heroSceneLock.style.aspectRatio = 'auto';
+            heroImg.classList.add('object-cover');
+          }
         }
         const biabImg = document.getElementById('feature-biab-img');
         if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;

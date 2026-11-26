@@ -19,7 +19,13 @@
 ## Bespoke Brand Identity & Gold-Leaf Assets
 - **Gold-Leaf Calligraphic Logo (`assets/lux-logo.svg`):** Custom 24K gold-leaf 3D vector redraw of the calligraphic `"Lux"` script from the salon's storefront sign, harmonized inside the pearl-gold medallion (`#brand-logo-slot` in Header & Reserve Card seal in `#visit`).
 - **Gold-Leaf `"L"` Favicon (`favicon.svg`, `favicon.png`):** Embossed Palette `01` wax seal bearing the custom 24K gold-leaf calligraphic `"L"` matching the storefront script.
-- **Bespoke Branded Hero Oil Painting (`assets/client-photo-hero.jpg`):** Custom Palette `01` high-resolution vertical portrait oil painting (`896×1200` JPEG, generated from the salon's 3D brushed-gold storefront logo, refined v2 tonal brushed Champagne Gold relief with airy warm limestone shadows and morning sunlight grazing the plaster alcove) framed inside the signature `aspect-[4/5]` arched gold-foil canvas (`object-position: 50% 45%`).
+- **Bespoke 70% Weathered-Brass Hero Oil Painting & Living Layers (`assets/client-photo-hero-clean.jpg`, `assets/client-photo-hero-flowers.webp`, `assets/client-photo-hero.jpg`):**
+  - Custom Palette `01` `896×1200` portrait featuring `"Lux / NAIL BAR & Co."` scaled down to **70%** (`269px` width inside the recessed arch) in rich antique brushed brass with natural surface grain/patina and realistic wall standoff shadows.
+  - **Living Oil Painting Mode (`window.ATELIER_CONFIG.livingHero.enabled: true`):** Renders the clean plaster/vase plate (`client-photo-hero-clean.jpg`) underneath GPU-composited sunlit arched-window light drift + floating golden motes and the transparent difference-matted eucalyptus & wattle bouquet (`client-photo-hero-flowers.webp`, `~23 KB`) swaying gently around the vase rim (`85.22% 91.88%`), complete with an accessible Pause/Play toggle (`#btn-hero-motion-toggle`) and `prefers-reduced-motion` support.
+  - **Instant Rollback Paths:**
+    1. Live A/B Static View: append `?static-hero=1` to URL (`https://luxnailbarcosouthbank.wynnpages.com.au/?static-hero=1`).
+    2. Disable Living Motion cleanly: set `window.ATELIER_CONFIG.livingHero.enabled = false` in `index.html` (reverts instantly to the matching static 70%-logo painting `assets/client-photo-hero.jpg`).
+    3. Full Git Rollback to pre-Living v2 snapshot: `git checkout 2801758 -- clients/luxnailbarcosouthbank/`.
 
 ## Antigravity Editing Rules
 1. Always preserve the **WynnPages Digital Atelier** standards in `clients/GEMINI.md` (oil-painting + gold-leaf aesthetic, zero emojis, italic accent heading signature).
