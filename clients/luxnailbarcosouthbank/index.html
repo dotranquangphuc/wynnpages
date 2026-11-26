@@ -929,123 +929,20 @@
       100% { transform: rotate(0deg) skewX(0deg); }
     }
 
-    @keyframes hero-sun-ray-drift-a {
-      0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1); opacity: 0.42; }
-      42% { transform: translate3d(7%, 4%, 0) scale(1.08); opacity: 0.82; }
-      76% { transform: translate3d(1%, -3%, 0) scale(1.03); opacity: 0.50; }
+    @keyframes hero-curtain-breeze-l {
+      0% { transform: skewX(0deg) scaleX(1); }
+      28% { transform: skewX(-1.5deg) scaleX(1.042); }
+      58% { transform: skewX(0.45deg) scaleX(0.992); }
+      82% { transform: skewX(-0.95deg) scaleX(1.024); }
+      100% { transform: skewX(0deg) scaleX(1); }
     }
 
-    @keyframes hero-sun-ray-drift-b {
-      0%, 100% { transform: translate3d(5%, 3%, 0) scale(1.04); opacity: 0.52; }
-      50% { transform: translate3d(-6%, -3%, 0) scale(0.98); opacity: 0.24; }
-    }
-
-    @keyframes hero-sun-glint-twinkle {
-      0%, 100% { transform: scale(0.55) translate3d(0, 0, 0); opacity: 0.12; }
-      45% { transform: scale(1.35) translate3d(2px, -2px, 0); opacity: 0.95; }
-      75% { transform: scale(0.85) translate3d(-1px, 1px, 0); opacity: 0.38; }
-    }
-
-    @keyframes hero-sun-shaft-glide-1 {
-      0%, 100% { transform: translate3d(-4%, -2%, 0) scale(1); opacity: 0.20; }
-      50% { transform: translate3d(5%, 3%, 0) scale(1.06); opacity: 0.44; }
-    }
-
-    @keyframes hero-sun-shaft-glide-2 {
-      0%, 100% { transform: translate3d(3%, 2%, 0) scale(1.03); opacity: 0.34; }
-      50% { transform: translate3d(-4%, -2%, 0) scale(0.98); opacity: 0.14; }
-    }
-
-    @keyframes hero-sun-mote-float {
-      0% { transform: translate3d(0, 8px, 0) scale(0.65); opacity: 0; }
-      28% { opacity: 0.88; }
-      72% { opacity: 0.62; }
-      100% { transform: translate3d(24px, -28px, 0) scale(1.15); opacity: 0; }
-    }
-
-    .hero-sun-canopy {
-      position: absolute;
-      left: 5.5%;
-      top: 8.8%;
-      width: 14.5%;
-      height: 60.5%;
-      border-radius: 50% 50% 2% 2% / 18% 18% 2% 2%;
-      overflow: hidden;
-      pointer-events: none;
-    }
-    .hero-sun-ray-a {
-      position: absolute;
-      inset: -16%;
-      background:
-        linear-gradient(128deg, rgba(255, 251, 228, 0.85) 8%, rgba(255, 232, 165, 0.52) 38%, rgba(255, 224, 152, 0) 70%),
-        radial-gradient(ellipse 75% 44% at 45% 24%, rgba(255, 252, 232, 0.78) 0%, transparent 66%),
-        radial-gradient(ellipse 68% 40% at 58% 64%, rgba(255, 235, 174, 0.58) 0%, transparent 68%);
-      mix-blend-mode: screen;
-      opacity: 0.38;
-      will-change: transform, opacity;
-    }
-    .hero-sun-ray-b {
-      position: absolute;
-      inset: -14%;
-      background:
-        radial-gradient(ellipse 62% 38% at 34% 46%, rgba(255, 248, 218, 0.70) 0%, transparent 64%),
-        radial-gradient(ellipse 70% 36% at 62% 84%, rgba(255, 232, 168, 0.54) 0%, transparent 68%);
-      mix-blend-mode: screen;
-      opacity: 0.24;
-      will-change: transform, opacity;
-    }
-
-    .hero-sun-glint {
-      position: absolute;
-      width: var(--glint-size, 14px);
-      height: var(--glint-size, 14px);
-      border-radius: 9999px;
-      background:
-        radial-gradient(circle, rgba(255, 253, 236, 0.96) 0%, rgba(255, 228, 152, 0.62) 34%, rgba(255, 214, 128, 0.16) 62%, transparent 76%);
-      mix-blend-mode: screen;
-      opacity: 0.18;
-      pointer-events: none;
-      will-change: transform, opacity;
-    }
-
-    .hero-sun-shaft-1 {
-      position: absolute;
-      left: -4%;
-      top: 11%;
-      width: 68%;
-      height: 76%;
-      background:
-        linear-gradient(126deg, rgba(255, 244, 206, 0.44) 0%, rgba(255, 228, 158, 0.22) 34%, rgba(255, 220, 144, 0) 68%),
-        radial-gradient(ellipse 64% 48% at 20% 42%, rgba(255, 250, 226, 0.36) 0%, transparent 72%);
-      mix-blend-mode: screen;
-      opacity: 0.20;
-      pointer-events: none;
-      will-change: transform, opacity;
-    }
-    .hero-sun-shaft-2 {
-      position: absolute;
-      left: 2%;
-      top: 22%;
-      width: 58%;
-      height: 66%;
-      background:
-        linear-gradient(126deg, rgba(255, 248, 220, 0.36) 4%, rgba(255, 226, 156, 0.16) 36%, rgba(255, 218, 140, 0) 66%);
-      mix-blend-mode: screen;
-      opacity: 0.16;
-      pointer-events: none;
-      will-change: transform, opacity;
-    }
-
-    .hero-sun-mote {
-      position: absolute;
-      width: var(--mote-size, 5px);
-      height: var(--mote-size, 5px);
-      border-radius: 9999px;
-      background: radial-gradient(circle, rgba(255, 252, 232, 0.98) 0%, rgba(255, 220, 128, 0.55) 50%, transparent 100%);
-      mix-blend-mode: screen;
-      opacity: 0;
-      pointer-events: none;
-      will-change: transform, opacity;
+    @keyframes hero-curtain-breeze-r {
+      0% { transform: skewX(0deg) scaleX(1); }
+      26% { transform: skewX(-1.35deg) scaleX(1.032); }
+      54% { transform: skewX(0.5deg) scaleX(0.990); }
+      78% { transform: skewX(-0.85deg) scaleX(1.018); }
+      100% { transform: skewX(0deg) scaleX(1); }
     }
 
     @media (prefers-reduced-motion: no-preference) {
@@ -1053,25 +950,13 @@
         animation: hero-botanical-breeze 9.2s ease-in-out infinite;
         will-change: transform;
       }
-      .hero-sun-ray-a {
-        animation: hero-sun-ray-drift-a 9.5s ease-in-out infinite;
+      .hero-curtain-sway-l {
+        animation: hero-curtain-breeze-l 8.6s ease-in-out infinite;
+        will-change: transform;
       }
-      .hero-sun-ray-b {
-        animation: hero-sun-ray-drift-b 13.5s ease-in-out infinite;
-      }
-      .hero-sun-glint {
-        animation: hero-sun-glint-twinkle var(--glint-dur, 6.2s) ease-in-out infinite;
-        animation-delay: var(--glint-delay, 0s);
-      }
-      .hero-sun-shaft-1 {
-        animation: hero-sun-shaft-glide-1 11s ease-in-out infinite;
-      }
-      .hero-sun-shaft-2 {
-        animation: hero-sun-shaft-glide-2 15.5s ease-in-out infinite;
-      }
-      .hero-sun-mote {
-        animation: hero-sun-mote-float var(--mote-dur, 10.5s) ease-in-out infinite;
-        animation-delay: var(--mote-delay, 0s);
+      .hero-curtain-sway-r {
+        animation: hero-curtain-breeze-r 10.2s ease-in-out -1.8s infinite;
+        will-change: transform;
       }
     }
 
@@ -1320,7 +1205,7 @@
   "heroStory": "Structured BIAB overlays, fine-art manicure design, and botanical spa rituals—performed unhurriedly with hospital-grade sterilisation.",
   "parkingNote": "Convenient client parking right near Grey St with effortless ground-level boutique arrival.",
   "images": {
-    "hero": "/assets/client-photo-hero.jpg?v=20261126lv3",
+    "hero": "/assets/client-photo-hero.jpg?v=20261126lv4",
     "beforeNail": "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd",
     "afterNail": "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123p1",
     "biabFeature": "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123p1",
@@ -1350,9 +1235,12 @@
   },
   "livingHero": {
     "enabled": true,
-    "cleanBg": "/assets/client-photo-hero-clean.jpg?v=20261126lv3",
-    "flowersLayer": "/assets/client-photo-hero-flowers.webp?v=20261126lv3",
-    "staticFallback": "/assets/client-photo-hero.jpg?v=20261126lv3"
+    "cleanBg": "/assets/client-photo-hero-clean.jpg?v=20261126lv4",
+    "curtainLeft": "/assets/client-photo-hero-curtain-l.webp?v=20261126lv4",
+    "curtainRight": "/assets/client-photo-hero-curtain-r.webp?v=20261126lv4",
+    "clientEdge": "/assets/client-photo-hero-client-edge.webp?v=20261126lv4",
+    "flowersLayer": "/assets/client-photo-hero-flowers.webp?v=20261126lv4",
+    "staticFallback": "/assets/client-photo-hero.jpg?v=20261126lv4"
   },
   "hours": [
     {
@@ -1715,44 +1603,59 @@
             <div id="hero-scene-lock" class="absolute left-0 w-full" style="top: -3.214%; aspect-ratio: 896 / 1200;">
               <img
                 id="hero-oil-img"
-                src="/assets/client-photo-hero-clean.jpg?v=20261126lv3"
+                src="/assets/client-photo-hero-clean.jpg?v=20261126lv4"
                 alt="Lux Nail Bar &amp; Co. sunlit artisanal nail sanctuary interior oil painting with 24k brushed gold wall signage"
                 fetchpriority="high"
                 width="896"
                 height="1200"
-                onerror="this.onerror=null;this.src='/assets/client-photo-hero.jpg?v=20261126lv3';"
+                onerror="this.onerror=null;this.src='/assets/client-photo-hero.jpg?v=20261126lv4';"
                 class="w-full h-full block select-none"
               >
-              <div id="hero-window-light" class="hero-living-layer absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                <div class="hero-sun-canopy">
-                  <div class="hero-sun-ray-a"></div>
-                  <div class="hero-sun-ray-b"></div>
-                  <span class="hero-sun-glint" style="left: 22%; top: 13%; --glint-size: 16px; --glint-dur: 5.2s; --glint-delay: 0s;"></span>
-                  <span class="hero-sun-glint" style="left: 56%; top: 21%; --glint-size: 14px; --glint-dur: 6.8s; --glint-delay: -1.8s;"></span>
-                  <span class="hero-sun-glint" style="left: 34%; top: 31%; --glint-size: 18px; --glint-dur: 5.8s; --glint-delay: -3.2s;"></span>
-                  <span class="hero-sun-glint" style="left: 70%; top: 39%; --glint-size: 12px; --glint-dur: 7.4s; --glint-delay: -0.9s;"></span>
-                  <span class="hero-sun-glint" style="left: 28%; top: 50%; --glint-size: 15px; --glint-dur: 6.1s; --glint-delay: -4.4s;"></span>
-                  <span class="hero-sun-glint" style="left: 62%; top: 61%; --glint-size: 17px; --glint-dur: 5.4s; --glint-delay: -2.5s;"></span>
-                  <span class="hero-sun-glint" style="left: 42%; top: 75%; --glint-size: 13px; --glint-dur: 7.9s; --glint-delay: -5.1s;"></span>
-                </div>
-                <div class="hero-sun-shaft-1"></div>
-                <div class="hero-sun-shaft-2"></div>
-                <span class="hero-sun-mote" style="left: 8%; top: 24%; --mote-size: 5px; --mote-dur: 9.2s; --mote-delay: 0s;"></span>
-                <span class="hero-sun-mote" style="left: 13%; top: 35%; --mote-size: 6px; --mote-dur: 11.8s; --mote-delay: -2.5s;"></span>
-                <span class="hero-sun-mote" style="left: 10%; top: 47%; --mote-size: 4px; --mote-dur: 8.8s; --mote-delay: -5.2s;"></span>
-                <span class="hero-sun-mote" style="left: 16%; top: 30%; --mote-size: 5px; --mote-dur: 12.6s; --mote-delay: -7.1s;"></span>
-                <span class="hero-sun-mote" style="left: 18%; top: 43%; --mote-size: 4px; --mote-dur: 10.4s; --mote-delay: -3.8s;"></span>
-                <span class="hero-sun-mote" style="left: 12%; top: 56%; --mote-size: 5px; --mote-dur: 11.2s; --mote-delay: -6.4s;"></span>
-              </div>
+              <img
+                id="hero-curtain-l-img"
+                src="/assets/client-photo-hero-curtain-l.webp?v=20261126lv4"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="70"
+                height="988"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='/assets/client-photo-hero.jpg?v=20261126lv4';}"
+                style="left: 0.000%; top: 0.000%; width: 7.812%; height: 82.333%; transform-origin: 0% 0%;"
+                class="hero-living-layer hero-curtain-sway-l absolute pointer-events-none select-none block"
+              >
+              <img
+                id="hero-curtain-r-img"
+                src="/assets/client-photo-hero-curtain-r.webp?v=20261126lv4"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="111"
+                height="722"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='/assets/client-photo-hero.jpg?v=20261126lv4';}"
+                style="left: 17.857%; top: 3.500%; width: 12.388%; height: 60.167%; transform-origin: 96% 0%;"
+                class="hero-living-layer hero-curtain-sway-r absolute pointer-events-none select-none block"
+              >
+              <img
+                id="hero-client-edge-img"
+                src="/assets/client-photo-hero-client-edge.webp?v=20261126lv4"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="153"
+                height="196"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='/assets/client-photo-hero.jpg?v=20261126lv4';}"
+                style="left: 15.067%; top: 48.833%; width: 17.076%; height: 16.333%;"
+                class="hero-living-layer absolute pointer-events-none select-none block"
+              >
               <img
                 id="hero-flowers-img"
-                src="/assets/client-photo-hero-flowers.webp?v=20261126lv3"
+                src="/assets/client-photo-hero-flowers.webp?v=20261126lv4"
                 alt=""
                 aria-hidden="true"
                 decoding="async"
                 width="230"
                 height="271"
-                onerror="this.style.display='none';var b=document.getElementById('hero-oil-img');if(b){b.src='/assets/client-photo-hero.jpg?v=20261126lv3';}"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='/assets/client-photo-hero.jpg?v=20261126lv4';}"
                 style="left: 74.330%; top: 39.917%; width: 25.670%; height: 22.583%; transform-origin: 85.22% 91.88%;"
                 class="hero-living-layer hero-flowers-sway absolute pointer-events-none select-none block"
               >
@@ -2862,6 +2765,9 @@
       const staticHeroParam = qsParams.get('static-hero') === '1';
       const useLivingHero = !forceVault && !staticHeroParam && livingCfg.enabled === true && livingCfg.cleanBg && livingCfg.flowersLayer;
       const heroSceneLock = document.getElementById('hero-scene-lock');
+      const heroCurtainLImg = document.getElementById('hero-curtain-l-img');
+      const heroCurtainRImg = document.getElementById('hero-curtain-r-img');
+      const heroClientEdgeImg = document.getElementById('hero-client-edge-img');
       const heroFlowersImg = document.getElementById('hero-flowers-img');
 
       if (resolvedImages) {
@@ -2869,6 +2775,15 @@
         if (useLivingHero) {
           if (heroImg && heroImg.getAttribute('src') !== livingCfg.cleanBg) {
             heroImg.src = livingCfg.cleanBg;
+          }
+          if (heroCurtainLImg && livingCfg.curtainLeft && heroCurtainLImg.getAttribute('src') !== livingCfg.curtainLeft) {
+            heroCurtainLImg.src = livingCfg.curtainLeft;
+          }
+          if (heroCurtainRImg && livingCfg.curtainRight && heroCurtainRImg.getAttribute('src') !== livingCfg.curtainRight) {
+            heroCurtainRImg.src = livingCfg.curtainRight;
+          }
+          if (heroClientEdgeImg && livingCfg.clientEdge && heroClientEdgeImg.getAttribute('src') !== livingCfg.clientEdge) {
+            heroClientEdgeImg.src = livingCfg.clientEdge;
           }
           if (heroFlowersImg && heroFlowersImg.getAttribute('src') !== livingCfg.flowersLayer) {
             heroFlowersImg.src = livingCfg.flowersLayer;
