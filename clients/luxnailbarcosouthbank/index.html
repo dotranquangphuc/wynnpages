@@ -912,13 +912,109 @@
       animation-delay: var(--row-delay, 0ms);
     }
 
-    /* Subtle Hero Canvas Breathing */
+    /* Subtle Hero Canvas Breathing & Living Oil Painting Motion */
     @keyframes canvas-breathe {
       0%, 100% { transform: scale(1.02) translate3d(0, 0, 0); }
       50% { transform: scale(1.052) translate3d(0, -3px, 0); }
     }
     .animate-canvas-breathe {
       animation: canvas-breathe 16s ease-in-out infinite;
+    }
+
+    @keyframes hero-botanical-breeze {
+      0% { transform: rotate(0deg) skewX(0deg); }
+      22% { transform: rotate(-1.7deg) skewX(-0.6deg); }
+      48% { transform: rotate(0.95deg) skewX(0.35deg); }
+      73% { transform: rotate(-1.1deg) skewX(-0.4deg); }
+      100% { transform: rotate(0deg) skewX(0deg); }
+    }
+
+    @keyframes hero-sun-canopy-drift {
+      0%, 100% { transform: translate3d(-4%, -2%, 0) scale(1); opacity: 0.34; }
+      38% { transform: translate3d(5%, 3%, 0) scale(1.08); opacity: 0.68; }
+      72% { transform: translate3d(1%, -3%, 0) scale(1.03); opacity: 0.40; }
+    }
+
+    @keyframes hero-sun-beam-glide {
+      0%, 100% { transform: translate3d(-4%, -2%, 0) scale(1); opacity: 0.16; }
+      50% { transform: translate3d(5%, 3%, 0) scale(1.06); opacity: 0.36; }
+    }
+
+    @keyframes hero-sun-mote-float {
+      0% { transform: translate3d(0, 8px, 0) scale(0.75); opacity: 0; }
+      30% { opacity: 0.72; }
+      72% { opacity: 0.46; }
+      100% { transform: translate3d(20px, -26px, 0) scale(1.1); opacity: 0; }
+    }
+
+    .hero-sun-canopy {
+      position: absolute;
+      left: 3.2%;
+      top: 8.5%;
+      width: 18.5%;
+      height: 61.5%;
+      border-radius: 50% 50% 4% 4% / 22% 22% 2% 2%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .hero-sun-canopy-glow {
+      position: absolute;
+      inset: -14%;
+      background:
+        radial-gradient(ellipse 68% 42% at 38% 28%, rgba(255, 245, 210, 0.76) 0%, transparent 66%),
+        radial-gradient(ellipse 58% 36% at 64% 58%, rgba(255, 232, 178, 0.56) 0%, transparent 64%),
+        radial-gradient(ellipse 74% 38% at 42% 82%, rgba(255, 240, 200, 0.48) 0%, transparent 68%);
+      mix-blend-mode: screen;
+      opacity: 0.28;
+      will-change: transform, opacity;
+    }
+
+    .hero-sun-beam {
+      position: absolute;
+      left: -6%;
+      top: 12%;
+      width: 68%;
+      height: 74%;
+      background:
+        linear-gradient(125deg, rgba(255, 244, 212, 0.46) 0%, rgba(255, 232, 184, 0.22) 34%, rgba(255, 224, 172, 0) 68%),
+        radial-gradient(ellipse 65% 48% at 22% 44%, rgba(255, 248, 224, 0.36) 0%, transparent 72%);
+      mix-blend-mode: soft-light;
+      opacity: 0.18;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .hero-sun-mote {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(255, 248, 220, 0.95) 0%, rgba(212, 155, 40, 0.35) 60%, transparent 100%);
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero-flowers-sway {
+        animation: hero-botanical-breeze 9.2s ease-in-out infinite;
+        will-change: transform;
+      }
+      .hero-sun-canopy-glow {
+        animation: hero-sun-canopy-drift 14s ease-in-out infinite;
+      }
+      .hero-sun-beam {
+        animation: hero-sun-beam-glide 16s ease-in-out infinite;
+      }
+      .hero-sun-mote {
+        animation: hero-sun-mote-float var(--mote-dur, 13s) ease-in-out infinite;
+        animation-delay: var(--mote-delay, 0s);
+      }
+    }
+
+    #hero-canvas-stage[data-motion-paused="true"],
+    #hero-canvas-stage[data-motion-paused="true"] * {
+      animation-play-state: paused !important;
     }
 
     /* Palette-Harmonized Architectural Map Embed (GPU-Isolated, Zero-Jank) */
@@ -1166,7 +1262,7 @@
   "heroStory": "Structured BIAB overlays, fine-art manicure design, and botanical spa rituals—performed unhurriedly with hospital-grade sterilisation.",
   "parkingNote": "Convenient client parking right near Grey St with effortless ground-level boutique arrival.",
   "images": {
-    "hero": "/assets/client-photo-hero.jpg?v=20261126",
+    "hero": "/assets/client-photo-hero.jpg?v=20261126lv2",
     "beforeNail": "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd",
     "afterNail": "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123p1",
     "biabFeature": "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123p1",
@@ -1193,6 +1289,12 @@
         "tag": "Natural Nail Restoration"
       }
     ]
+  },
+  "livingHero": {
+    "enabled": true,
+    "cleanBg": "/assets/client-photo-hero-clean.jpg?v=20261126lv2",
+    "flowersLayer": "/assets/client-photo-hero-flowers.webp?v=20261126lv2",
+    "staticFallback": "/assets/client-photo-hero.jpg?v=20261126lv2"
   },
   "hours": [
     {
@@ -1550,21 +1652,55 @@
 
       <!-- Right Arched Oil-Painting Frame (5 Cols) -->
       <div id="hero-art-col" class="lg:col-span-5 relative max-w-md mx-auto lg:max-w-none w-full will-change-transform">
-        <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[9/10] relative" style="background-color: var(--bg-canvas-alt);">
+        <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
           <div id="hero-canvas-stage" class="w-full h-full relative animate-canvas-breathe will-change-transform" style="border-radius: inherit;">
-            <img
-              id="hero-oil-img"
-              src="/assets/client-photo-hero.jpg?v=20261126"
-              alt="Lux Nail Bar &amp; Co. sunlit artisanal nail sanctuary interior oil painting with 24k gold-leaf wall signage"
-              fetchpriority="high"
-              width="1024"
-              height="571"
-              onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg';"
-              style="border-radius: inherit; object-position: 52% 50%;"
-              class="w-full h-full object-cover block"
-            >
+            <div id="hero-scene-lock" class="absolute left-0 w-full" style="top: -3.214%; aspect-ratio: 896 / 1200;">
+              <img
+                id="hero-oil-img"
+                src="/assets/client-photo-hero-clean.jpg?v=20261126lv2"
+                alt="Lux Nail Bar &amp; Co. sunlit artisanal nail sanctuary interior oil painting with antique brushed brass wall signage"
+                fetchpriority="high"
+                width="896"
+                height="1200"
+                onerror="this.onerror=null;this.src='/assets/client-photo-hero.jpg?v=20261126lv2';"
+                class="w-full h-full block select-none"
+              >
+              <div id="hero-window-light" class="hero-living-layer absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                <div class="hero-sun-canopy"><div class="hero-sun-canopy-glow"></div></div>
+                <div class="hero-sun-beam"></div>
+                <span class="hero-sun-mote" style="left: 9%; top: 27%; --mote-dur: 12s; --mote-delay: 0s;"></span>
+                <span class="hero-sun-mote" style="left: 14%; top: 38%; --mote-dur: 15s; --mote-delay: -4s;"></span>
+                <span class="hero-sun-mote" style="left: 11%; top: 49%; --mote-dur: 11s; --mote-delay: -7s;"></span>
+                <span class="hero-sun-mote" style="left: 17%; top: 33%; --mote-dur: 16s; --mote-delay: -9s;"></span>
+              </div>
+              <img
+                id="hero-flowers-img"
+                src="/assets/client-photo-hero-flowers.webp?v=20261126lv2"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="230"
+                height="271"
+                onerror="this.style.display='none';var b=document.getElementById('hero-oil-img');if(b){b.src='/assets/client-photo-hero.jpg?v=20261126lv2';}"
+                style="left: 74.330%; top: 39.917%; width: 25.670%; height: 22.583%; transform-origin: 85.22% 91.88%;"
+                class="hero-living-layer hero-flowers-sway absolute pointer-events-none select-none block"
+              >
+            </div>
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
+          <button
+            id="btn-hero-motion-toggle"
+            type="button"
+            aria-label="Pause ambient painting motion"
+            title="Pause ambient painting motion"
+            class="absolute bottom-[84px] sm:bottom-[92px] left-4 sm:left-5 z-10 w-8 h-8 rounded-full atelier-card flex items-center justify-center cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+            style="color: var(--ink-primary);"
+          >
+            <svg id="hero-motion-icon" class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <rect x="4" y="3" width="2.8" height="10" rx="0.9"></rect>
+              <rect x="9.2" y="3" width="2.8" height="10" rx="0.9"></rect>
+            </svg>
+          </button>
           <!-- Interactive Floating Craft Capsule (Glides to Treatment Matchmaker) -->
           <a
             id="hero-floating-seal"
