@@ -4494,11 +4494,11 @@ function buildClaimBarSnippet(client) {
       backdrop-filter: blur(28px) saturate(190%) !important;
       -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
       color: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(235, 192, 92, 0.44) !important;
+      border: 1px solid rgba(235, 192, 92, 0.55) !important;
       border-radius: 9999px;
-      padding: 8px 16px;
+      padding: 9px 18px;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       letter-spacing: 0.01em;
       white-space: nowrap;
@@ -4513,10 +4513,19 @@ function buildClaimBarSnippet(client) {
       border-color: rgba(235, 192, 92, 0.62) !important;
       color: #ffffff;
     }
+    @keyframes claim-pill-breathe {
+      0%, 100% {
+        box-shadow: 0 20px 48px -12px rgba(28, 17, 12, 0.38), 0 4px 16px rgba(43, 25, 18, 0.20), 0 0 0 0 rgba(235, 192, 92, 0.18), inset 0 1px 0 rgba(255, 248, 236, 0.28), inset 0 -1px 0 rgba(212, 155, 40, 0.16);
+      }
+      50% {
+        box-shadow: 0 20px 48px -12px rgba(28, 17, 12, 0.42), 0 6px 22px rgba(200, 138, 27, 0.26), 0 0 14px rgba(235, 192, 92, 0.28), inset 0 1px 0 rgba(255, 248, 236, 0.36), inset 0 -1px 0 rgba(212, 155, 40, 0.26);
+      }
+    }
     .claim-restore-tab.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
       pointer-events: auto;
+      animation: claim-pill-breathe 3.6s ease-in-out infinite;
     }
     .claim-restore-dot {
       width: 6px;
@@ -5042,31 +5051,68 @@ function buildClaimBarSnippet(client) {
       var collapseBtn = document.getElementById('wynn-claim-collapse');
       var restoreBtn = document.getElementById('wynn-claim-restore');
       if (!bar || !collapseBtn || !restoreBtn) return;
-      document.body.classList.add('wynn-claim-expanded');
-      document.body.classList.remove('wynn-claim-collapsed');
+      var isMobileView = window.innerWidth <= 640;
+      var isPaidBar = bar.classList.contains('claimed-active');
+      var hasAutoExpandedOnScroll = false;
+      var userDismissed = false;
+      var manuallyExpandedAtTop = false;
+      var footerReopened = false;
       var manualCollapsedAt = 0;
-      function setCollapsed(collapsed) {
+      function setCollapsed(collapsed, reason) {
         if (collapsed) {
           bar.classList.add('is-collapsed');
           restoreBtn.classList.add('visible');
           document.body.classList.remove('wynn-claim-expanded');
           document.body.classList.add('wynn-claim-collapsed');
-          manualCollapsedAt = Date.now();
+          if (reason === 'user-collapse') {
+            userDismissed = true;
+            manuallyExpandedAtTop = false;
+            manualCollapsedAt = Date.now();
+            footerReopened = false;
+          }
         } else {
           bar.classList.remove('is-collapsed');
           restoreBtn.classList.remove('visible');
           document.body.classList.add('wynn-claim-expanded');
           document.body.classList.remove('wynn-claim-collapsed');
+          if (reason === 'user-expand') {
+            userDismissed = false;
+            if ((window.scrollY || window.pageYOffset || 0) < 260) {
+              manuallyExpandedAtTop = true;
+            }
+          }
         }
+      }
+      if (isMobileView && !isPaidBar && (window.scrollY || window.pageYOffset || 0) < 260) {
+        setCollapsed(true, 'init-mobile');
+      } else {
+        setCollapsed(false, 'init');
       }
       collapseBtn.addEventListener('click', function(ev) {
         ev.preventDefault();
         ev.stopPropagation();
-        setCollapsed(true);
+        setCollapsed(true, 'user-collapse');
       });
       restoreBtn.addEventListener('click', function() {
-        setCollapsed(false);
+        setCollapsed(false, 'user-expand');
       });
+      var touchStartY = 0;
+      var touchStartX = 0;
+      bar.addEventListener('touchstart', function(ev) {
+        if (ev.touches && ev.touches.length === 1) {
+          touchStartY = ev.touches[0].clientY;
+          touchStartX = ev.touches[0].clientX;
+        }
+      }, { passive: true });
+      bar.addEventListener('touchend', function(ev) {
+        if (ev.changedTouches && ev.changedTouches.length === 1) {
+          var deltaY = ev.changedTouches[0].clientY - touchStartY;
+          var deltaX = ev.changedTouches[0].clientX - touchStartX;
+          if (deltaY > 26 && Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+            setCollapsed(true, 'user-collapse');
+          }
+        }
+      }, { passive: true });
       // Merge phone icon into sticky header "Book Visit" button & remove trailing arrow
       try {
         var hdrBookBtn = document.querySelector('#atelier-header button[data-open-booking], header button[data-open-booking]');
@@ -5088,11 +5134,27 @@ function buildClaimBarSnippet(client) {
         }
       } catch (_) {}
       window.addEventListener('scroll', function() {
-        if (!bar.classList.contains('is-collapsed')) return;
-        if (Date.now() - manualCollapsedAt < 1200) return;
+        var sy = window.scrollY || window.pageYOffset || 0;
         var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-        if (window.scrollY + window.innerHeight >= docH - 150) {
-          setCollapsed(false);
+        var scrollable = Math.max(1, docH - window.innerHeight);
+        var scrollRatio = sy / scrollable;
+        var revealThreshold = Math.min(360, Math.max(220, window.innerHeight * 0.42));
+        if (bar.classList.contains('is-collapsed') && !userDismissed && (sy >= revealThreshold || scrollRatio >= 0.25)) {
+          hasAutoExpandedOnScroll = true;
+          setCollapsed(false, 'scroll-reveal');
+          return;
+        }
+        if (isMobileView && !isPaidBar && !bar.classList.contains('is-collapsed') && sy < 110 && hasAutoExpandedOnScroll && !manuallyExpandedAtTop) {
+          setCollapsed(true, 'top-tuck');
+          return;
+        }
+        if (bar.classList.contains('is-collapsed') && userDismissed) {
+          if (!footerReopened && (Date.now() - manualCollapsedAt > 2000) && (sy + window.innerHeight >= docH - 130)) {
+            footerReopened = true;
+            setCollapsed(false, 'footer-reveal');
+          } else if (sy + window.innerHeight < docH - 360) {
+            footerReopened = false;
+          }
         }
       }, { passive: true });
     })();

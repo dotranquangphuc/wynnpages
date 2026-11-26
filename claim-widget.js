@@ -30,7 +30,7 @@
   if (!document.getElementById('wynnpages-claim-glass-style')) {
     const gStyle = document.createElement('style');
     gStyle.id = 'wynnpages-claim-glass-style';
-    gStyle.textContent = '#atelier-float-dock{display:none!important;opacity:0!important;pointer-events:none!important;}#atelier-nav-shell{min-width:0!important;}#atelier-nav-shell>a:first-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#atelier-nav-shell>a:first-child>div:last-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#nav-salon-name{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;font-size:clamp(15px,4.2vw,22px)!important;line-height:1.15!important;}#nav-salon-sub{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}#atelier-header button[data-open-booking],header button[data-open-booking]{white-space:nowrap!important;flex-shrink:0!important;display:inline-flex!important;align-items:center!important;gap:6px!important;padding-left:14px!important;padding-right:14px!important;}#atelier-header button[data-open-booking] svg:not(:first-child),header button[data-open-booking] svg:not(:first-child),#atelier-header button[data-open-booking] .wynn-merged-phone-icon~svg,header button[data-open-booking] .wynn-merged-phone-icon~svg{display:none!important;}#atelier-header #btn-mobile-menu,header #btn-mobile-menu{flex-shrink:0!important;}';
+    gStyle.textContent = '#atelier-float-dock{display:none!important;opacity:0!important;pointer-events:none!important;}#atelier-nav-shell{min-width:0!important;}#atelier-nav-shell>a:first-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#atelier-nav-shell>a:first-child>div:last-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#nav-salon-name{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;font-size:clamp(15px,4.2vw,22px)!important;line-height:1.15!important;}#nav-salon-sub{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}#atelier-header button[data-open-booking],header button[data-open-booking]{white-space:nowrap!important;flex-shrink:0!important;display:inline-flex!important;align-items:center!important;gap:6px!important;padding-left:14px!important;padding-right:14px!important;}#atelier-header button[data-open-booking] svg:not(:first-child),header button[data-open-booking] svg:not(:first-child),#atelier-header button[data-open-booking] .wynn-merged-phone-icon~svg,header button[data-open-booking] .wynn-merged-phone-icon~svg{display:none!important;}#atelier-header #btn-mobile-menu,header #btn-mobile-menu{flex-shrink:0!important;}@keyframes wynn-claim-pill-breathe{0%,100%{box-shadow:0 20px 48px -12px rgba(28,17,12,0.38),0 4px 16px rgba(43,25,18,0.20),0 0 0 0 rgba(235,192,92,0.18),inset 0 1px 0 rgba(255,248,236,0.28),inset 0 -1px 0 rgba(212,155,40,0.16);}50%{box-shadow:0 20px 48px -12px rgba(28,17,12,0.42),0 6px 22px rgba(200,138,27,0.26),0 0 14px rgba(235,192,92,0.28),inset 0 1px 0 rgba(255,248,236,0.36),inset 0 -1px 0 rgba(212,155,40,0.26);}}#wynnpages-claim-restore.wynn-pill-visible{animation:wynn-claim-pill-breathe 3.6s ease-in-out infinite;}';
     (document.head || document.documentElement).appendChild(gStyle);
   }
 
@@ -80,11 +80,11 @@
     'backdrop-filter:blur(28px) saturate(190%) !important',
     '-webkit-backdrop-filter:blur(28px) saturate(190%) !important',
     'color:rgba(255,255,255,0.96)',
-    'border:1px solid rgba(235,192,92,0.44) !important',
+    'border:1px solid rgba(235,192,92,0.55) !important',
     'border-radius:9999px',
-    'padding:8px 16px',
+    'padding:9px 18px',
     'font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","Segoe UI",Roboto,sans-serif',
-    'font-size:12px',
+    'font-size:12.5px',
     'font-weight:700',
     'letter-spacing:0.01em',
     'white-space:nowrap',
@@ -174,7 +174,7 @@
       collapseBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
-        setBarCollapsed(true);
+        setBarCollapsed(true, 'user-collapse');
       });
     }
     const btn = document.getElementById('wynnpages-claim-btn');
@@ -187,18 +187,32 @@
     }
   }
 
+  let isMobileView = window.innerWidth <= 640;
+  let isPaidBarState = false;
   let isBarCollapsed = false;
+  let hasAutoExpandedOnScroll = false;
+  let userDismissed = false;
+  let manuallyExpandedAtTop = false;
+  let footerReopened = false;
   let manualCollapsedAt = 0;
-  function setBarCollapsed(collapsed) {
+  function setBarCollapsed(collapsed, reason) {
     isBarCollapsed = Boolean(collapsed);
     if (isBarCollapsed) {
-      manualCollapsedAt = Date.now();
       bar.style.transform = 'translateX(-50%) translateY(calc(100% + 48px))';
       bar.style.opacity = '0';
       bar.style.pointerEvents = 'none';
       restoreTab.style.opacity = '1';
       restoreTab.style.transform = 'translateX(-50%) translateY(0)';
       restoreTab.style.pointerEvents = 'auto';
+      restoreTab.classList.add('wynn-pill-visible');
+      document.body.classList.remove('wynn-claim-expanded');
+      document.body.classList.add('wynn-claim-collapsed');
+      if (reason === 'user-collapse') {
+        userDismissed = true;
+        manuallyExpandedAtTop = false;
+        manualCollapsedAt = Date.now();
+        footerReopened = false;
+      }
     } else {
       bar.style.transform = 'translateX(-50%) translateY(0)';
       bar.style.opacity = '1';
@@ -206,6 +220,15 @@
       restoreTab.style.opacity = '0';
       restoreTab.style.transform = 'translateX(-50%) translateY(16px)';
       restoreTab.style.pointerEvents = 'none';
+      restoreTab.classList.remove('wynn-pill-visible');
+      document.body.classList.add('wynn-claim-expanded');
+      document.body.classList.remove('wynn-claim-collapsed');
+      if (reason === 'user-expand') {
+        userDismissed = false;
+        if ((window.scrollY || window.pageYOffset || 0) < 260) {
+          manuallyExpandedAtTop = true;
+        }
+      }
     }
   }
 
@@ -230,6 +253,12 @@
     document.body.appendChild(bar);
     document.body.appendChild(restoreTab);
 
+    if (isMobileView && !isPaidBarState && (window.scrollY || window.pageYOffset || 0) < 260) {
+      setBarCollapsed(true, 'init-mobile');
+    } else {
+      setBarCollapsed(false, 'init');
+    }
+
     try {
       var hdrBookBtn = document.querySelector('#atelier-header button[data-open-booking], header button[data-open-booking]');
       if (hdrBookBtn) {
@@ -251,14 +280,49 @@
     } catch (_) {}
 
     restoreTab.addEventListener('click', function () {
-      setBarCollapsed(false);
+      setBarCollapsed(false, 'user-expand');
     });
+
+    var touchStartY = 0;
+    var touchStartX = 0;
+    bar.addEventListener('touchstart', function (ev) {
+      if (ev.touches && ev.touches.length === 1) {
+        touchStartY = ev.touches[0].clientY;
+        touchStartX = ev.touches[0].clientX;
+      }
+    }, { passive: true });
+    bar.addEventListener('touchend', function (ev) {
+      if (ev.changedTouches && ev.changedTouches.length === 1) {
+        var deltaY = ev.changedTouches[0].clientY - touchStartY;
+        var deltaX = ev.changedTouches[0].clientX - touchStartX;
+        if (deltaY > 26 && Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+          setBarCollapsed(true, 'user-collapse');
+        }
+      }
+    }, { passive: true });
+
     window.addEventListener('scroll', function () {
-      if (!isBarCollapsed) return;
-      if (Date.now() - manualCollapsedAt < 1200) return;
+      var sy = window.scrollY || window.pageYOffset || 0;
       var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-      if (window.scrollY + window.innerHeight >= docH - 150) {
-        setBarCollapsed(false);
+      var scrollable = Math.max(1, docH - window.innerHeight);
+      var scrollRatio = sy / scrollable;
+      var revealThreshold = Math.min(360, Math.max(220, window.innerHeight * 0.42));
+      if (isBarCollapsed && !userDismissed && (sy >= revealThreshold || scrollRatio >= 0.25)) {
+        hasAutoExpandedOnScroll = true;
+        setBarCollapsed(false, 'scroll-reveal');
+        return;
+      }
+      if (isMobileView && !isPaidBarState && !isBarCollapsed && sy < 110 && hasAutoExpandedOnScroll && !manuallyExpandedAtTop) {
+        setBarCollapsed(true, 'top-tuck');
+        return;
+      }
+      if (isBarCollapsed && userDismissed) {
+        if (!footerReopened && (Date.now() - manualCollapsedAt > 2000) && (sy + window.innerHeight >= docH - 130)) {
+          footerReopened = true;
+          setBarCollapsed(false, 'footer-reveal');
+        } else if (sy + window.innerHeight < docH - 360) {
+          footerReopened = false;
+        }
       }
     }, { passive: true });
 
@@ -266,8 +330,11 @@
       fetch(`https://wynnpages.com.au/api/demo-status?cid=${encodeURIComponent(cid)}&slug=${encodeURIComponent(clientSlug)}`)
         .then(function (r) { return r.json(); })
         .then(function (st) {
-          if (st && st.found && st.isPaid) renderBarHtml(true, false);
-          else if (st && st.found && st.isFlashDeal) {
+          if (st && st.found && st.isPaid) {
+            isPaidBarState = true;
+            renderBarHtml(true, false);
+            setBarCollapsed(false, 'paid');
+          } else if (st && st.found && st.isFlashDeal) {
             restoreTab.innerHTML = '<span style="width:6px;height:6px;border-radius:9999px;background:#C85A32;box-shadow:0 0 8px rgba(200,90,50,0.95);flex-shrink:0;"></span><svg width="12" height="7" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8L9 2L16 8"/></svg><span>50% Off Deal &bull; <span style="color:#f3a683;font-weight:800;">$299 AUD</span></span>';
             renderBarHtml(false, true);
           }
