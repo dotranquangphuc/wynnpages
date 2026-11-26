@@ -30,7 +30,7 @@
   if (!document.getElementById('wynnpages-claim-glass-style')) {
     const gStyle = document.createElement('style');
     gStyle.id = 'wynnpages-claim-glass-style';
-    gStyle.textContent = '#atelier-float-dock{display:none!important;opacity:0!important;pointer-events:none!important;}#atelier-nav-shell{min-width:0!important;}#atelier-nav-shell>a:first-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#atelier-nav-shell>a:first-child>div:last-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#nav-salon-name{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;font-size:clamp(15px,4.2vw,22px)!important;line-height:1.15!important;}#nav-salon-sub{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}#atelier-header button[data-open-booking],header button[data-open-booking]{white-space:nowrap!important;flex-shrink:0!important;display:inline-flex!important;align-items:center!important;gap:6px!important;padding-left:14px!important;padding-right:14px!important;}#atelier-header button[data-open-booking] svg:not(:first-child),header button[data-open-booking] svg:not(:first-child),#atelier-header button[data-open-booking] .wynn-merged-phone-icon~svg,header button[data-open-booking] .wynn-merged-phone-icon~svg{display:none!important;}#atelier-header #btn-mobile-menu,header #btn-mobile-menu{flex-shrink:0!important;}@keyframes wynn-claim-pill-breathe{0%,100%{box-shadow:0 20px 48px -12px rgba(28,17,12,0.38),0 4px 16px rgba(43,25,18,0.20),0 0 0 0 rgba(235,192,92,0.18),inset 0 1px 0 rgba(255,248,236,0.28),inset 0 -1px 0 rgba(212,155,40,0.16);}50%{box-shadow:0 20px 48px -12px rgba(28,17,12,0.42),0 6px 22px rgba(200,138,27,0.26),0 0 14px rgba(235,192,92,0.28),inset 0 1px 0 rgba(255,248,236,0.36),inset 0 -1px 0 rgba(212,155,40,0.26);}}#wynnpages-claim-restore.wynn-pill-visible{animation:wynn-claim-pill-breathe 3.6s ease-in-out infinite;}';
+    gStyle.textContent = '#atelier-float-dock{display:none!important;opacity:0!important;pointer-events:none!important;}#atelier-nav-shell{min-width:0!important;}#atelier-nav-shell>a:first-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#atelier-nav-shell>a:first-child>div:last-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}#nav-salon-name{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;font-size:clamp(15px,4.2vw,22px)!important;line-height:1.15!important;}#nav-salon-sub{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}#atelier-header button[data-open-booking],header button[data-open-booking]{white-space:nowrap!important;flex-shrink:0!important;display:inline-flex!important;align-items:center!important;gap:6px!important;padding-left:14px!important;padding-right:14px!important;}#atelier-header button[data-open-booking] svg:not(:first-child),header button[data-open-booking] svg:not(:first-child),#atelier-header button[data-open-booking] .wynn-merged-phone-icon~svg,header button[data-open-booking] .wynn-merged-phone-icon~svg{display:none!important;}#atelier-header #btn-mobile-menu,header #btn-mobile-menu{flex-shrink:0!important;}@keyframes wynn-claim-pill-breathe{0%,100%{box-shadow:0 20px 48px -12px rgba(28,17,12,0.38),0 4px 16px rgba(43,25,18,0.20),0 0 0 0 rgba(235,192,92,0.18),inset 0 1px 0 rgba(255,248,236,0.28),inset 0 -1px 0 rgba(212,155,40,0.16);}50%{box-shadow:0 20px 48px -12px rgba(28,17,12,0.42),0 6px 22px rgba(200,138,27,0.26),0 0 14px rgba(235,192,92,0.28),inset 0 1px 0 rgba(255,248,236,0.36),inset 0 -1px 0 rgba(212,155,40,0.26);}}@keyframes wynn-bar-collapse-apple{0%{transform:translateX(-50%) translateY(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(0.33,1,0.68,1);}26%{transform:translateX(-50%) translateY(-8px) scale(1.012);opacity:1;animation-timing-function:cubic-bezier(0.55,0,0.28,1);}100%{transform:translateX(-50%) translateY(calc(100% + 48px)) scale(0.93);opacity:0;}}@keyframes wynn-bar-expand-apple{0%{transform:translateX(-50%) translateY(calc(100% + 42px)) scale(0.92);opacity:0;animation-timing-function:cubic-bezier(0.22,1,0.36,1);}60%{transform:translateX(-50%) translateY(-8px) scale(1.012);opacity:1;animation-timing-function:cubic-bezier(0.42,0,0.58,1);}82%{transform:translateX(-50%) translateY(2.5px) scale(0.997);opacity:1;animation-timing-function:cubic-bezier(0.25,1,0.5,1);}100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1;}}@keyframes wynn-pill-enter-apple{0%{transform:translateX(-50%) translateY(28px) scale(0.88);opacity:0;animation-timing-function:cubic-bezier(0.22,1,0.36,1);}62%{transform:translateX(-50%) translateY(-5px) scale(1.028);opacity:1;animation-timing-function:cubic-bezier(0.42,0,0.58,1);}84%{transform:translateX(-50%) translateY(1.5px) scale(0.995);opacity:1;animation-timing-function:cubic-bezier(0.25,1,0.5,1);}100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1;}}@keyframes wynn-pill-exit-apple{0%{transform:translateX(-50%) translateY(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(0.33,1,0.68,1);}28%{transform:translateX(-50%) translateY(-5px) scale(1.03);opacity:1;animation-timing-function:cubic-bezier(0.55,0,0.28,1);}100%{transform:translateX(-50%) translateY(26px) scale(0.88);opacity:0;}}#wynnpages-claim-bar{transform:translateX(-50%) translateY(0);opacity:1;transform-origin:50% 100%;will-change:transform,opacity;}#wynnpages-claim-bar.is-collapsed{transform:translateX(-50%) translateY(calc(100% + 48px)) scale(0.93);opacity:0;pointer-events:none;}#wynnpages-claim-bar.anim-collapsing{animation:wynn-bar-collapse-apple 0.72s forwards;pointer-events:none;}#wynnpages-claim-bar.anim-expanding{animation:wynn-bar-expand-apple 0.82s 0.06s both;}#wynnpages-claim-restore{transform:translateX(-50%) translateY(16px);opacity:0;pointer-events:none;transform-origin:50% 100%;will-change:transform,opacity;}#wynnpages-claim-restore.wynn-pill-visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;animation:wynn-claim-pill-breathe 3.6s ease-in-out infinite;}#wynnpages-claim-restore.wynn-pill-visible.anim-entering{animation:wynn-pill-enter-apple 0.72s 0.18s both,wynn-claim-pill-breathe 3.6s ease-in-out 0.9s infinite;}#wynnpages-claim-restore.anim-exiting{animation:wynn-pill-exit-apple 0.48s forwards;pointer-events:none;}';
     (document.head || document.documentElement).appendChild(gStyle);
   }
 
@@ -40,7 +40,6 @@
     'position:fixed',
     'bottom:calc(20px + env(safe-area-inset-bottom,0px))',
     'left:50%',
-    'transform:translateX(-50%) translateY(0)',
     'z-index:2147483647',
     'width:calc(100% - 28px)',
     'max-width:820px',
@@ -58,8 +57,7 @@
     'justify-content:space-between',
     'gap:12px 16px',
     'font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","Segoe UI",Roboto,sans-serif',
-    'box-sizing:border-box',
-    'transition:transform 0.35s cubic-bezier(0.16,1,0.3,1),opacity 0.25s ease'
+    'box-sizing:border-box'
   ].join(';');
 
   const restoreTab = document.createElement('button');
@@ -89,11 +87,7 @@
     'letter-spacing:0.01em',
     'white-space:nowrap',
     'box-shadow:0 20px 48px -12px rgba(28,17,12,0.38),0 4px 16px rgba(43,25,18,0.20),inset 0 1px 0 rgba(255,248,236,0.28),inset 0 -1px 0 rgba(212,155,40,0.16) !important',
-    'cursor:pointer',
-    'opacity:0',
-    'transform:translateX(-50%) translateY(16px)',
-    'pointer-events:none',
-    'transition:all 0.28s cubic-bezier(0.16,1,0.3,1)'
+    'cursor:pointer'
   ].join(';');
 
   function renderBarHtml(isPaid, isFlashDeal) {
@@ -195,16 +189,24 @@
   let manuallyExpandedAtTop = false;
   let footerReopened = false;
   let manualCollapsedAt = 0;
+  let isInitialized = false;
   function setBarCollapsed(collapsed, reason) {
-    isBarCollapsed = Boolean(collapsed);
+    const targetCollapsed = Boolean(collapsed);
+    if (isInitialized && targetCollapsed === isBarCollapsed) return;
+    isBarCollapsed = targetCollapsed;
     if (isBarCollapsed) {
-      bar.style.transform = 'translateX(-50%) translateY(calc(100% + 48px))';
-      bar.style.opacity = '0';
-      bar.style.pointerEvents = 'none';
-      restoreTab.style.opacity = '1';
-      restoreTab.style.transform = 'translateX(-50%) translateY(0)';
-      restoreTab.style.pointerEvents = 'auto';
+      bar.classList.add('is-collapsed');
+      bar.classList.remove('anim-expanding');
       restoreTab.classList.add('wynn-pill-visible');
+      restoreTab.classList.remove('anim-exiting');
+      if (isInitialized) {
+        bar.classList.remove('anim-collapsing');
+        void bar.offsetWidth;
+        bar.classList.add('anim-collapsing');
+        restoreTab.classList.remove('anim-entering');
+        void restoreTab.offsetWidth;
+        restoreTab.classList.add('anim-entering');
+      }
       document.body.classList.remove('wynn-claim-expanded');
       document.body.classList.add('wynn-claim-collapsed');
       if (reason === 'user-collapse') {
@@ -214,13 +216,16 @@
         footerReopened = false;
       }
     } else {
-      bar.style.transform = 'translateX(-50%) translateY(0)';
-      bar.style.opacity = '1';
-      bar.style.pointerEvents = 'auto';
-      restoreTab.style.opacity = '0';
-      restoreTab.style.transform = 'translateX(-50%) translateY(16px)';
-      restoreTab.style.pointerEvents = 'none';
-      restoreTab.classList.remove('wynn-pill-visible');
+      bar.classList.remove('is-collapsed', 'anim-collapsing');
+      restoreTab.classList.remove('wynn-pill-visible', 'anim-entering');
+      if (isInitialized) {
+        bar.classList.remove('anim-expanding');
+        void bar.offsetWidth;
+        bar.classList.add('anim-expanding');
+        restoreTab.classList.remove('anim-exiting');
+        void restoreTab.offsetWidth;
+        restoreTab.classList.add('anim-exiting');
+      }
       document.body.classList.add('wynn-claim-expanded');
       document.body.classList.remove('wynn-claim-collapsed');
       if (reason === 'user-expand') {
@@ -258,6 +263,7 @@
     } else {
       setBarCollapsed(false, 'init');
     }
+    isInitialized = true;
 
     try {
       var hdrBookBtn = document.querySelector('#atelier-header button[data-open-booking], header button[data-open-booking]');

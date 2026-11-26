@@ -4445,12 +4445,57 @@ function buildClaimBarSnippet(client) {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       box-sizing: border-box;
       overflow: visible;
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+      transform-origin: 50% 100%;
+      will-change: transform, opacity;
+    }
+    @keyframes claim-bar-collapse-apple {
+      0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+      }
+      26% {
+        transform: translateX(-50%) translateY(-8px) scale(1.012);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.55, 0, 0.28, 1);
+      }
+      100% {
+        transform: translateX(-50%) translateY(calc(100% + 48px)) scale(0.93);
+        opacity: 0;
+      }
+    }
+    @keyframes claim-bar-expand-apple {
+      0% {
+        transform: translateX(-50%) translateY(calc(100% + 42px)) scale(0.92);
+        opacity: 0;
+        animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-8px) scale(1.012);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+      }
+      82% {
+        transform: translateX(-50%) translateY(2.5px) scale(0.997);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
     }
     .claim-bar.is-collapsed {
-      transform: translateX(-50%) translateY(calc(100% + 48px));
+      transform: translateX(-50%) translateY(calc(100% + 48px)) scale(0.93);
       opacity: 0;
       pointer-events: none;
+    }
+    .claim-bar.anim-collapsing {
+      animation: claim-bar-collapse-apple 0.72s forwards;
+      pointer-events: none;
+    }
+    .claim-bar.anim-expanding {
+      animation: claim-bar-expand-apple 0.82s 0.06s both;
     }
     .claim-bar.claimed-active {
       border: 1.5px solid rgba(52, 211, 153, 0.48) !important;
@@ -4506,7 +4551,8 @@ function buildClaimBarSnippet(client) {
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: 50% 100%;
+      will-change: transform, opacity;
     }
     .claim-restore-tab:hover {
       background: linear-gradient(135deg, rgba(72, 43, 30, 0.84) 0%, rgba(52, 31, 22, 0.86) 100%) !important;
@@ -4521,11 +4567,55 @@ function buildClaimBarSnippet(client) {
         box-shadow: 0 20px 48px -12px rgba(28, 17, 12, 0.42), 0 6px 22px rgba(200, 138, 27, 0.26), 0 0 14px rgba(235, 192, 92, 0.28), inset 0 1px 0 rgba(255, 248, 236, 0.36), inset 0 -1px 0 rgba(212, 155, 40, 0.26);
       }
     }
+    @keyframes claim-pill-enter-apple {
+      0% {
+        transform: translateX(-50%) translateY(28px) scale(0.88);
+        opacity: 0;
+        animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      62% {
+        transform: translateX(-50%) translateY(-5px) scale(1.028);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+      }
+      84% {
+        transform: translateX(-50%) translateY(1.5px) scale(0.995);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+    @keyframes claim-pill-exit-apple {
+      0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+      }
+      28% {
+        transform: translateX(-50%) translateY(-5px) scale(1.03);
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.55, 0, 0.28, 1);
+      }
+      100% {
+        transform: translateX(-50%) translateY(26px) scale(0.88);
+        opacity: 0;
+      }
+    }
     .claim-restore-tab.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
       pointer-events: auto;
       animation: claim-pill-breathe 3.6s ease-in-out infinite;
+    }
+    .claim-restore-tab.visible.anim-entering {
+      animation: claim-pill-enter-apple 0.72s 0.18s both, claim-pill-breathe 3.6s ease-in-out 0.9s infinite;
+    }
+    .claim-restore-tab.anim-exiting {
+      animation: claim-pill-exit-apple 0.48s forwards;
+      pointer-events: none;
     }
     .claim-restore-dot {
       width: 6px;
@@ -5058,10 +5148,23 @@ function buildClaimBarSnippet(client) {
       var manuallyExpandedAtTop = false;
       var footerReopened = false;
       var manualCollapsedAt = 0;
+      var isInitialized = false;
       function setCollapsed(collapsed, reason) {
-        if (collapsed) {
+        var targetCollapsed = Boolean(collapsed);
+        if (isInitialized && targetCollapsed === bar.classList.contains('is-collapsed')) return;
+        if (targetCollapsed) {
           bar.classList.add('is-collapsed');
+          bar.classList.remove('anim-expanding');
           restoreBtn.classList.add('visible');
+          restoreBtn.classList.remove('anim-exiting');
+          if (isInitialized) {
+            bar.classList.remove('anim-collapsing');
+            void bar.offsetWidth;
+            bar.classList.add('anim-collapsing');
+            restoreBtn.classList.remove('anim-entering');
+            void restoreBtn.offsetWidth;
+            restoreBtn.classList.add('anim-entering');
+          }
           document.body.classList.remove('wynn-claim-expanded');
           document.body.classList.add('wynn-claim-collapsed');
           if (reason === 'user-collapse') {
@@ -5071,8 +5174,16 @@ function buildClaimBarSnippet(client) {
             footerReopened = false;
           }
         } else {
-          bar.classList.remove('is-collapsed');
-          restoreBtn.classList.remove('visible');
+          bar.classList.remove('is-collapsed', 'anim-collapsing');
+          restoreBtn.classList.remove('visible', 'anim-entering');
+          if (isInitialized) {
+            bar.classList.remove('anim-expanding');
+            void bar.offsetWidth;
+            bar.classList.add('anim-expanding');
+            restoreBtn.classList.remove('anim-exiting');
+            void restoreBtn.offsetWidth;
+            restoreBtn.classList.add('anim-exiting');
+          }
           document.body.classList.add('wynn-claim-expanded');
           document.body.classList.remove('wynn-claim-collapsed');
           if (reason === 'user-expand') {
@@ -5088,6 +5199,7 @@ function buildClaimBarSnippet(client) {
       } else {
         setCollapsed(false, 'init');
       }
+      isInitialized = true;
       collapseBtn.addEventListener('click', function(ev) {
         ev.preventDefault();
         ev.stopPropagation();
