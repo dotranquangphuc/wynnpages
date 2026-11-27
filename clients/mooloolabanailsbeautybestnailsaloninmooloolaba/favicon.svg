@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <!-- Atelier Palette 01 Warm Wax Seal Background -->
+    <radialGradient id="waxSealBg" cx="32%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="#FCF9F3"/>
+      <stop offset="68%" stop-color="#F6E8C8"/>
+      <stop offset="100%" stop-color="#EBD197"/>
+    </radialGradient>
+
+    <!-- 24K Gold-Leaf Foil Ring & Calligraphic M Gradient -->
+    <linearGradient id="goldFoilRing" x1="8%" y1="6%" x2="92%" y2="94%">
+      <stop offset="0%" stop-color="#B87E1B"/>
+      <stop offset="30%" stop-color="#F4CF67"/>
+      <stop offset="55%" stop-color="#D49B28"/>
+      <stop offset="82%" stop-color="#FCE8A6"/>
+      <stop offset="100%" stop-color="#9A6410"/>
+    </linearGradient>
+
+    <linearGradient id="goldFoilM" x1="12%" y1="5%" x2="88%" y2="95%">
+      <stop offset="0%" stop-color="#9B620C"/>
+      <stop offset="22%" stop-color="#E7B742"/>
+      <stop offset="44%" stop-color="#FFF2C2"/>
+      <stop offset="64%" stop-color="#C88718"/>
+      <stop offset="85%" stop-color="#F8DE8C"/>
+      <stop offset="100%" stop-color="#7A4B08"/>
+    </linearGradient>
+
+    <linearGradient id="goldBronzeM" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5C3A08"/>
+      <stop offset="100%" stop-color="#3E2504"/>
+    </linearGradient>
+
+    <filter id="mSoftShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="-0.5" dy="1.1" stdDeviation="0.7" flood-color="#2B1E0D" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <!-- Embossed Wax Seal Disc & Double Hairline Gold Rings -->
+  <circle cx="32" cy="32" r="29.8" fill="url(#waxSealBg)" stroke="url(#goldFoilRing)" stroke-width="2.4"/>
+  <circle cx="32" cy="32" r="25.6" fill="none" stroke="#C89328" stroke-width="0.95" stroke-opacity="0.62"/>
+
+  <!-- Bespoke 24K Gold-Leaf Calligraphic "M" (from Mooloolaba sign) -->
+  <g filter="url(#mSoftShadow)" transform="translate(10.8, 17.5) scale(0.19)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Crisp Antique Bronze Halo + 3D Extrusion -->
+    <path d="M 38 122 C 20 128, 18 106, 36 82 C 56 54, 78 24, 88 18 C 78 52, 64 96, 56 128 C 72 88, 102 36, 124 22 C 118 62, 114 102, 114 124 C 132 82, 162 28, 182 18 C 172 64, 166 106, 174 122 C 181 134, 196 121, 210 100"
+          stroke="url(#goldBronzeM)" stroke-opacity="0.78" stroke-width="18.5"/>
+    <path transform="translate(-3.0, 4.8)"
+          d="M 38 122 C 20 128, 18 106, 36 82 C 56 54, 78 24, 88 18 C 78 52, 64 96, 56 128 C 72 88, 102 36, 124 22 C 118 62, 114 102, 114 124 C 132 82, 162 28, 182 18 C 172 64, 166 106, 174 122 C 181 134, 196 121, 210 100"
+          stroke="url(#goldBronzeM)" stroke-opacity="0.88" stroke-width="16.5"/>
+    <!-- 24K Gold-Leaf Main Body -->
+    <path d="M 38 122 C 20 128, 18 106, 36 82 C 56 54, 78 24, 88 18 C 78 52, 64 96, 56 128 C 72 88, 102 36, 124 22 C 118 62, 114 102, 114 124 C 132 82, 162 28, 182 18 C 172 64, 166 106, 174 122 C 181 134, 196 121, 210 100"
+          stroke="url(#goldFoilM)" stroke-width="13.5"/>
+    <!-- Specular Foil Sheen -->
+    <path transform="translate(0.8, -1.4)"
+          d="M 38 122 C 20 128, 18 106, 36 82 C 56 54, 78 24, 88 18 C 78 52, 64 96, 56 128 C 72 88, 102 36, 124 22 C 118 62, 114 102, 114 124 C 132 82, 162 28, 182 18 C 172 64, 166 106, 174 122 C 181 134, 196 121, 210 100"
+          stroke="#FFFDF5" stroke-opacity="0.72" stroke-width="2.8"/>
+  </g>
+</svg>
