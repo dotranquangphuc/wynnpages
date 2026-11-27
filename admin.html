@@ -2046,8 +2046,9 @@
 
         // Outbound stats (4 clear stages: Pending -> Pitched -> Paid awaiting launch -> Officially Launched)
         const isObLaunched = (c) => c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
-        const obPending = obList.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending' && !isObLaunched(c)).length;
-        const obPitched = obList.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup') && !isObLaunched(c)).length;
+        const isObPitched = (c) => Boolean(c.demoSentAt || c.fbPitchedAt || c.step1SentAt || c.sequenceStartedAt || (c.lastSmsLog && c.lastSmsLog.startsWith('OK'))) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup';
+        const obPending = obList.filter(c => c.paymentStatus === 'unpaid' && !isObPitched(c) && !isObLaunched(c)).length;
+        const obPitched = obList.filter(c => c.paymentStatus === 'unpaid' && isObPitched(c) && !isObLaunched(c)).length;
         const obPaidWaiting = obList.filter(c => (c.paymentStatus === 'paid' || c.stage === 'outbound_paid') && !isObLaunched(c)).length;
         const obLaunched = obList.filter(isObLaunched).length;
         const obActionToday = obList.filter(c => Boolean(getClientDueAction(c))).length;
@@ -2284,12 +2285,13 @@
 
         if (activeMainTab === 'outbound') {
           const isObLaunched = (c) => c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
+          const isObPitched = (c) => Boolean(c.demoSentAt || c.fbPitchedAt || c.step1SentAt || c.sequenceStartedAt || (c.lastSmsLog && c.lastSmsLog.startsWith('OK'))) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup';
           if (currentObFilter === 'action_today') {
             filtered = filtered.filter(c => Boolean(getClientDueAction(c)));
           } else if (currentObFilter === 'pending') {
-            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && !c.demoSentAt && c.stage === 'outbound_pending' && !isObLaunched(c));
+            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && !isObPitched(c) && !isObLaunched(c));
           } else if (currentObFilter === 'pitched') {
-            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && (c.demoSentAt || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup') && !isObLaunched(c));
+            filtered = filtered.filter(c => c.paymentStatus === 'unpaid' && isObPitched(c) && !isObLaunched(c));
           } else if (currentObFilter === 'paid') {
             filtered = filtered.filter(c => (c.paymentStatus === 'paid' || c.stage === 'outbound_paid') && !isObLaunched(c));
           } else if (currentObFilter === 'launched') {
@@ -3170,19 +3172,72 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
           const resolvedLiveUrl = (c.liveUrl || '').trim();
           const hasValidLive = isValidUrl(resolvedLiveUrl);
           const isPaid = c.paymentStatus === 'paid' || c.stage === 'outbound_paid' || c.stage === 'launched';
-          const isPitched = Boolean(c.demoSentAt || c.fbPitchedAt || c.step1SentAt) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
+          const smsSentOk = Boolean(c.lastSmsLog && c.lastSmsLog.startsWith('OK'));
+          const smsFailed = Boolean(c.lastSmsLog && !c.lastSmsLog.startsWith('OK'));
+          const emailSentOk = Boolean(c.lastEmailLog && c.lastEmailLog.startsWith('OK'));
+          const isTurbo = c.turboTestMode === true;
+          const isFbMode = c.channelMode === 'facebook' || (!hasPhone && Boolean(c.fbPitchedAt));
+          const pitchTime = c.sequenceStartedAt || c.demoSentAt || c.fbPitchedAt || c.step1SentAt;
+          const pitchMs = parseTimestampMs(pitchTime);
+          const isPitched = Boolean(pitchTime || smsSentOk) || c.stage === 'outbound_pitched' || c.stage === 'outbound_followup' || isPaid;
           const isLaunched = c.stage === 'launched' || c.stage === 'site_launched' || Boolean(c.launchedAt);
           const canOpenLiveWeb = hasValidLive && isLaunched;
+
+          let shortDayText = '';
+          if (pitchTime && pitchMs) {
+            const elapsedMs = Math.max(0, Date.now() - pitchMs);
+            const daysElapsed = Math.floor(elapsedMs / (1000 * 3600 * 24));
+            const minsElapsed = Math.floor(elapsedMs / (1000 * 60));
+            shortDayText = isTurbo ? `Phút ${minsElapsed}/60` : `Ngày ${daysElapsed + 1}/10`;
+          }
+
+          const isPurged = c.dealStatus === 'purged';
+          const isDealActive = c.dealStatus === 'flash_deal' && c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() > Date.now();
+          const isExpired = c.dealStatus === 'expired' || isPurged || Boolean(c.step5LockedAt) || (c.dealExpiresAt && new Date(c.dealExpiresAt).getTime() <= Date.now());
+          const step1Done = Boolean(c.step1SentAt || pitchTime || smsSentOk) || c.nurtureStep === 'aussie_pitch' || c.nurtureStep === 'pitch' || isPitched;
+          const step2Done = Boolean(c.step2SentAt) || c.nurtureStep === 'day3_reminder' || c.nurtureStep === 'aussie_followup_views' || c.nurtureStep === 'followup_views';
+          const step3Done = Boolean(c.step3SentAt) || (isDealActive && !isFbMode) || c.nurtureStep === 'day7_deal_active' || c.nurtureStep === 'aussie_flash_deal_299';
+          const step4Done = Boolean(c.step4SentAt) || c.nurtureStep === 'day9_warning';
+          const sentChannelLabel = isFbMode
+            ? 'Facebook'
+            : (smsSentOk && emailSentOk ? 'SMS + Email' : (smsSentOk ? 'SMS' : (emailSentOk ? 'Email' : (hasPhone ? 'SMS' : 'Email'))));
+          const dueAction = (!isPaid && !isLaunched) ? getClientDueAction(c) : null;
 
           const titleName = c.businessName
             ? `${c.businessName}${c.name && c.name !== c.businessName ? ` (${c.name})` : ''}`
             : (c.name || 'Tiệm chưa đặt tên');
 
-          const paymentBadge = isLaunched
-            ? `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 leading-snug max-w-full">🚀 ĐÃ LÊN SÓNG (LIVE)</span>`
-            : (isPaid
-                ? `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-teal-600 text-white shadow-xs leading-snug max-w-full">🟢 ĐÃ MUA $599 (CHỜ LÊN SÓNG)</span>`
-                : `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 leading-snug max-w-full">🟡 Đang chào hàng (Chưa trả $599)</span>`);
+          let paymentBadge = '';
+          if (isLaunched) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 leading-snug max-w-full">🚀 ĐÃ LÊN SÓNG (LIVE)</span>`;
+          } else if (isPaid) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-teal-600 text-white shadow-xs leading-snug max-w-full">🟢 ĐÃ MUA $599 (CHỜ LÊN SÓNG)</span>`;
+          } else if (isPurged) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-stone-900 text-rose-300 border border-rose-900/60 leading-snug max-w-full">🗑️ Đã xoá KV • Kết thúc chuỗi (Bước 5/5)</span>`;
+          } else if (isExpired) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-stone-800 text-stone-100 border border-stone-700 leading-snug max-w-full">🔒 Đã khoá Demo Ngày 10 (Bước 5/5 • Chưa trả $599)</span>`;
+          } else if (step4Done) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-rose-100 text-rose-900 border border-rose-300 leading-snug max-w-full">🚨 Đã gửi ${sentChannelLabel} Nhắc 24h Cuối (Bước 4/5${shortDayText ? ` • ${shortDayText}` : ''})</span>`;
+          } else if (isDealActive || step3Done) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-gradient-to-r from-amber-100 to-rose-100 text-rose-950 border border-rose-300 leading-snug max-w-full">⚡ Đang mở Deal $299 • Đã gửi ${sentChannelLabel} (Bước 3/5${shortDayText ? ` • ${shortDayText}` : ''})</span>`;
+          } else if (step2Done) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-emerald-100 text-emerald-950 border border-emerald-300 leading-snug max-w-full">📩 Đã gửi ${sentChannelLabel} Hỏi Thăm (Bước 2/5${shortDayText ? ` • ${shortDayText}` : ''})</span>`;
+          } else if (step1Done) {
+            if (smsFailed) {
+              paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-rose-100 text-rose-900 border border-rose-300 leading-snug max-w-full">⚠️ Lỗi gửi SMS Chào Hàng (Bấm Chi tiết kiểm tra)</span>`;
+            } else if (isFbMode) {
+              paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-blue-50 text-[#1877f2] border border-blue-300 leading-snug max-w-full">💬 Đã chào qua Facebook (Bước 1/5${shortDayText ? ` • ${shortDayText}` : ''})</span>`;
+            } else {
+              paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-extrabold bg-emerald-50 text-emerald-900 border border-emerald-300 leading-snug max-w-full">✅ Đã gửi ${sentChannelLabel} Chào Hàng (Bước 1/5${shortDayText ? ` • ${shortDayText}` : ''})</span>`;
+            }
+          } else if (!hasValidDemo) {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-stone-100 text-stone-600 border border-stone-300 leading-snug max-w-full">⚪ Chưa dựng Web Demo</span>`;
+          } else {
+            paymentBadge = `<span class="inline-flex items-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 leading-snug max-w-full">🟡 Chưa gửi chào hàng (Chờ gửi SMS / FB)</span>`;
+          }
+          if (dueAction) {
+            paymentBadge += ` <span class="inline-flex items-center px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] font-black ${dueAction.isFb ? 'bg-[#1877f2] text-white' : 'bg-rose-600 text-white'} animate-pulse leading-snug max-w-full">${dueAction.isFb ? '💬' : '🔔'} Đến hạn: ${escapeHtml(dueAction.label)}</span>`;
+          }
 
 
           const previewOverlayUrl = c.brandedDemoUrl || `https://${encodeURIComponent(c.demoSlug || c.id)}.wynnpages.com.au`;
@@ -3197,7 +3252,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
             },
             {
               label: '2. Gửi Chào Hàng (Pitch)',
-              sub: isPitched ? (c.channelMode === 'facebook' ? 'Đã chào qua Facebook ✓' : 'Đã gửi cho chủ tiệm ✓') : 'Chờ gửi SMS / FB',
+              sub: isPitched ? (isFbMode ? 'Đã chào qua Facebook ✓' : `Đã gửi ${sentChannelLabel} ✓${shortDayText ? ` (${shortDayText})` : ''}`) : 'Chờ gửi SMS / FB',
               done: isPitched,
               waiting: false
             },
@@ -3261,10 +3316,20 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                     }
                   </div>
                   <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-stone-600 min-w-0">
-                    <span class="font-mono wrap-anywhere">${c.email ? `📧 ${escapeHtml(c.email)}` : `<span class="text-stone-400 italic">📧 Chưa có email (Khách tự điền khi Claim $599)</span>`}</span>
+                    <span class="font-mono wrap-anywhere inline-flex items-center gap-1.5 flex-wrap">${
+                      c.email
+                        ? `<span>📧 ${escapeHtml(c.email)}</span>${emailSentOk ? `<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold font-sans">✓ Đã gửi Email</span>` : ''}`
+                        : `<span class="text-stone-400 italic">📧 Chưa có email (Khách tự điền khi Claim $599)</span>`
+                    }</span>
                     ${hasPhone
-                      ? `<span class="font-mono text-emerald-800 font-semibold whitespace-nowrap">📱 SMS: ${escapeHtml(c.phone)}</span>`
-                      : `<span class="text-amber-700 font-semibold">📱 Chưa có SĐT (Bấm "✏️ Sửa" để thêm SĐT bắn SMS)</span>`
+                      ? `<span class="font-mono ${smsSentOk ? 'text-emerald-800' : 'text-stone-700'} font-semibold whitespace-nowrap inline-flex items-center gap-1.5"><span>📱 SMS: ${escapeHtml(c.phone)}</span>${
+                          smsSentOk
+                            ? `<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold font-sans">✓ Đã gửi SMS</span>`
+                            : (smsFailed
+                                ? `<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-extrabold font-sans">⚠️ Lỗi SMS</span>`
+                                : `<span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold font-sans">Chưa gửi</span>`)
+                        }</span>`
+                      : `<span class="text-amber-700 font-semibold">📱 Chưa có SĐT (Bấm "✏️ Hồ Sơ" để thêm SĐT bắn SMS)</span>`
                     }
                     ${c.facebookUrl ? `
                       <a href="${escapeHtml(c.facebookUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#1877F2] font-semibold hover:underline shrink-0" title="Mở Facebook của tiệm">
@@ -3278,7 +3343,7 @@ Mandatory Artwork Directive (Cách 2: AI Fine-Art Translation):
                         <span>Instagram</span>
                       </a>
                     ` : ''}
-                    <span class="text-stone-400">🕒 ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>
+                    ${pitchMs ? `<span class="text-emerald-800 font-semibold" title="Thời điểm bắt đầu gửi chào hàng">📤 Đã gửi: ${new Date(pitchMs).toLocaleString('vi-VN')}</span>` : `<span class="text-stone-400">🕒 Tạo: ${new Date(c.submittedAt).toLocaleString('vi-VN')}</span>`}
                   </div>
                 </div>
 
