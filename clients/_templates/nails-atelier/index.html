@@ -892,13 +892,52 @@
       animation-delay: var(--row-delay, 0ms);
     }
 
-    /* Subtle Hero Canvas Breathing */
+    /* Subtle Hero Canvas Breathing & Living Oil Painting Motion */
     @keyframes canvas-breathe {
       0%, 100% { transform: scale(1.02) translate3d(0, 0, 0); }
       50% { transform: scale(1.052) translate3d(0, -3px, 0); }
     }
     .animate-canvas-breathe {
       animation: canvas-breathe 16s ease-in-out infinite;
+    }
+
+    @keyframes hero-botanical-breeze {
+      0% { transform: rotate(0deg) skewX(0deg); }
+      22% { transform: rotate(-1.7deg) skewX(-0.6deg); }
+      48% { transform: rotate(0.95deg) skewX(0.35deg); }
+      73% { transform: rotate(-1.1deg) skewX(-0.4deg); }
+      100% { transform: rotate(0deg) skewX(0deg); }
+    }
+
+    @keyframes hero-curtain-breeze-l {
+      0% { transform: skewX(0deg) scaleX(1); }
+      28% { transform: skewX(-1.5deg) scaleX(1.042); }
+      58% { transform: skewX(0.45deg) scaleX(0.992); }
+      82% { transform: skewX(-0.95deg) scaleX(1.024); }
+      100% { transform: skewX(0deg) scaleX(1); }
+    }
+
+    @keyframes hero-curtain-breeze-r {
+      0% { transform: skewX(0deg) scaleX(1); }
+      26% { transform: skewX(-1.35deg) scaleX(1.032); }
+      54% { transform: skewX(0.5deg) scaleX(0.990); }
+      78% { transform: skewX(-0.85deg) scaleX(1.018); }
+      100% { transform: skewX(0deg) scaleX(1); }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero-flowers-sway {
+        animation: hero-botanical-breeze 9.2s ease-in-out infinite;
+        will-change: transform;
+      }
+      .hero-curtain-sway-l {
+        animation: hero-curtain-breeze-l 8.6s ease-in-out infinite;
+        will-change: transform;
+      }
+      .hero-curtain-sway-r {
+        animation: hero-curtain-breeze-r 10.2s ease-in-out -1.8s infinite;
+        will-change: transform;
+      }
     }
 
     /* Palette-Harmonized Architectural Map Embed (GPU-Isolated, Zero-Jank) */
@@ -1146,7 +1185,7 @@
       heroStory: "Structured BIAB overlays, fine-art manicure design, and botanical spa rituals—performed unhurriedly with hospital-grade sterilisation.",
       parkingNote: "Complimentary 2-hour street parking right along High Street & effortless rear laneway entry.",
       images: {
-        hero: "https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg",
+        hero: "https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127",
         beforeNail: "https://wynnpages.com.au/assets/atelier/nails/before-natural-nails.jpg?v=20261123hd",
         afterNail: "https://wynnpages.com.au/assets/atelier/nails/biab-artistry.jpg?v=20261123p1",
         biabFeature: "https://wynnpages.com.au/assets/atelier/nails/sheer-biab-architecture.jpg?v=20261123p1",
@@ -1173,6 +1212,15 @@
             tag: "Natural Nail Restoration"
           }
         ]
+      },
+      livingHero: {
+        enabled: true,
+        cleanBg: "https://wynnpages.com.au/assets/atelier/nails/hero-living-clean.jpg?v=20261127",
+        curtainLeft: "https://wynnpages.com.au/assets/atelier/nails/hero-living-curtain-l.webp?v=20261127",
+        curtainRight: "https://wynnpages.com.au/assets/atelier/nails/hero-living-curtain-r.webp?v=20261127",
+        clientEdge: "https://wynnpages.com.au/assets/atelier/nails/hero-living-client-edge.webp?v=20261127",
+        flowersLayer: "https://wynnpages.com.au/assets/atelier/nails/hero-living-flowers.webp?v=20261127",
+        staticFallback: "https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127"
       },
       hours: [
         { days: "Tuesday – Friday", time: "9:30 am – 6:30 pm" },
@@ -1436,16 +1484,66 @@
       <div id="hero-art-col" class="lg:col-span-5 relative max-w-md mx-auto lg:max-w-none w-full will-change-transform">
         <div class="hero-frame-unveil arch-oil-frame gold-foil-frame overflow-hidden aspect-[4/5] relative" style="background-color: var(--bg-canvas-alt);">
           <div id="hero-canvas-stage" class="w-full h-full relative animate-canvas-breathe will-change-transform" style="border-radius: inherit;">
-            <img
-              id="hero-oil-img"
-              src="https://wynnpages.com.au/assets/atelier/nails/hero-sanctuary.jpg"
-              alt="Sunlit artisanal nail sanctuary interior oil illustration"
-              fetchpriority="high"
-              width="900"
-              height="1125"
-              style="border-radius: inherit;"
-              class="w-full h-full object-cover block"
-            >
+            <div id="hero-scene-lock" class="absolute left-0 w-full" style="top: -3.214%; aspect-ratio: 896 / 1200;">
+              <img
+                id="hero-oil-img"
+                src="https://wynnpages.com.au/assets/atelier/nails/hero-living-clean.jpg?v=20261127"
+                alt="Sunlit artisanal nail sanctuary interior oil painting"
+                fetchpriority="high"
+                width="896"
+                height="1200"
+                onerror="this.onerror=null;this.src='https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127';"
+                class="w-full h-full block select-none"
+              >
+              <img
+                id="hero-curtain-l-img"
+                src="https://wynnpages.com.au/assets/atelier/nails/hero-living-curtain-l.webp?v=20261127"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="70"
+                height="988"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127';}"
+                style="left: 0.000%; top: 0.000%; width: 7.812%; height: 82.333%; transform-origin: 0% 0%;"
+                class="hero-living-layer hero-curtain-sway-l absolute pointer-events-none select-none block"
+              >
+              <img
+                id="hero-curtain-r-img"
+                src="https://wynnpages.com.au/assets/atelier/nails/hero-living-curtain-r.webp?v=20261127"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="111"
+                height="722"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127';}"
+                style="left: 17.857%; top: 3.500%; width: 12.388%; height: 60.167%; transform-origin: 96% 0%;"
+                class="hero-living-layer hero-curtain-sway-r absolute pointer-events-none select-none block"
+              >
+              <img
+                id="hero-client-edge-img"
+                src="https://wynnpages.com.au/assets/atelier/nails/hero-living-client-edge.webp?v=20261127"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="153"
+                height="196"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127';}"
+                style="left: 15.067%; top: 48.833%; width: 17.076%; height: 16.333%;"
+                class="hero-living-layer absolute pointer-events-none select-none block"
+              >
+              <img
+                id="hero-flowers-img"
+                src="https://wynnpages.com.au/assets/atelier/nails/hero-living-flowers.webp?v=20261127"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                width="230"
+                height="271"
+                onerror="document.querySelectorAll('.hero-living-layer').forEach(function(el){el.style.display='none';});var b=document.getElementById('hero-oil-img');if(b){b.src='https://wynnpages.com.au/assets/atelier/nails/hero-living-static.jpg?v=20261127';}"
+                style="left: 74.330%; top: 39.917%; width: 25.670%; height: 22.583%; transform-origin: 85.22% 91.88%;"
+                class="hero-living-layer hero-flowers-sway absolute pointer-events-none select-none block"
+              >
+            </div>
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none"></div>
           <!-- Interactive Floating Craft Capsule (Glides to Treatment Matchmaker) -->
@@ -2341,7 +2439,7 @@
       const VAULT_BASE = 'https://wynnpages.com.au/assets/atelier/nails';
       const PALETTE_ART_VAULT = {
         '01': {
-          hero: `${VAULT_BASE}/hero-sanctuary.jpg`,
+          hero: `${VAULT_BASE}/hero-living-static.jpg?v=20261127`,
           beforeNail: `${VAULT_BASE}/before-natural-nails.jpg?v=20261123hd`,
           afterNail: `${VAULT_BASE}/biab-artistry.jpg?v=20261123p1`,
           biabFeature: `${VAULT_BASE}/sheer-biab-architecture.jpg?v=20261123p1`,
@@ -2549,10 +2647,58 @@
       setText('hero-rating', cfg.googleRating);
       setText('hero-review-count', cfg.reviewCount);
 
+      const livingCfg = cfg.livingHero || {};
+      const staticHeroParam = qsParams.get('static-hero') === '1';
+      const hasCustomNonVaultHero = Boolean(cfg.images && cfg.images.hero && !isAtelierVaultAsset(cfg.images.hero));
+      const isVaultLiving = isAtelierVaultAsset(livingCfg.cleanBg);
+      const useLivingHero =
+        !staticHeroParam &&
+        livingCfg.enabled === true &&
+        Boolean(livingCfg.cleanBg) &&
+        Boolean(livingCfg.flowersLayer) &&
+        (isVaultLiving ? (activePalette === '01' && !hasCustomNonVaultHero) : !forceVault);
+
+      const heroSceneLock = document.getElementById('hero-scene-lock');
+      const heroCurtainLImg = document.getElementById('hero-curtain-l-img');
+      const heroCurtainRImg = document.getElementById('hero-curtain-r-img');
+      const heroClientEdgeImg = document.getElementById('hero-client-edge-img');
+      const heroFlowersImg = document.getElementById('hero-flowers-img');
+
       if (resolvedImages) {
         const heroImg = document.getElementById('hero-oil-img');
-        if (heroImg && resolvedImages.hero && heroImg.getAttribute('src') !== resolvedImages.hero) {
-          heroImg.src = resolvedImages.hero;
+        if (useLivingHero) {
+          if (heroImg && heroImg.getAttribute('src') !== livingCfg.cleanBg) {
+            heroImg.src = livingCfg.cleanBg;
+          }
+          if (heroCurtainLImg && livingCfg.curtainLeft && heroCurtainLImg.getAttribute('src') !== livingCfg.curtainLeft) {
+            heroCurtainLImg.src = livingCfg.curtainLeft;
+          }
+          if (heroCurtainRImg && livingCfg.curtainRight && heroCurtainRImg.getAttribute('src') !== livingCfg.curtainRight) {
+            heroCurtainRImg.src = livingCfg.curtainRight;
+          }
+          if (heroClientEdgeImg && livingCfg.clientEdge && heroClientEdgeImg.getAttribute('src') !== livingCfg.clientEdge) {
+            heroClientEdgeImg.src = livingCfg.clientEdge;
+          }
+          if (heroFlowersImg && heroFlowersImg.getAttribute('src') !== livingCfg.flowersLayer) {
+            heroFlowersImg.src = livingCfg.flowersLayer;
+          }
+        } else {
+          document.querySelectorAll('.hero-living-layer').forEach((el) => {
+            el.style.display = 'none';
+          });
+          const fallbackSrc = (!forceVault && !hasCustomNonVaultHero && livingCfg.staticFallback)
+            ? livingCfg.staticFallback
+            : resolvedImages.hero;
+          if (heroImg && fallbackSrc && heroImg.getAttribute('src') !== fallbackSrc) {
+            heroImg.src = fallbackSrc;
+          }
+          if ((activePalette !== '01' || hasCustomNonVaultHero) && heroSceneLock && heroImg) {
+            heroSceneLock.style.inset = '0';
+            heroSceneLock.style.top = '0';
+            heroSceneLock.style.height = '100%';
+            heroSceneLock.style.aspectRatio = 'auto';
+            heroImg.classList.add('object-cover');
+          }
         }
         const biabImg = document.getElementById('feature-biab-img');
         if (biabImg && resolvedImages.biabFeature) biabImg.src = resolvedImages.biabFeature;

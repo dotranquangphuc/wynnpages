@@ -197,7 +197,7 @@ function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
 
   const vaultBase = `${STUDIO_ORIGIN}/assets/atelier/nails`;
   const vaultMap = {
-    '01': { hero: `${vaultBase}/hero-sanctuary.jpg`, biab: `${vaultBase}/sheer-biab-architecture.jpg?v=20261123p1`, pedi: `${vaultBase}/botanical-pedicure.jpg` },
+    '01': { hero: `${vaultBase}/hero-living-static.jpg?v=20261127`, biab: `${vaultBase}/sheer-biab-architecture.jpg?v=20261123p1`, pedi: `${vaultBase}/botanical-pedicure.jpg` },
     '02': { hero: `${vaultBase}/p02/hero.jpg`, biab: `${vaultBase}/p02/biab.jpg`, pedi: `${vaultBase}/p02/pedicure.jpg` },
     '03': { hero: `${vaultBase}/p03/hero.jpg`, biab: `${vaultBase}/p03/biab.jpg`, pedi: `${vaultBase}/p03/pedicure.jpg` },
     '04': { hero: `${vaultBase}/p04/hero.jpg`, biab: `${vaultBase}/p04/biab.jpg`, pedi: `${vaultBase}/p04/pedicure.jpg` },
@@ -207,7 +207,8 @@ function injectClientIntoMasterHtml(templateHtml, client, paletteOverride) {
   patchStringField('hero', pv.hero);
   patchStringField('biabFeature', pv.biab);
   patchStringField('pedicureFeature', pv.pedi);
-  html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${pv.hero}$2`);
+  const initialHeroImgSrc = palette === '01' ? `${vaultBase}/hero-living-clean.jpg?v=20261127` : pv.hero;
+  html = html.replace(/(<img[\s\S]*?id="hero-oil-img"[\s\S]*?src=")[^"]*(")/, `$1${initialHeroImgSrc}$2`);
 
   const resolvedSuburb = parsedAddr.suburb || parsedAddr.street || 'Australia';
   const resolvedState = parsedAddr.state || '';
