@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 2 436 164" width="760" height="286" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" fill="none">
+  <defs>
+    <!-- 24K Gold-Leaf Foil Multi-Stop Metallic Gradient -->
+    <linearGradient id="goldLeafBody" x1="5%" y1="4%" x2="95%" y2="96%">
+      <stop offset="0%" stop-color="#9E6812"/>
+      <stop offset="15%" stop-color="#E7BA4C"/>
+      <stop offset="30%" stop-color="#FFF2C4"/>
+      <stop offset="46%" stop-color="#D49B28"/>
+      <stop offset="62%" stop-color="#9B6510"/>
+      <stop offset="78%" stop-color="#F7DC88"/>
+      <stop offset="91%" stop-color="#C88A1E"/>
+      <stop offset="100%" stop-color="#8C580A"/>
+    </linearGradient>
+
+    <!-- Brushed Gold Specular Bevel Highlight -->
+    <linearGradient id="goldLeafSheen" x1="0%" y1="0%" x2="100%" y2="90%">
+      <stop offset="0%" stop-color="#FFFDF5" stop-opacity="0.84"/>
+      <stop offset="38%" stop-color="#FBE8A4" stop-opacity="0.54"/>
+      <stop offset="70%" stop-color="#D49B28" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#FFF9E2" stop-opacity="0.62"/>
+    </linearGradient>
+
+    <!-- Deep Antique Bronze 3D Extrusion -->
+    <linearGradient id="goldBronzeDepth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5C3A08"/>
+      <stop offset="55%" stop-color="#744A0C"/>
+      <stop offset="100%" stop-color="#4A2E05"/>
+    </linearGradient>
+  </defs>
+
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- LAYER 0: Pure-Vector Ambient Drop Shadow (Safari/iOS Retina Crisp, Zero Bitmap Filter) -->
+    <g transform="translate(-2.0, 3.6)" stroke="#2B1E0D" stroke-opacity="0.16">
+      <!-- Capital G upper canopy & bowl -->
+      <path d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82" stroke-width="11.2"/>
+      <!-- Tall l loop flowing into o -->
+      <path d="M 132 82 C 165 56, 198 16, 191 10 C 183 4, 152 46, 138 92 C 132 110, 136 116, 148 113 C 160 110, 173 95, 185 81" stroke-width="10.4"/>
+      <!-- o bowl & top connector -->
+      <path d="M 208 75 C 194 72, 177 88, 176 105 C 175 117, 189 119, 202 107 C 213 96, 217 81, 207 76 C 199 72, 197 85, 209 89 C 221 92, 236 84, 249 71" stroke-width="10.0"/>
+      <!-- First s -->
+      <path d="M 249 71 C 258 63, 264 62, 261 70 C 258 79, 270 89, 266 103 C 261 116, 240 119, 238 110 C 236 102, 252 99, 273 91 C 285 86, 297 78, 307 69" stroke-width="10.0"/>
+      <!-- Second s -->
+      <path d="M 307 69 C 316 61, 322 60, 319 68 C 316 77, 328 87, 324 101 C 319 114, 298 117, 296 108 C 294 100, 310 97, 331 89 C 342 84, 352 77, 359 71" stroke-width="10.0"/>
+      <!-- y with graceful lower descender loop & flourish -->
+      <path d="M 359 71 C 351 88, 348 107, 357 109 C 367 111, 383 92, 396 71 C 378 108, 355 145, 332 153 C 316 158, 312 146, 326 131 C 348 108, 386 95, 422 80" stroke-width="10.2"/>
+    </g>
+
+    <!-- LAYER 1: 3D Extruded Antique Bronze Backing -->
+    <g transform="translate(-1.2, 2.0)" stroke="url(#goldBronzeDepth)">
+      <path d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82" stroke-width="10.2"/>
+      <path d="M 132 82 C 165 56, 198 16, 191 10 C 183 4, 152 46, 138 92 C 132 110, 136 116, 148 113 C 160 110, 173 95, 185 81" stroke-width="9.4"/>
+      <path d="M 208 75 C 194 72, 177 88, 176 105 C 175 117, 189 119, 202 107 C 213 96, 217 81, 207 76 C 199 72, 197 85, 209 89 C 221 92, 236 84, 249 71" stroke-width="9.0"/>
+      <path d="M 249 71 C 258 63, 264 62, 261 70 C 258 79, 270 89, 266 103 C 261 116, 240 119, 238 110 C 236 102, 252 99, 273 91 C 285 86, 297 78, 307 69" stroke-width="9.0"/>
+      <path d="M 307 69 C 316 61, 322 60, 319 68 C 316 77, 328 87, 324 101 C 319 114, 298 117, 296 108 C 294 100, 310 97, 331 89 C 342 84, 352 77, 359 71" stroke-width="9.0"/>
+      <path d="M 359 71 C 351 88, 348 107, 357 109 C 367 111, 383 92, 396 71 C 378 108, 355 145, 332 153 C 316 158, 312 146, 326 131 C 348 108, 386 95, 422 80" stroke-width="9.2"/>
+    </g>
+
+    <!-- LAYER 2: 24K Gold-Leaf Foil Body -->
+    <g stroke="url(#goldLeafBody)">
+      <path d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82" stroke-width="9.2"/>
+      <path d="M 132 82 C 165 56, 198 16, 191 10 C 183 4, 152 46, 138 92 C 132 110, 136 116, 148 113 C 160 110, 173 95, 185 81" stroke-width="8.4"/>
+      <path d="M 208 75 C 194 72, 177 88, 176 105 C 175 117, 189 119, 202 107 C 213 96, 217 81, 207 76 C 199 72, 197 85, 209 89 C 221 92, 236 84, 249 71" stroke-width="8.0"/>
+      <path d="M 249 71 C 258 63, 264 62, 261 70 C 258 79, 270 89, 266 103 C 261 116, 240 119, 238 110 C 236 102, 252 99, 273 91 C 285 86, 297 78, 307 69" stroke-width="8.0"/>
+      <path d="M 307 69 C 316 61, 322 60, 319 68 C 316 77, 328 87, 324 101 C 319 114, 298 117, 296 108 C 294 100, 310 97, 331 89 C 342 84, 352 77, 359 71" stroke-width="8.0"/>
+      <path d="M 359 71 C 351 88, 348 107, 357 109 C 367 111, 383 92, 396 71 C 378 108, 355 145, 332 153 C 316 158, 312 146, 326 131 C 348 108, 386 95, 422 80" stroke-width="8.2"/>
+    </g>
+
+    <!-- LAYER 3: Specular Gold-Leaf Foil Highlight Ridge -->
+    <g transform="translate(0.3, -0.7)" stroke="url(#goldLeafSheen)">
+      <path d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82" stroke-width="2.0"/>
+      <path d="M 132 82 C 165 56, 198 16, 191 10 C 183 4, 152 46, 138 92 C 132 110, 136 116, 148 113 C 160 110, 173 95, 185 81" stroke-width="1.8"/>
+      <path d="M 208 75 C 194 72, 177 88, 176 105 C 175 117, 189 119, 202 107 C 213 96, 217 81, 207 76 C 199 72, 197 85, 209 89 C 221 92, 236 84, 249 71" stroke-width="1.7"/>
+      <path d="M 249 71 C 258 63, 264 62, 261 70 C 258 79, 270 89, 266 103 C 261 116, 240 119, 238 110 C 236 102, 252 99, 273 91 C 285 86, 297 78, 307 69" stroke-width="1.7"/>
+      <path d="M 307 69 C 316 61, 322 60, 319 68 C 316 77, 328 87, 324 101 C 319 114, 298 117, 296 108 C 294 100, 310 97, 331 89 C 342 84, 352 77, 359 71" stroke-width="1.7"/>
+      <path d="M 359 71 C 351 88, 348 107, 357 109 C 367 111, 383 92, 396 71 C 378 108, 355 145, 332 153 C 316 158, 312 146, 326 131 C 348 108, 386 95, 422 80" stroke-width="1.8"/>
+    </g>
+  </g>
+</svg>

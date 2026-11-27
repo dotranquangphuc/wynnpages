@@ -1,1 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><radialGradient id="wax" cx="32%" cy="28%" r="72%"><stop offset="0%" stop-color="#FCF9F3"/><stop offset="100%" stop-color="#F3DFB2"/></radialGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wax)" stroke="#D49B28" stroke-width="2.2"/><circle cx="32" cy="32" r="25.5" fill="none" stroke="#D49B28" stroke-width="0.9" stroke-opacity="0.55"/><text x="32" y="42.5" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="31" fill="#96432B">G</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <!-- Atelier Palette 01 Warm Wax Seal Background -->
+    <radialGradient id="waxSealBg" cx="32%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="#FCF9F3"/>
+      <stop offset="68%" stop-color="#F6E8C8"/>
+      <stop offset="100%" stop-color="#EBD197"/>
+    </radialGradient>
+
+    <!-- 24K Gold-Leaf Foil Ring & Calligraphic G Gradient -->
+    <linearGradient id="goldFoilRing" x1="8%" y1="6%" x2="92%" y2="94%">
+      <stop offset="0%" stop-color="#B87E1B"/>
+      <stop offset="30%" stop-color="#F4CF67"/>
+      <stop offset="55%" stop-color="#D49B28"/>
+      <stop offset="82%" stop-color="#FCE8A6"/>
+      <stop offset="100%" stop-color="#9A6410"/>
+    </linearGradient>
+
+    <linearGradient id="goldFoilG" x1="12%" y1="5%" x2="88%" y2="95%">
+      <stop offset="0%" stop-color="#9B620C"/>
+      <stop offset="22%" stop-color="#E7B742"/>
+      <stop offset="44%" stop-color="#FFF2C2"/>
+      <stop offset="64%" stop-color="#C88718"/>
+      <stop offset="85%" stop-color="#F8DE8C"/>
+      <stop offset="100%" stop-color="#7A4B08"/>
+    </linearGradient>
+
+    <linearGradient id="goldBronzeG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5C3A08"/>
+      <stop offset="100%" stop-color="#3E2504"/>
+    </linearGradient>
+
+    <filter id="gSoftShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="-0.5" dy="1.1" stdDeviation="0.7" flood-color="#2B1E0D" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <!-- Embossed Wax Seal Disc & Double Hairline Gold Rings -->
+  <circle cx="32" cy="32" r="29.8" fill="url(#waxSealBg)" stroke="url(#goldFoilRing)" stroke-width="2.4"/>
+  <circle cx="32" cy="32" r="25.6" fill="none" stroke="#C89328" stroke-width="0.95" stroke-opacity="0.62"/>
+
+  <!-- Bespoke 24K Gold-Leaf Calligraphic "G" (from Glossy sign) -->
+  <g filter="url(#gSoftShadow)" transform="translate(14.5, 13.5) scale(0.228)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Crisp Antique Bronze Halo + 3D Extrusion for High-Contrast Readability -->
+    <path d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82"
+          stroke="url(#goldBronzeG)" stroke-opacity="0.78" stroke-width="17.5"/>
+    <path transform="translate(-3.0, 4.8)"
+          d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82"
+          stroke="url(#goldBronzeG)" stroke-opacity="0.88" stroke-width="16"/>
+    <!-- 24K Gold-Leaf Main Body -->
+    <path d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82"
+          stroke="url(#goldFoilG)" stroke-width="13"/>
+    <!-- Specular Foil Sheen -->
+    <path transform="translate(0.8, -1.4)"
+          d="M 65 24 C 42 25, 24 38, 26 52 C 28 65, 56 64, 92 49 C 128 34, 154 14, 146 9 C 138 4, 102 18, 76 50 C 52 80, 44 109, 64 111 C 84 113, 108 92, 121 71 C 103 108, 76 146, 48 154 C 28 159, 20 147, 36 132 C 58 112, 96 97, 132 82"
+          stroke="#FFFDF5" stroke-opacity="0.72" stroke-width="2.8"/>
+  </g>
+</svg>
